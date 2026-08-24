@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "noEmit": true
+  },
+  "include": [
+    "src/runtime.d.ts",
+    "src/types.ts",
+    "src/canonical.ts",
+    "src/config.ts",
+    "src/billing.ts"
+  ]
+}

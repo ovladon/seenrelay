@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - review/v0.3-bootstrap
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run project checks
+        run: npm run check
+      - name: Build verified source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=zip --output=seenrelay-source.zip HEAD
+          sha256sum seenrelay-source.zip > seenrelay-source.zip.sha256
+      - name: Upload verified source snapshot
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: seenrelay-source-snapshot
+          path: |
+            seenrelay-source.zip
+            seenrelay-source.zip.sha256
+          if-no-files-found: error
+          retention-days: 7

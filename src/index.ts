@@ -1,0 +1,132 @@
+import { Hono } from 'hono';
+import { assertBillingDisabled } from './billing.js';
+import { canonicalFact, ValidationError } from './canonical.js';
+import { config } from './config.js';
+import { admitHive, finishHiveCheck, finishHiveObserve } from './hive.js';
+import { readJsonBody, requestId } from './http.js';
+import { handleMcp } from './mcp.js';
+import { openApi } from './openapi.js';
+import { deriveClientKey } from './identity.js';
+import { checkFact, observeFact } from './service.js';
+import { adminControl, adminHousekeeping, adminLogin, adminLogout, adminOperationsExport, adminPage, adminPlaybook, adminSnapshot } from './admin.js';
+import { publicLandingPage, serviceDescriptor } from './public.js';
+import { getPublicStats } from './public-db.js';
+import { assertRuntimeFactAllowed } from './runtime-guard.js';
+import { dataPracticesDescriptor, dataPracticesPage } from './data-practices.js';
+import type { CheckRequest, ObserveRequest } from './types.js';
+
+const app = new Hono();
+
+app.use('*', async (c, next) => {
+  const rid = requestId(c.req.raw);
+  c.header('x-request-id', rid);
+  c.header('x-content-type-options', 'nosniff');
+  c.header('x-frame-options', 'DENY');
+  c.header('referrer-policy', 'no-referrer');
+  c.header('permissions-policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  c.header('cache-control', 'no-store');
+  if (process.env.VERCEL_ENV === 'production') c.header('strict-transport-security', 'max-age=31536000; includeSubDomains');
+  assertBillingDisabled();
+  await next();
+});
+
+app.onError((err, c) => {
+  if (err instanceof ValidationError) {
+    return c.json({ error: { code: 'INVALID_REQUEST', detail: err.message } }, 400);
+  }
+  const rid = c.res.headers.get('x-request-id') || c.req.header('x-vercel-id') || 'unknown';
+  console.error(JSON.stringify({ event: 'error', request_id: rid, path: c.req.path, error: err instanceof Error ? err.message : 'unknown' }));
+  return c.json({ error: { code: 'INTERNAL_ERROR', detail: 'Request could not be completed.' } }, 500);
+});
+
+app.get('/', (c) => {
+  const origin = new URL(c.req.url).origin;
+  const accept = c.req.header('accept') || '';
+  c.header('vary', 'Accept');
+  if (accept.includes('text/html')) {
+    c.header('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+    c.header('cache-control', 'public, max-age=60');
+    return c.html(publicLandingPage(origin));
+  }
+  return c.json(serviceDescriptor(origin));
+});
+
+app.get('/service.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  return c.json(serviceDescriptor(new URL(c.req.url).origin));
+});
+app.get('/data-practices', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(dataPracticesPage(new URL(c.req.url).origin));
+});
+app.get('/data-practices.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  return c.json(dataPracticesDescriptor(new URL(c.req.url).origin));
+});
+app.get('/public-stats.json', async (c) => {
+  c.header('cache-control', 'public, max-age=15, stale-while-revalidate=45');
+  return c.json(await getPublicStats());
+});
+app.get('/healthz', (c) => {
+  const deploymentSha = process.env.VERCEL_GIT_COMMIT_SHA || null;
+  if (deploymentSha) c.header('x-seenrelay-deployment-sha', deploymentSha);
+  return c.json({
+    ok: true,
+    version: config().version,
+    billing_enabled: false,
+    environment: process.env.VERCEL_ENV || 'local',
+    deployment_sha: deploymentSha
+  });
+});
+app.get('/openapi.json', (c) => { c.header('cache-control', 'public, max-age=3600'); return c.json(openApi(new URL(c.req.url).origin)); });
+app.all('/mcp', (c) => handleMcp(c.req.raw));
+
+app.get('/admin', (c) => adminPage(c.req.raw));
+app.post('/admin/login', (c) => adminLogin(c.req.raw));
+app.post('/admin/logout', (c) => adminLogout(c.req.raw));
+app.get('/admin/api/snapshot', (c) => adminSnapshot(c.req.raw));
+app.get('/admin/api/operations-export', (c) => adminOperationsExport(c.req.raw));
+app.post('/admin/api/control', (c) => adminControl(c.req.raw));
+app.post('/admin/api/playbook', (c) => adminPlaybook(c.req.raw));
+app.post('/admin/api/housekeeping', (c) => adminHousekeeping(c.req.raw));
+
+app.post('/v1/check', async (c) => {
+  const started = Date.now();
+  const body = await readJsonBody<CheckRequest>(c.req.raw, config().maxBodyBytes);
+  canonicalFact(body.fact);
+  assertRuntimeFactAllowed(body.fact);
+  const admission = await admitHive(c.req.raw, 'check');
+  if (!admission.allowed) {
+    if (admission.reason === 'runtime_disabled') return c.json({ error: { code: 'SERVICE_CONTROLLED', detail: 'CHECK is temporarily disabled by the SeenRelay control plane.' }, hive: admission.state }, 503);
+    c.header('x-seenrelay-lease', admission.token);
+    if (admission.state.retry_after_seconds) c.header('retry-after', String(admission.state.retry_after_seconds));
+    return c.json({ error: { code: 'HIVE_RATE_LIMITED', detail: 'Free CHECK allowance is refilling.' }, hive: admission.state }, 429);
+  }
+  c.header('x-seenrelay-lease', admission.token);
+  const result = await checkFact(body);
+  const finished = await finishHiveCheck(admission, result);
+  const clientKey = await deriveClientKey(c.req.raw);
+  console.log(JSON.stringify({ event: 'check', client_key: clientKey, hive_class: finished.state.class, outcome: result.status, useful_reuse_awards: finished.usefulReuseAwards, latency_ms: Date.now() - started }));
+  return c.json({ ...result, hive: finished.state, useful_reuse_awards: finished.usefulReuseAwards });
+});
+
+app.post('/v1/observe', async (c) => {
+  const started = Date.now();
+  const body = await readJsonBody<ObserveRequest>(c.req.raw, config().maxBodyBytes);
+  canonicalFact(body.fact);
+  assertRuntimeFactAllowed(body.fact);
+  const admission = await admitHive(c.req.raw, 'observe');
+  if (!admission.allowed) return c.json({ error: { code: 'SERVICE_CONTROLLED', detail: 'OBSERVE is temporarily disabled by the SeenRelay control plane.' }, hive: admission.state }, 503);
+  c.header('x-seenrelay-lease', admission.token);
+  const result = await observeFact(c.req.raw, body, admission.leaseId);
+  const hive = await finishHiveObserve(admission, result.fact_key, result.accepted ? 'accepted' : 'deduplicated');
+  const clientKey = await deriveClientKey(c.req.raw);
+  console.log(JSON.stringify({ event: 'observe', client_key: clientKey, hive_class: hive.class, observer_identity: result.observer_identity, observer_assurance: result.observer_assurance, outcome: result.accepted ? 'accepted' : 'deduplicated', latency_ms: Date.now() - started }));
+  return c.json({ ...result, hive });
+});
+
+app.all('/v1/billing/*', (c) => c.json({ error: { code: 'BILLING_DISABLED', detail: 'Billing is not available in this deployment.' } }, 404));
+app.notFound((c) => c.json({ error: { code: 'NOT_FOUND', detail: 'No such endpoint.' } }, 404));
+
+export default app;

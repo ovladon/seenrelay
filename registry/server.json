@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ovladon/seenrelay",
+  "title": "SeenRelay",
+  "description": "Cooperative fact-freshness signals for AI agents. Check before revalidating; contribute observations you independently obtained.",
+  "repository": {
+    "url": "https://github.com/ovladon/seenrelay",
+    "source": "github"
+  },
+  "version": "0.3.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://seenrelay.com/mcp"
+    }
+  ]
+}

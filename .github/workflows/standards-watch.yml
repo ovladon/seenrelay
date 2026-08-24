@@ -1,0 +1,44 @@
+name: Standards Watch
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+      - name: Inspect official standards sources
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/standards-watch.mjs
+      - name: Open, refresh, or close standards drift issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title='[standards-watch] Protocol or security standards drift'
+          drift=$(node -e "const x=require('./standards-watch-report.json');process.stdout.write(String(Boolean(x.drift)))")
+          issue=$(gh issue list --state open --search '"[standards-watch] Protocol or security standards drift" in:title' --json number --jq '.[0].number // empty')
+          if [ "$drift" = 'true' ]; then
+            if [ -n "$issue" ]; then
+              gh issue edit "$issue" --title "$title" --body-file standards-watch-report.md
+            else
+              gh issue create --title "$title" --body-file standards-watch-report.md
+            fi
+          elif [ -n "$issue" ]; then
+            gh issue comment "$issue" --body 'The latest standards watch is aligned again. Closing the drift issue.'
+            gh issue close "$issue"
+          fi
