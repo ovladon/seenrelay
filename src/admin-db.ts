@@ -42,7 +42,7 @@ export async function setRuntimeControls(input: Partial<Pick<RuntimeControls, 'm
     capacity_multiplier: input.capacity_multiplier ?? current.capacity_multiplier,
     refill_multiplier: input.refill_multiplier ?? current.refill_multiplier
   };
-  const rows = await sql().query(`UPDATE runtime_controls SET mode=$1, checks_enabled=$2, observes_enabled=$3, rewards_enabled=$4, capacity_multiplier=$5, refill_multiplier=$6, updated_at=now(), updated_by=$7 WHERE control_id='global' RETURNING control_id, mode, checks_enabled, observes_enabled, rewards_enabled, capacity_multiplier::float8, refill_multiplier::float8, updated_at::text, updated_by`, [next.mode,next.checks_enabled,next.observes_enabled,next.capacity_multiplier,next.refill_multiplier,actor]) as RuntimeControls[];
+  const rows = await sql().query(`UPDATE runtime_controls SET mode=$1, checks_enabled=$2, observes_enabled=$3, rewards_enabled=$4, capacity_multiplier=$5, refill_multiplier=$6, updated_at=now(), updated_by=$7 WHERE control_id='global' RETURNING control_id, mode, checks_enabled, observes_enabled, rewards_enabled, capacity_multiplier::float8, refill_multiplier::float8, updated_at::text, updated_by`, [next.mode,next.checks_enabled,next.observes_enabled,next.rewards_enabled,next.capacity_multiplier,next.refill_multiplier,actor]) as RuntimeControls[];
   if (!rows[0]) throw new Error('Unable to update runtime controls');
   return rows[0];
 }
