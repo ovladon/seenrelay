@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.5 - 2026-08-25
+- Changed Control Room adoption telemetry to external-only views by excluding the first-party Reference Observer from active Hive radar leases, retained OBSERVE/fact counts, and contributor rankings.
+- Count qualified reuse as external adoption only when the consuming lease is external; a first-party seed may still support genuine third-party reuse.
+- Kept CHECK telemetry external by invariant because the Reference Observer performs OBSERVE only and never calls CHECK.
+- Added structural regression coverage for the external-adoption boundary.
+
+## 0.3.4 - 2026-08-25
+- Added the bounded first-party Reference Observer and scheduled allowlisted public-source workflow.
+- Kept the Reference Observer outside the SeenRelay server runtime and on the same public OBSERVE path as ordinary clients.
+- Added explicit documentation that first-party observer activity is bootstrap data and must not be treated as third-party adoption.
+- Added a static MCP server card for directory discovery and synchronized tool metadata for `check_fact` and `observe_fact`.
+
 ## 0.3.3 - 2026-08-25
 - Reworked public documentation around a cooperative freshness-cache model and removed brand-specific analogy language.
 - Added explicit cold-start behavior: UNKNOWN passthrough, first-observation seeding, same-fleet reuse, and additive external coverage.
