@@ -14,6 +14,7 @@ test('public MCP registry metadata is production-ready', () => {
   assert.equal(registry.repository?.url, 'https://github.com/ovladon/seenrelay');
   assert.equal(registry.remotes?.[0]?.type, 'streamable-http');
   assert.equal(registry.remotes?.[0]?.url, 'https://seenrelay.com/mcp');
+  assert.ok(typeof registry.description === 'string' && registry.description.length <= 100, 'Registry description must stay within the current 100-character limit');
   assert.doesNotMatch(JSON.stringify(registry), /REPLACE_WITH|localhost|127\.0\.0\.1/i);
 });
 
