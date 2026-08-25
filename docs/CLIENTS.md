@@ -29,6 +29,18 @@ Official reference: <https://docs.anthropic.com/en/docs/claude-code/mcp>
 
 Cursor supports remote Streamable HTTP MCP servers in `.cursor/mcp.json` for a project or `~/.cursor/mcp.json` globally.
 
+**One-click install:** [Add SeenRelay to Cursor](https://cursor.com/install-mcp?name=seenrelay&config=eyJ1cmwiOiJodHRwczovL3NlZW5yZWxheS5jb20vbWNwIn0%3D)
+
+The deeplink encodes only this remote configuration:
+
+```json
+{
+  "url": "https://seenrelay.com/mcp"
+}
+```
+
+Manual project/global configuration remains:
+
 ```json
 {
   "mcpServers": {
@@ -41,7 +53,10 @@ Cursor supports remote Streamable HTTP MCP servers in `.cursor/mcp.json` for a p
 
 Cursor can then expose the SeenRelay tools to Agent when relevant. Tool approval and enterprise allowlists remain controlled by Cursor and your organization.
 
-Official reference: <https://cursor.com/docs/mcp>
+Official references:
+
+- <https://cursor.com/docs/mcp>
+- <https://cursor.com/docs/mcp/install-links>
 
 ## VS Code / GitHub Copilot
 
@@ -59,6 +74,12 @@ VS Code supports remote HTTP MCP servers in `mcp.json`.
 ```
 
 For workspace configuration, use `.vscode/mcp.json`. VS Code also supports user-profile configuration and centrally managed enterprise policies.
+
+On macOS/Linux shells, VS Code's documented `--add-mcp` CLI flow can add the same remote server directly:
+
+```bash
+code --add-mcp '{"name":"seenrelay","type":"http","url":"https://seenrelay.com/mcp"}'
+```
 
 Official references:
 

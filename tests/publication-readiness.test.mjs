@@ -18,6 +18,20 @@ test('public MCP registry metadata is production-ready', () => {
   assert.doesNotMatch(JSON.stringify(registry), /REPLACE_WITH|localhost|127\.0\.0\.1/i);
 });
 
+test('service release is code-owned and synchronized with MCP Registry', () => {
+  const registry = JSON.parse(read('registry', 'server.json'));
+  const versionSource = read('src', 'version.ts');
+  const config = read('src', 'config.ts');
+  const env = read('.env.example');
+  const match = versionSource.match(/SERVICE_RELEASE\s*=\s*'([^']+)'/);
+  assert.ok(match, 'SERVICE_RELEASE constant missing');
+  assert.equal(match[1], registry.version);
+  assert.equal(registry.version, '0.3.1');
+  assert.match(config, /version:\s*SERVICE_RELEASE/);
+  assert.doesNotMatch(config, /process\.env\.SERVICE_VERSION/);
+  assert.doesNotMatch(env, /^SERVICE_VERSION=/m);
+});
+
 test('quickstart exposes a bounded adoption path without changing product semantics', () => {
   const quickstart = read('docs', 'QUICKSTART.md');
   const page = read('src', 'quickstart.ts');
@@ -34,12 +48,16 @@ test('quickstart exposes a bounded adoption path without changing product semant
 
 test('client and decision-maker adoption guides are concrete and conservative', () => {
   const clients = read('docs', 'CLIENTS.md');
+  const adoption = read('src', 'adoption.ts');
   const pilot = read('docs', 'PILOT.md');
   assert.match(clients, /claude mcp add --transport http seenrelay https:\/\/seenrelay\.com\/mcp/);
   assert.match(clients, /\.cursor\/mcp\.json/);
+  assert.match(clients, /cursor\.com\/install-mcp\?name=seenrelay/);
+  assert.match(clients, /code --add-mcp/);
   assert.match(clients, /VS Code \/ GitHub Copilot/);
   assert.match(clients, /ChatGPT custom MCP apps/);
   assert.match(clients, /shadow mode/i);
+  assert.match(adoption, /Add SeenRelay to Cursor/);
   assert.match(pilot, /Kill criteria/);
   assert.match(pilot, /Do not estimate savings without a baseline/);
   assert.match(pilot, /rollback/i);
