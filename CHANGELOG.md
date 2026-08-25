@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.7 — Discovery funnel telemetry
+
+- Add privacy-minimized aggregate MCP `initialize` and `tools/list` request counters.
+- Surface protocol interest separately from external CHECK, OBSERVE, and qualified reuse in the Control Room.
+- Keep discovery telemetry explicitly non-adoption and fail-open so telemetry cannot break MCP service.
+- Document that discovery counters persist no request payload, clientInfo, IP, user-agent, or MCP session identifier.
+
 ## 0.3.6 - 2026-08-25
 - Made the Control Room operational snapshot independent from optional external-adoption classification so an adoption query failure cannot blank the admin surface.
 - Added an explicit external / first-party / total split, adoption milestones, Reference Observer health context, and an external-only Hive Radar with a truthful empty state.

@@ -14,7 +14,7 @@ export function dataPracticesDescriptor(origin: string) {
       observation: ['value', 'timestamps', 'optional evidence fingerprint', 'optional source validator'],
       provenance: ['privacy-salted observer identifier', 'assurance class', 'optional proof fingerprint'],
       hive: ['privacy-salted operational client fingerprint', 'privacy-salted conservative reuse-independence bucket', 'lease state', 'aggregate contribution/reuse counters'],
-      aggregate_metrics: ['CHECK/OBSERVE outcomes', 'useful reuse', 'lease counts']
+      aggregate_metrics: ['CHECK/OBSERVE outcomes', 'useful reuse', 'lease counts', 'MCP initialize/tools/list aggregate request counters']
     },
     application_does_not_store_as_database_identity: [
       'raw transport IP address',
@@ -22,6 +22,11 @@ export function dataPracticesDescriptor(origin: string) {
       'raw Ed25519 public key',
       'raw self-asserted observer_id'
     ],
+    discovery_telemetry: {
+      stores: 'Daily aggregate counts of MCP initialize and tools/list request events only.',
+      does_not_store: ['MCP request payloads', 'clientInfo', 'raw IP address', 'raw user-agent', 'MCP session identifier'],
+      interpretation: 'Protocol-interest telemetry is not a unique-client count and is never classified as adoption; automated directory probes and operator diagnostics may be included.'
+    },
     identity_processing: {
       client_fingerprint: 'Transport IP hint + user-agent + optional x-seenrelay-client are privacy-salted and hashed for frictionless lease continuity.',
       reuse_independence: 'Useful-reuse rewards require a different conservative privacy-salted network bucket; x-seenrelay-client and user-agent do not establish reward independence.',

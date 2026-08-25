@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { privacyScopedHash } from './identity.js';
+import { getMcpDiscoverySnapshot } from './discovery.js';
 
 export type RuntimeMode = 'NORMAL' | 'SHIELD' | 'READ_ONLY' | 'FREEZE';
 export interface RuntimeControls {
@@ -76,13 +77,21 @@ export async function getAdminSnapshotData() {
     q.query(`SELECT substring(replace(lease_id,'-',''),1,12) AS radar_id, contribution_score::float8, useful_reuse_generated::int, check_count::int, observe_count::int, last_seen_at::text FROM hive_leases ORDER BY contribution_score DESC, useful_reuse_generated DESC LIMIT 20`),
     q.query(`SELECT occurred_at::text, action, detail_json FROM admin_audit_events ORDER BY occurred_at DESC LIMIT 50`)
   ]);
+  let discovery;
+  try {
+    discovery = await getMcpDiscoverySnapshot();
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'admin_discovery_snapshot_error', error: error instanceof Error ? error.message : 'unknown' }));
+    discovery = { status: 'unavailable' as const, classification: 'aggregate-protocol-interest-not-adoption', summary: {} };
+  }
   return {
     summary: (summary as any[])[0] || {},
     active_leases: active,
     metrics_daily: metrics,
     recent_reuse: reuse,
     top_contributors: top,
-    audit
+    audit,
+    discovery
   };
 }
 
