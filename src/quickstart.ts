@@ -9,13 +9,13 @@ export function quickstartPage(origin: string): string {
 <link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/">Home</a><a href="/openapi.json">OpenAPI</a><a href="/service.json">Machine JSON</a><a href="/data-practices">Data</a></nav></header>
+<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/">Home</a><a href="/clients">Clients</a><a href="/openapi.json">OpenAPI</a><a href="/service.json">Machine JSON</a><a href="/data-practices">Data</a></nav></header>
 <main>
 <section class="hero">
 <div class="eyebrow">INTEGRATION QUICKSTART</div>
 <h1>Add one cheap question before expensive revalidation.</h1>
 <p class="lead">Keep your existing source-validation policy. CHECK first. Reuse only when your policy permits it. If you validate independently anyway, OBSERVE the result for the next agent.</p>
-<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Full quickstart</a><a class="secondary" href="/openapi.json">REST / OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a></div>
+<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Full quickstart</a><a class="secondary" href="/clients">Deterministic wrappers</a><a class="secondary" href="/openapi.json">REST / OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a></div>
 <div class="contract"><span>Registry</span><b>io.github.ovladon/seenrelay</b><span>No account · no API key · currently free</span></div>
 </section>
 
@@ -29,6 +29,12 @@ io.github.ovladon/seenrelay
 Operations:
 check_fact   ✓
 observe_fact ✓</pre></div>
+</section>
+
+<section class="section split decision">
+<div><div class="eyebrow">DETERMINISTIC CALL PATH</div><h2>Use a wrapper when tool routing itself is the uncertainty.</h2><p>MCP remains the standard discovery interface. For applications that must execute the preflight every time a selected validation path runs, the reference JavaScript and Python wrappers put CHECK directly around that existing validation.</p><p>Relay timeout, 429, malformed output, or outage fails open into the original validation path. Shadow mode remains the default; skipping validation requires an explicit caller policy.</p></div>
+<div class="proof-grid"><article><b>JavaScript / TypeScript</b><span>Single-file, zero-dependency runtime client.</span></article><article><b>Python</b><span>Standard-library-only client.</span></article><article><b>Conditional hints</b><span>Safe ETag / Last-Modified hints can reach the existing validation without being trusted automatically.</span></article><article><b>Measure locally</b><span>In-process counters can quantify actual reuse and request overhead.</span></article></div>
+<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/tree/main/clients">Open wrappers</a><a class="secondary" href="/clients">Integration options</a></div>
 </section>
 
 <section class="section split decision">

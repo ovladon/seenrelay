@@ -4,13 +4,90 @@ Canonical remote MCP endpoint: `https://seenrelay.com/mcp`
 
 Official MCP Registry identifier: `io.github.ovladon/seenrelay`
 
-SeenRelay exposes exactly two domain operations through MCP: `check_fact` and `observe_fact`. Treat it as freshness infrastructure, not as a browser, search engine, fact checker, truth oracle, or shared general memory.
+SeenRelay exposes exactly two domain operations through MCP and REST: `check_fact` / CHECK and `observe_fact` / OBSERVE. Treat it as freshness infrastructure, not as a browser, search engine, fact checker, truth oracle, or shared general memory.
 
 The integration policy is simple:
 
-1. call `check_fact` before source-backed revalidation work that might be redundant;
+1. call CHECK before source-backed revalidation work that might be redundant;
 2. if the result is not reusable under your own policy, perform the validation you already intended to perform;
-3. call `observe_fact` only after your agent independently obtained the result for its own task.
+3. call OBSERVE only after your agent independently obtained the result for its own task.
+
+## Deterministic JavaScript and Python wrappers
+
+MCP is the standard discovery and tool interface. Some applications, however, need the SeenRelay preflight to execute deterministically whenever a selected validation path runs instead of depending on model tool-routing behavior.
+
+SeenRelay therefore also ships vendorable, zero-third-party-runtime-dependency reference wrappers:
+
+- JavaScript / TypeScript runtime: [`../clients/typescript/dist/seenrelay.js`](../clients/typescript/dist/seenrelay.js)
+- Python: [`../clients/python/seenrelay.py`](../clients/python/seenrelay.py)
+- wrapper design and usage: [`../clients/README.md`](../clients/README.md)
+
+The wrappers do not add a protocol operation or a local fact cache. Their default is shadow mode:
+
+1. CHECK;
+2. unless the caller explicitly supplied a reuse policy that accepts the result, continue to the application's existing validation;
+3. pass only safe observer-supplied ETag / Last-Modified conditional hints to that validation when available;
+4. OBSERVE the independently obtained result best-effort;
+5. if SeenRelay times out, returns 429, returns malformed output, or is unavailable, fail open into the original validation path.
+
+Application validation failures still propagate; fail-open applies to the relay, not to the application's own source validation.
+
+### JavaScript / TypeScript
+
+```js
+import {
+  SeenRelayClient,
+  reuseKnownOnSameObserved
+} from './clients/typescript/dist/seenrelay.js';
+
+const relay = new SeenRelayClient();
+
+const value = await relay.guard({
+  fact,
+  knownValue,
+  validate: ({ conditionalHeaders }) => existingValidation(conditionalHeaders)
+});
+```
+
+The example above remains shadow mode because no reuse policy was supplied. If a narrowly defined application policy permits reusing its already-known value when CHECK returns `SAME_OBSERVED`, it can opt in explicitly:
+
+```js
+const value = await relay.guard({
+  fact,
+  knownValue,
+  validate: ({ conditionalHeaders }) => existingValidation(conditionalHeaders),
+  reuse: reuseKnownOnSameObserved
+});
+```
+
+### Python
+
+```python
+from seenrelay import SeenRelayClient, reuse_known_on_same_observed
+
+relay = SeenRelayClient()
+
+value = relay.guard(
+    fact=fact,
+    known_value=known_value,
+    validate=lambda context: existing_validation(context.conditional_headers),
+)
+```
+
+Explicit bounded reuse is opt-in:
+
+```python
+value = relay.guard(
+    fact=fact,
+    known_value=known_value,
+    validate=lambda context: existing_validation(context.conditional_headers),
+    reuse=reuse_known_on_same_observed,
+)
+```
+
+The wrappers also expose in-process telemetry for CHECK network requests, coalesced simultaneous checks, validations, reuse hits, OBSERVE attempts, failures, and request latency. They do not upload that telemetry. Cost estimation uses only caller-supplied cost units; SeenRelay does not invent provider pricing or count unmeasured conditional-request savings.
+
+Use this path around work that is materially more expensive than the SeenRelay preflight, such as browser rendering, proxies/scraping, paid APIs, extraction, LLM parsing, rate-limited sources, or multi-step validation. It is a poor fit for a one-off trivial request with little chance of repeated work.
 
 ## Claude Code
 
@@ -100,7 +177,7 @@ Official reference: <https://help.openai.com/en/articles/12584461-developer-mode
 
 ## REST clients and agent frameworks
 
-Clients that do not use MCP can integrate directly through the stable REST contract:
+Clients that do not use MCP and do not use a reference wrapper can integrate directly through the stable REST contract:
 
 - OpenAPI: `https://seenrelay.com/openapi.json`
 - CHECK: `POST https://seenrelay.com/v1/check`
@@ -122,4 +199,4 @@ Only enable bounded reuse after the measured results and your risk policy justif
 
 ## Security note
 
-Connecting any MCP server expands an agent's tool surface. Review the server, endpoint, permissions and tool semantics before enabling it. SeenRelay's public source is available in this repository, and its production surface is exercised by CI plus an isolated Preview Release Gate before promotion.
+Connecting any MCP server expands an agent's tool surface. Vendoring a client wrapper adds application code to the validation path. Review the server, endpoint, wrapper source, permissions and semantics before enabling either route. SeenRelay's public source is available in this repository, and its production surface is exercised by CI plus an isolated Preview Release Gate before promotion.
