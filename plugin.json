@@ -1,0 +1,15 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "seenrelay",
+  "version": "0.3.6",
+  "description": "Cooperative freshness for AI agents. CHECK before revalidating; OBSERVE what you independently saw.",
+  "homepage": "https://seenrelay.com",
+  "repository": "https://github.com/ovladon/seenrelay",
+  "keywords": [
+    "mcp",
+    "ai-agents",
+    "freshness",
+    "validation",
+    "agent-infrastructure"
+  ]
+}

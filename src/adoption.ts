@@ -25,7 +25,6 @@ export function clientsPage(origin: string): string {
 <div class="cta"><a class="primary" href="${cursorInstall}">Add to Cursor</a><a class="secondary" href="/quickstart">Pilot safely</a></div>
 <div class="contract"><span>2 operations</span><b>check_fact</b><b>observe_fact</b><span>Observations, not universal truth</span></div>
 </section>
-
 <section class="section split">
 <div><div class="eyebrow">CLAUDE CODE</div><h2>Remote Streamable HTTP.</h2><p>Anthropic documents remote HTTP MCP servers through <code>claude mcp add</code>.</p></div>
 <div class="terminal"><pre>claude mcp add --transport http seenrelay \\
@@ -33,7 +32,6 @@ export function clientsPage(origin: string): string {
 
 claude mcp list</pre></div>
 </section>
-
 <section class="section split">
 <div><div class="eyebrow">CURSOR</div><h2>One click or normal MCP configuration.</h2><p>Cursor documents MCP install links. The button below encodes only <code>{"url":"${origin}/mcp"}</code>; Cursor still shows its installation prompt before adding the server.</p><p><a href="${cursorInstall}">Add SeenRelay to Cursor →</a></p></div>
 <div class="terminal"><pre>{
@@ -44,7 +42,6 @@ claude mcp list</pre></div>
   }
 }</pre></div>
 </section>
-
 <section class="section split">
 <div><div class="eyebrow">VS CODE / COPILOT</div><h2>Remote HTTP MCP server.</h2><p>VS Code supports remote MCP servers through <code>mcp.json</code> and its documented <code>--add-mcp</code> CLI flow.</p></div>
 <div class="terminal"><pre>{
@@ -58,15 +55,13 @@ claude mcp list</pre></div>
 
 code --add-mcp '{"name":"seenrelay","type":"http","url":"${origin}/mcp"}'</pre></div>
 </section>
-
 <section class="section split">
 <div><div class="eyebrow">CHATGPT CUSTOM MCP APPS</div><h2>Use the same remote endpoint where your plan and workspace permit it.</h2><p>Create a custom app, provide <code>${origin}/mcp</code>, scan the tools, and review permissions before enabling it. Full MCP availability and administrative controls vary by plan and can change.</p></div>
 <div class="proof-grid"><article><b>Endpoint</b><span>${origin}/mcp</span></article><article><b>Tool policy</b><span>CHECK before potentially redundant validation; OBSERVE only after independent observation.</span></article></div>
 </section>
-
 <section class="section decision">
 <div class="section-head"><div><div class="eyebrow">DEPLOY SAFELY</div><h2>Start in shadow mode.</h2></div><p>Do not let SeenRelay suppress existing validation on day one. Measure what CHECK would have saved, while continuing the original workflow.</p></div>
-<div class="cta"><a class="primary" href="/quickstart">Run the quickstart</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/PILOT.md">Decision-maker pilot</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/CLIENTS.md">Full client guide</a></div>
+<div class="cta"><a class="primary" href="/quickstart">Run the quickstart</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/CLIENTS.md">Full client guide</a></div>
 </section>
 </main>
 <footer><span>SeenRelay</span><span>Observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
