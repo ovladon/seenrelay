@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3 - 2026-08-25
+- Reworked public documentation around a cooperative freshness-cache model and removed brand-specific analogy language.
+- Added explicit cold-start behavior: UNKNOWN passthrough, first-observation seeding, same-fleet reuse, and additive external coverage.
+- Simplified public access wording to state that the service is currently free without exposing payment configuration details in product documentation.
+- Reduced the public documentation set to implementation, integration, operations, security, and protocol material.
+- Clarified Control Room runtime labels and added confirmation before restrictive custom runtime-control changes.
+- Updated public-surface and release-gate assertions for the revised machine descriptor and landing page.
+
 ## 0.3.0 - 2026-08-24
 - Replaced the hand-built MCP transport with the official `@modelcontextprotocol/server` v2 SDK and `createMcpHandler`.
 - Targeted MCP protocol revision `2026-07-28`.

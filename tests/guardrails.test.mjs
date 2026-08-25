@@ -70,7 +70,7 @@ test('REST and MCP validate fact identity before stateful Hive admission', () =>
 });
 
 test('canonical product documentation cannot regress to fact-v2 or mutable anchors', () => {
-  for (const file of ['README.md','docs/PROTOCOL.md','docs/PROJECT_CONTEXT.md','docs/DECISIONS.md','docs/HANDOFF.md']) {
+  for (const file of ['README.md','docs/PROTOCOL.md','docs/QUICKSTART.md']) {
     const text = read(...file.split('/'));
     assert.match(text, /seenrelay-fact-v3|fact identity v3|Fact identity v3/i, `${file} must describe fact-v3`);
     assert.doesNotMatch(text, /seenrelay-fact-v2|source_fragment_sha256/, `${file} contains retired identity language`);
@@ -147,6 +147,9 @@ test('human admin plane is isolated from MCP and has circuit-breaker and operati
   assert.match(admin, /FREEZE/);
   assert.match(admin, /SameSite=Strict/);
   assert.match(admin, /No secrets/);
+  const adminUi = read('public','admin.js');
+  assert.match(adminUi, /Serve CHECK requests/);
+  assert.match(adminUi, /Apply restrictive runtime controls/);
   assert.match(migration, /runtime_controls/);
   assert.match(migration, /admin_audit_events/);
 });
@@ -160,6 +163,9 @@ test('public surface is dual human-machine and exposes only aggregate network st
   assert.match(index, /\/public-stats\.json/);
   assert.match(publicSource, /Before checking a fact again, ask if another agent just checked it/);
   assert.match(publicSource, /THE IDEA IN 30 SECONDS/);
+  assert.match(publicSource, /shared cache for freshness evidence/i);
+  assert.match(publicSource, /USEFUL FROM THE FIRST CALLER/);
+  assert.match(publicSource, /current_pricing: 'free'/);
   assert.match(publicSource, /SAME_OBSERVED does not mean/);
   assert.match(publicSource, /Useful reuse rate/);
   assert.match(publicSource, /does not decide truth/);
@@ -204,6 +210,13 @@ test('standards posture pins implemented MCP and treats other standards explicit
   assert.match(standards, /tracked: '1\.0\.0'/);
   assert.match(standards, /RFC9700/);
   assert.match(standards, /RFC9449/);
+});
+
+test('public repository excludes internal decision and strategy documents', () => {
+  for (const file of ['DECISIONS.md','ECONOMICS.md','HANDOFF.md','PILOT.md','PROJECT_CONTEXT.md','ROADMAP.md','WHY_NOT.md']) {
+    assert.equal(fs.existsSync(path.join(root,'docs',file)), false, `${file} must not be part of the public documentation tree`);
+  }
+  assert.doesNotMatch(read('README.md'), /Waze|kill criteria|PAYMENTS_ENABLED|PAYMENT_PROVIDER/i);
 });
 
 test('online project surfaces satisfy the private-context boundary', () => {

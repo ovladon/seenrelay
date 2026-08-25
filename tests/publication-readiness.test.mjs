@@ -46,10 +46,10 @@ test('quickstart exposes a bounded adoption path without changing product semant
   assert.doesNotMatch(quickstart, /certified truth|guaranteed truth/i);
 });
 
-test('client and decision-maker adoption guides are concrete and conservative', () => {
+test('client and quickstart adoption guides are concrete and conservative', () => {
   const clients = read('docs', 'CLIENTS.md');
   const adoption = read('src', 'adoption.ts');
-  const pilot = read('docs', 'PILOT.md');
+  const quickstart = read('docs', 'QUICKSTART.md');
   assert.match(clients, /claude mcp add --transport http seenrelay https:\/\/seenrelay\.com\/mcp/);
   assert.match(clients, /\.cursor\/mcp\.json/);
   assert.match(clients, /cursor\.com\/install-mcp\?name=seenrelay/);
@@ -58,10 +58,11 @@ test('client and decision-maker adoption guides are concrete and conservative', 
   assert.match(clients, /ChatGPT custom MCP apps/);
   assert.match(clients, /shadow mode/i);
   assert.match(adoption, /Add SeenRelay to Cursor/);
-  assert.match(pilot, /Kill criteria/);
-  assert.match(pilot, /Do not estimate savings without a baseline/);
-  assert.match(pilot, /rollback/i);
-  assert.doesNotMatch(`${clients}\n${pilot}`, /certified truth|guaranteed truth/i);
+  assert.match(quickstart, /currently free/i);
+  assert.match(quickstart, /Useful from the first integration/);
+  assert.match(quickstart, /UNKNOWN/);
+  assert.doesNotMatch(`${clients}
+${quickstart}`, /certified truth|guaranteed truth|kill criteria/i);
 });
 
 test('public discovery surfaces expose clients without indexing admin', () => {

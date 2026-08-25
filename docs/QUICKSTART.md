@@ -6,7 +6,7 @@ SeenRelay reports observations, not universal truth. `UNKNOWN`, `STALE`, and `CO
 
 ## Connect without an account
 
-Bootstrap access requires no account, API key, email, or OAuth.
+Access is currently free and requires no account, API key, email, or OAuth.
 
 ### MCP
 
@@ -21,6 +21,17 @@ When an MCP client supports remote Streamable HTTP servers, point it at the endp
 - OpenAPI: `https://seenrelay.com/openapi.json`
 - CHECK: `POST https://seenrelay.com/v1/check`
 - OBSERVE: `POST https://seenrelay.com/v1/observe`
+
+## Useful from the first integration
+
+A large public network is not required for SeenRelay to be useful.
+
+- If no one has observed the fact yet, CHECK returns `UNKNOWN` and your existing validation path continues.
+- When your agent performs that validation, OBSERVE can make the result available to later callers.
+- Repeated work inside one fleet can therefore become reusable before any external network effect exists.
+- Observations from other callers increase coverage over time.
+
+The safe initial pattern is still shadow mode: measure the signal first, then decide where your own policy permits reuse.
 
 ## Integration pattern
 
@@ -125,20 +136,17 @@ Do not put mutable observed content into identity. `subject` is descriptive only
 
 See [`PROTOCOL.md`](PROTOCOL.md) for the complete `seenrelay-fact-v3` contract.
 
-## Decision-maker rollout
+## Safe rollout
 
-1. **Baseline:** measure browser/search/API/model/human revalidation work, latency, and cost.
-2. **Shadow mode:** call CHECK but continue every existing validation; compare outcomes.
-3. **Bounded reuse:** allow reuse only for fact classes and freshness windows your policy accepts.
-4. **Measure utility:** qualified reuse rate, avoided downstream operations, latency saved, cost saved, false-reuse/policy incidents, and UNKNOWN/STALE/CONTESTED rates.
+1. **Baseline:** measure the validations your workflow already performs.
+2. **Shadow mode:** call CHECK but continue every existing validation.
+3. **Compare:** record status distribution, latency, and the downstream calls that could have been skipped or deprioritized.
+4. **Bounded reuse:** permit reuse only for fact classes and freshness windows accepted by your own policy.
+5. **Monitor:** track false convergence, policy exceptions, `UNKNOWN`/`STALE`/`CONTESTED`, latency, and operational overhead.
 
 ```text
-measured value = avoided downstream work - SeenRelay integration/operation cost
+measured operational value = downstream work actually avoided - integration/operation overhead
 ```
-
-### Kill criteria
-
-Do not expand rollout if the pilot cannot demonstrate net avoided work, if identity discipline creates unacceptable false convergence, if operational complexity exceeds savings, or if the application's risk policy cannot safely consume observational freshness signals.
 
 ## Security and provenance
 

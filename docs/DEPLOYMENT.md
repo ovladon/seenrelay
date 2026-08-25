@@ -9,12 +9,7 @@ Create/import the Git repository as a Vercel project. A `*.vercel.app` domain is
 Install Neon Postgres from the Vercel Marketplace into the same project. Confirm Vercel injects `DATABASE_URL` into development, preview and production.
 
 ## 3. Secrets
-Set a high-entropy `PRIVACY_SALT` (minimum 32 characters). Production/preview fail closed if it is missing. Do not rotate it casually because it intentionally breaks continuity of privacy-preserving client/observer hashes. Keep:
-
-```text
-PAYMENTS_ENABLED=false
-PAYMENT_PROVIDER=none
-```
+Set a high-entropy `PRIVACY_SALT` (minimum 32 characters). Production/preview fail closed if it is missing. Do not rotate it casually because it intentionally breaks continuity of privacy-preserving client/observer hashes. Apply the remaining runtime configuration from the committed `.env.example`.
 
 ## 4. Pull env locally
 Use Vercel CLI only after the project is linked:
@@ -44,7 +39,7 @@ vercel --prod
 ```
 
 ## 8. Production verification
-Verify `/`, `/healthz`, `/openapi.json`, `/mcp`, `/v1/check`, `/v1/observe` and confirm billing endpoints cannot collect money.
+Verify `/`, `/healthz`, `/openapi.json`, `/mcp`, `/v1/check` and `/v1/observe`.
 
 ## 9. Cost protection
-Before broad registry publication configure Vercel spend management and firewall/rate controls. Keep a low hard monthly ceiling during free validation.
+Configure provider spend management and firewall/rate controls before broad traffic. Current public access is free.
