@@ -1,0 +1,84 @@
+export function clientsPage(origin: string): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Connect SeenRelay to Claude Code, Cursor, VS Code, ChatGPT custom MCP apps, or REST clients.">
+<link rel="canonical" href="${origin}/clients">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Connect SeenRelay to MCP clients">
+<meta property="og:description" content="Verified integration patterns for Claude Code, Cursor, VS Code and supported ChatGPT custom MCP apps.">
+<meta property="og:url" content="${origin}/clients">
+<meta name="twitter:card" content="summary">
+<title>SeenRelay — Client integrations</title>
+<link rel="stylesheet" href="/site.css">
+</head>
+<body>
+<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/">Home</a><a href="/quickstart">Quickstart</a><a href="/openapi.json">OpenAPI</a><a href="/service.json">Machine JSON</a></nav></header>
+<main>
+<section class="hero">
+<div class="eyebrow">CLIENT INTEGRATIONS</div>
+<h1>Point a remote MCP client at one endpoint.</h1>
+<p class="lead">Canonical MCP endpoint: <code>${origin}/mcp</code>. Official MCP Registry identifier: <code>io.github.ovladon/seenrelay</code>.</p>
+<div class="contract"><span>2 operations</span><b>check_fact</b><b>observe_fact</b><span>Observations, not universal truth</span></div>
+</section>
+
+<section class="section split">
+<div><div class="eyebrow">CLAUDE CODE</div><h2>Remote Streamable HTTP.</h2><p>Anthropic documents remote HTTP MCP servers through <code>claude mcp add</code>.</p></div>
+<div class="terminal"><pre>claude mcp add --transport http seenrelay \\
+  ${origin}/mcp
+
+claude mcp list</pre></div>
+</section>
+
+<section class="section split">
+<div><div class="eyebrow">CURSOR</div><h2>Project or global MCP configuration.</h2><p>Use <code>.cursor/mcp.json</code> for a project or <code>~/.cursor/mcp.json</code> globally.</p></div>
+<div class="terminal"><pre>{
+  "mcpServers": {
+    "seenrelay": {
+      "url": "${origin}/mcp"
+    }
+  }
+}</pre></div>
+</section>
+
+<section class="section split">
+<div><div class="eyebrow">VS CODE / COPILOT</div><h2>Remote HTTP MCP server.</h2><p>VS Code supports remote MCP servers through <code>mcp.json</code>.</p></div>
+<div class="terminal"><pre>{
+  "servers": {
+    "seenrelay": {
+      "type": "http",
+      "url": "${origin}/mcp"
+    }
+  }
+}</pre></div>
+</section>
+
+<section class="section split">
+<div><div class="eyebrow">CHATGPT CUSTOM MCP APPS</div><h2>Use the same remote endpoint where your plan and workspace permit it.</h2><p>Create a custom app, provide <code>${origin}/mcp</code>, scan the tools, and review permissions before enabling it. Full MCP availability and administrative controls vary by plan and can change.</p></div>
+<div class="proof-grid"><article><b>Endpoint</b><span>${origin}/mcp</span></article><article><b>Tool policy</b><span>CHECK before potentially redundant validation; OBSERVE only after independent observation.</span></article></div>
+</section>
+
+<section class="section decision">
+<div class="section-head"><div><div class="eyebrow">DEPLOY SAFELY</div><h2>Start in shadow mode.</h2></div><p>Do not let SeenRelay suppress existing validation on day one. Measure what CHECK would have saved, while continuing the original workflow.</p></div>
+<div class="cta"><a class="primary" href="/quickstart">Run the quickstart</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/PILOT.md">Decision-maker pilot</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/CLIENTS.md">Full client guide</a></div>
+</section>
+</main>
+<footer><span>SeenRelay</span><span>Observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
+</body>
+</html>`;
+}
+
+export function robotsText(origin: string): string {
+  return `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /admin/\nSitemap: ${origin}/sitemap.xml\n`;
+}
+
+export function sitemapXml(origin: string): string {
+  const urls = ['/', '/quickstart', '/clients', '/data-practices'];
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((path) => `  <url><loc>${origin}${path}</loc></url>`).join('\n')}\n</urlset>\n`;
+}
+
+export function llmsText(origin: string): string {
+  return `# SeenRelay\n\n> Cooperative freshness infrastructure for AI agents. CHECK before redundant source-backed revalidation; OBSERVE only what an agent independently obtained.\n\nSeenRelay reports observations, not universal truth. It does not browse, search, externally verify facts, or use an LLM as a truth arbiter.\n\n## Canonical interfaces\n\n- Website: ${origin}/\n- Quickstart: ${origin}/quickstart\n- Client integrations: ${origin}/clients\n- Machine descriptor: ${origin}/service.json\n- OpenAPI: ${origin}/openapi.json\n- MCP endpoint: ${origin}/mcp\n- MCP Registry: io.github.ovladon/seenrelay\n- Data practices: ${origin}/data-practices.json\n- Public aggregate metrics: ${origin}/public-stats.json\n\n## Operations\n\n- CHECK / check_fact: compare a caller-known value with recent observations for the same deterministic source-backed fact.\n- OBSERVE / observe_fact: contribute a value only after the caller independently observed it while doing its own work.\n\n## Adoption policy\n\nStart in shadow mode. Keep the existing validation policy, measure potential avoided work, and enable bounded reuse only when the consuming application's own risk policy permits it.\n`;
+}
