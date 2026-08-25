@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS mcp_discovery_metrics_daily (
   tools_list_last_at timestamptz
 );
 
-COMMENT ON TABLE mcp_discovery_metrics_daily IS 'Aggregate MCP protocol-interest counters only; no request payloads, client identifiers, IPs, user agents, session IDs, or clientInfo are persisted.';
+COMMENT ON TABLE mcp_discovery_metrics_daily IS 'Aggregate MCP protocol-interest counters only, with no request payloads, client identifiers, IPs, user agents, session IDs, or clientInfo persisted.';
