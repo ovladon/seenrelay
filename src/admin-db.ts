@@ -55,6 +55,7 @@ export async function getAdminSnapshotData() {
   const q = sql();
   const firstPartyObserverKey = await referenceObserverKey();
   const externalLeaseFilter = `NOT EXISTS (SELECT 1 FROM observations_recent fp WHERE fp.lease_id = h.lease_id AND fp.observer_key = $1)`;
+  const externalContributorFilter = `(${externalLeaseFilter}) AND (h.check_count > 0 OR EXISTS (SELECT 1 FROM observations_recent ext WHERE ext.lease_id = h.lease_id AND ext.observer_key <> $1))`;
   const [summary, active, metrics, reuse, top, audit] = await Promise.all([
     q.query(`SELECT
       (SELECT COUNT(DISTINCT fact_key)::int FROM observations_recent WHERE observer_key <> $1) AS facts,
@@ -74,7 +75,7 @@ export async function getAdminSnapshotData() {
     q.query(`SELECT substring(replace(h.lease_id,'-',''),1,12) AS radar_id, h.issued_at::text, h.last_seen_at::text, h.expires_at::text, h.check_count::int, h.observe_count::int, h.useful_reuse_generated::int, h.useful_reuse_consumed::int, h.contribution_score::float8, h.last_operation, h.last_outcome FROM hive_leases h WHERE h.last_seen_at >= now()-interval '5 minutes' AND ${externalLeaseFilter} ORDER BY h.last_seen_at DESC LIMIT 300`, [firstPartyObserverKey]),
     q.query(`SELECT day::text, checks::int, observes::int, unknown::int, stale::int, same_observed::int, changed_observed::int, contested::int, useful_reuse::int, new_leases::int FROM hive_metrics_daily WHERE day >= current_date-29 ORDER BY day ASC`),
     q.query(`SELECT substring(replace(e.contributor_lease_id,'-',''),1,12) AS contributor, substring(replace(e.consumer_lease_id,'-',''),1,12) AS consumer, e.created_at::text, e.utility_units::float8 FROM useful_reuse_events e WHERE NOT EXISTS (SELECT 1 FROM observations_recent fp WHERE fp.lease_id = e.consumer_lease_id AND fp.observer_key = $1) ORDER BY e.created_at DESC LIMIT 40`, [firstPartyObserverKey]),
-    q.query(`SELECT substring(replace(h.lease_id,'-',''),1,12) AS radar_id, h.contribution_score::float8, h.useful_reuse_generated::int, h.check_count::int, h.observe_count::int, h.last_seen_at::text FROM hive_leases h WHERE ${externalLeaseFilter} ORDER BY h.contribution_score DESC, h.useful_reuse_generated DESC LIMIT 20`, [firstPartyObserverKey]),
+    q.query(`SELECT substring(replace(h.lease_id,'-',''),1,12) AS radar_id, h.contribution_score::float8, h.useful_reuse_generated::int, h.check_count::int, h.observe_count::int, h.last_seen_at::text FROM hive_leases h WHERE ${externalContributorFilter} ORDER BY h.contribution_score DESC, h.useful_reuse_generated DESC LIMIT 20`, [firstPartyObserverKey]),
     q.query(`SELECT occurred_at::text, action, detail_json FROM admin_audit_events ORDER BY occurred_at DESC LIMIT 50`)
   ]);
   return {
