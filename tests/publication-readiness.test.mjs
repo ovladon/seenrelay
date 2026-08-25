@@ -17,6 +17,30 @@ test('public MCP registry metadata is production-ready', () => {
   assert.doesNotMatch(JSON.stringify(registry), /REPLACE_WITH|localhost|127\.0\.0\.1/i);
 });
 
+test('quickstart exposes a bounded adoption path without changing product semantics', () => {
+  const quickstart = read('docs', 'QUICKSTART.md');
+  const page = read('src', 'quickstart.ts');
+  const publicSource = read('src', 'public.ts');
+  const index = read('src', 'index.ts');
+  assert.match(quickstart, /shadow mode/i);
+  assert.match(quickstart, /io\.github\.ovladon\/seenrelay/);
+  assert.match(quickstart, /exactly two domain operations/i);
+  assert.match(page, /io\.github\.ovladon\/seenrelay/);
+  assert.match(publicSource, /quickstart:\s*`\$\{origin\}\/quickstart`/);
+  assert.match(index, /app\.get\('\/quickstart'/);
+  assert.doesNotMatch(quickstart, /certified truth|guaranteed truth/i);
+});
+
+test('MCP Registry publishing uses GitHub OIDC and a checksum-pinned publisher binary', () => {
+  const workflow = read('.github', 'workflows', 'mcp-registry-publish.yml');
+  assert.match(workflow, /id-token:\s*write/);
+  assert.match(workflow, /mcp-publisher login github-oidc/);
+  assert.match(workflow, /MCP_PUBLISHER_VERSION:\s*v1\.8\.1/);
+  assert.match(workflow, /a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc/);
+  assert.match(workflow, /mcp-publisher publish registry\/server\.json/);
+  assert.doesNotMatch(workflow, /releases\/latest\/download/);
+});
+
 test('operator spend threshold is not published as a numeric default', () => {
   const env = read('.env.example');
   assert.match(env, /^VERCEL_HARD_SPEND_CAP_USD=$/m);
@@ -36,7 +60,8 @@ test('GitHub Actions are pinned to immutable commit SHAs', () => {
   const files = [
     ['.github', 'workflows', 'ci.yml'],
     ['.github', 'workflows', 'preview-release-gate.yml'],
-    ['.github', 'workflows', 'standards-watch.yml']
+    ['.github', 'workflows', 'standards-watch.yml'],
+    ['.github', 'workflows', 'mcp-registry-publish.yml']
   ];
   for (const parts of files) {
     const text = read(...parts);

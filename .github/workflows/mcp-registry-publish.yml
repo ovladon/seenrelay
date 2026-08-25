@@ -1,0 +1,86 @@
+name: Publish MCP Registry
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - registry/server.json
+      - .github/workflows/mcp-registry-publish.yml
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: mcp-registry-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pinned MCP publisher
+        shell: bash
+        env:
+          MCP_PUBLISHER_VERSION: v1.8.1
+          MCP_PUBLISHER_SHA256: a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc
+        run: |
+          set -euo pipefail
+          asset="mcp-publisher_linux_amd64.tar.gz"
+          url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/${asset}"
+          curl --fail --location --retry 3 --proto '=https' --tlsv1.2 --output "$asset" "$url"
+          printf '%s  %s\n' "$MCP_PUBLISHER_SHA256" "$asset" | sha256sum --check --strict
+          tar -xzf "$asset" mcp-publisher
+          ./mcp-publisher --help >/dev/null
+
+      - name: Validate Registry manifest
+        run: ./mcp-publisher validate registry/server.json
+
+      - name: Check whether this version is already published
+        id: registry_check
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="$(jq -r '.name' registry/server.json)"
+          version="$(jq -r '.version' registry/server.json)"
+          body="$(curl --fail --silent --show-error --location --retry 3 \
+            "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.ovladon%2Fseenrelay" || true)"
+          if printf '%s' "$body" | jq -e --arg name "$name" --arg version "$version" \
+            '.. | objects | select(.name? == $name and .version? == $version)' >/dev/null; then
+            echo 'already_published=true' >> "$GITHUB_OUTPUT"
+            echo "Registry already contains ${name}@${version}; skipping duplicate publish."
+          else
+            echo 'already_published=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Authenticate to MCP Registry with GitHub OIDC
+        if: steps.registry_check.outputs.already_published != 'true'
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to Official MCP Registry
+        if: steps.registry_check.outputs.already_published != 'true'
+        run: ./mcp-publisher publish registry/server.json
+
+      - name: Verify Registry discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="$(jq -r '.name' registry/server.json)"
+          version="$(jq -r '.version' registry/server.json)"
+          for attempt in $(seq 1 12); do
+            body="$(curl --fail --silent --show-error --location \
+              "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.ovladon%2Fseenrelay" || true)"
+            if printf '%s' "$body" | jq -e --arg name "$name" --arg version "$version" \
+              '.. | objects | select(.name? == $name and .version? == $version)' >/dev/null; then
+              echo "Verified Registry discovery for ${name}@${version}."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Registry did not expose ${name}@${version} within the verification window." >&2
+          exit 1

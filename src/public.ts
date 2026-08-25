@@ -32,6 +32,7 @@ export function serviceDescriptor(origin: string) {
       observe: `${origin}/v1/observe`,
       mcp: `${origin}/mcp`,
       openapi: `${origin}/openapi.json`,
+      quickstart: `${origin}/quickstart`,
       health: `${origin}/healthz`,
       public_stats: `${origin}/public-stats.json`,
       data_practices: `${origin}/data-practices.json`,
@@ -51,13 +52,13 @@ export function publicLandingPage(origin: string): string {
 <link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="#network">Network</a><a href="#integrate">Integrate</a><a href="#trust">Trust</a><a href="/data-practices">Data</a><a href="/service.json">Machine JSON</a></nav></header>
+<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="#network">Network</a><a href="/quickstart">Quickstart</a><a href="#integrate">Integrate</a><a href="#trust">Trust</a><a href="/data-practices">Data</a><a href="/service.json">Machine JSON</a></nav></header>
 <main>
 <section class="hero">
 <div class="eyebrow">FRESHNESS INFRASTRUCTURE FOR AGENT FLEETS</div>
 <h1>Don't revalidate what another agent just saw.</h1>
 <p class="lead">SeenRelay converts incidental, source-backed observations into reusable information gain. Agents CHECK before repeating work and OBSERVE only what they independently encountered anyway.</p>
-<div class="cta"><a class="primary" href="/openapi.json">OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a><a class="secondary" href="/service.json">Machine descriptor</a></div>
+<div class="cta"><a class="primary" href="/quickstart">Quickstart</a><a class="secondary" href="/openapi.json">OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a><a class="secondary" href="/service.json">Machine descriptor</a></div>
 <div class="contract"><span>2 operations</span><b>CHECK</b><b>OBSERVE</b><span>No browse · no search · no LLM truth oracle</span></div>
 </section>
 
@@ -88,7 +89,7 @@ observe_fact    ✓</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">FOR DECISION MAKERS</div><h2>Fleet utility, not another memory layer.</h2><p>The useful question is measurable: does a low-cost CHECK reduce redundant browser, API, search, model, or human revalidation work while preserving conservative semantics?</p><div class="formula">network utility = qualified reuse × avoided downstream work</div></div>
+<div><div class="eyebrow">FOR DECISION MAKERS</div><h2>Fleet utility, not another memory layer.</h2><p>The useful question is measurable: does a low-cost CHECK reduce redundant browser, API, search, model, or human revalidation work while preserving conservative semantics?</p><div class="formula">network utility = qualified reuse × avoided downstream work</div><p><a href="/quickstart">Run a bounded shadow-mode pilot →</a></p></div>
 <div class="proof-grid"><article><b>Deterministic identity</b><span>Fact identity v3 uses source-native locators when available; mutable observed content never becomes identity.</span></article><article><b>Delayed contributor reward</b><span>Raw OBSERVE earns nothing. Contribution increases only after qualified reuse across a different conservative network-derived bucket.</span></article><article><b>Conservative semantics</b><span>SAME_OBSERVED, CHANGED_OBSERVED, CONTESTED, STALE, UNKNOWN — never “true”.</span></article><article><b>Bounded bootstrap</b><span>CHECK/OBSERVE are free in this deployment and protected by Hive admission.</span></article></div>
 </section>
 
@@ -97,7 +98,7 @@ observe_fact    ✓</pre></div>
 <div class="trust-note"><a href="/data-practices">Inspect technical data practices →</a></div>
 </section>
 
-<section class="section final"><div><div class="eyebrow">CONNECT A FLEET</div><h2>Bring observations that already happened. Take freshness that saves work.</h2></div><div class="cta"><a class="primary" href="/openapi.json">Inspect contract</a><a class="secondary" href="/service.json">Read machine JSON</a></div></section>
+<section class="section final"><div><div class="eyebrow">CONNECT A FLEET</div><h2>Bring observations that already happened. Take freshness that saves work.</h2></div><div class="cta"><a class="primary" href="/quickstart">Start a pilot</a><a class="secondary" href="/openapi.json">Inspect contract</a><a class="secondary" href="/service.json">Read machine JSON</a></div></section>
 </main>
 <footer><span>SeenRelay</span><span>Observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
 <script src="/site.js" defer></script>
