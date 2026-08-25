@@ -5,6 +5,7 @@ import { checkFact, observeFact } from './service.js';
 import { config } from './config.js';
 import { admitHive, finishHiveCheck, finishHiveObserve } from './hive.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
+import { classifyMcpDiscoveryRequest, recordMcpDiscoveryEvents } from './discovery.js';
 import type { JsonValue as JsonValueType } from './types.js';
 
 const JsonValue: z.ZodType<JsonValueType> = z.lazy(() => z.union([
@@ -70,4 +71,16 @@ const handler = createMcpHandler(() => {
   return server;
 });
 
-export async function handleMcp(request: Request): Promise<Response> { return handler.fetch(request); }
+export async function handleMcp(request: Request): Promise<Response> {
+  const discoveryEvents = classifyMcpDiscoveryRequest(request);
+  const response = await handler.fetch(request);
+  if (response.status < 500) {
+    try {
+      const events = await discoveryEvents;
+      if (events.length) await recordMcpDiscoveryEvents(events);
+    } catch (error) {
+      console.error(JSON.stringify({ event: 'mcp_discovery_metric_error', error: error instanceof Error ? error.message : 'unknown' }));
+    }
+  }
+  return response;
+}
