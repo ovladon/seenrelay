@@ -1,0 +1,15 @@
+{
+  "name": "seenrelay",
+  "version": "0.3.5",
+  "description": "Cooperative freshness for AI agents. CHECK before revalidating; OBSERVE what you independently saw.",
+  "mcpServers": {
+    "seenrelay": {
+      "httpUrl": "https://seenrelay.com/mcp",
+      "description": "Recent source-backed freshness evidence for AI agents.",
+      "includeTools": [
+        "check_fact",
+        "observe_fact"
+      ]
+    }
+  }
+}
