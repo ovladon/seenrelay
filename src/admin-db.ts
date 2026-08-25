@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+import { privacyScopedHash } from './identity.js';
 
 export type RuntimeMode = 'NORMAL' | 'SHIELD' | 'READ_ONLY' | 'FREEZE';
 export interface RuntimeControls {
@@ -13,10 +14,16 @@ export interface RuntimeControls {
   updated_by: string;
 }
 
+const REFERENCE_OBSERVER_ID = 'seenrelay-reference-observer-v1';
+
 function sql() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is not configured');
   return neon(url);
+}
+
+async function referenceObserverKey(): Promise<string> {
+  return `self:${await privacyScopedHash('observer-self', REFERENCE_OBSERVER_ID)}`;
 }
 
 export async function getRuntimeControls(): Promise<RuntimeControls> {
@@ -46,23 +53,25 @@ export async function recordAdminAudit(action: string, detail: unknown): Promise
 
 export async function getAdminSnapshotData() {
   const q = sql();
+  const firstPartyObserverKey = await referenceObserverKey();
+  const externalLeaseFilter = `NOT EXISTS (SELECT 1 FROM observations_recent fp WHERE fp.lease_id = h.lease_id AND fp.observer_key = $1)`;
   const [summary, active, metrics, reuse, top, audit] = await Promise.all([
     q.query(`SELECT
-      (SELECT COUNT(*)::int FROM facts) AS facts,
-      (SELECT COUNT(*)::int FROM observations_recent) AS observations,
+      (SELECT COUNT(DISTINCT fact_key)::int FROM observations_recent WHERE observer_key <> $1) AS external_facts,
+      (SELECT COUNT(*)::int FROM observations_recent WHERE observer_key <> $1) AS external_observations,
+      (SELECT COUNT(DISTINCT observer_key)::int FROM observations_recent WHERE observer_key <> $1) AS external_observer_keys,
       (SELECT COUNT(*)::int FROM hive_leases) AS leases_total,
-      (SELECT COUNT(*)::int FROM hive_leases WHERE last_seen_at >= now()-interval '60 seconds') AS leases_active_60s,
-      (SELECT COUNT(*)::int FROM hive_leases WHERE last_seen_at >= now()-interval '5 minutes') AS leases_active_5m,
-      (SELECT COUNT(*)::int FROM useful_reuse_events) AS useful_reuse_total,
+      (SELECT COUNT(*)::int FROM hive_leases h WHERE last_seen_at >= now()-interval '60 seconds' AND ${externalLeaseFilter}) AS leases_active_60s,
+      (SELECT COUNT(*)::int FROM hive_leases h WHERE last_seen_at >= now()-interval '5 minutes' AND ${externalLeaseFilter}) AS leases_active_5m,
+      (SELECT COUNT(*)::int FROM useful_reuse_events e WHERE NOT EXISTS (SELECT 1 FROM observations_recent fp WHERE fp.lease_id = e.consumer_lease_id AND fp.observer_key = $1)) AS useful_reuse_total,
       (SELECT COALESCE(SUM(checks),0)::int FROM hive_metrics_daily WHERE day >= date_trunc('month', current_date)::date) AS checks_month,
-      (SELECT COALESCE(SUM(observes),0)::int FROM hive_metrics_daily WHERE day >= date_trunc('month', current_date)::date) AS observes_month,
       (SELECT COALESCE(SUM(unknown),0)::int FROM hive_metrics_daily WHERE day >= date_trunc('month', current_date)::date) AS unknown_month,
-      (SELECT COALESCE(SUM(useful_reuse),0)::int FROM hive_metrics_daily WHERE day >= date_trunc('month', current_date)::date) AS reuse_month,
-      pg_database_size(current_database())::bigint AS database_bytes`),
-    q.query(`SELECT substring(replace(lease_id,'-',''),1,12) AS radar_id, issued_at::text, last_seen_at::text, expires_at::text, check_count::int, observe_count::int, useful_reuse_generated::int, useful_reuse_consumed::int, contribution_score::float8, last_operation, last_outcome FROM hive_leases WHERE last_seen_at >= now()-interval '5 minutes' ORDER BY last_seen_at DESC LIMIT 300`),
+      (SELECT COUNT(*)::int FROM useful_reuse_events e WHERE e.created_at >= date_trunc('month', current_date) AND NOT EXISTS (SELECT 1 FROM observations_recent fp WHERE fp.lease_id = e.consumer_lease_id AND fp.observer_key = $1)) AS reuse_month,
+      pg_database_size(current_database())::bigint AS database_bytes`, [firstPartyObserverKey]),
+    q.query(`SELECT substring(replace(h.lease_id,'-',''),1,12) AS radar_id, h.issued_at::text, h.last_seen_at::text, h.expires_at::text, h.check_count::int, h.observe_count::int, h.useful_reuse_generated::int, h.useful_reuse_consumed::int, h.contribution_score::float8, h.last_operation, h.last_outcome FROM hive_leases h WHERE h.last_seen_at >= now()-interval '5 minutes' AND ${externalLeaseFilter} ORDER BY h.last_seen_at DESC LIMIT 300`, [firstPartyObserverKey]),
     q.query(`SELECT day::text, checks::int, observes::int, unknown::int, stale::int, same_observed::int, changed_observed::int, contested::int, useful_reuse::int, new_leases::int FROM hive_metrics_daily WHERE day >= current_date-29 ORDER BY day ASC`),
-    q.query(`SELECT substring(replace(contributor_lease_id,'-',''),1,12) AS contributor, substring(replace(consumer_lease_id,'-',''),1,12) AS consumer, created_at::text, utility_units::float8 FROM useful_reuse_events ORDER BY created_at DESC LIMIT 40`),
-    q.query(`SELECT substring(replace(lease_id,'-',''),1,12) AS radar_id, contribution_score::float8, useful_reuse_generated::int, check_count::int, observe_count::int, last_seen_at::text FROM hive_leases ORDER BY contribution_score DESC, useful_reuse_generated DESC LIMIT 20`),
+    q.query(`SELECT substring(replace(e.contributor_lease_id,'-',''),1,12) AS contributor, substring(replace(e.consumer_lease_id,'-',''),1,12) AS consumer, e.created_at::text, e.utility_units::float8 FROM useful_reuse_events e WHERE NOT EXISTS (SELECT 1 FROM observations_recent fp WHERE fp.lease_id = e.consumer_lease_id AND fp.observer_key = $1) ORDER BY e.created_at DESC LIMIT 40`, [firstPartyObserverKey]),
+    q.query(`SELECT substring(replace(h.lease_id,'-',''),1,12) AS radar_id, h.contribution_score::float8, h.useful_reuse_generated::int, h.check_count::int, h.observe_count::int, h.last_seen_at::text FROM hive_leases h WHERE ${externalLeaseFilter} ORDER BY h.contribution_score DESC, h.useful_reuse_generated DESC LIMIT 20`, [firstPartyObserverKey]),
     q.query(`SELECT occurred_at::text, action, detail_json FROM admin_audit_events ORDER BY occurred_at DESC LIMIT 50`)
   ]);
   return {
