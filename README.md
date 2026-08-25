@@ -23,7 +23,8 @@ Access is **currently free** and requires no account or API key.
 ## Start here
 
 - Quickstart: [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
-- MCP client setup: [`docs/CLIENTS.md`](docs/CLIENTS.md)
+- MCP and deterministic client setup: [`docs/CLIENTS.md`](docs/CLIENTS.md)
+- Zero-dependency JavaScript/Python wrappers: [`clients/README.md`](clients/README.md)
 - Protocol contract: [`docs/PROTOCOL.md`](docs/PROTOCOL.md)
 - Web quickstart: `https://seenrelay.com/quickstart`
 - Web client integrations: `https://seenrelay.com/clients`
@@ -44,6 +45,12 @@ Access is **currently free** and requires no account or API key.
 Possible statuses are `SAME_OBSERVED`, `CHANGED_OBSERVED`, `CONTESTED`, `STALE`, and `UNKNOWN`.
 
 `SAME_OBSERVED` means the same value was recently observed for the same deterministic fact identity. It is not a truth verdict. The consuming agent decides whether the evidence is sufficient for its own policy.
+
+## Deterministic client path
+
+MCP remains the standard discovery and tool interface. Applications that need CHECK to run deterministically whenever an existing validation path runs can instead vendor the zero-third-party-runtime-dependency JavaScript/TypeScript or Python reference wrapper in [`clients/`](clients/).
+
+The wrappers default to shadow mode, fail open on relay-side failure, retain no completed CHECK result cache, and require an explicit caller policy before reuse can suppress validation. They do not add a SeenRelay domain operation.
 
 ## Validator-assisted revalidation
 
@@ -101,7 +108,7 @@ A2A is monitored but is not advertised as an implemented product interface.
 
 ## Verification
 
-`npm run check` performs TypeScript checks, product guardrails, production dependency auditing, structural tests, and runtime tests. The Preview Release Gate additionally exercises REST, MCP, fact identity, security boundaries, runtime controls, and reuse accounting against the exact Preview deployment SHA before Production promotion.
+`npm run check` performs TypeScript checks, product guardrails, production dependency auditing, structural tests, and runtime tests. The dedicated Client Wrappers workflow executes the JavaScript and Python wrapper regressions. The Preview Release Gate additionally exercises REST, MCP, fact identity, security boundaries, runtime controls, and reuse accounting against the exact Preview deployment SHA before Production promotion.
 
 Builds use the committed lockfile and `npm ci`.
 
