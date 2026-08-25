@@ -61,8 +61,10 @@ test('client and quickstart adoption guides are concrete and conservative', () =
   assert.match(quickstart, /currently free/i);
   assert.match(quickstart, /Useful from the first integration/);
   assert.match(quickstart, /UNKNOWN/);
-  assert.doesNotMatch(`${clients}
-${quickstart}`, /certified truth|guaranteed truth|kill criteria/i);
+  assert.match(quickstart, /observer_supplied_unverified/);
+  assert.match(quickstart, /conditional_request_hint/);
+  assert.match(quickstart, /304 Not Modified/);
+  assert.doesNotMatch(`${clients}\n${quickstart}`, /certified truth|guaranteed truth|kill criteria/i);
 });
 
 test('public discovery surfaces expose clients without indexing admin', () => {
@@ -79,6 +81,9 @@ test('public discovery surfaces expose clients without indexing admin', () => {
   assert.match(publicSource, /property="og:title"/);
   assert.match(publicSource, /clients:\s*`\$\{origin\}\/clients`/);
   assert.match(publicSource, /mcp_name:\s*'io\.github\.ovladon\/seenrelay'/);
+  assert.match(publicSource, /observer_supplied_unverified/);
+  assert.match(publicSource, /same integration or fleet/i);
+  assert.match(adoption, /conditional-request hint/i);
 });
 
 test('MCP Registry publishing uses GitHub OIDC and a checksum-pinned publisher binary', () => {

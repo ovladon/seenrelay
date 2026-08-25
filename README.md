@@ -2,7 +2,7 @@
 
 **A cooperative freshness cache for AI agents.**
 
-Think of SeenRelay as a shared cache for **freshness evidence rather than content**. A normal cache lets a later request avoid fetching the same bytes again. SeenRelay lets a later agent avoid repeating the same fact validation when another agent has already observed that exact source-backed fact recently.
+Think of SeenRelay as a shared cache for **freshness evidence rather than content**. A normal cache lets a later request avoid fetching the same bytes again. SeenRelay lets a later check reuse recent source-backed evidence produced by the same integration, the same fleet, or another agent instead of blindly repeating the full validation path.
 
 > CHECK before repeating validation work. OBSERVE what you independently found while doing work you already needed to do.
 
@@ -14,7 +14,8 @@ SeenRelay remains useful before broad network coverage exists:
 
 - with no prior observation, `CHECK` returns `UNKNOWN` and your existing workflow continues;
 - when your agent validates the source anyway, `OBSERVE` can make that result reusable for later callers;
-- multiple agents or workers in the same fleet can benefit from observations produced by their own normal work;
+- later runs in the same integration or fleet can benefit from observations produced by their own normal work;
+- when an observation carries an ETag or Last-Modified validator, CHECK can return it as an explicitly unverified conditional-request hint for cheaper source confirmation;
 - external observations add coverage as the network grows, but they are not required for the integration to function.
 
 Access is **currently free** and requires no account or API key.
@@ -43,6 +44,12 @@ Access is **currently free** and requires no account or API key.
 Possible statuses are `SAME_OBSERVED`, `CHANGED_OBSERVED`, `CONTESTED`, `STALE`, and `UNKNOWN`.
 
 `SAME_OBSERVED` means the same value was recently observed for the same deterministic fact identity. It is not a truth verdict. The consuming agent decides whether the evidence is sufficient for its own policy.
+
+## Validator-assisted revalidation
+
+`OBSERVE` can include source metadata such as an `etag` or `last_modified` value obtained during the caller's normal validation. When the newest usable observation carries one of those validators, a fresh `CHECK` can return it together with `source_validator_assurance: observer_supplied_unverified` and a safe `conditional_request_hint`.
+
+That hint is an optimization, not a truth claim. If the caller's policy still requires source confirmation, it can attempt `If-None-Match` or `If-Modified-Since` before invoking a more expensive browser, extraction, API, or model pipeline. A `304 Not Modified` response is confirmation from the source, not from SeenRelay.
 
 ## Fact identity
 
