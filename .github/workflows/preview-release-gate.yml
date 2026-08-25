@@ -5,9 +5,19 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      preview_url:
+        description: Exact Vercel Preview URL to verify
+        required: true
+        type: string
+      release_sha:
+        description: Exact deployment commit SHA expected from /healthz
+        required: true
+        type: string
 
 permissions:
   contents: read
+  issues: read
 
 concurrency:
   group: seenrelay-preview-release-gate-${{ github.event.pull_request.number || github.ref }}
@@ -19,14 +29,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
-      PREVIEW_URL: https://seenrelay-git-review-v03-bootstrap-ovladonn-9636s-projects.vercel.app
       BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-      RELEASE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.release_sha }}
     steps:
       - name: Checkout exact head commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.RELEASE_SHA }}
+
+      - name: Resolve this PR's Vercel Preview URL
+        id: preview
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          url="$(node scripts/resolve-pr-preview-url.mjs)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Resolved Preview: $url"
+
       - name: Run isolated Preview release gate
         shell: bash
+        env:
+          PREVIEW_URL: ${{ github.event_name == 'pull_request' && steps.preview.outputs.url || inputs.preview_url }}
         run: bash scripts/run-preview-release-gate.sh
