@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Deterministic client wrappers
+
+- Add vendorable zero-third-party-runtime-dependency JavaScript/TypeScript and Python reference wrappers that put CHECK deterministically in front of an application's existing validation path.
+- Keep shadow mode as the default; bounded reuse requires an explicit caller-supplied policy.
+- Fail open on relay-side timeout, 429, malformed response, or outage without hiding failures from the application's own validation.
+- Forward only safe observer-supplied ETag / Last-Modified conditional hints and retain no completed CHECK result cache.
+- Coalesce only overlapping request-equivalent CHECKs in process and expose local-only measurement counters plus caller-supplied reuse economics.
+- Preserve the public protocol boundary: no database migration, no third domain operation, and no change to MCP CHECK / OBSERVE semantics.
+
 ## 0.3.8 — Early value and validator-assisted CHECK
 
 - Return the newest observer-supplied source validator with fresh CHECK evidence without claiming that SeenRelay verified it.
