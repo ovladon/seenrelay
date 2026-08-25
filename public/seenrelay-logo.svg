@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">SeenRelay</title>
+  <desc id="desc">SeenRelay relay mark on a dark square background.</desc>
+  <rect width="512" height="512" rx="96" fill="#071013"/>
+  <rect x="28" y="28" width="456" height="456" rx="76" fill="none" stroke="#1d3037" stroke-width="4"/>
+  <path d="M150 170 C205 118 307 118 362 170 C402 208 399 260 354 286 C319 306 268 304 230 321 C194 337 186 374 218 396 C256 422 324 410 363 372" fill="none" stroke="#eaf8f3" stroke-width="38" stroke-linecap="round"/>
+  <path d="M150 170 C205 118 307 118 362 170" fill="none" stroke="#6ee7c7" stroke-width="14" stroke-linecap="round"/>
+  <path d="M218 396 C256 422 324 410 363 372" fill="none" stroke="#9fd8ff" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="150" cy="170" r="22" fill="#6ee7c7" stroke="#071013" stroke-width="8"/>
+  <circle cx="256" cy="304" r="24" fill="#f2c96f" stroke="#071013" stroke-width="8"/>
+  <circle cx="363" cy="372" r="22" fill="#9fd8ff" stroke="#071013" stroke-width="8"/>
+</svg>
