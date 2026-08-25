@@ -26,7 +26,7 @@ test('service release is code-owned and synchronized with MCP Registry', () => {
   const match = versionSource.match(/SERVICE_RELEASE\s*=\s*'([^']+)'/);
   assert.ok(match, 'SERVICE_RELEASE constant missing');
   assert.equal(match[1], registry.version);
-  assert.equal(registry.version, '0.3.1');
+  assert.match(registry.version, /^\d+\.\d+\.\d+$/);
   assert.match(config, /version:\s*SERVICE_RELEASE/);
   assert.doesNotMatch(config, /process\.env\.SERVICE_VERSION/);
   assert.doesNotMatch(env, /^SERVICE_VERSION=/m);

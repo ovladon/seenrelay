@@ -158,9 +158,12 @@ test('public surface is dual human-machine and exposes only aggregate network st
   assert.match(index, /accept\.includes\('text\/html'\)/);
   assert.match(index, /\/service\.json/);
   assert.match(index, /\/public-stats\.json/);
-  assert.match(publicSource, /Don't revalidate what another agent just saw/);
-  assert.match(publicSource, /Qualified reuse/);
-  assert.match(publicSource, /observations, not universal truth|Observations, not universal truth/i);
+  assert.match(publicSource, /Before checking a fact again, ask if another agent just checked it/);
+  assert.match(publicSource, /THE IDEA IN 30 SECONDS/);
+  assert.match(publicSource, /SAME_OBSERVED does not mean/);
+  assert.match(publicSource, /Useful reuse rate/);
+  assert.match(publicSource, /does not decide truth/);
+  assert.match(publicSource, /observations, not universal truth|Recent observations, not universal truth/i);
   assert.doesNotMatch(publicSource, /guaranteed savings|verified truth|independent agents confirmed/i);
   assert.match(stats, /qualified_reuse_rate/);
   assert.doesNotMatch(stats, /cross_client_reuse_rate/);
