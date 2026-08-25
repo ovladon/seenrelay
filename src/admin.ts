@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import { getAdminSnapshotData, getRuntimeControls, recordAdminAudit, setRuntimeControls, type RuntimeMode } from './admin-db.js';
+import { getAdminAdoptionData, getAdminSnapshotData, getRuntimeControls, recordAdminAudit, setRuntimeControls, type RuntimeMode } from './admin-db.js';
 import { invalidateRuntimeControlCache } from './controls.js';
 import { runHiveHousekeeping } from './reuse.js';
 import { getPublicStats } from './public-db.js';
@@ -83,7 +83,7 @@ function headers(extra: Record<string,string>={}): Headers {
 }
 function json(body: unknown,status=200,extra:Record<string,string>={}): Response { return new Response(JSON.stringify(body),{status,headers:headers({'content-type':'application/json; charset=utf-8',...extra})}); }
 function html(body:string,status=200):Response { return new Response(body,{status,headers:headers({'content-type':'text/html; charset=utf-8'})}); }
-function shell(authenticated:boolean):string { return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SeenRelay Control Room</title><link rel="stylesheet" href="/admin.css"></head><body data-auth="${authenticated?'1':'0'}"><main id="app">${authenticated?'<div class="boot">Loading SeenRelay Control Room…</div>':'<section class="login card"><h1>SeenRelay Control Room</h1><p>Human administration only. This surface is never exposed as an agent operation.</p><form id="login"><label>Admin secret<input id="secret" type="password" autocomplete="current-password" required></label><button>Unlock</button><p id="login-error" class="error"></p></form></section>'}</main><script src="/admin.js" defer></script></body></html>`; }
+function shell(authenticated:boolean):string { return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SeenRelay Control Room</title><link rel="stylesheet" href="/admin.css"><link rel="stylesheet" href="/admin-v2.css"></head><body data-auth="${authenticated?'1':'0'}"><main id="app">${authenticated?'<div class="boot">Loading SeenRelay Control Room…</div>':'<section class="login card"><h1>SeenRelay Control Room</h1><p>Human administration only. This surface is never exposed as an agent operation.</p><form id="login"><label>Admin secret<input id="secret" type="password" autocomplete="current-password" required></label><button>Unlock</button><p id="login-error" class="error"></p></form></section>'}</main><script src="/admin-v2.js" defer></script></body></html>`; }
 async function requireAdmin(request: Request): Promise<{token:string;csrf:string}|Response> { return (await verifySession(request)) || json({error:{code:'ADMIN_UNAUTHORIZED'}},401); }
 async function csrfOk(request:Request,auth:{csrf:string}):Promise<boolean> { return request.headers.get('x-seenrelay-csrf')===auth.csrf; }
 
@@ -108,18 +108,34 @@ function rotationPosture() {
   const admin=adminSecretRotationState(), hive=hiveSigningRotationState();
   return { admin_previous_key_active:admin.previousAuthenticationKeyActive, hive_previous_key_active:hive.previousVerificationKeyActive, transition_active:admin.previousAuthenticationKeyActive||hive.previousVerificationKeyActive };
 }
+function adoptionUnavailable(error: unknown) {
+  console.error(JSON.stringify({event:'admin_adoption_snapshot_error',error:error instanceof Error?error.message:'unknown'}));
+  return {
+    status:'unavailable' as const,
+    classification:'reference-observer-excluded',
+    summary:{},
+    active_external_leases:[],
+    recent_external_reuse:[],
+    top_external_contributors:[]
+  };
+}
 
 export async function adminSnapshot(request: Request): Promise<Response> {
   const auth=await requireAdmin(request); if (auth instanceof Response) return auth;
   const [controls,data]=await Promise.all([getRuntimeControls(),getAdminSnapshotData()]);
+  let adoption: Awaited<ReturnType<typeof getAdminAdoptionData>> | ReturnType<typeof adoptionUnavailable>;
+  try { adoption=await getAdminAdoptionData(); } catch (error) { adoption=adoptionUnavailable(error); }
   const summary=data.summary as Record<string,unknown>;
-  const checks=Number(summary.checks_month||0), reuse=Number(summary.reuse_month||0), unknown=Number(summary.unknown_month||0);
+  const adoptionSummary=adoption.summary as Record<string,unknown>;
+  const checks=Number(adoptionSummary.checks_external_month ?? summary.checks_month ?? 0);
+  const reuse=Number(adoptionSummary.reuse_external_month ?? summary.reuse_month ?? 0);
+  const unknown=Number(summary.unknown_month||0);
   const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState();
   return json({
-    now:new Date().toISOString(),csrf:auth.csrf,controls,data,
+    now:new Date().toISOString(),csrf:auth.csrf,controls,data,adoption,
     derived:{qualified_reuse_rate:checks?reuse/checks:0,unknown_rate:checks?unknown/checks:0},
     safety:{billing_enabled:false,admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_dedicated:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),declared_vercel_hard_spend_cap_usd:config().declaredVercelHardSpendCapUsd,provider_spend_cap_verified_by_app:false},
-    semantics:{fact_identity:'seenrelay-fact-v3',operations:['CHECK','OBSERVE'],truth_oracle:false,reward:'qualified cross-bucket reuse only; never truth confidence'},
+    semantics:{fact_identity:'seenrelay-fact-v3',operations:['CHECK','OBSERVE'],truth_oracle:false,reward:'qualified cross-bucket reuse only; never truth confidence',adoption:'external activity excludes the bounded first-party Reference Observer'},
     readiness:readinessPayload(),credential_rotation:rotationPosture()
   });
 }
@@ -127,16 +143,19 @@ export async function adminSnapshot(request: Request): Promise<Response> {
 export async function adminOperationsExport(request: Request): Promise<Response> {
   const auth=await requireAdmin(request); if (auth instanceof Response) return auth;
   const [controls,stats]=await Promise.all([getRuntimeControls(),getPublicStats()]);
+  let adoption: unknown;
+  try { adoption=await getAdminAdoptionData(); } catch { adoption={status:'unavailable'}; }
   await recordAdminAudit('OPERATIONS_EXPORT',{});
   const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState();
   return json({
     generated_at:new Date().toISOString(),
     service:{name:'SeenRelay',version:config().version,domain:'seenrelay.com',operations:['CHECK','OBSERVE'],fact_identity:'seenrelay-fact-v3'},
     operational_summary:stats,
+    external_adoption:adoption,
     runtime:{mode:controls.mode,checks_enabled:controls.checks_enabled,observes_enabled:controls.observes_enabled,rewards_enabled:controls.rewards_enabled},
     security_posture:{admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_configured:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),billing_enabled:false},
     credential_rotation:rotationPosture(),...readinessPayload(),
-    exclusions:['No secrets','No Hive lease tokens','No IP addresses','No raw public keys','No pseudonymous radar identifiers','No admin CSRF/session material']
+    exclusions:['No secrets','No Hive lease tokens','No IP addresses','No raw public keys','No admin CSRF/session material']
   });
 }
 
