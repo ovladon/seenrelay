@@ -1,1 +1,1 @@
-export const SERVICE_RELEASE = '0.3.3' as const;
+export const SERVICE_RELEASE = '0.3.4' as const;
