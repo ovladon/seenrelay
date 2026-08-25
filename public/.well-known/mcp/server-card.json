@@ -1,0 +1,92 @@
+{
+  "serverInfo": {
+    "name": "seenrelay",
+    "version": "0.3.4"
+  },
+  "tools": [
+    {
+      "name": "check_fact",
+      "description": "CHECK for recently observed source-backed values before repeating external validation. SeenRelay reports freshness evidence, not truth.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fact": {
+            "type": "object",
+            "properties": {
+              "subject": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "predicate": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "qualifiers": { "type": "object" },
+              "source": { "type": "string", "format": "uri", "maxLength": 2048 },
+              "locator": {
+                "type": "object",
+                "properties": {
+                  "scheme": { "type": "string", "enum": ["json_pointer", "element_id", "source_key"] },
+                  "value": { "type": "string", "minLength": 1, "maxLength": 1024 }
+                },
+                "required": ["scheme", "value"]
+              }
+            },
+            "required": ["subject", "predicate", "source"]
+          },
+          "known_value": {},
+          "max_age_seconds": { "type": "integer", "minimum": 1, "maximum": 604800 }
+        },
+        "required": ["fact", "known_value"]
+      }
+    },
+    {
+      "name": "observe_fact",
+      "description": "OBSERVE an independently obtained source-backed value for possible reuse by later agents. Evidence is observational and is not a truth verdict.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fact": {
+            "type": "object",
+            "properties": {
+              "subject": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "predicate": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "qualifiers": { "type": "object" },
+              "source": { "type": "string", "format": "uri", "maxLength": 2048 },
+              "locator": {
+                "type": "object",
+                "properties": {
+                  "scheme": { "type": "string", "enum": ["json_pointer", "element_id", "source_key"] },
+                  "value": { "type": "string", "minLength": 1, "maxLength": 1024 }
+                },
+                "required": ["scheme", "value"]
+              }
+            },
+            "required": ["subject", "predicate", "source"]
+          },
+          "value": {},
+          "observed_at": { "type": "string" },
+          "observer_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "observer_proof": {
+            "type": "object",
+            "properties": {
+              "scheme": { "type": "string", "const": "ed25519-v1" },
+              "public_key": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "timestamp": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "nonce": { "type": "string", "minLength": 1, "maxLength": 128 },
+              "signature": { "type": "string", "minLength": 1, "maxLength": 256 }
+            },
+            "required": ["scheme", "public_key", "timestamp", "nonce", "signature"]
+          },
+          "evidence_fingerprint": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "source_validator": {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string", "enum": ["etag", "last_modified", "content_hash", "other"] },
+              "value": { "type": "string", "minLength": 1, "maxLength": 512 }
+            },
+            "required": ["kind", "value"]
+          },
+          "idempotency_key": { "type": "string", "minLength": 1, "maxLength": 128 }
+        },
+        "required": ["fact", "value"]
+      }
+    }
+  ],
+  "resources": [],
+  "prompts": []
+}
