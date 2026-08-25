@@ -1,3 +1,5 @@
+import { SERVICE_RELEASE } from './version.js';
+
 function int(name: string, fallback: number): number {
   const raw = process.env[name];
   if (!raw) return fallback;
@@ -20,7 +22,7 @@ function optionalNum(name: string): number | null {
 export function config() {
   return {
     brandName: process.env.BRAND_NAME || 'SeenRelay',
-    version: process.env.SERVICE_VERSION || '0.3.0',
+    version: SERVICE_RELEASE,
     paymentsEnabled: process.env.PAYMENTS_ENABLED === 'true',
     paymentProvider: process.env.PAYMENT_PROVIDER || 'none',
     defaultMaxAgeSeconds: int('DEFAULT_MAX_AGE_SECONDS', 3600),

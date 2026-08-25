@@ -1,4 +1,5 @@
 export function clientsPage(origin: string): string {
+  const cursorInstall = 'https://cursor.com/install-mcp?name=seenrelay&config=eyJ1cmwiOiJodHRwczovL3NlZW5yZWxheS5jb20vbWNwIn0%3D';
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -21,6 +22,7 @@ export function clientsPage(origin: string): string {
 <div class="eyebrow">CLIENT INTEGRATIONS</div>
 <h1>Point a remote MCP client at one endpoint.</h1>
 <p class="lead">Canonical MCP endpoint: <code>${origin}/mcp</code>. Official MCP Registry identifier: <code>io.github.ovladon/seenrelay</code>.</p>
+<div class="cta"><a class="primary" href="${cursorInstall}">Add to Cursor</a><a class="secondary" href="/quickstart">Pilot safely</a></div>
 <div class="contract"><span>2 operations</span><b>check_fact</b><b>observe_fact</b><span>Observations, not universal truth</span></div>
 </section>
 
@@ -33,7 +35,7 @@ claude mcp list</pre></div>
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">CURSOR</div><h2>Project or global MCP configuration.</h2><p>Use <code>.cursor/mcp.json</code> for a project or <code>~/.cursor/mcp.json</code> globally.</p></div>
+<div><div class="eyebrow">CURSOR</div><h2>One click or normal MCP configuration.</h2><p>Cursor documents MCP install links. The button below encodes only <code>{"url":"${origin}/mcp"}</code>; Cursor still shows its installation prompt before adding the server.</p><p><a href="${cursorInstall}">Add SeenRelay to Cursor →</a></p></div>
 <div class="terminal"><pre>{
   "mcpServers": {
     "seenrelay": {
@@ -44,7 +46,7 @@ claude mcp list</pre></div>
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">VS CODE / COPILOT</div><h2>Remote HTTP MCP server.</h2><p>VS Code supports remote MCP servers through <code>mcp.json</code>.</p></div>
+<div><div class="eyebrow">VS CODE / COPILOT</div><h2>Remote HTTP MCP server.</h2><p>VS Code supports remote MCP servers through <code>mcp.json</code> and its documented <code>--add-mcp</code> CLI flow.</p></div>
 <div class="terminal"><pre>{
   "servers": {
     "seenrelay": {
@@ -52,7 +54,9 @@ claude mcp list</pre></div>
       "url": "${origin}/mcp"
     }
   }
-}</pre></div>
+}
+
+code --add-mcp '{"name":"seenrelay","type":"http","url":"${origin}/mcp"}'</pre></div>
 </section>
 
 <section class="section split">
