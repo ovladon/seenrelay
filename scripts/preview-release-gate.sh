@@ -44,7 +44,8 @@ grep -q '"operations":\["CHECK","OBSERVE"\]' /tmp/root.json
 grep -q '"billing_enabled":false' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
-grep -q 'FRESHNESS INFRASTRUCTURE FOR AGENT FLEETS' /tmp/site.html
+grep -q 'SHARED FRESHNESS FOR AI AGENTS' /tmp/site.html
+grep -q 'SAME_OBSERVED does not mean' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/service.json" -o /tmp/service.json
 grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json
