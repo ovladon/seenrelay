@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.6 - 2026-08-25
+- Made the Control Room operational snapshot independent from optional external-adoption classification so an adoption query failure cannot blank the admin surface.
+- Added an explicit external / first-party / total split, adoption milestones, Reference Observer health context, and an external-only Hive Radar with a truthful empty state.
+- Preserved first-party bootstrap data while keeping it excluded from external adoption metrics.
+- Bound the Preview Release Gate to the current pull request's Vercel Preview URL instead of a stale hard-coded branch alias, while retaining exact deployment-SHA verification.
+- Synchronized the service, static MCP server card, and Official MCP Registry metadata at 0.3.6.
+
 ## 0.3.5 - 2026-08-25
 - Changed Control Room adoption telemetry to external-only views by excluding the first-party Reference Observer from active Hive radar leases, retained OBSERVE/fact counts, and contributor rankings.
 - Count qualified reuse as external adoption only when the consuming lease is external; a first-party seed may still support genuine third-party reuse.
