@@ -7,7 +7,7 @@
     "url": "https://github.com/ovladon/seenrelay",
     "source": "github"
   },
-  "version": "0.3.3",
+  "version": "0.3.4",
   "remotes": [
     {
       "type": "streamable-http",
