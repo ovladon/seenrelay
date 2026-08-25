@@ -57,6 +57,9 @@ export async function getAdminSnapshotData() {
   const externalLeaseFilter = `NOT EXISTS (SELECT 1 FROM observations_recent fp WHERE fp.lease_id = h.lease_id AND fp.observer_key = $1)`;
   const [summary, active, metrics, reuse, top, audit] = await Promise.all([
     q.query(`SELECT
+      (SELECT COUNT(DISTINCT fact_key)::int FROM observations_recent WHERE observer_key <> $1) AS facts,
+      (SELECT COUNT(*)::int FROM observations_recent WHERE observer_key <> $1) AS observations,
+      (SELECT COUNT(*)::int FROM observations_recent WHERE observer_key <> $1) AS observes_month,
       (SELECT COUNT(DISTINCT fact_key)::int FROM observations_recent WHERE observer_key <> $1) AS external_facts,
       (SELECT COUNT(*)::int FROM observations_recent WHERE observer_key <> $1) AS external_observations,
       (SELECT COUNT(DISTINCT observer_key)::int FROM observations_recent WHERE observer_key <> $1) AS external_observer_keys,
