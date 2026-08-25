@@ -161,7 +161,7 @@ test('public surface is dual human-machine and exposes only aggregate network st
   assert.match(index, /accept\.includes\('text\/html'\)/);
   assert.match(index, /\/service\.json/);
   assert.match(index, /\/public-stats\.json/);
-  assert.match(publicSource, /Before checking a fact again, ask if another agent just checked it/);
+  assert.match(publicSource, /Before repeating a fact validation, check whether recent evidence already exists/);
   assert.match(publicSource, /THE IDEA IN 30 SECONDS/);
   assert.match(publicSource, /shared cache for freshness evidence/i);
   assert.match(publicSource, /USEFUL FROM THE FIRST CALLER/);
