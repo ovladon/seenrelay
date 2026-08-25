@@ -30,6 +30,11 @@ export function serviceDescriptor(origin: string) {
       a2a: { status: standardsPosture.a2a.status, tracked: standardsPosture.a2a.tracked }
     },
     external_verification: false,
+    source_validation_hints: {
+      assurance: 'observer_supplied_unverified',
+      conditional_request_headers: ['If-None-Match', 'If-Modified-Since'],
+      semantics: 'Optimization hints only; the caller decides whether source confirmation is still required.'
+    },
     endpoints: {
       check: `${origin}/v1/check`,
       observe: `${origin}/v1/observe`,
@@ -53,12 +58,12 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Before an AI agent checks a fact again, SeenRelay lets it ask whether another agent recently observed the same source-backed fact.">
+<meta name="description" content="Before an AI agent repeats a fact validation, SeenRelay lets it check recent source-backed observations and reuse safe conditional-request hints when available.">
 <link rel="canonical" href="${origin}/">
 <link rel="alternate" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SeenRelay — Shared freshness for AI agents">
-<meta property="og:description" content="A shared freshness layer for AI agents: CHECK before repeating validation work; OBSERVE what you independently found.">
+<meta property="og:description" content="A low-cost freshness preflight for AI agents: CHECK before repeating validation work; OBSERVE what you independently found.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
 <title>SeenRelay — Shared freshness for AI agents</title>
@@ -69,8 +74,8 @@ export function publicLandingPage(origin: string): string {
 <main>
 <section class="hero">
 <div class="eyebrow">SHARED FRESHNESS FOR AI AGENTS</div>
-<h1>Before checking a fact again, ask if another agent just checked it.</h1>
-<p class="lead">SeenRelay is a small shared freshness layer. An agent sends <b>CHECK</b> with the source-backed fact and value it already knows. SeenRelay returns recent observations of that exact fact. If the agent still verifies the source, it sends <b>OBSERVE</b> with what it found so the next agent may avoid repeating the same work.</p>
+<h1>Before repeating a fact validation, check whether recent evidence already exists.</h1>
+<p class="lead">SeenRelay is a small, low-cost freshness preflight. An agent sends <b>CHECK</b> with the source-backed fact and value it already knows. SeenRelay returns recent observations of that exact fact and, when available, an observer-supplied ETag or Last-Modified hint for cheaper conditional revalidation. If validation still runs, the agent sends <b>OBSERVE</b> with what it found so its own later runs or other agents may avoid repeating the same work.</p>
 <div class="cta"><a class="primary" href="/clients">Connect an MCP client</a><a class="secondary" href="/quickstart">5-minute quickstart</a><a class="secondary" href="/openapi.json">OpenAPI</a><a class="secondary" href="/service.json">For machines</a></div>
 <div class="contract"><span>Exactly 2 operations</span><b>CHECK</b><b>OBSERVE</b><span>Currently free · no account · no browse/search · no truth verdict</span></div>
 </section>
@@ -100,8 +105,8 @@ reuse or revalidate → caller policy</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">USEFUL FROM THE FIRST CALLER</div><h2>Network effects add coverage; they are not required to start.</h2><p>If the network has no observation for a fact, CHECK returns <b>UNKNOWN</b> and the caller continues its normal validation. When that caller later sends OBSERVE, the result is immediately available to later agents that ask about the same deterministic fact.</p><p>This means a single fleet can begin accumulating reusable freshness evidence from its own normal work before broader external coverage exists.</p></div>
-<div class="proof-grid"><article><b>Empty network</b><span>CHECK returns UNKNOWN; the existing workflow continues normally.</span></article><article><b>First observation</b><span>An agent validates the source for its own task and sends OBSERVE.</span></article><article><b>Later callers</b><span>Subsequent agents can see the recent observation before repeating the same validation.</span></article><article><b>Growing coverage</b><span>External observations add more opportunities for reuse without changing the two-operation integration.</span></article></div>
+<div><div class="eyebrow">USEFUL FROM THE FIRST CALLER</div><h2>Network effects add coverage; they are not required to start.</h2><p>If the network has no observation for a fact, CHECK returns <b>UNKNOWN</b> and the caller continues its normal validation. When that caller later sends OBSERVE, the result is immediately available to later CHECKs, including from the same integration or fleet.</p><p>If that observation includes an ETag or Last-Modified validator, a later CHECK can also return it as an explicitly unverified conditional-request hint. The source, not SeenRelay, decides whether a conditional request is still valid.</p></div>
+<div class="proof-grid"><article><b>Empty network</b><span>CHECK returns UNKNOWN; the existing workflow continues normally.</span></article><article><b>First observation</b><span>An agent validates the source for its own task and sends OBSERVE.</span></article><article><b>Same integration or fleet</b><span>Later CHECKs can benefit from the observation before any public network effect exists.</span></article><article><b>Cheaper revalidation</b><span>Observer-supplied ETag or Last-Modified metadata can support a conditional source request before expensive downstream work.</span></article></div>
 </section>
 
 <section id="network" class="section">
@@ -131,7 +136,7 @@ observe_fact</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">SAFE ADOPTION</div><h2>Start in shadow mode.</h2><p>Insert CHECK before existing validation but initially skip nothing. Compare SeenRelay status with the result your workflow obtains normally, then allow bounded reuse only for fact classes and freshness windows accepted by your own policy.</p><p>Access is currently free, so the first integration can focus on signal quality and workflow fit rather than account setup.</p><p><a href="/quickstart">Open the integration sequence →</a></p></div>
+<div><div class="eyebrow">SAFE ADOPTION</div><h2>Start in shadow mode.</h2><p>Insert CHECK before existing validation but initially skip nothing. Compare SeenRelay status with the result your workflow obtains normally, then allow bounded reuse only for fact classes and freshness windows accepted by your own policy.</p><p>When CHECK includes a conditional-request hint, treat it only as a way to make source confirmation cheaper. It is observer-supplied metadata, not a SeenRelay truth or freshness certificate.</p><p>Access is currently free, so the first integration can focus on signal quality and workflow fit rather than account setup.</p><p><a href="/quickstart">Open the integration sequence →</a></p></div>
 <div class="proof-grid"><article><b>Best fit</b><span>Repeated machine-locatable prices, statuses, versions, availability, capacities, and similar changing facts.</span></article><article><b>Keep validating</b><span>When the result is UNKNOWN, STALE, CONTESTED, or your policy requires a fresh source check.</span></article><article><b>Measure</b><span>Status distribution, downstream operations actually skipped, latency, and policy exceptions.</span></article><article><b>Stay bounded</b><span>SeenRelay supplies freshness evidence; the consuming workflow retains the final decision.</span></article></div>
 </section>
 
