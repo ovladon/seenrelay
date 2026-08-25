@@ -16,6 +16,16 @@ Official Registry identifier: `io.github.ovladon/seenrelay`
 
 When an MCP client supports remote Streamable HTTP servers, point it at the endpoint above. When it supports MCP Registry discovery, use the Registry identifier.
 
+### Deterministic reference wrappers
+
+For applications that must run the SeenRelay preflight as part of an existing validation call path rather than depending on model tool-routing behavior, the repository also ships vendorable zero-third-party-runtime-dependency JavaScript and Python wrappers:
+
+- JavaScript / TypeScript: [`../clients/typescript/dist/seenrelay.js`](../clients/typescript/dist/seenrelay.js)
+- Python: [`../clients/python/seenrelay.py`](../clients/python/seenrelay.py)
+- design, safety and examples: [`../clients/README.md`](../clients/README.md)
+
+The wrappers default to shadow mode and fail open on relay-side timeout, 429, malformed responses, or outages. They never hide an error from the application's own validation. They do not add a SeenRelay operation or persistent local fact cache.
+
 ### REST / OpenAPI
 
 - OpenAPI: `https://seenrelay.com/openapi.json`
@@ -51,6 +61,45 @@ CHECK
 ```
 
 A safe first deployment is **shadow mode**: call CHECK and record what it would have changed, but do not skip any existing validation. Promote only after measured results justify it.
+
+## Deterministic wrapper pattern
+
+The wrapper path encodes the same sequence directly in application code. With no `reuse` policy supplied, it remains shadow mode.
+
+### JavaScript / TypeScript
+
+```js
+import { SeenRelayClient } from './clients/typescript/dist/seenrelay.js';
+
+const relay = new SeenRelayClient();
+
+const value = await relay.guard({
+  fact,
+  knownValue,
+  validate: async ({ conditionalHeaders }) => {
+    // This is your existing source-validation function.
+    // conditionalHeaders may contain only a safe If-None-Match or
+    // If-Modified-Since hint from a prior observer.
+    return yourExistingValidation(conditionalHeaders);
+  }
+});
+```
+
+### Python
+
+```python
+from seenrelay import SeenRelayClient
+
+relay = SeenRelayClient()
+
+value = relay.guard(
+    fact=fact,
+    known_value=known_value,
+    validate=lambda context: your_existing_validation(context.conditional_headers),
+)
+```
+
+If the relay itself cannot be used, the validation still runs. If validation succeeds but the later OBSERVE cannot be deposited, the validated application result is still returned. Reuse must be enabled explicitly by the caller; see [`CLIENTS.md`](CLIENTS.md).
 
 ## Minimal CHECK
 
@@ -165,6 +214,8 @@ See [`PROTOCOL.md`](PROTOCOL.md) for the complete `seenrelay-fact-v3` contract.
 ```text
 measured operational value = downstream work actually avoided - integration/operation overhead
 ```
+
+The deterministic wrappers expose local in-process counters to support this measurement. Package downloads, MCP initialize requests, tools/list requests, and the first-party Reference Observer are not evidence of external adoption.
 
 ## Security and provenance
 
