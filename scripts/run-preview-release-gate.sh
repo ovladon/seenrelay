@@ -8,3 +8,4 @@ curl() {
 trap 'rc=$?; echo "Preview release gate failed: rc=${rc} source=${BASH_SOURCE[*]} lineno=${LINENO} stack=${BASH_LINENO[*]} command=${BASH_COMMAND}" >&2; if [ -f /tmp/auth-url-out.json ]; then echo "auth-url-response:" >&2; cat /tmp/auth-url-out.json >&2; echo >&2; fi; exit "$rc"' ERR
 
 source scripts/preview-release-gate.sh
+source scripts/preview-early-value-gate.sh
