@@ -28,7 +28,8 @@ A large public network is not required for SeenRelay to be useful.
 
 - If no one has observed the fact yet, CHECK returns `UNKNOWN` and your existing validation path continues.
 - When your agent performs that validation, OBSERVE can make the result available to later callers.
-- Repeated work inside one fleet can therefore become reusable before any external network effect exists.
+- Repeated work inside the same integration or fleet can therefore become reusable before any external network effect exists.
+- If a prior OBSERVE included an ETag or Last-Modified validator, CHECK can return it as an explicitly unverified conditional-request hint for cheaper source confirmation.
 - Observations from other callers increase coverage over time.
 
 The safe initial pattern is still shadow mode: measure the signal first, then decide where your own policy permits reuse.
@@ -70,9 +71,25 @@ curl -sS https://seenrelay.com/v1/check \
 
 Possible statuses: `SAME_OBSERVED`, `CHANGED_OBSERVED`, `CONTESTED`, `STALE`, `UNKNOWN`.
 
+A fresh CHECK may also include `source_validator`, `source_validator_assurance: observer_supplied_unverified`, and, for ETag or Last-Modified metadata, a `conditional_request_hint`. Treat that hint only as an optimization. If your policy still requires source confirmation, try the conditional request before a more expensive validation path; any `304 Not Modified` result comes from the source itself.
+
+### Cheapest useful validation path
+
+```text
+CHECK
+  ├─ policy permits reuse → avoid redundant validation
+  └─ validation still required
+       ├─ conditional_request_hint available → conditional source request
+       │    ├─ source confirms not modified → avoid expensive downstream work
+       │    └─ source changed / cannot confirm → full validation
+       └─ no validator hint → full validation
+
+After an independently completed validation → OBSERVE
+```
+
 ## Minimal OBSERVE
 
-Call OBSERVE only after your agent independently obtained the value for its own task:
+Call OBSERVE only after your agent independently obtained the value for its own task. When that validation also produced an ETag or Last-Modified value, include it as `source_validator` so a later CHECK can offer a cheaper conditional-request path. The validator remains observer-supplied and unverified by SeenRelay.
 
 ```bash
 NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -87,7 +104,8 @@ curl -sS https://seenrelay.com/v1/observe \
     },
     \"value\": 17,
     \"observed_at\": \"$NOW\",
-    \"idempotency_key\": \"example-run/model-x-input-price\"
+    \"idempotency_key\": \"example-run/model-x-input-price\",
+    \"source_validator\": {\"kind\": \"last_modified\", \"value\": \"Tue, 25 Aug 2026 16:00:00 GMT\"}
   }"
 ```
 
