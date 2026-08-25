@@ -55,5 +55,5 @@ test('Preview gate resolves the current PR preview instead of using a stale bran
   assert.doesNotMatch(workflow, /seenrelay-git-review-v03-bootstrap/);
   assert.match(resolver, /vercel\[bot\]/);
   assert.match(resolver, /Preview/);
-  assert.match(resolver, /vercel\.app/);
+  assert.match(resolver, /process\.stdout\.write\(match\[1\]\)/);
 });
