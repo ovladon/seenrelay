@@ -1,6 +1,8 @@
 import { canonicalFactKey, ValidationError, valueIdentity } from './canonical.js';
 import { config } from './config.js';
-import { acceptObservation, cleanupTouchedFact, getFact, getObserverState, getRecentValueGroups } from './db.js';
+import { acceptObservation, cleanupTouchedFact, getFact, getObserverState } from './db.js';
+import { getRecentValueGroupsWithValidators } from './check-evidence.js';
+import type { SourceValidator } from './check-evidence.js';
 import { deriveObserverIdentity } from './identity.js';
 import { predicateGuidance } from './predicates.js';
 import type { CheckRequest, JsonValue, ObserveRequest } from './types.js';
@@ -34,6 +36,21 @@ function factIdentityMetadata(fact: Awaited<ReturnType<typeof canonicalFactKey>>
   };
 }
 
+function sourceValidatorMetadata(validator: SourceValidator | null) {
+  if (!validator) return {};
+  const conditionalRequestHint = validator.kind === 'etag'
+    ? { request_header: 'If-None-Match', header_value: validator.value }
+    : validator.kind === 'last_modified'
+      ? { request_header: 'If-Modified-Since', header_value: validator.value }
+      : undefined;
+  return {
+    source_validator: validator,
+    source_validator_assurance: 'observer_supplied_unverified' as const,
+    ...(conditionalRequestHint ? { conditional_request_hint: conditionalRequestHint } : {}),
+    source_validator_caveat: 'Observer-supplied metadata only. SeenRelay did not verify this validator against the source.'
+  };
+}
+
 export async function checkFact(body: CheckRequest) {
   if (!body || typeof body !== 'object' || !('known_value' in body)) throw new ValidationError('known_value is required');
   const cfg = config();
@@ -49,12 +66,14 @@ export async function checkFact(body: CheckRequest) {
       fact_key: fact.factKey,
       ...factIdentityMetadata(fact),
       max_age_seconds: maxAge,
-      note: 'No accepted observation exists for this source-backed fact.'
+      next_step: 'VALIDATE_THEN_OBSERVE' as const,
+      accepted_observation_can_answer_later_checks: true,
+      note: 'No accepted observation exists. Validate normally, then OBSERVE; later CHECKs, including from the same integration or fleet, can benefit.'
     };
   }
 
   const cutoffIso = isoFromMs(nowMs - maxAge * 1000);
-  const groups = await getRecentValueGroups(fact.factKey, cutoffIso);
+  const groups = await getRecentValueGroupsWithValidators(fact.factKey, cutoffIso);
   if (groups.length === 0) {
     return {
       status: 'STALE' as const,
@@ -65,7 +84,9 @@ export async function checkFact(body: CheckRequest) {
       age_seconds: Math.max(0, Math.floor((nowMs - epochMs(stored.last_observed_at)) / 1000)),
       max_age_seconds: maxAge,
       last_observed_value: stored.current_value_json,
-      observation_total: stored.observation_total
+      observation_total: stored.observation_total,
+      next_step: 'VALIDATE_THEN_OBSERVE' as const,
+      accepted_observation_can_answer_later_checks: true
     };
   }
 
@@ -81,7 +102,11 @@ export async function checkFact(body: CheckRequest) {
     observations: g.observations,
     observer_keys: g.observers,
     cryptographic_observer_keys: g.cryptographic_observers,
-    unverified_observer_keys: g.unverified_observers
+    unverified_observer_keys: g.unverified_observers,
+    ...(g.source_validator ? {
+      source_validator: g.source_validator,
+      source_validator_assurance: 'observer_supplied_unverified' as const
+    } : {})
   }));
 
   if (contested) {
@@ -113,6 +138,7 @@ export async function checkFact(body: CheckRequest) {
     recent_observer_keys: latest.observers,
     recent_cryptographic_observer_keys: latest.cryptographic_observers,
     recent_unverified_observer_keys: latest.unverified_observers,
+    ...sourceValidatorMetadata(latest.source_validator),
     evidence,
     caveat: 'SeenRelay reports recent observations; it does not assert universal truth. Cryptographic observer proofs establish key possession, not independent-world identity.'
   };
@@ -133,6 +159,7 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
   if (body.source_validator) {
     if (!['etag', 'last_modified', 'content_hash', 'other'].includes(body.source_validator.kind)) throw new ValidationError('source_validator.kind is invalid');
     if (!body.source_validator.value || body.source_validator.value.length > 512) throw new ValidationError('source_validator.value must be 1..512 characters');
+    if (/[\r\n]/.test(body.source_validator.value)) throw new ValidationError('source_validator.value must not contain CR or LF');
     sourceValidator = body.source_validator as unknown as JsonValue;
   }
 
@@ -146,6 +173,7 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
       value_hash: value.valueHash,
       observer_identity: observer.kind,
       observer_assurance: observer.assurance,
+      future_check_eligible: true,
       reason: `same observer/value seen within ${cfg.dedupWindowSeconds}s`
     };
   }
@@ -186,6 +214,7 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
       value_hash: value.valueHash,
       observer_identity: observer.kind,
       observer_assurance: observer.assurance,
+      future_check_eligible: true,
       reason: 'idempotent or cryptographic-proof replay'
     };
   }
@@ -204,6 +233,8 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
     received_at: receivedAtIso,
     observer_identity: observer.kind,
     observer_assurance: observer.assurance,
+    future_check_eligible: true,
+    source_validator_recorded: sourceValidator !== null,
     caveat: observer.assurance === 'proof_of_possession'
       ? 'Observation is bound to a verified Ed25519 key. This proves key possession and continuity, not that the actor is independent or the value is true.'
       : 'Observation accepted as unverified provenance-bearing evidence, not certified truth.'

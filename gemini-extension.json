@@ -1,6 +1,6 @@
 {
   "name": "seenrelay",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Cooperative freshness for AI agents. CHECK before revalidating; OBSERVE what you independently saw.",
   "mcpServers": {
     "seenrelay": {

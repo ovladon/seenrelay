@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.8 — Early value and validator-assisted CHECK
+
+- Return the newest observer-supplied source validator with fresh CHECK evidence without claiming that SeenRelay verified it.
+- Provide safe conditional-request hints for `etag` and `last_modified` validators, while rejecting CR/LF-bearing validator values.
+- Make the cold-start loop machine-readable: `UNKNOWN`/`STALE` directs the caller to validate normally and OBSERVE, and accepted observations are explicitly eligible for later CHECKs.
+- Release-gate same-integration reuse so a caller can benefit from its own earlier OBSERVE without receiving qualified cross-client reuse credit.
+- Keep CHECK and OBSERVE as the only domain operations and preserve the external-verification=false boundary.
+
 ## 0.3.7 — Discovery funnel telemetry
 
 - Add privacy-minimized aggregate MCP `initialize` and `tools/list` request counters.

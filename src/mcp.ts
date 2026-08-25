@@ -28,7 +28,10 @@ const CheckRequest = z.object({ fact: FactDescriptor, known_value: JsonValue, ma
 const ObserveRequest = z.object({
   fact: FactDescriptor, value: JsonValue, observed_at: z.string().optional(), observer_id: z.string().min(1).max(128).optional(), observer_proof: ObserverProof.optional(),
   evidence_fingerprint: z.string().min(1).max(256).optional(),
-  source_validator: z.object({ kind: z.enum(['etag', 'last_modified', 'content_hash', 'other']), value: z.string().min(1).max(512) }).optional(),
+  source_validator: z.object({
+    kind: z.enum(['etag', 'last_modified', 'content_hash', 'other']),
+    value: z.string().min(1).max(512).regex(/^[^\r\n]+$/, 'source_validator.value must not contain CR or LF')
+  }).optional(),
   idempotency_key: z.string().min(1).max(128).optional()
 });
 function textResult(value: unknown) { return { content: [{ type: 'text' as const, text: JSON.stringify(value) }], structuredContent: value }; }
@@ -38,7 +41,7 @@ const handler = createMcpHandler(() => {
   const server = new McpServer({ name: 'seenrelay', version: cfg.version });
   server.registerTool('check_fact', {
     title: 'Check Fact Freshness',
-    description: 'Free-bootstrap CHECK for recently observed source-backed values. A frictionless Hive Lease controls abuse and rewards useful contributors; SeenRelay never browses or verifies externally.',
+    description: 'Low-cost CHECK before repeating potentially expensive source validation. If no reusable observation exists, validate normally and OBSERVE so later CHECKs, including from the same integration, can benefit. Fresh results may include observer-supplied source validators. SeenRelay never browses or verifies externally.',
     inputSchema: CheckRequest,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
   }, async (args, ctx) => {
@@ -55,7 +58,7 @@ const handler = createMcpHandler(() => {
 
   server.registerTool('observe_fact', {
     title: 'Contribute Fact Observation',
-    description: 'Deposit an independently obtained source-backed observation. OBSERVE is free; contribution score increases only if a different operational client later reuses the observation. Optional Ed25519 proof establishes key possession and continuity, not truth or real-world independence.',
+    description: 'Deposit an independently obtained source-backed observation. Accepted observations can answer later CHECKs, including from the same integration; contribution score increases only when a different qualified client reuses one. Optional Ed25519 proof establishes key possession and continuity, not truth or real-world independence.',
     inputSchema: ObserveRequest,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
   }, async (args, ctx) => {
