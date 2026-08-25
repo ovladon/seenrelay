@@ -6,6 +6,17 @@ Working analogy: Waze does not send a special car to inspect every road. Drivers
 
 > Before re-checking a fact, ask whether another agent has observed it recently. If you independently check the source anyway, leave the observation for the next agent.
 
+## Start here
+
+- Human integration guide: [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
+- Web quickstart: `https://seenrelay.com/quickstart`
+- MCP remote endpoint: `https://seenrelay.com/mcp`
+- MCP Registry identifier: `io.github.ovladon/seenrelay`
+- REST/OpenAPI contract: `https://seenrelay.com/openapi.json`
+- Machine descriptor: `https://seenrelay.com/service.json`
+
+The recommended first deployment is **shadow mode**: CHECK before existing revalidation, but initially skip nothing. Measure what SeenRelay would have saved before allowing bounded reuse.
+
 ## Two operations only
 
 - `CHECK` — compare a value an agent already knows with recent observations for the same deterministic source-backed fact.
@@ -55,6 +66,7 @@ Hive classes (`new`, `established`, `contributor`) describe operational contribu
 The canonical domain is `seenrelay.com`.
 
 - Browser `Accept: text/html` at `/` gets a decision-maker/agent landing page with live aggregate metrics.
+- `/quickstart` gives decision makers and implementers the shortest safe adoption path.
 - Generic/API requests to `/` retain the machine-readable service descriptor.
 - `/service.json` exposes the stable machine descriptor explicitly.
 - `/public-stats.json` exposes privacy-safe aggregate network metrics.
@@ -85,6 +97,12 @@ If SeenRelay returns `UNKNOWN`, the caller continues exactly as it would have wi
 - **Control Room** — authenticated human administration, live Hive Radar, incident playbooks, standards posture, operational readiness and custody-transfer support.
 
 A2A `1.0.0` is monitored but intentionally **not exposed**. SeenRelay is currently a tool/infrastructure service, not a task-oriented autonomous agent; publishing an Agent Card without genuine A2A task semantics would be misleading.
+
+## Discovery and distribution
+
+`registry/server.json` is the canonical MCP Registry manifest for `io.github.ovladon/seenrelay` and points remote clients to `https://seenrelay.com/mcp`.
+
+The repository includes a GitHub OIDC publishing workflow for the Official MCP Registry. It pins the publisher binary and verifies its SHA-256 before execution; no persistent Registry credential is stored in the repository.
 
 ## Verification gates
 
