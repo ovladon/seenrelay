@@ -17,6 +17,9 @@ test('Control Room adoption telemetry excludes the first-party Reference Observe
   assert.match(db, /privacyScopedHash\('observer-self', REFERENCE_OBSERVER_ID\)/);
   assert.match(db, /observer_key <> \$1/);
   assert.match(db, /externalLeaseFilter/);
+  assert.match(db, /externalContributorFilter/);
+  assert.match(db, /h\.check_count > 0/);
+  assert.match(db, /ext\.observer_key <> \$1/);
   assert.match(db, /e\.consumer_lease_id/);
   assert.match(db, /AS observes_month/);
   assert.doesNotMatch(db, /SUM\(observes\).*AS observes_month/);
