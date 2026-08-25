@@ -11,6 +11,7 @@ import { checkFact, observeFact } from './service.js';
 import { adminControl, adminHousekeeping, adminLogin, adminLogout, adminOperationsExport, adminPage, adminPlaybook, adminSnapshot } from './admin.js';
 import { publicLandingPage, serviceDescriptor } from './public.js';
 import { quickstartPage } from './quickstart.js';
+import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
 import { getPublicStats } from './public-db.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
 import { dataPracticesDescriptor, dataPracticesPage } from './data-practices.js';
@@ -60,6 +61,26 @@ app.get('/quickstart', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(quickstartPage(new URL(c.req.url).origin));
+});
+app.get('/clients', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(clientsPage(new URL(c.req.url).origin));
+});
+app.get('/robots.txt', (c) => {
+  c.header('content-type', 'text/plain; charset=utf-8');
+  c.header('cache-control', 'public, max-age=3600');
+  return c.body(robotsText(new URL(c.req.url).origin));
+});
+app.get('/sitemap.xml', (c) => {
+  c.header('content-type', 'application/xml; charset=utf-8');
+  c.header('cache-control', 'public, max-age=3600');
+  return c.body(sitemapXml(new URL(c.req.url).origin));
+});
+app.get('/llms.txt', (c) => {
+  c.header('content-type', 'text/plain; charset=utf-8');
+  c.header('cache-control', 'public, max-age=3600');
+  return c.body(llmsText(new URL(c.req.url).origin));
 });
 app.get('/data-practices', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
