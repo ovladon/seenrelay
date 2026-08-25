@@ -8,6 +8,8 @@ Think of SeenRelay as a shared cache for **freshness evidence rather than conten
 
 SeenRelay has exactly two domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
 
+For application workflows where `CHECK` must run whenever a selected validation path executes, use the deterministic JavaScript/TypeScript or Python wrapper. MCP remains the standard discovery and model/tool-routing interface. Both paths expose the same two SeenRelay operations; the wrapper changes execution placement, not protocol semantics.
+
 ## Why connect now
 
 SeenRelay remains useful before broad network coverage exists:
@@ -22,9 +24,9 @@ Access is **currently free** and requires no account or API key.
 
 ## Start here
 
+- Recommended deterministic application integration: [`clients/README.md`](clients/README.md)
+- Integration choices and MCP setup: [`docs/CLIENTS.md`](docs/CLIENTS.md)
 - Quickstart: [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
-- MCP and deterministic client setup: [`docs/CLIENTS.md`](docs/CLIENTS.md)
-- Zero-dependency JavaScript/Python wrappers: [`clients/README.md`](clients/README.md)
 - Protocol contract: [`docs/PROTOCOL.md`](docs/PROTOCOL.md)
 - Web quickstart: `https://seenrelay.com/quickstart`
 - Web client integrations: `https://seenrelay.com/clients`
@@ -48,7 +50,9 @@ Possible statuses are `SAME_OBSERVED`, `CHANGED_OBSERVED`, `CONTESTED`, `STALE`,
 
 ## Deterministic client path
 
-MCP remains the standard discovery and tool interface. Applications that need CHECK to run deterministically whenever an existing validation path runs can instead vendor the zero-third-party-runtime-dependency JavaScript/TypeScript or Python reference wrapper in [`clients/`](clients/).
+The reference wrappers are the recommended path when application code must guarantee that CHECK runs before selected validation work. They put SeenRelay directly around the validation the application already performs rather than relying on a model to select the MCP tool.
+
+MCP remains fully supported as the standard discovery and tool interface when model-selected tool routing is appropriate.
 
 The wrappers default to shadow mode, fail open on relay-side failure, retain no completed CHECK result cache, and require an explicit caller policy before reuse can suppress validation. They do not add a SeenRelay domain operation.
 
@@ -85,7 +89,7 @@ The canonical domain is `seenrelay.com`.
 
 - Browser `Accept: text/html` at `/` receives the public landing page.
 - Generic/API requests to `/` receive the machine descriptor.
-- `/service.json` exposes the explicit machine descriptor.
+- `/service.json` exposes the explicit machine descriptor, including the deterministic-wrapper and MCP integration paths.
 - `/public-stats.json` exposes privacy-safe aggregate activity.
 - `/openapi.json` exposes the REST contract.
 - `/mcp` exposes MCP `2026-07-28`.
@@ -102,6 +106,7 @@ SeenRelay itself does not browse or search fact sources, perform on-demand verif
 - Hono + TypeScript / Node 22
 - REST/OpenAPI
 - MCP `2026-07-28` through the official v2 server SDK
+- vendorable deterministic JavaScript/TypeScript and Python client wrappers
 - authenticated human-only Control Room for runtime operations and incident controls
 
 A2A is monitored but is not advertised as an implemented product interface.
