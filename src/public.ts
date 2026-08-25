@@ -29,6 +29,19 @@ export function serviceDescriptor(origin: string) {
       mcp: { status: 'implemented_e2e_verified', revision: standardsPosture.mcp.implemented, url: `${origin}/mcp` },
       a2a: { status: standardsPosture.a2a.status, tracked: standardsPosture.a2a.tracked }
     },
+    integration_paths: {
+      deterministic_wrappers: {
+        status: 'implemented',
+        recommendation: 'Use when the application must execute SeenRelay CHECK whenever a selected validation path runs.',
+        javascript_typescript: 'https://github.com/ovladon/seenrelay/tree/main/clients/typescript',
+        python: 'https://github.com/ovladon/seenrelay/tree/main/clients/python',
+        failure_semantics: 'Relay-side failure fails open into the application existing validation path.'
+      },
+      mcp: {
+        role: 'Standard discovery and model/tool-routing interface.',
+        url: `${origin}/mcp`
+      }
+    },
     external_verification: false,
     source_validation_hints: {
       assurance: 'observer_supplied_unverified',
@@ -58,12 +71,12 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Before an AI agent repeats a fact validation, SeenRelay lets it check recent source-backed observations and reuse safe conditional-request hints when available.">
+<meta name="description" content="Put a deterministic SeenRelay freshness preflight around existing validation with JavaScript or Python wrappers, or expose the same CHECK and OBSERVE operations through MCP.">
 <link rel="canonical" href="${origin}/">
 <link rel="alternate" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SeenRelay — Shared freshness for AI agents">
-<meta property="og:description" content="A low-cost freshness preflight for AI agents: CHECK before repeating validation work; OBSERVE what you independently found.">
+<meta property="og:description" content="Deterministic freshness preflight for application validation paths, with MCP available for agent tool routing.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
 <title>SeenRelay — Shared freshness for AI agents</title>
@@ -75,8 +88,8 @@ export function publicLandingPage(origin: string): string {
 <section class="hero">
 <div class="eyebrow">SHARED FRESHNESS FOR AI AGENTS</div>
 <h1>Before repeating a fact validation, check whether recent evidence already exists.</h1>
-<p class="lead">SeenRelay is a small, low-cost freshness preflight. An agent sends <b>CHECK</b> with the source-backed fact and value it already knows. SeenRelay returns recent observations of that exact fact and, when available, an observer-supplied ETag or Last-Modified hint for cheaper conditional revalidation. If validation still runs, the agent sends <b>OBSERVE</b> with what it found so its own later runs or other agents may avoid repeating the same work.</p>
-<div class="cta"><a class="primary" href="/clients">Connect an MCP client</a><a class="secondary" href="/quickstart">5-minute quickstart</a><a class="secondary" href="/openapi.json">OpenAPI</a><a class="secondary" href="/service.json">For machines</a></div>
+<p class="lead">SeenRelay is a small, low-cost freshness preflight. For application workflows that must run the preflight whenever a selected validation path executes, use the deterministic JavaScript/TypeScript or Python wrapper to place <b>CHECK</b> directly in that call path. MCP remains the standard discovery and model/tool-routing interface. If validation still runs, <b>OBSERVE</b> records what the caller independently found so later runs or other agents may avoid repeating the same work.</p>
+<div class="cta"><a class="primary" href="/clients">Use a deterministic wrapper</a><a class="secondary" href="/clients">Connect via MCP</a><a class="secondary" href="/quickstart">5-minute quickstart</a><a class="secondary" href="/service.json">For machines</a></div>
 <div class="contract"><span>Exactly 2 operations</span><b>CHECK</b><b>OBSERVE</b><span>Currently free · no account · no browse/search · no truth verdict</span></div>
 </section>
 
@@ -123,20 +136,22 @@ reuse or revalidate → caller policy</pre></div>
 </section>
 
 <section id="integrate" class="section split">
-<div><div class="eyebrow">FOR DEVELOPERS AND AGENTS</div><h2>One endpoint. Two tools.</h2><p>Use the remote MCP endpoint directly or the REST/OpenAPI contract. No account or API key is required during bootstrap.</p><div class="flow"><span>need fact</span><i>→</i><span>CHECK</span><i>→</i><span>reuse or validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Copy setup for Claude Code, Cursor, VS Code or supported ChatGPT custom MCP apps →</a></p></div>
-<div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>MCP</b></div><pre>Endpoint
-${origin}/mcp
+<div><div class="eyebrow">INTEGRATION PATHS</div><h2>Deterministic in application code. MCP when tool routing is appropriate.</h2><p>If the application must execute CHECK whenever a selected validation path runs, vendor the zero-dependency JavaScript/TypeScript or Python wrapper. It fails open into the validation the application already planned. If model-selected tool use is appropriate, connect the same two SeenRelay operations through the remote MCP endpoint.</p><div class="flow"><span>need fact</span><i>→</i><span>CHECK</span><i>→</i><span>reuse or validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Choose the deterministic wrapper or MCP setup →</a></p></div>
+<div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>integration</b></div><pre>Deterministic application path
+JavaScript / TypeScript wrapper
+Python wrapper
 
-Registry
+MCP discovery / tool routing
+${origin}/mcp
 io.github.ovladon/seenrelay
 
-Tools
-check_fact
-observe_fact</pre></div>
+Same domain operations
+CHECK
+OBSERVE</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">SAFE ADOPTION</div><h2>Start in shadow mode.</h2><p>Insert CHECK before existing validation but initially skip nothing. Compare SeenRelay status with the result your workflow obtains normally, then allow bounded reuse only for fact classes and freshness windows accepted by your own policy.</p><p>When CHECK includes a conditional-request hint, treat it only as a way to make source confirmation cheaper. It is observer-supplied metadata, not a SeenRelay truth or freshness certificate.</p><p>Access is currently free, so the first integration can focus on signal quality and workflow fit rather than account setup.</p><p><a href="/quickstart">Open the integration sequence →</a></p></div>
+<div><div class="eyebrow">SAFE ADOPTION</div><h2>Start in shadow mode.</h2><p>For deterministic application integration, place the wrapper around existing validation but initially skip nothing. Compare SeenRelay status with the result your workflow obtains normally, then allow bounded reuse only for fact classes and freshness windows accepted by your own policy.</p><p>When CHECK includes a conditional-request hint, treat it only as a way to make source confirmation cheaper. It is observer-supplied metadata, not a SeenRelay truth or freshness certificate.</p><p>Access is currently free, so the first integration can focus on signal quality and workflow fit rather than account setup.</p><p><a href="/quickstart">Open the integration sequence →</a></p></div>
 <div class="proof-grid"><article><b>Best fit</b><span>Repeated machine-locatable prices, statuses, versions, availability, capacities, and similar changing facts.</span></article><article><b>Keep validating</b><span>When the result is UNKNOWN, STALE, CONTESTED, or your policy requires a fresh source check.</span></article><article><b>Measure</b><span>Status distribution, downstream operations actually skipped, latency, and policy exceptions.</span></article><article><b>Stay bounded</b><span>SeenRelay supplies freshness evidence; the consuming workflow retains the final decision.</span></article></div>
 </section>
 
@@ -145,7 +160,7 @@ observe_fact</pre></div>
 <div class="trust-note"><a href="/data-practices">Inspect technical data practices →</a></div>
 </section>
 
-<section class="section final"><div><div class="eyebrow">CONNECT WITHOUT COMMITTING YOUR WORKFLOW</div><h2>Start free in shadow mode and let your own observations seed later reuse.</h2></div><div class="cta"><a class="primary" href="/clients">Connect a client</a><a class="secondary" href="/quickstart">Start the pilot</a><a class="secondary" href="/openapi.json">Inspect OpenAPI</a><a class="secondary" href="/service.json">Machine descriptor</a></div></section>
+<section class="section final"><div><div class="eyebrow">CONNECT WITHOUT COMMITTING YOUR WORKFLOW</div><h2>Start free in shadow mode and let your own observations seed later reuse.</h2></div><div class="cta"><a class="primary" href="/clients">Use a deterministic wrapper</a><a class="secondary" href="/clients">Connect via MCP</a><a class="secondary" href="/quickstart">Start the pilot</a><a class="secondary" href="/service.json">Machine descriptor</a></div></section>
 </main>
 <footer><span>SeenRelay</span><span>Recent observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
 <script src="/site.js" defer></script>
