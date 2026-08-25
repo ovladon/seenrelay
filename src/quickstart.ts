@@ -16,7 +16,7 @@ export function quickstartPage(origin: string): string {
 <h1>Add one cheap question before expensive revalidation.</h1>
 <p class="lead">Keep your existing source-validation policy. CHECK first. Reuse only when your policy permits it. If you validate independently anyway, OBSERVE the result for the next agent.</p>
 <div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Full quickstart</a><a class="secondary" href="/openapi.json">REST / OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a></div>
-<div class="contract"><span>Registry</span><b>io.github.ovladon/seenrelay</b><span>No account · no API key · bootstrap billing off</span></div>
+<div class="contract"><span>Registry</span><b>io.github.ovladon/seenrelay</b><span>No account · no API key · currently free</span></div>
 </section>
 
 <section class="section split">
@@ -32,8 +32,8 @@ observe_fact ✓</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">PILOT</div><h2>Four stages, measurable exit criteria.</h2><p><b>1. Baseline:</b> measure repeated browser, API, search, model, human-review, latency and cost.</p><p><b>2. Shadow:</b> call CHECK but keep every existing validation.</p><p><b>3. Bounded reuse:</b> allow reuse only for approved fact classes and freshness windows.</p><p><b>4. Measure:</b> qualified reuse, avoided work, latency/cost saved and policy incidents.</p></div>
-<div class="proof-grid"><article><b>Expand when</b><span>Measured avoided downstream work exceeds integration and operating cost.</span></article><article><b>Stop when</b><span>False convergence, policy risk or operational complexity outweighs savings.</span></article><article><b>Conservative outcomes</b><span>UNKNOWN, STALE and CONTESTED mean continue with the validation you already planned.</span></article><article><b>No truth oracle</b><span>SAME_OBSERVED and CHANGED_OBSERVED are observations; your application decides what they permit.</span></article></div>
+<div><div class="eyebrow">COLD START</div><h2>Useful before broad network coverage exists.</h2><p><b>1. Empty network:</b> CHECK returns UNKNOWN and the existing validation continues.</p><p><b>2. First observation:</b> after normal source validation, the caller sends OBSERVE.</p><p><b>3. Later callers:</b> subsequent agents can see the recent observation before repeating the same validation.</p><p><b>4. Broader coverage:</b> external observations add more reusable freshness without changing the integration.</p></div>
+<div class="proof-grid"><article><b>Shadow first</b><span>Call CHECK while initially keeping every existing validation.</span></article><article><b>Measure directly</b><span>Record status distribution, latency and downstream operations actually skipped.</span></article><article><b>Conservative outcomes</b><span>UNKNOWN, STALE and CONTESTED mean continue with the validation you already planned.</span></article><article><b>Caller policy</b><span>SAME_OBSERVED and CHANGED_OBSERVED are evidence; your application decides what they permit.</span></article></div>
 </section>
 
 <section class="section final"><div><div class="eyebrow">IMPLEMENT</div><h2>Copy the complete examples and fact-identity rules.</h2></div><div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Open Quickstart</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/PROTOCOL.md">Protocol</a></div></section>

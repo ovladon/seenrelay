@@ -236,13 +236,6 @@ The central product metric is **qualified reuse rate**, not raw request volume. 
 
 OpenTelemetry and GenAI semantic conventions are tracked for future adoption. Any telemetry implementation must avoid exporting sensitive fact values, source URLs, raw keys, lease tokens or customer payloads by default.
 
-## Billing state
+## Access
 
-Billing is disabled in this deployment:
-
-```text
-PAYMENTS_ENABLED=false
-PAYMENT_PROVIDER=none
-```
-
-Any incompatible billing configuration fails closed before normal request handling. No pricing or private operator strategy is stored in this repository.
+SeenRelay is currently free to use. Pricing is not part of the CHECK/OBSERVE protocol contract.
