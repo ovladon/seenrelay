@@ -34,8 +34,13 @@ test('billing is disabled and fails closed', () => {
 
 test('version and idempotency scope are internally consistent', () => {
   const config = read('src','config.ts');
-  const pkg = JSON.parse(read('package.json'));
-  assert.match(config, new RegExp(`SERVICE_VERSION \\|\\| ['\"]${pkg.version}['\"]`));
+  const versionSource = read('src','version.ts');
+  const registry = JSON.parse(read('registry','server.json'));
+  const release = versionSource.match(/SERVICE_RELEASE\s*=\s*'([^']+)'/);
+  assert.ok(release, 'SERVICE_RELEASE constant missing');
+  assert.equal(release[1], registry.version);
+  assert.match(config, /version:\s*SERVICE_RELEASE/);
+  assert.doesNotMatch(config, /SERVICE_VERSION/);
   const service = read('src','service.ts');
   assert.match(service, /idem\|\$\{fact\.factKey\}\|\$\{observer\.key\}\|\$\{idempotency\}/);
 });
