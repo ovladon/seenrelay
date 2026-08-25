@@ -1,0 +1,37 @@
+name: Client Wrappers
+
+on:
+  pull_request:
+    paths:
+      - 'clients/**'
+      - 'tests/client-wrappers.test.mjs'
+      - '.github/workflows/client-wrappers.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'clients/**'
+      - 'tests/client-wrappers.test.mjs'
+      - '.github/workflows/client-wrappers.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/client-wrappers.test.mjs
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m unittest -v test_seenrelay.py
+        working-directory: clients/python
