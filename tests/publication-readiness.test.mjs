@@ -32,6 +32,36 @@ test('quickstart exposes a bounded adoption path without changing product semant
   assert.doesNotMatch(quickstart, /certified truth|guaranteed truth/i);
 });
 
+test('client and decision-maker adoption guides are concrete and conservative', () => {
+  const clients = read('docs', 'CLIENTS.md');
+  const pilot = read('docs', 'PILOT.md');
+  assert.match(clients, /claude mcp add --transport http seenrelay https:\/\/seenrelay\.com\/mcp/);
+  assert.match(clients, /\.cursor\/mcp\.json/);
+  assert.match(clients, /VS Code \/ GitHub Copilot/);
+  assert.match(clients, /ChatGPT custom MCP apps/);
+  assert.match(clients, /shadow mode/i);
+  assert.match(pilot, /Kill criteria/);
+  assert.match(pilot, /Do not estimate savings without a baseline/);
+  assert.match(pilot, /rollback/i);
+  assert.doesNotMatch(`${clients}\n${pilot}`, /certified truth|guaranteed truth/i);
+});
+
+test('public discovery surfaces expose clients without indexing admin', () => {
+  const adoption = read('src', 'adoption.ts');
+  const publicSource = read('src', 'public.ts');
+  const index = read('src', 'index.ts');
+  assert.match(index, /app\.get\('\/clients'/);
+  assert.match(index, /app\.get\('\/robots\.txt'/);
+  assert.match(index, /app\.get\('\/sitemap\.xml'/);
+  assert.match(index, /app\.get\('\/llms\.txt'/);
+  assert.match(adoption, /Disallow: \/admin/);
+  assert.match(adoption, /io\.github\.ovladon\/seenrelay/);
+  assert.match(publicSource, /rel="canonical"/);
+  assert.match(publicSource, /property="og:title"/);
+  assert.match(publicSource, /clients:\s*`\$\{origin\}\/clients`/);
+  assert.match(publicSource, /mcp_name:\s*'io\.github\.ovladon\/seenrelay'/);
+});
+
 test('MCP Registry publishing uses GitHub OIDC and a checksum-pinned publisher binary', () => {
   const workflow = read('.github', 'workflows', 'mcp-registry-publish.yml');
   assert.match(workflow, /id-token:\s*write/);

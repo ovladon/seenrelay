@@ -9,11 +9,15 @@ Working analogy: Waze does not send a special car to inspect every road. Drivers
 ## Start here
 
 - Human integration guide: [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
+- Verified MCP client integrations: [`docs/CLIENTS.md`](docs/CLIENTS.md)
+- Decision-maker pilot and kill criteria: [`docs/PILOT.md`](docs/PILOT.md)
 - Web quickstart: `https://seenrelay.com/quickstart`
+- Web client integrations: `https://seenrelay.com/clients`
 - MCP remote endpoint: `https://seenrelay.com/mcp`
 - MCP Registry identifier: `io.github.ovladon/seenrelay`
 - REST/OpenAPI contract: `https://seenrelay.com/openapi.json`
 - Machine descriptor: `https://seenrelay.com/service.json`
+- Machine-oriented index: `https://seenrelay.com/llms.txt`
 
 The recommended first deployment is **shadow mode**: CHECK before existing revalidation, but initially skip nothing. Measure what SeenRelay would have saved before allowing bounded reuse.
 
@@ -67,6 +71,8 @@ The canonical domain is `seenrelay.com`.
 
 - Browser `Accept: text/html` at `/` gets a decision-maker/agent landing page with live aggregate metrics.
 - `/quickstart` gives decision makers and implementers the shortest safe adoption path.
+- `/clients` gives copy-ready MCP client configuration.
+- `/robots.txt`, `/sitemap.xml` and `/llms.txt` expose bounded public discovery metadata.
 - Generic/API requests to `/` retain the machine-readable service descriptor.
 - `/service.json` exposes the stable machine descriptor explicitly.
 - `/public-stats.json` exposes privacy-safe aggregate network metrics.

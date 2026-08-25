@@ -14,6 +14,11 @@ export function serviceDescriptor(origin: string) {
     fact_identity_precedence: ['source_locator', 'predicate'],
     observer_proof: 'ed25519-v1',
     observer_proof_semantics: 'Proof of key possession and continuity only; not proof of independent actor identity or truth.',
+    registry: {
+      mcp_name: 'io.github.ovladon/seenrelay',
+      version: cfg.version,
+      status: 'published'
+    },
     hive: {
       lease: 'frictionless signed operational slot; no account required',
       check_bootstrap: 'free with token-bucket admission',
@@ -33,6 +38,9 @@ export function serviceDescriptor(origin: string) {
       mcp: `${origin}/mcp`,
       openapi: `${origin}/openapi.json`,
       quickstart: `${origin}/quickstart`,
+      clients: `${origin}/clients`,
+      llms: `${origin}/llms.txt`,
+      sitemap: `${origin}/sitemap.xml`,
       health: `${origin}/healthz`,
       public_stats: `${origin}/public-stats.json`,
       data_practices: `${origin}/data-practices.json`,
@@ -48,17 +56,24 @@ export function publicLandingPage(origin: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="SeenRelay turns incidental source-backed observations from AI agents into reusable freshness signals for other agents.">
+<link rel="canonical" href="${origin}/">
+<link rel="alternate" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SeenRelay — Reusable information gain for AI agents">
+<meta property="og:description" content="Cooperative freshness infrastructure for AI agents. CHECK before redundant revalidation; OBSERVE what was independently seen.">
+<meta property="og:url" content="${origin}/">
+<meta name="twitter:card" content="summary">
 <title>SeenRelay — Reusable information gain for AI agents</title>
 <link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="#network">Network</a><a href="/quickstart">Quickstart</a><a href="#integrate">Integrate</a><a href="#trust">Trust</a><a href="/data-practices">Data</a><a href="/service.json">Machine JSON</a></nav></header>
+<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="#network">Network</a><a href="/quickstart">Quickstart</a><a href="/clients">Clients</a><a href="#integrate">Integrate</a><a href="#trust">Trust</a><a href="/data-practices">Data</a><a href="/service.json">Machine JSON</a></nav></header>
 <main>
 <section class="hero">
 <div class="eyebrow">FRESHNESS INFRASTRUCTURE FOR AGENT FLEETS</div>
 <h1>Don't revalidate what another agent just saw.</h1>
 <p class="lead">SeenRelay converts incidental, source-backed observations into reusable information gain. Agents CHECK before repeating work and OBSERVE only what they independently encountered anyway.</p>
-<div class="cta"><a class="primary" href="/quickstart">Quickstart</a><a class="secondary" href="/openapi.json">OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a><a class="secondary" href="/service.json">Machine descriptor</a></div>
+<div class="cta"><a class="primary" href="/quickstart">Quickstart</a><a class="secondary" href="/clients">Connect a client</a><a class="secondary" href="/openapi.json">OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a><a class="secondary" href="/service.json">Machine descriptor</a></div>
 <div class="contract"><span>2 operations</span><b>CHECK</b><b>OBSERVE</b><span>No browse · no search · no LLM truth oracle</span></div>
 </section>
 
@@ -76,7 +91,7 @@ export function publicLandingPage(origin: string): string {
 </section>
 
 <section id="integrate" class="section split">
-<div><div class="eyebrow">FOR AGENTS</div><h2>One cheap question before expensive work.</h2><p>CHECK asks whether the same structured fact/value has been observed recently. If the answer is useful, continue. If it is UNKNOWN or your policy requires revalidation, do the work you were going to do anyway and OBSERVE the result for the next agent.</p><div class="flow"><span>goal</span><i>→</i><span>CHECK</span><i>→</i><span>reuse or revalidate</span><i>→</i><span>OBSERVE</span></div></div>
+<div><div class="eyebrow">FOR AGENTS</div><h2>One cheap question before expensive work.</h2><p>CHECK asks whether the same structured fact/value has been observed recently. If the answer is useful, continue. If it is UNKNOWN or your policy requires revalidation, do the work you were going to do anyway and OBSERVE the result for the next agent.</p><div class="flow"><span>goal</span><i>→</i><span>CHECK</span><i>→</i><span>reuse or revalidate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Connect Claude Code, Cursor, VS Code or a supported custom MCP app →</a></p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>MCP 2026-07-28</b></div><pre>POST ${origin}/mcp
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
@@ -98,7 +113,7 @@ observe_fact    ✓</pre></div>
 <div class="trust-note"><a href="/data-practices">Inspect technical data practices →</a></div>
 </section>
 
-<section class="section final"><div><div class="eyebrow">CONNECT A FLEET</div><h2>Bring observations that already happened. Take freshness that saves work.</h2></div><div class="cta"><a class="primary" href="/quickstart">Start a pilot</a><a class="secondary" href="/openapi.json">Inspect contract</a><a class="secondary" href="/service.json">Read machine JSON</a></div></section>
+<section class="section final"><div><div class="eyebrow">CONNECT A FLEET</div><h2>Bring observations that already happened. Take freshness that saves work.</h2></div><div class="cta"><a class="primary" href="/quickstart">Start a pilot</a><a class="secondary" href="/clients">Connect a client</a><a class="secondary" href="/openapi.json">Inspect contract</a><a class="secondary" href="/service.json">Read machine JSON</a></div></section>
 </main>
 <footer><span>SeenRelay</span><span>Observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
 <script src="/site.js" defer></script>
