@@ -118,7 +118,7 @@ Do not immediately allow SeenRelay to suppress existing validation. Start in **s
 - OBSERVE the independently obtained result;
 - measure potential avoided work, latency and cost.
 
-Only enable bounded reuse after the measured results and your risk policy justify it. See [`PILOT.md`](PILOT.md).
+Only enable bounded reuse after the measured results and your risk policy justify it. The bounded sequence is documented in [`QUICKSTART.md`](QUICKSTART.md).
 
 ## Security note
 
