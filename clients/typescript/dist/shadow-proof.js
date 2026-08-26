@@ -132,7 +132,7 @@ export class SeenRelayShadowProof {
       statusCounts: proof.statuses,
       observedSameRate,
       conditionalHintsSeen: proof.conditionalHintsSeen,
-      validationMsAverage,
+      validationMsAverage: validationAverageMs,
       checkNetworkLatencyMsAverage: checkAverageMs,
       observeNetworkLatencyMsAverage: observeAverageMs,
       potentialValidationCallsAvoided: same,
