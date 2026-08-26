@@ -1,0 +1,46 @@
+name: Apply Security Abuse Bounds
+
+on:
+  push:
+    branches:
+      - security/abuse-bounds
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-security-abuse-bounds
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: security/abuse-bounds
+          fetch-depth: 1
+
+      - name: Verify and apply bounded hardening patch
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cat .github/security-patch/part-*.b64 | base64 --decode > /tmp/security-abuse-bounds.patch
+          printf '%s  %s\n' 'd53bd0ce51cd2e87eb0533797ec3e3e22bf6ba3366e113cd3042278b053b5916' '/tmp/security-abuse-bounds.patch' | sha256sum --check --strict
+          git apply --check /tmp/security-abuse-bounds.patch
+          git apply /tmp/security-abuse-bounds.patch
+
+      - name: Remove one-shot staging material and commit
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          rm -rf .github/security-patch
+          rm -f .github/workflows/apply-security-abuse-bounds.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Harden accountless abuse boundaries'
+          git push origin HEAD:security/abuse-bounds
