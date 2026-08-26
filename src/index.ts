@@ -3,7 +3,7 @@ import { assertBillingDisabled } from './billing.js';
 import { canonicalFact, ValidationError } from './canonical.js';
 import { config } from './config.js';
 import { admitHive, finishHiveCheck, finishHiveObserve } from './hive.js';
-import { readJsonBody, requestId } from './http.js';
+import { limitRequestBody, readJsonBody, requestId } from './http.js';
 import { handleMcp } from './mcp.js';
 import { openApi } from './openapi.js';
 import { deriveClientKey } from './identity.js';
@@ -118,7 +118,7 @@ app.get('/healthz', (c) => {
   });
 });
 app.get('/openapi.json', (c) => { c.header('cache-control', 'public, max-age=3600'); return c.json(openApi(new URL(c.req.url).origin)); });
-app.all('/mcp', (c) => handleMcp(c.req.raw));
+app.all('/mcp', async (c) => handleMcp(await limitRequestBody(c.req.raw, config().maxBodyBytes)));
 
 app.get('/admin', (c) => adminPage(c.req.raw));
 app.post('/admin/login', (c) => adminLogin(c.req.raw));
