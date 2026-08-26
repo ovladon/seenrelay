@@ -21,6 +21,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # The generator fails if versions, anchors, pricing freshness or generated output drift.
           node scripts/sync-public-surfaces.mjs --write --enforce-freshness
           node scripts/sync-public-surfaces.mjs --enforce-freshness
       - name: Commit generated surfaces
