@@ -23,9 +23,6 @@ function parsePyprojectVersion(text) {
 function parseServiceVersion(text) {
   return text.match(/SERVICE_RELEASE\s*=\s*'([^']+)'/)?.[1] ?? null;
 }
-function escapeHtml(value) {
-  return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-}
 function markerBlock(name, body) {
   return `<!-- BEGIN GENERATED:${name} -->\n${body.trim()}\n<!-- END GENERATED:${name} -->`;
 }
@@ -123,7 +120,7 @@ const clients = replaceOrInsert(
   read('clients/README.md'),
   'PUBLIC-FACTS',
   renderInstallSummary(facts),
-  '# SeenRelay deterministic clients',
+  '# SeenRelay deterministic client wrappers',
 );
 outputs.set('clients/README.md', clients);
 
