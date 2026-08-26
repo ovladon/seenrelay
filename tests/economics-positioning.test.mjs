@@ -23,8 +23,11 @@ test('public and machine-facing guidance targets repeated expensive fleet valida
   assert.match(economics, /OpenAI Web Search/);
   assert.match(economics, /\$1,000/);
   assert.match(economics, /\$700/);
-  assert.match(economics, /Firecrawl Standard plan/);
-  assert.match(economics, /\$0 direct plan-fee saving/);
+  assert.match(economics, /Firecrawl Pay As You Go/);
+  assert.match(economics, /\$500/);
+  assert.match(economics, /\$350/);
+  assert.match(economics, /Firecrawl Standard/);
+  assert.match(economics, /\$83 → \$83/);
   assert.match(publicSource, /direct_plan_fee_avoided_usd: 0/);
   assert.match(economics, /Browserbase Extract/);
   assert.match(economics, /30% is an illustration, not a promised hit rate/);
