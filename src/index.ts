@@ -136,19 +136,38 @@ app.post('/admin/login', async (c) => {
   if ('response' in bounded) return bounded.response;
   return adminLogin(bounded.request);
 });
-app.post('/admin/logout', (c) => adminLogout(c.req.raw));
+app.post('/admin/logout', async (c) => {
+  const bounded = await boundedRequest(c.req.raw, Math.min(config().maxBodyBytes, 4096));
+  if ('response' in bounded) return bounded.response;
+  return adminLogout(bounded.request);
+});
 app.get('/admin/api/snapshot', (c) => adminSnapshot(c.req.raw));
 app.get('/admin/api/operations-export', (c) => adminOperationsExport(c.req.raw));
-app.post('/admin/api/control', (c) => adminControl(c.req.raw));
-app.post('/admin/api/playbook', (c) => adminPlaybook(c.req.raw));
-app.post('/admin/api/housekeeping', (c) => adminHousekeeping(c.req.raw));
+app.post('/admin/api/control', async (c) => {
+  const bounded = await boundedRequest(c.req.raw, Math.min(config().maxBodyBytes, 4096));
+  if ('response' in bounded) return bounded.response;
+  return adminControl(bounded.request);
+});
+app.post('/admin/api/playbook', async (c) => {
+  const bounded = await boundedRequest(c.req.raw, Math.min(config().maxBodyBytes, 4096));
+  if ('response' in bounded) return bounded.response;
+  return adminPlaybook(bounded.request);
+});
+app.post('/admin/api/housekeeping', async (c) => {
+  const bounded = await boundedRequest(c.req.raw, Math.min(config().maxBodyBytes, 4096));
+  if ('response' in bounded) return bounded.response;
+  return adminHousekeeping(bounded.request);
+});
 
 app.post('/v1/check', async (c) => {
   const started = Date.now();
-  const body = await readJsonBody<CheckRequest>(c.req.raw, config().maxBodyBytes);
+  const bounded = await boundedRequest(c.req.raw, config().maxBodyBytes);
+  if ('response' in bounded) return bounded.response;
+  const request = bounded.request;
+  const body = await readJsonBody<CheckRequest>(request, config().maxBodyBytes);
   canonicalFact(body.fact);
   assertRuntimeFactAllowed(body.fact);
-  const admission = await admitHive(c.req.raw, 'check');
+  const admission = await admitHive(request, 'check');
   if (!admission.allowed) {
     if (admission.reason === 'runtime_disabled') return c.json({ error: { code: 'SERVICE_CONTROLLED', detail: 'CHECK is temporarily disabled by the SeenRelay control plane.' }, hive: admission.state }, 503);
     c.header('x-seenrelay-lease', admission.token);
@@ -158,22 +177,25 @@ app.post('/v1/check', async (c) => {
   c.header('x-seenrelay-lease', admission.token);
   const result = await checkFact(body);
   const finished = await finishHiveCheck(admission, result);
-  const clientKey = await deriveClientKey(c.req.raw);
+  const clientKey = await deriveClientKey(request);
   console.log(JSON.stringify({ event: 'check', client_key: clientKey, hive_class: finished.state.class, outcome: result.status, useful_reuse_awards: finished.usefulReuseAwards, latency_ms: Date.now() - started }));
   return c.json({ ...result, hive: finished.state, useful_reuse_awards: finished.usefulReuseAwards });
 });
 
 app.post('/v1/observe', async (c) => {
   const started = Date.now();
-  const body = await readJsonBody<ObserveRequest>(c.req.raw, config().maxBodyBytes);
+  const bounded = await boundedRequest(c.req.raw, config().maxBodyBytes);
+  if ('response' in bounded) return bounded.response;
+  const request = bounded.request;
+  const body = await readJsonBody<ObserveRequest>(request, config().maxBodyBytes);
   canonicalFact(body.fact);
   assertRuntimeFactAllowed(body.fact);
-  const admission = await admitHive(c.req.raw, 'observe');
+  const admission = await admitHive(request, 'observe');
   if (!admission.allowed) return c.json({ error: { code: 'SERVICE_CONTROLLED', detail: 'OBSERVE is temporarily disabled by the SeenRelay control plane.' }, hive: admission.state }, 503);
   c.header('x-seenrelay-lease', admission.token);
-  const result = await observeFact(c.req.raw, body, admission.leaseId);
+  const result = await observeFact(request, body, admission.leaseId);
   const hive = await finishHiveObserve(admission, result.fact_key, result.accepted ? 'accepted' : 'deduplicated');
-  const clientKey = await deriveClientKey(c.req.raw);
+  const clientKey = await deriveClientKey(request);
   console.log(JSON.stringify({ event: 'observe', client_key: clientKey, hive_class: hive.class, observer_identity: result.observer_identity, observer_assurance: result.observer_assurance, outcome: result.accepted ? 'accepted' : 'deduplicated', latency_ms: Date.now() - started }));
   return c.json({ ...result, hive });
 });
