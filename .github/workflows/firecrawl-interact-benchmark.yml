@@ -1,0 +1,33 @@
+name: Firecrawl Interact Benchmark
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/benchmark-firecrawl-interact.mjs'
+      - '.github/workflows/firecrawl-interact-benchmark.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact benchmark commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - name: Run bounded keyless Firecrawl Interact benchmark
+        run: node scripts/benchmark-firecrawl-interact.mjs
+      - name: Upload benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: firecrawl-interact-benchmark
+          path: firecrawl-interact-benchmark.json
+          if-no-files-found: warn
+          retention-days: 14
