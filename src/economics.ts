@@ -44,12 +44,12 @@ and any fixed plan minimums.</pre></div>
 
 <section class="section decision">
 <div class="section-head"><div><div class="eyebrow">CONCRETE LIST-PRICE ARITHMETIC</div><h2>100,000 repeated validations · 30% measured reusable.</h2></div><p>Illustrative arithmetic using public provider prices checked 26 August 2026. That 30% is an illustration, not a promised hit rate. Shadow Proof must measure your workload first.</p></div>
-<div class="proof-grid"><article><b>OpenAI Web Search</b><span>$10 / 1,000 calls → 100k calls = $1,000. If 30k validations are safely reusable, 70k paid searches = $700. <strong>$300 gross tool spend avoided.</strong></span></article><article><b>Firecrawl Standard plan</b><span>Current self-serve pricing is plan-based, not pay-per-use: Standard is $83/month billed yearly for 100k credits, and a standard scrape uses 1 credit. 100k scrapes → 70k after 30% reuse still fits the same Standard tier. <strong>$0 direct plan-fee saving in this example; 30k credits are freed.</strong> Savings appear only if reduced usage avoids an upgrade or overage.</span></article><article><b>Browserbase Extract</b><span>Published marginal Extract rate: $4 / 1,000 calls without proxies after plan allowance. For 100k billable marginal calls: $400 → $280 at 30% reuse. <strong>$120 gross marginal spend avoided.</strong></span></article><article><b>What is excluded</b><span>SeenRelay currently charges no API fee. Examples exclude CHECK network/compute overhead, fixed subscriptions, included credits, taxes and any unmeasured token or conditional-request savings.</span></article></div>
-<div class="trust-note">Price sources: <a href="https://platform.openai.com/pricing">OpenAI API pricing</a> · <a href="https://www.firecrawl.dev/pricing">Firecrawl pricing</a> · <a href="https://www.browserbase.com/pricing">Browserbase pricing</a>. Provider pricing can change; use your invoice for production decisions.</div>
+<div class="proof-grid"><article><b>OpenAI Web Search</b><span>$10 / 1,000 calls → 100k calls = $1,000. If 30k validations are safely reusable, 70k paid searches = $700. <strong>$300 gross search-call spend avoided.</strong> Search-content token effects are excluded.</span></article><article><b>Firecrawl Pay As You Go</b><span>$5 / 1,000 credits and a standard scrape uses 1 credit. 100k scrapes = $500 of purchased credits. At 30% reusable: 70k scrapes = $350. <strong>$150 gross credit spend avoided</strong>, assuming the avoided credits would otherwise have been purchased.</span></article><article><b>Browserbase Extract</b><span>Published marginal Extract rate: $4 / 1,000 calls without proxies after plan allowance. For 100k billable marginal calls: $400 → $280 at 30% reuse. <strong>$120 gross marginal spend avoided.</strong></span></article><article><b>Fixed-tier counterexample</b><span>Firecrawl Standard is $83/month billed yearly for 100k credits. 100k scrapes → 70k still remains inside the same tier: <strong>$83 → $83</strong>. 30k credits are freed, but the bill falls only if lower usage changes tier, overage or future capacity needs.</span></article></div>
+<div class="trust-note">Price sources: <a href="https://platform.openai.com/pricing">OpenAI API pricing</a> · <a href="https://www.firecrawl.dev/pricing">Firecrawl pricing</a> · <a href="https://www.browserbase.com/pricing">Browserbase pricing</a>. Provider pricing can change; use your invoice for production decisions. Examples exclude SeenRelay network/compute overhead, taxes, fixed plan minimums and unmeasured conditional-request savings.</div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">RIDICULOUSLY SMALL INTEGRATION</div><h2>Bind once. One line per revalidation after that.</h2><p>The deterministic client can bind SeenRelay around one existing fixed-fact validation. With no reuse policy it is automatically shadow mode: CHECK runs, your original validation still runs, and OBSERVE records the independent result.</p><p>After measurement, adding a caller-approved reuse policy can allow matching recent evidence to suppress the expensive validation.</p></div>
+<div><div class="eyebrow">RIDICULOUSLY SMALL INTEGRATION</div><h2>Bind once. One line per revalidation after that.</h2><p>The deterministic clients bind SeenRelay around one existing fixed-fact validation. With no reuse policy they are automatically shadow mode: CHECK runs, your original validation still runs, and OBSERVE records the independent result.</p><p>After measurement, adding a caller-approved reuse policy can allow matching recent evidence to suppress the expensive validation.</p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>JavaScript / TypeScript</b></div><pre>const validatePrice = relay.protectValidation({
   fact,
   validate: ({ conditionalHeaders }) =&gt;
@@ -57,6 +57,20 @@ and any fixed plan minimums.</pre></div>
 });
 
 const value = await validatePrice(knownValue);</pre></div>
+</section>
+
+<section class="section split decision">
+<div><div class="eyebrow">PYTHON</div><h2>The same bind-once pattern.</h2><p>The Python helper keeps the same semantics and uses only the standard library.</p></div>
+<div class="terminal"><pre>from seenrelay_easy import protect_validation
+
+validate_price = protect_validation(
+    relay,
+    fact=fact,
+    validate=lambda ctx:
+        expensive_validation(ctx.conditional_headers),
+)
+
+value = validate_price(known_value)</pre></div>
 </section>
 
 <section class="section split decision">
