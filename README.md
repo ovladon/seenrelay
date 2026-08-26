@@ -1,8 +1,8 @@
 # SeenRelay
 
-**A cooperative freshness cache for AI agents.**
+**A cooperative freshness cache that reduces redundant validation spend across AI-agent fleets.**
 
-Think of SeenRelay as a shared cache for **freshness evidence rather than content**. A normal cache lets a later request avoid fetching the same bytes again. SeenRelay lets a later check reuse recent source-backed evidence produced by the same integration, the same fleet, or another agent instead of blindly repeating the full validation path.
+Think of SeenRelay as a shared cache for **freshness evidence rather than content**. Put a cheap CHECK before repeated paid search, scraping, browser/extraction, rate-limited API or other expensive fact validation. When recent matching evidence meets caller policy, a later run or agent can avoid paying for the same validation again. If not, the existing validation runs normally and OBSERVE records the independent result for later callers.
 
 > CHECK before repeating validation work. OBSERVE what you independently found while doing work you already needed to do.
 
@@ -24,6 +24,7 @@ Access is **currently free** and requires no account or API key.
 
 ## Start here
 
+- Fleet economics and concrete cost examples: `https://seenrelay.com/economics`
 - Recommended deterministic application integration: [`clients/README.md`](clients/README.md)
 - Measure your own workload before enabling reuse: [`docs/ECONOMICS_LAB.md`](docs/ECONOMICS_LAB.md)
 - Integration choices and MCP setup: [`docs/CLIENTS.md`](docs/CLIENTS.md)
@@ -60,6 +61,21 @@ The wrappers default to shadow mode, fail open on relay-side failure, retain no 
 The client wrappers are separately MIT licensed so applications can integrate them without changing the repository-root license that governs the hosted service implementation. Package metadata is prepared for npm and PyPI publication; registry publication is a separate release step.
 
 `SeenRelayShadowProof` measures the consuming application's own CHECK status distribution, validation time and relay latency while keeping every original validation. Potential direct savings count only measured `SAME_OBSERVED` cases, and conditional-request savings remain excluded until the application measures them separately. See [`docs/ECONOMICS_LAB.md`](docs/ECONOMICS_LAB.md).
+
+## One-line-per-revalidation binding
+
+For a fixed source-backed fact, bind SeenRelay around the existing validator once. Shadow mode remains the default:
+
+```js
+const validatePrice = relay.protectValidation({
+  fact,
+  validate: ({ conditionalHeaders }) => existingValidation(conditionalHeaders)
+});
+
+const value = await validatePrice(knownValue);
+```
+
+Python exposes the equivalent `protect_validation(...)`. Add an explicit reuse policy only after Shadow Proof shows that the workload's measured reuse rate is above its cost/latency break-even threshold and the application's risk policy permits that reuse.
 
 ## Validator-assisted revalidation
 
