@@ -55,6 +55,7 @@ export interface HousekeepingResult {
   observer_states_deleted: number;
   reuse_deleted: number;
   leases_deleted: number;
+  admission_windows_deleted: number;
 }
 
 /**
@@ -72,10 +73,12 @@ export async function runHiveHousekeeping(
   const observerStates = await q.query(`WITH d AS (DELETE FROM observer_fact_state WHERE last_received_at < now()-($1::text||' seconds')::interval RETURNING 1) SELECT COUNT(*)::int AS n FROM d`, [String(observationRetentionSeconds)]) as Array<{n:number}>;
   const reuse = await q.query(`WITH d AS (DELETE FROM useful_reuse_events WHERE created_at < now()-($1::text||' seconds')::interval RETURNING 1) SELECT COUNT(*)::int AS n FROM d`, [String(reuseRetentionSeconds)]) as Array<{n:number}>;
   const leases = await q.query(`WITH d AS (DELETE FROM hive_leases WHERE expires_at < now()-($1::text||' seconds')::interval RETURNING 1) SELECT COUNT(*)::int AS n FROM d`, [String(leaseRetentionSeconds)]) as Array<{n:number}>;
+  const admissionWindows = await q.query(`WITH d AS (DELETE FROM hive_admission_windows WHERE updated_at < now()-($1::text||' seconds')::interval RETURNING 1) SELECT COUNT(*)::int AS n FROM d`, ['86400']) as Array<{n:number}>;
   return {
     observations_deleted: observations[0]?.n || 0,
     observer_states_deleted: observerStates[0]?.n || 0,
     reuse_deleted: reuse[0]?.n || 0,
-    leases_deleted: leases[0]?.n || 0
+    leases_deleted: leases[0]?.n || 0,
+    admission_windows_deleted: admissionWindows[0]?.n || 0
   };
 }
