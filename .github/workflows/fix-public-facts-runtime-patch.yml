@@ -1,0 +1,39 @@
+name: One-off Fix Public Facts Runtime Patch
+
+on:
+  push:
+    branches: [infra/public-facts-sync]
+    paths:
+      - '.github/workflows/fix-public-facts-runtime-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: infra/public-facts-sync
+      - name: Fix service descriptor transform
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/public-facts-runtime-patch.yml')
+          t=p.read_text()
+          old='"    public_product_facts: productFactsForOrigin(origin),\\n    latest_verified_updates: publicProductFacts.latest_verified_updates\\n  };\\n}\\n\\nexport function publicLandingPage(origin: string): string {"'
+          new='"    },\\n    public_product_facts: productFactsForOrigin(origin),\\n    latest_verified_updates: publicProductFacts.latest_verified_updates\\n  };\\n}\\n\\nexport function publicLandingPage(origin: string): string {"'
+          if t.count(old) != 1:
+              raise SystemExit(f'expected one transform target, found {t.count(old)}')
+          p.write_text(t.replace(old,new,1))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- .github/workflows/public-facts-runtime-patch.yml
+          git diff --cached --check
+          git commit -m 'Fix service descriptor public facts insertion'
+          git push origin HEAD:infra/public-facts-sync
