@@ -21,13 +21,16 @@ test('future npm trusted publishes request provenance explicitly', () => {
   assert.match(read('.github','workflows','publish-clients.yml'), /npm publish "\$TARBALL" --access public --provenance/);
 });
 
-test('trust surface does not claim third-party certification', () => {
+test('trust surface does not claim third-party certification or unenforced merge gates', () => {
   const trust = read('src','trust.ts');
   assert.match(trust, /third_party_security_audit:\s*false/);
   assert.match(trust, /external_security_certification:\s*false/);
   assert.match(trust, /Do not take SeenRelay on faith/);
   assert.match(trust, /shadow mode/i);
   assert.match(trust, /Fail open/i);
+  assert.match(trust, /required_merge_gates:\s*\['pull_request', 'verify', 'preview-release-gate'\]/);
+  assert.match(trust, /branch_ruleset:/);
+  assert.doesNotMatch(trust, /Pull request -> CI\/security analysis/);
 });
 
 test('MCP gets an explicit bounded transport request before SDK handling', () => {
