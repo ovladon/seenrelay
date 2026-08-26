@@ -151,6 +151,8 @@ export declare class SeenRelayClient {
     getTelemetry(): Readonly<SeenRelayTelemetry>;
     resetTelemetry(): void;
     estimateReuseEconomics(input: ReuseEconomicsInput): ReuseEconomicsEstimate;
+    /** Build a reusable one-line guard around one fixed fact validation. Shadow mode remains the default unless reuse is supplied. */
+    protectValidation<T>(options: Omit<GuardOptions<T>, 'knownValue'>): (knownValue: T) => Promise<T>;
     guard<T>(options: GuardOptions<T>): Promise<T>;
     guardDetailed<T>(options: GuardOptions<T>): Promise<GuardDetailedResult<T>>;
     private commonHeaders;
