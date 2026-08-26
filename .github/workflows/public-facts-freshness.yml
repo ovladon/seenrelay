@@ -1,0 +1,21 @@
+name: Public Facts Freshness
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Verify synchronized and non-stale public facts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/sync-public-surfaces.mjs --enforce-freshness
