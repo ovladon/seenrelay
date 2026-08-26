@@ -54,13 +54,22 @@ test('Control Room separates bootstrap and controlled benchmarks from external a
   assert.match(ui, /classification is temporarily unavailable/);
 });
 
-test('Preview gate resolves the current PR preview instead of using a stale branch alias', () => {
+test('Preview gate resolves the exact PR preview from Vercel comments or check runs', () => {
   const workflow = read('.github', 'workflows', 'preview-release-gate.yml');
   const resolver = read('scripts', 'resolve-pr-preview-url.mjs');
   assert.match(workflow, /Resolve this PR's Vercel Preview URL/);
   assert.match(workflow, /steps\.preview\.outputs\.url/);
   assert.doesNotMatch(workflow, /seenrelay-git-review-v03-bootstrap/);
+
+  // Keep the original Vercel bot comment path when it exists.
   assert.match(resolver, /vercel\[bot\]/);
-  assert.match(resolver, /Preview/);
+  assert.match(resolver, /\[Preview\\\]/);
   assert.match(resolver, /process\.stdout\.write\(match\[1\]\)/);
+
+  // Vercel can now expose the preview only through a check run. The fallback
+  // must stay pinned to the exact PR head and to the Vercel GitHub App.
+  assert.match(resolver, /pulls\/\$\{pr\}/);
+  assert.match(resolver, /commits\/\$\{headSha\}\/check-runs/);
+  assert.match(resolver, /check\?\.app\?\.slug === 'vercel'/);
+  assert.match(resolver, /\.vercel\\\.app/);
 });
