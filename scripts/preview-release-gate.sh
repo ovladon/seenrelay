@@ -58,7 +58,9 @@ grep -q 'pip install seenrelay' /tmp/site.html
 grep -q '3/3 provider calls avoided' /tmp/site.html
 grep -q '15 credits avoided' /tmp/site.html
 grep -q 'Counterexample matters' /tmp/site.html
-curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json" -o /tmp/product-facts.json
+# The branch alias can retain public max-age content across Preview deployments;
+# cache-bust deployment-specific machine facts before asserting exact release data.
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json?release=${RELEASE_SHA}" -o /tmp/product-facts.json
 node <<'NODE'
 const fs = require('fs');
 const x = JSON.parse(fs.readFileSync('/tmp/product-facts.json', 'utf8'));
