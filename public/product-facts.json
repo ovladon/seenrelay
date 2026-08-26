@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-26T09:37:32Z",
+  "updated_at": "2026-08-26T11:50:57Z",
   "positioning": {
     "category": "cost-avoidance freshness infrastructure for AI-agent fleets",
     "headline": "Stop paying to revalidate the same fact.",
@@ -77,6 +77,28 @@
       "evidence_url": "https://github.com/ovladon/seenrelay/actions/runs/32953960787",
       "artifact_digest": "sha256:4fe2ad7e74305996d2fae8210bbefce3ba8a2096c0145b250e9006e078aa7a41",
       "caveat": "First-party smoke benchmark, n=3, with caller policy accepting observations up to 300 seconds old. Reuse is not equivalent to a policy requiring a brand-new source fetch on every call."
+    },
+    {
+      "id": "firecrawl-browser-interaction-2026-08-26",
+      "status": "first_party_smoke",
+      "verified_at": "2026-08-26T11:50:57.487Z",
+      "provider": "Firecrawl",
+      "workload": "fixed-URL browser interaction using scrape + interact(code) + stop",
+      "samples": 3,
+      "freshness_window_seconds": 3600,
+      "baseline_provider_calls": 3,
+      "baseline_median_ms": 4385.018,
+      "reuse_provider_calls": 0,
+      "reuse_median_ms": 661.372,
+      "provider_calls_avoided": 3,
+      "provider_credits_avoided": 9,
+      "latency_improvement_percent": 84.9,
+      "provider_credit_model": "Each measured direct validation used 1 scrape credit plus 2 Firecrawl-reported interact credits in this run.",
+      "economic_result": "lower provider-credit consumption on every eligible reuse in this run",
+      "latency_result": "lower median latency than the full browser-validation path in this run",
+      "evidence_url": "https://github.com/ovladon/seenrelay/actions/runs/32965390611",
+      "artifact_digest": "sha256:51ebee97e40dee759a49d3171e03fc7c5f7cf344411fbd7dede6c941640d3df3",
+      "caveat": "First-party smoke benchmark, n=3, on one intentionally repeated source-backed fact. It demonstrates the mechanics and measured savings when eligible reuse exists; it does not establish a natural-world reuse rate or a universal browser-workload speedup."
     }
   ],
   "pricing_snapshots": {
@@ -111,6 +133,11 @@
       "date": "2026-08-26",
       "title": "Measured Firecrawl structured-extraction savings",
       "summary": "In a first-party n=3 smoke benchmark, bounded reuse avoided 3/3 Firecrawl JSON extraction calls, 15 provider credits, and reduced median latency from 1.266 s fresh / 1.040 s provider-cached to 0.618 s."
+    },
+    {
+      "date": "2026-08-26",
+      "title": "Measured browser-interaction savings",
+      "summary": "In a first-party n=3 Firecrawl browser-interaction smoke benchmark, bounded reuse avoided 3/3 equivalent provider calls, 9 reported provider credits, and reduced median validation latency from 4.385 s to 0.661 s."
     },
     {
       "date": "2026-08-26",

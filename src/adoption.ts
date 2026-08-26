@@ -1,4 +1,4 @@
-import { machinePublicFactsText, publicInstallHtml } from './public-facts-view.js';
+import { machinePublicFactsText, publicInstallHtml, siteFooterHtml } from './public-facts-view.js';
 
 export function clientsPage(origin: string): string {
   const cursorInstall = 'https://cursor.com/install-mcp?name=seenrelay&config=eyJ1cmwiOiJodHRwczovL3NlZW5yZWxheS5jb20vbWNwIn0%3D';
@@ -71,7 +71,7 @@ code --add-mcp '{"name":"seenrelay","type":"http","url":"${origin}/mcp"}'</pre><
 <div class="cta"><a class="primary" href="/quickstart">Run the quickstart</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/CLIENTS.md">Full client guide</a></div>
 </section>
 </main>
-<footer><span>SeenRelay</span><span>Observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
+${siteFooterHtml()}
 </body>
 </html>`;
 }

@@ -1,7 +1,7 @@
 import { config } from './config.js';
 import { standardsPosture } from './standards.js';
 import { publicProductFacts } from './public-facts.generated.js';
-import { latestVerifiedHtml, productFactsForOrigin, publicInstallHtml, verifiedBenchmarkHtml } from './public-facts-view.js';
+import { latestVerifiedHtml, productFactsForOrigin, publicInstallHtml, siteFooterHtml, verifiedBenchmarkHtml, verifiedWorkloadMapHtml } from './public-facts-view.js';
 
 export function serviceDescriptor(origin: string) {
   const cfg = config();
@@ -118,6 +118,7 @@ export function publicLandingPage(origin: string): string {
 </section>
 ${publicInstallHtml()}
 ${verifiedBenchmarkHtml()}
+${verifiedWorkloadMapHtml()}
 ${latestVerifiedHtml()}
 
 <section id="how" class="section">
@@ -194,7 +195,7 @@ OBSERVE</pre></div>
 
 <section class="section final"><div><div class="eyebrow">PROVE THE SAVINGS ON YOUR OWN WORKLOAD</div><h2>Start free in shadow mode. Keep it only where measured fleet-level reuse beats the overhead.</h2></div><div class="cta"><a class="primary" href="/quickstart">Protect a validation</a><a class="secondary" href="/economics">Cost examples</a><a class="secondary" href="/clients">Clients</a><a class="secondary" href="/service.json">Machine descriptor</a></div></section>
 </main>
-<footer><span>SeenRelay</span><span>Recent observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
+${siteFooterHtml()}
 <script src="/site.js" defer></script>
 </body></html>`;
 }

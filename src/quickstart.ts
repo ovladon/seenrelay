@@ -1,4 +1,4 @@
-import { publicInstallHtml } from './public-facts-view.js';
+import { publicInstallHtml, siteFooterHtml } from './public-facts-view.js';
 
 export function quickstartPage(origin: string): string {
   return `<!doctype html>
@@ -56,7 +56,7 @@ const value = await validatePrice(knownValue);</pre></div>
 
 <section class="section final"><div><div class="eyebrow">IMPLEMENT</div><h2>Copy the complete examples and fact-identity rules.</h2></div><div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Open Quickstart</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/PROTOCOL.md">Protocol</a></div></section>
 </main>
-<footer><span>SeenRelay</span><span>Observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
+${siteFooterHtml()}
 </body>
 </html>`;
 }
