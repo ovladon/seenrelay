@@ -38,6 +38,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add public/product-facts.json src/public-facts.generated.ts src/public-facts-view.ts public/site.css scripts/sync-public-surfaces.mjs scripts/benchmark-firecrawl-interact.mjs .github/workflows/firecrawl-interact-benchmark.yml docs/VERIFIED_RESULTS.md docs/BENCHMARK_EVIDENCE.md tests/economics-positioning.test.mjs tests/benchmark-matrix.test.mjs README.md clients/README.md docs/QUICKSTART.md
+          git add public/product-facts.json src/public-facts.generated.ts src/public-facts-view.ts public/site.css scripts/sync-public-surfaces.mjs scripts/benchmark-firecrawl-interact.mjs docs/VERIFIED_RESULTS.md docs/BENCHMARK_EVIDENCE.md tests/economics-positioning.test.mjs tests/benchmark-matrix.test.mjs README.md clients/README.md docs/QUICKSTART.md
           git commit -m 'Automate verified benchmark matrix publication'
           git push origin HEAD:site/verified-benchmark-matrix-automation
