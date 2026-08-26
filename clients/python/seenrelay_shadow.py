@@ -100,6 +100,7 @@ class SeenRelayShadowProof:
         avoided_validation_cost: float = 0.0,
         check_request_cost: float = 0.0,
         observe_request_cost: float = 0.0,
+        observe_off_critical_path: bool = False,
     ) -> Mapping[str, Any]:
         avoided = _non_negative_finite(avoided_validation_cost, "avoided_validation_cost")
         check_cost = _non_negative_finite(check_request_cost, "check_request_cost")
@@ -122,18 +123,22 @@ class SeenRelayShadowProof:
         check_average_ms = float(relay.check_network_latency_ms_average)
         observe_average_ms = float(relay.observe_network_latency_ms_average)
         validation_average_ms = float(proof["validation_ms_average"])
+        off_critical_path = bool(observe_off_critical_path)
         prospective_relay_latency_ms = (
             float(relay.check_network_latency_ms_total)
-            + prospective_observe_requests * observe_average_ms
+            + (0.0 if off_critical_path else prospective_observe_requests * observe_average_ms)
         )
         potential_net_time_saved_ms = float(proof["same_observed_validation_ms"]) - prospective_relay_latency_ms
 
-        time_denominator = validation_average_ms + observe_average_ms
-        break_even_reuse_rate_by_time = (
-            (check_average_ms + observe_average_ms) / time_denominator
-            if time_denominator > 0
-            else None
-        )
+        if off_critical_path:
+            break_even_reuse_rate_by_time = check_average_ms / validation_average_ms if validation_average_ms > 0 else None
+        else:
+            time_denominator = validation_average_ms + observe_average_ms
+            break_even_reuse_rate_by_time = (
+                (check_average_ms + observe_average_ms) / time_denominator
+                if time_denominator > 0
+                else None
+            )
         cost_denominator = avoided + observe_cost
         break_even_reuse_rate_by_cost = (
             (check_cost + observe_cost) / cost_denominator
@@ -165,5 +170,6 @@ class SeenRelayShadowProof:
                 "active_mode_would_not_observe_direct_reuse_hits": True,
                 "caller_supplied_cost_units": True,
                 "no_savings_claim_when_same_observed_is_zero": True,
+                "observe_off_critical_path": off_critical_path,
             },
         }
