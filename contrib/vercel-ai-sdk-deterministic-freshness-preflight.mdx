@@ -1,0 +1,118 @@
+---
+title: Deterministic Freshness Preflight for Expensive AI SDK Tools
+description: Put a freshness check inside an AI SDK tool's execute path so repeated validation work can be reused without making freshness a model-selected step.
+tags: ['node', 'tools', 'agents', 'performance']
+---
+
+AI SDK tools often call services that are slower, rate-limited, or directly billed: search APIs, extraction services, browser automation, or authoritative data providers. If an application already has a specific source-backed value, the useful question is sometimes not “can the model call the provider?” but “does this exact fact need to be validated again right now?”
+
+The safest place for that decision is inside the tool implementation, after the model has selected the tool but before the expensive provider runs. That keeps tool selection and freshness policy separate. The model can decide that it needs the tool; application code decides whether recent evidence is reusable.
+
+This recipe uses [SeenRelay](https://seenrelay.com) as the freshness preflight. SeenRelay exposes only `CHECK` and `OBSERVE`. It does not fetch the source on the application's behalf and it does not decide whether evidence is safe enough to reuse.
+
+## Install
+
+```bash
+pnpm add ai zod seenrelay
+```
+
+The example below assumes your application already stores the last known value for the fact being requested and already has an authoritative provider function for refreshing it.
+
+## Put the preflight inside `execute`
+
+```ts filename="current-price-tool.ts"
+import { tool } from 'ai';
+import { z } from 'zod';
+import {
+  SeenRelayClient,
+  reuseKnownOnSameObserved,
+} from 'seenrelay';
+
+const relay = new SeenRelayClient({
+  clientHint: 'price-tools',
+});
+
+async function loadKnownPrice(itemId: string): Promise<number> {
+  // Replace with your application state or database lookup.
+  return 17;
+}
+
+async function callAuthoritativePriceProvider(itemId: string): Promise<number> {
+  // Keep your existing provider call here. It may be a paid API,
+  // browser task, search/extraction service, or another validation path.
+  const response = await fetch(
+    `https://merchant.example/items/${encodeURIComponent(itemId)}`,
+  );
+
+  if (!response.ok) {
+    throw new Error(`Provider failed with HTTP ${response.status}`);
+  }
+
+  const body = await response.json() as { price: number };
+  return body.price;
+}
+
+export const currentPrice = tool({
+  description: 'Get the current authoritative price for an item.',
+  inputSchema: z.object({
+    itemId: z.string(),
+  }),
+
+  execute: async ({ itemId }) => {
+    const knownValue = await loadKnownPrice(itemId);
+
+    const result = await relay.guardDetailed({
+      fact: {
+        subject: `Item ${itemId} price`,
+        predicate: 'price.current',
+        source: `https://merchant.example/items/${encodeURIComponent(itemId)}`,
+        locator: {
+          scheme: 'source_key',
+          value: 'price',
+        },
+      },
+      knownValue,
+      maxAgeSeconds: 300,
+
+      // Reuse is caller policy. Omit this callback to start in shadow mode.
+      reuse: reuseKnownOnSameObserved,
+
+      // This original provider path remains authoritative whenever
+      // validation is still required.
+      validate: async () => callAuthoritativePriceProvider(itemId),
+    });
+
+    return {
+      price: result.value,
+      validationPath: result.path,
+    };
+  },
+});
+```
+
+The important detail is placement. SeenRelay is not registered as a second model-callable tool. It runs inside `currentPrice.execute`, so once the model invokes `currentPrice`, the configured preflight cannot be silently skipped by tool routing.
+
+If `CHECK` returns evidence that the caller's policy accepts, `guardDetailed` returns the reusable value and `callAuthoritativePriceProvider` is never invoked. If the evidence is unknown, stale, changed, contested, unavailable, or rejected by local policy, the existing provider path runs normally. A successful independent validation can then be reported with `OBSERVE` through the client wrapper.
+
+## Start without suppressing validation
+
+For a new workload, start in shadow mode by removing the `reuse` callback:
+
+```ts
+const result = await relay.guardDetailed({
+  fact,
+  knownValue,
+  maxAgeSeconds: 300,
+  validate: async () => callAuthoritativeProvider(),
+});
+```
+
+The application still performs every original validation, while SeenRelay records what `CHECK` would have returned. This lets you measure whether repeated validation actually exists before enabling reuse.
+
+Only add a reuse policy when the workload has a stable fact identity, the application already has a known value, and its own freshness requirements permit reuse. Open-ended research tasks, requests without a stable source-backed fact, or workflows that require a fresh authoritative fetch every time should keep using the original provider path.
+
+## Failure behavior
+
+SeenRelay failure is fail-open: the original provider still runs. Provider errors remain provider or application errors. A reused value does not become a new independent observation, so reuse does not fabricate additional provenance.
+
+This pattern works with any AI SDK tool whose `execute` function eventually performs repeated validation work. The provider does not need to know about SeenRelay, and SeenRelay does not need access to model prompts, wallet credentials, API credentials, or provider internals.

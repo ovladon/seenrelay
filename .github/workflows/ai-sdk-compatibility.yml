@@ -5,6 +5,8 @@ on:
     paths:
       - 'docs/AI_SDK.md'
       - 'examples/ai-sdk-paid-tool.mjs'
+      - 'contrib/vercel-ai-sdk-deterministic-freshness-preflight.mdx'
+      - 'tests/vercel-ai-sdk-recipe.test.mjs'
       - '.github/workflows/ai-sdk-compatibility.yml'
   workflow_dispatch:
 
@@ -27,3 +29,5 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false --no-save ai@7.0.79 zod@3.25.76
       - name: Run deterministic paid-tool compatibility example
         run: node examples/ai-sdk-paid-tool.mjs
+      - name: Verify upstream recipe invariants
+        run: node --test tests/vercel-ai-sdk-recipe.test.mjs
