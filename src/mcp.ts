@@ -51,7 +51,14 @@ const handler = createMcpHandler(() => {
     canonicalFact(args.fact);
     assertRuntimeFactAllowed(args.fact);
     const admission = await admitHive(ctx.http?.req, 'check');
-    if (!admission.allowed) return textResult({ error: { code: admission.reason === 'runtime_disabled' ? 'SERVICE_CONTROLLED' : 'HIVE_RATE_LIMITED', detail: admission.reason === 'runtime_disabled' ? 'CHECK is temporarily disabled by the SeenRelay control plane.' : 'Free CHECK allowance is refilling.' }, hive: admission.state });
+    if (!admission.allowed) {
+      const controlled = admission.reason === 'runtime_disabled';
+      const admissionLimited = admission.reason === 'admission_limited';
+      return textResult({ error: {
+        code: controlled ? 'SERVICE_CONTROLLED' : admissionLimited ? 'HIVE_ADMISSION_LIMITED' : 'HIVE_RATE_LIMITED',
+        detail: controlled ? 'CHECK is temporarily disabled by the SeenRelay control plane.' : admissionLimited ? 'New free Hive leases from this network are temporarily limited. Reuse an existing lease or retry shortly.' : 'Free CHECK allowance is refilling.'
+      }, hive: admission.state });
+    }
     const result = await checkFact(args);
     const finished = await finishHiveCheck(admission, result);
     return textResult({ ...result, hive: finished.state, useful_reuse_awards: finished.usefulReuseAwards });
@@ -67,7 +74,10 @@ const handler = createMcpHandler(() => {
     assertRuntimeFactAllowed(args.fact);
     const request = ctx.http?.req;
     const admission = await admitHive(request, 'observe');
-    if (!admission.allowed) return textResult({ error: { code: 'SERVICE_CONTROLLED', detail: 'OBSERVE is temporarily disabled by the SeenRelay control plane.' }, hive: admission.state });
+    if (!admission.allowed) return textResult({ error: {
+      code: admission.reason === 'runtime_disabled' ? 'SERVICE_CONTROLLED' : 'HIVE_ADMISSION_LIMITED',
+      detail: admission.reason === 'runtime_disabled' ? 'OBSERVE is temporarily disabled by the SeenRelay control plane.' : 'New free Hive leases from this network are temporarily limited. Reuse an existing lease or retry shortly.'
+    }, hive: admission.state });
     const result = await observeFact(request, args, admission.leaseId);
     const hive = await finishHiveObserve(admission, result.fact_key, result.accepted ? 'accepted' : 'deduplicated');
     return textResult({ ...result, hive });
