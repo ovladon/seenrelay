@@ -46,9 +46,10 @@ export async function boundedRequest(request: Request, maxBytes: number): Promis
   } finally {
     reader.releaseLock();
   }
-  const body = new Uint8Array(total);
+  const body = new ArrayBuffer(total);
+  const bodyView = new Uint8Array(body);
   let offset = 0;
-  for (const chunk of chunks) { body.set(chunk, offset); offset += chunk.byteLength; }
+  for (const chunk of chunks) { bodyView.set(chunk, offset); offset += chunk.byteLength; }
   const headers = new Headers(request.headers);
   headers.delete('content-length');
   return { request: new Request(request.url, { method: request.method, headers, body, signal: request.signal }) };
