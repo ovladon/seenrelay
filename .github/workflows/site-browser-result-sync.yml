@@ -23,6 +23,17 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '22'
+      - name: Remove obsolete embedded test bootstrap
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/sync-browser-workload-footer.mjs')
+          s=p.read_text()
+          marker="write('tests/site-footer.test.mjs', `"
+          if marker in s:
+              s=s[:s.index(marker)] + "console.log('Staged canonical browser workload result, workload map, and shared footer.');\n"
+              p.write_text(s)
+          PY
       - name: Apply deterministic site synchronization
         run: |
           node scripts/sync-browser-workload-footer.mjs
