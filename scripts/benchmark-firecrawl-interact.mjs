@@ -83,17 +83,20 @@ function textOf(value) {
 }
 
 function benchmarkValueOf(interactBody) {
+  const resultValue = textOf(interactBody?.result ?? interactBody?.data?.result).trim();
+  if (/^https?:\/\//i.test(resultValue)) {
+    return resultValue.replace(/[),.;]+$/, '');
+  }
+
   const all = [
     interactBody?.stdout,
     interactBody?.data?.stdout,
-    interactBody?.result,
-    interactBody?.data?.result,
     interactBody?.output,
     interactBody?.data?.output,
   ].map(textOf).join('\n');
   const match = all.match(/SEENRELAY_BENCHMARK_VALUE=(https?:\/\/[^\s"']+)/);
   if (!match) {
-    throw new Error(`Interact response did not contain benchmark value: ${all.slice(0, 1000)}`);
+    throw new Error(`Interact response did not contain benchmark value: ${JSON.stringify(interactBody).slice(0, 1500)}`);
   }
   return match[1].replace(/[),.;]+$/, '');
 }
@@ -129,7 +132,7 @@ async function runFirecrawlInteract(sample) {
           "const link = page.locator('a').first();",
           "await link.click();",
           "await page.waitForLoadState('domcontentloaded');",
-          "console.log('SEENRELAY_BENCHMARK_VALUE=' + page.url());",
+          'page.url();',
         ].join('\n'),
       }),
     });
