@@ -5,11 +5,13 @@ on:
     paths:
       - 'clients/**'
       - '.github/workflows/package-validation.yml'
+      - '.github/workflows/publish-clients.yml'
   push:
     branches: [main]
     paths:
       - 'clients/**'
       - '.github/workflows/package-validation.yml'
+      - '.github/workflows/publish-clients.yml'
 
 permissions:
   contents: read
