@@ -44,12 +44,18 @@ grep -q '"operations":\["CHECK","OBSERVE"\]' /tmp/root.json
 grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
-grep -q 'SHARED FRESHNESS FOR AI AGENTS' /tmp/site.html
+grep -q 'COST AVOIDANCE FOR AI-AGENT FLEETS' /tmp/site.html
+grep -q 'Stop paying to revalidate the same fact' /tmp/site.html
 grep -q 'SAME_OBSERVED does not mean' /tmp/site.html
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
+grep -q 'FLEET-LEVEL COST AVOIDANCE' /tmp/economics.html
+grep -q 'Firecrawl Pay As You Go' /tmp/economics.html
+grep -q 'Firecrawl Standard' /tmp/economics.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/service.json" -o /tmp/service.json
 grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json
 grep -q '"current_pricing":"free"' /tmp/service.json
+grep -q '"economics"' /tmp/service.json
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/openapi.json" -o /tmp/openapi.json
 grep -q '"openapi":"3.1.0"' /tmp/openapi.json
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/data-practices.json" -o /tmp/data.json
