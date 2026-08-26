@@ -41,3 +41,9 @@ test('admin login route is transport-bounded before credential parsing', () => {
   assert.match(index, /boundedRequest\(c\.req\.raw, Math\.min\(config\(\)\.maxBodyBytes, 4096\)\)/);
   assert.match(index, /return adminLogin\(bounded\.request\)/);
 });
+
+test('trust surface is discoverable to humans and coding agents', () => {
+  const adoption = read('src','adoption.ts');
+  assert.match(adoption, /const urls = \[.*'\/trust'/);
+  assert.match(adoption, /Trust \/ verification posture: \${origin}\/trust/);
+});
