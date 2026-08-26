@@ -41,7 +41,7 @@ const handler = createMcpHandler(() => {
   const server = new McpServer({ name: 'seenrelay', version: cfg.version });
   server.registerTool('check_fact', {
     title: 'Check Fact Freshness',
-    description: 'Low-cost CHECK before repeating potentially expensive source validation. If no reusable observation exists, validate normally and OBSERVE so later CHECKs, including from the same integration, can benefit. Fresh results may include observer-supplied source validators. SeenRelay never browses or verifies externally.',
+    description: 'Cost preflight before repeated paid or slow source-backed validation, especially across an agent fleet. Use before paid web search, metered scraping, browser/extraction, rate-limited APIs or multi-step validation when the caller already has a known value. If evidence is not reusable under caller policy, validate normally and OBSERVE for later runs. SeenRelay never browses or verifies externally.',
     inputSchema: CheckRequest,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
   }, async (args, ctx) => {
@@ -58,7 +58,7 @@ const handler = createMcpHandler(() => {
 
   server.registerTool('observe_fact', {
     title: 'Contribute Fact Observation',
-    description: 'Deposit an independently obtained source-backed observation. Accepted observations can answer later CHECKs, including from the same integration; contribution score increases only when a different qualified client reuses one. Optional Ed25519 proof establishes key possession and continuity, not truth or real-world independence.',
+    description: 'After the caller independently performs a source-backed validation, deposit the observed result so later runs or agents can avoid repeating the same paid or slow work when their policy permits. Never OBSERVE hearsay. Optional Ed25519 proof establishes key possession and continuity, not truth or real-world independence.',
     inputSchema: ObserveRequest,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
   }, async (args, ctx) => {
