@@ -25,6 +25,7 @@ Access is **currently free** and requires no account or API key.
 ## Start here
 
 - Recommended deterministic application integration: [`clients/README.md`](clients/README.md)
+- Measure your own workload before enabling reuse: [`docs/ECONOMICS_LAB.md`](docs/ECONOMICS_LAB.md)
 - Integration choices and MCP setup: [`docs/CLIENTS.md`](docs/CLIENTS.md)
 - Quickstart: [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
 - Protocol contract: [`docs/PROTOCOL.md`](docs/PROTOCOL.md)
@@ -55,6 +56,10 @@ The reference wrappers are the recommended path when application code must guara
 MCP remains fully supported as the standard discovery and tool interface when model-selected tool routing is appropriate.
 
 The wrappers default to shadow mode, fail open on relay-side failure, retain no completed CHECK result cache, and require an explicit caller policy before reuse can suppress validation. They do not add a SeenRelay domain operation.
+
+The client wrappers are separately MIT licensed so applications can integrate them without changing the repository-root license that governs the hosted service implementation. Package metadata is prepared for npm and PyPI publication; registry publication is a separate release step.
+
+`SeenRelayShadowProof` measures the consuming application's own CHECK status distribution, validation time and relay latency while keeping every original validation. Potential direct savings count only measured `SAME_OBSERVED` cases, and conditional-request savings remain excluded until the application measures them separately. See [`docs/ECONOMICS_LAB.md`](docs/ECONOMICS_LAB.md).
 
 ## Validator-assisted revalidation
 
@@ -106,7 +111,7 @@ SeenRelay itself does not browse or search fact sources, perform on-demand verif
 - Hono + TypeScript / Node 22
 - REST/OpenAPI
 - MCP `2026-07-28` through the official v2 server SDK
-- vendorable deterministic JavaScript/TypeScript and Python client wrappers
+- deterministic JavaScript/TypeScript and Python client wrappers
 - authenticated human-only Control Room for runtime operations and incident controls
 
 A2A is monitored but is not advertised as an implemented product interface.
