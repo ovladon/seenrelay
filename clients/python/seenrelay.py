@@ -36,6 +36,7 @@ class GuardDetailedResult(Generic[T]):
     check: Optional[Mapping[str, Any]]
     check_ok: bool
     observe_ok: Optional[bool]
+    observe_deferred: bool = False
     check_error: Optional[str] = None
     observe_error: Optional[str] = None
 
@@ -55,6 +56,8 @@ class TelemetrySnapshot:
     validation_calls: int
     conditional_hint_validations: int
     observe_attempts: int
+    observe_scheduled: int
+    observe_schedule_failures: int
     observe_successes: int
     observe_failures: int
     observe_timeouts: int
@@ -89,7 +92,8 @@ def _empty_metrics() -> MutableMapping[str, float | int]:
         "check_timeouts": 0, "check_network_requests": 0, "check_coalesced": 0,
         "check_network_latency_ms_total": 0.0, "check_network_latency_ms_max": 0.0,
         "reuse_hits": 0, "validation_calls": 0, "conditional_hint_validations": 0,
-        "observe_attempts": 0, "observe_successes": 0, "observe_failures": 0,
+        "observe_attempts": 0, "observe_scheduled": 0, "observe_schedule_failures": 0,
+        "observe_successes": 0, "observe_failures": 0,
         "observe_timeouts": 0, "observe_network_requests": 0,
         "observe_network_latency_ms_total": 0.0, "observe_network_latency_ms_max": 0.0,
     }
@@ -153,7 +157,10 @@ class SeenRelayClient:
     def __init__(self, *, base_url: str = "https://seenrelay.com", client_hint: Optional[str] = None,
                  initial_lease: Optional[str] = None, on_lease: Optional[Callable[[str], None]] = None,
                  check_timeout_seconds: float = 1.0, observe_timeout_seconds: float = 0.75,
-                 coalesce_checks: bool = True, transport: Transport = _default_transport) -> None:
+                 coalesce_checks: bool = True,
+                 schedule_observe: Optional[Callable[[Callable[[], None]], None]] = None,
+                 on_deferred_observe_error: Optional[Callable[[Exception], None]] = None,
+                 transport: Transport = _default_transport) -> None:
         self.base_url = base_url.rstrip("/")
         self.client_hint = client_hint.strip() if client_hint and client_hint.strip() else None
         self.lease = initial_lease.strip() if initial_lease and initial_lease.strip() else None
@@ -161,6 +168,8 @@ class SeenRelayClient:
         self.check_timeout_seconds = _positive_finite(check_timeout_seconds, "check_timeout_seconds")
         self.observe_timeout_seconds = _positive_finite(observe_timeout_seconds, "observe_timeout_seconds")
         self.coalesce_checks = bool(coalesce_checks)
+        self.schedule_observe = schedule_observe
+        self.on_deferred_observe_error = on_deferred_observe_error
         self.transport = transport
         self._state_lock = threading.Lock()
         self._inflight_checks: MutableMapping[str, _InflightCheck] = {}
@@ -190,6 +199,7 @@ class SeenRelayClient:
             check_network_latency_ms_average=(float(m["check_network_latency_ms_total"]) / check_requests if check_requests else 0.0),
             reuse_hits=int(m["reuse_hits"]), validation_calls=int(m["validation_calls"]),
             conditional_hint_validations=int(m["conditional_hint_validations"]), observe_attempts=int(m["observe_attempts"]),
+            observe_scheduled=int(m["observe_scheduled"]), observe_schedule_failures=int(m["observe_schedule_failures"]),
             observe_successes=int(m["observe_successes"]), observe_failures=int(m["observe_failures"]),
             observe_timeouts=int(m["observe_timeouts"]), observe_network_requests=observe_requests,
             observe_network_latency_ms_total=float(m["observe_network_latency_ms_total"]),
@@ -245,19 +255,39 @@ class SeenRelayClient:
         value = validate(context)
         observe_ok: Optional[bool] = None
         observe_error: Optional[str] = None
+        observe_deferred = False
         self._metric_add("observe_attempts")
-        try:
-            metadata = observation(value, context) if observation else None
-            self._observe(fact, value, metadata)
-            observe_ok = True
-            self._metric_add("observe_successes")
-        except Exception as exc:
-            observe_ok = False
-            self._metric_add("observe_failures")
-            if isinstance(exc, TimeoutError): self._metric_add("observe_timeouts")
-            observe_error = str(exc)
+
+        def perform_observe(*, deferred: bool) -> tuple[bool, Optional[str]]:
+            try:
+                metadata = observation(value, context) if observation else None
+                self._observe(fact, value, metadata)
+                self._metric_add("observe_successes")
+                return True, None
+            except Exception as exc:
+                self._metric_add("observe_failures")
+                if isinstance(exc, TimeoutError): self._metric_add("observe_timeouts")
+                if deferred and self.on_deferred_observe_error is not None:
+                    try:
+                        self.on_deferred_observe_error(exc)
+                    except Exception:
+                        pass
+                return False, str(exc)
+
+        if self.schedule_observe is not None:
+            observe_deferred = True
+            try:
+                self.schedule_observe(lambda: perform_observe(deferred=True))
+                self._metric_add("observe_scheduled")
+            except Exception as exc:
+                self._metric_add("observe_schedule_failures")
+                observe_ok = False
+                observe_error = str(exc)
+        else:
+            observe_ok, observe_error = perform_observe(deferred=False)
+
         return GuardDetailedResult(value=value, path="validated", check=check, check_ok=check_ok, observe_ok=observe_ok,
-                                   check_error=check_error, observe_error=observe_error)
+                                   observe_deferred=observe_deferred, check_error=check_error, observe_error=observe_error)
 
     def _headers(self) -> MutableMapping[str, str]:
         with self._state_lock:
