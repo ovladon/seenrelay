@@ -3,7 +3,7 @@ import { assertBillingDisabled } from './billing.js';
 import { canonicalFact, ValidationError } from './canonical.js';
 import { config } from './config.js';
 import { admitHive, finishHiveCheck, finishHiveObserve } from './hive.js';
-import { readJsonBody, requestId } from './http.js';
+import { PayloadTooLargeError, readJsonBody, requestId } from './http.js';
 import { handleMcp } from './mcp.js';
 import { openApi } from './openapi.js';
 import { deriveClientKey } from './identity.js';
@@ -35,6 +35,9 @@ app.use('*', async (c, next) => {
 });
 
 app.onError((err, c) => {
+  if (err instanceof PayloadTooLargeError) {
+    return c.json({ error: { code: 'PAYLOAD_TOO_LARGE', detail: err.message } }, 413);
+  }
   if (err instanceof ValidationError) {
     return c.json({ error: { code: 'INVALID_REQUEST', detail: err.message } }, 400);
   }
