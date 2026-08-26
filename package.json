@@ -5,6 +5,8 @@
   "description": "Cooperative fact-freshness signals for AI agents.",
   "type": "module",
   "scripts": {
+    "public:sync": "node scripts/sync-public-surfaces.mjs --write",
+    "public:sync:check": "node scripts/sync-public-surfaces.mjs --enforce-freshness",
     "typecheck:core": "tsc -p tsconfig.core.json --noEmit",
     "typecheck:full": "tsc -p tsconfig.json --noEmit",
     "guardrails": "node scripts/guardrails.mjs",
@@ -12,7 +14,7 @@
     "test:structural": "node --test tests/*.test.mjs",
     "test:runtime": "tsx --test tests/*.test.ts",
     "test": "npm run test:structural && npm run test:runtime",
-    "check": "npm run typecheck:core && npm run typecheck:full && npm run guardrails && npm run audit:prod && npm test",
+    "check": "npm run public:sync:check && npm run typecheck:core && npm run typecheck:full && npm run guardrails && npm run audit:prod && npm test",
     "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
