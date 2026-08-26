@@ -7,6 +7,7 @@ import { admitHive, finishHiveCheck, finishHiveObserve } from './hive.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
 import { classifyMcpDiscoveryRequest, recordMcpDiscoveryEvents } from './discovery.js';
 import type { JsonValue as JsonValueType } from './types.js';
+import { boundedRequest } from './http.js';
 
 const JsonValue: z.ZodType<JsonValueType> = z.lazy(() => z.union([
   z.string(),
@@ -75,8 +76,11 @@ const handler = createMcpHandler(() => {
 });
 
 export async function handleMcp(request: Request): Promise<Response> {
-  const discoveryEvents = classifyMcpDiscoveryRequest(request);
-  const response = await handler.fetch(request);
+  const bounded = await boundedRequest(request, config().maxBodyBytes);
+  if ('response' in bounded) return bounded.response;
+  const safeRequest = bounded.request;
+  const discoveryEvents = classifyMcpDiscoveryRequest(safeRequest);
+  const response = await handler.fetch(safeRequest);
   if (response.status < 500) {
     try {
       const events = await discoveryEvents;

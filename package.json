@@ -11,10 +11,11 @@
     "typecheck:full": "tsc -p tsconfig.json --noEmit",
     "guardrails": "node scripts/guardrails.mjs",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "audit:all": "npm audit --audit-level=high",
     "test:structural": "node --test tests/*.test.mjs",
     "test:runtime": "tsx --test tests/*.test.ts",
     "test": "npm run test:structural && npm run test:runtime",
-    "check": "npm run public:sync:check && npm run typecheck:core && npm run typecheck:full && npm run guardrails && npm run audit:prod && npm test",
+    "check": "npm run public:sync:check && npm run typecheck:core && npm run typecheck:full && npm run guardrails && npm run audit:all && npm test",
     "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
