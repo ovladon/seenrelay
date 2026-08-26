@@ -157,6 +157,7 @@ test('human admin plane is isolated from MCP and has circuit-breaker and operati
 test('public surface is dual human-machine and exposes only aggregate network stats', () => {
   const index = read('src','index.ts');
   const publicSource = read('src','public.ts');
+  const publicFactsView = read('src','public-facts-view.ts');
   const stats = read('src','public-db.ts');
   assert.match(index, /accept\.includes\('text\/html'\)/);
   assert.match(index, /\/service\.json/);
@@ -170,7 +171,8 @@ test('public surface is dual human-machine and exposes only aggregate network st
   assert.match(publicSource, /SAME_OBSERVED does not mean/);
   assert.match(publicSource, /Useful reuse rate/);
   assert.match(publicSource, /does not decide truth/);
-  assert.match(publicSource, /observations, not universal truth|Recent observations, not universal truth/i);
+  assert.match(publicSource, /siteFooterHtml\(\)/);
+  assert.match(publicFactsView, /Recent observations, not universal truth/i);
   assert.doesNotMatch(publicSource, /guaranteed savings|verified truth|independent agents confirmed/i);
   assert.match(stats, /qualified_reuse_rate/);
   assert.doesNotMatch(stats, /cross_client_reuse_rate/);
