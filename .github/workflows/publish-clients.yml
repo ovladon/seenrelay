@@ -3,23 +3,25 @@ name: Publish Clients
 on:
   release:
     types: [published]
+  push:
+    branches: [main]
+    paths:
+      - 'clients/RELEASE_VERSION'
 
 permissions:
   contents: read
 
 concurrency:
-  group: publish-clients-${{ github.ref }}
+  group: publish-clients-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build-npm:
-    if: github.event.release.prerelease == false && startsWith(github.event.release.tag_name, 'clients-v')
+    if: (github.event_name == 'release' && github.event.release.prerelease == false && startsWith(github.event.release.tag_name, 'clients-v')) || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout release tag
+      - name: Checkout exact publishing commit
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          ref: ${{ github.event.release.tag_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -28,11 +30,16 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
 
-      - name: Verify release version matches npm package
+      - name: Verify requested version matches npm package
         shell: bash
         run: |
           set -euo pipefail
-          EXPECTED="${GITHUB_REF_NAME#clients-v}"
+          if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            EXPECTED="${GITHUB_REF_NAME#clients-v}"
+          else
+            EXPECTED="$(tr -d '[:space:]' < clients/RELEASE_VERSION)"
+          fi
+          test -n "$EXPECTED"
           ACTUAL="$(node -p "require('./clients/typescript/package.json').version")"
           test "$EXPECTED" = "$ACTUAL"
 
@@ -98,7 +105,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#clients-v}"
+          TARBALL="$(find npm-release -maxdepth 1 -type f -name 'seenrelay-*.tgz' -print -quit)"
+          test -n "$TARBALL"
+          VERSION="$(basename "$TARBALL")"
+          VERSION="${VERSION#seenrelay-}"
+          VERSION="${VERSION%.tgz}"
+          test -n "$VERSION"
           if npm view "seenrelay@$VERSION" version --json >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
@@ -115,24 +127,27 @@ jobs:
           npm publish "$TARBALL" --access public
 
   build-pypi:
-    if: github.event.release.prerelease == false && startsWith(github.event.release.tag_name, 'clients-v')
+    if: (github.event_name == 'release' && github.event.release.prerelease == false && startsWith(github.event.release.tag_name, 'clients-v')) || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout release tag
+      - name: Checkout exact publishing commit
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          ref: ${{ github.event.release.tag_name }}
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.13'
 
-      - name: Verify release version matches Python package
+      - name: Verify requested version matches Python package
         shell: bash
         run: |
           set -euo pipefail
-          EXPECTED="${GITHUB_REF_NAME#clients-v}"
+          if [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            EXPECTED="${GITHUB_REF_NAME#clients-v}"
+          else
+            EXPECTED="$(tr -d '[:space:]' < clients/RELEASE_VERSION)"
+          fi
+          test -n "$EXPECTED"
           ACTUAL="$(python - <<'PY'
           import tomllib
           with open('clients/python/pyproject.toml', 'rb') as f:
