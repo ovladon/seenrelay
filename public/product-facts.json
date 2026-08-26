@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-08-26T09:37:32Z",
+  "positioning": {
+    "category": "cost-avoidance freshness infrastructure for AI-agent fleets",
+    "headline": "Stop paying to revalidate the same fact.",
+    "subheadline": "Install SeenRelay, put CHECK before repeated paid or slow source-backed validation, and OBSERVE only after independent validation. Start in shadow mode; enable bounded reuse only when your own measurements and policy permit it.",
+    "current_pricing": "free",
+    "account_required": false,
+    "api_key_required": false
+  },
+  "install": {
+    "npm_package": "seenrelay",
+    "npm_command": "npm install seenrelay",
+    "pypi_package": "seenrelay",
+    "pypi_command": "pip install seenrelay",
+    "client_version": "0.1.0",
+    "runtime_dependencies": 0,
+    "registry_install_verified_at": "2026-08-26T09:10:00Z",
+    "verification": "Installed from public npm and PyPI indexes in clean GitHub-hosted environments and imported SeenRelayClient, SeenRelayShadowProof, protectValidation and protect_validation successfully."
+  },
+  "fit": {
+    "use_when": [
+      "the caller already knows a value and is about to revalidate it",
+      "the same exact source-backed fact repeats across runs, workers, agents or teams",
+      "validation consumes paid search, metered scraping, browser/extraction, rate-limited API capacity, model work or a multi-step validation chain",
+      "a cheap preflight can plausibly cost less than the full validation it may avoid"
+    ],
+    "do_not_use_when": [
+      "the operation is a cheap one-off fetch with little repeat probability",
+      "an equivalent authoritative shared cache already solves the problem",
+      "policy requires a brand-new authoritative source confirmation on every call and no conditional shortcut is useful"
+    ]
+  },
+  "verified_benchmarks": [
+    {
+      "id": "firecrawl-basic-scrape-2026-08-26",
+      "status": "first_party_smoke",
+      "verified_at": "2026-08-26T09:35:23.876Z",
+      "provider": "Firecrawl",
+      "workload": "fixed-URL basic scrape with provider caching enabled",
+      "samples": 5,
+      "freshness_window_seconds": 3600,
+      "baseline_provider_calls": 5,
+      "baseline_median_ms": 91.03,
+      "reuse_provider_calls": 0,
+      "reuse_median_ms": 648.98,
+      "provider_credits_avoided": 5,
+      "provider_credit_model": "1 credit per successful basic scrape; cached results still consume 1 credit",
+      "economic_result": "lower provider-credit consumption on eligible reuse",
+      "latency_result": "slower than the provider's cached basic scrape in this run",
+      "evidence_url": "https://github.com/ovladon/seenrelay/actions/runs/32953753129",
+      "artifact_digest": "sha256:1177ca13a1974064942487671352f42a45a74c36745a24680ba62e5d39b3b5f4",
+      "caveat": "First-party smoke benchmark with a small sample. It demonstrates mechanics and measured provider-call avoidance, not a universal reuse rate or universal latency advantage."
+    },
+    {
+      "id": "firecrawl-json-extraction-2026-08-26",
+      "status": "first_party_smoke",
+      "verified_at": "2026-08-26T09:37:31.948Z",
+      "provider": "Firecrawl",
+      "workload": "fixed-URL JSON structured extraction",
+      "samples": 3,
+      "freshness_window_seconds": 300,
+      "credits_per_full_validation": 5,
+      "fresh_baseline_provider_calls": 3,
+      "fresh_baseline_median_ms": 1265.68,
+      "provider_cached_baseline_provider_calls": 3,
+      "provider_cached_baseline_median_ms": 1039.5,
+      "reuse_provider_calls": 0,
+      "reuse_median_ms": 617.78,
+      "provider_calls_avoided": 3,
+      "provider_credits_avoided": 15,
+      "latency_improvement_vs_fresh_percent": 51.2,
+      "latency_improvement_vs_provider_cached_percent": 40.6,
+      "economic_result": "lower provider-credit consumption on every eligible reuse in this run",
+      "latency_result": "faster than both fresh and provider-cached JSON extraction in this run",
+      "evidence_url": "https://github.com/ovladon/seenrelay/actions/runs/32953960787",
+      "artifact_digest": "sha256:4fe2ad7e74305996d2fae8210bbefce3ba8a2096c0145b250e9006e078aa7a41",
+      "caveat": "First-party smoke benchmark, n=3, with caller policy accepting observations up to 300 seconds old. Reuse is not equivalent to a policy requiring a brand-new source fetch on every call."
+    }
+  ],
+  "pricing_snapshots": {
+    "checked_at": "2026-08-26",
+    "max_age_days": 30,
+    "openai_web_search": {
+      "price_usd_per_1000_calls": 10,
+      "source": "https://platform.openai.com/pricing",
+      "note": "Search-content token effects are separate."
+    },
+    "firecrawl": {
+      "basic_scrape_credits_per_page": 1,
+      "json_extraction_total_credits_per_page": 5,
+      "standard_plan_usd_per_month_billed_yearly": 83,
+      "standard_plan_credits_per_month": 100000,
+      "source": "https://www.firecrawl.dev/pricing",
+      "cost_detail_source": "https://www.firecrawl.dev/blog/mastering-firecrawl-scrape-endpoint",
+      "note": "Use credits avoided as the direct benchmark metric. Fixed-plan invoice savings occur only when lower usage changes tier, overage or required capacity."
+    },
+    "browserbase_extract": {
+      "marginal_price_usd_per_1000_calls_without_proxies_after_allowance": 4,
+      "source": "https://www.browserbase.com/pricing"
+    }
+  },
+  "latest_verified_updates": [
+    {
+      "date": "2026-08-26",
+      "title": "Public npm and PyPI installation",
+      "summary": "The zero-dependency clients are publicly installable with npm install seenrelay and pip install seenrelay; clean registry installs are release-gated."
+    },
+    {
+      "date": "2026-08-26",
+      "title": "Measured Firecrawl structured-extraction savings",
+      "summary": "In a first-party n=3 smoke benchmark, bounded reuse avoided 3/3 Firecrawl JSON extraction calls, 15 provider credits, and reduced median latency from 1.266 s fresh / 1.040 s provider-cached to 0.618 s."
+    },
+    {
+      "date": "2026-08-26",
+      "title": "Bind once, one protected call per revalidation",
+      "summary": "JavaScript and Python helpers put SeenRelay deterministically around an existing fixed-fact validator while shadow mode remains the default."
+    },
+    {
+      "date": "2026-08-26",
+      "title": "Shadow Proof and deferred OBSERVE",
+      "summary": "Callers can measure reuse economics without suppressing validation and can schedule OBSERVE off the critical path when their runtime provides a safe lifecycle primitive."
+    }
+  ]
+}

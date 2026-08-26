@@ -49,8 +49,31 @@ grep -q 'Stop paying to revalidate the same fact' /tmp/site.html
 grep -q 'SAME_OBSERVED does not mean' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'FLEET-LEVEL COST AVOIDANCE' /tmp/economics.html
-grep -q 'Firecrawl Pay As You Go' /tmp/economics.html
-grep -q 'Firecrawl Standard' /tmp/economics.html
+grep -q 'MEASURED · FIRST-PARTY SMOKE BENCHMARK' /tmp/economics.html
+grep -q 'Firecrawl JSON extraction' /tmp/economics.html
+grep -q 'Fixed-tier counterexample' /tmp/economics.html
+! grep -q 'Firecrawl Pay As You Go' /tmp/economics.html
+grep -q 'npm install seenrelay' /tmp/site.html
+grep -q 'pip install seenrelay' /tmp/site.html
+grep -q '3/3 provider calls avoided' /tmp/site.html
+grep -q '15 credits avoided' /tmp/site.html
+grep -q 'Counterexample matters' /tmp/site.html
+# The branch alias can retain public max-age content across Preview deployments;
+# cache-bust deployment-specific machine facts before asserting exact release data.
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json?release=${RELEASE_SHA}" -o /tmp/product-facts.json
+node <<'NODE'
+const fs = require('fs');
+const x = JSON.parse(fs.readFileSync('/tmp/product-facts.json', 'utf8'));
+const b = x.verified_benchmarks?.find((item) => item.id === 'firecrawl-json-extraction-2026-08-26');
+if (x.install?.npm_command !== 'npm install seenrelay') process.exit(1);
+if (x.install?.pypi_command !== 'pip install seenrelay') process.exit(1);
+if (x.install?.client_version !== '0.1.0') process.exit(1);
+if (!b || b.provider_credits_avoided !== 15 || b.reuse_provider_calls !== 0) process.exit(1);
+NODE
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
+grep -q 'npm install seenrelay' /tmp/llms.txt
+grep -q 'pip install seenrelay' /tmp/llms.txt
+grep -q 'Firecrawl JSON extraction smoke benchmark' /tmp/llms.txt
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/service.json" -o /tmp/service.json
 grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json

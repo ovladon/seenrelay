@@ -1,5 +1,11 @@
 # SeenRelay deterministic client wrappers
 
+<!-- BEGIN GENERATED:PUBLIC-FACTS -->
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.1.0 · currently free · no account/API key.
+
+**Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
+<!-- END GENERATED:PUBLIC-FACTS -->
+
 These reference clients put SeenRelay directly in front of validation work an application already performs. They are the recommended application path when CHECK must run deterministically instead of depending on a model to decide whether to call an MCP tool.
 
 They do **not** change the SeenRelay protocol. The server still has exactly two domain operations: CHECK and OBSERVE.

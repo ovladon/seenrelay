@@ -1,4 +1,8 @@
+import { publicProductFacts } from './public-facts.generated.js';
+import { verifiedBenchmarkHtml } from './public-facts-view.js';
+
 export function economicsPage(origin: string): string {
+  const prices = publicProductFacts.pricing_snapshots;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -23,6 +27,7 @@ export function economicsPage(origin: string): string {
 <div class="cta"><a class="primary" href="/quickstart">Add it to a validation path</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Run Shadow Proof</a><a class="secondary" href="/clients">Client options</a></div>
 <div class="contract"><span>SeenRelay API fee</span><b>Currently $0</b><span>Measure first · reuse remains caller policy</span></div>
 </section>
+${verifiedBenchmarkHtml()}
 
 <section class="section decision">
 <div class="section-head"><div><div class="eyebrow">USE IT WHERE THE MATH CAN WIN</div><h2>Best fit: validation work with a visible marginal cost.</h2></div><p>SeenRelay is a preflight, not a replacement for every fetch. The protected operation should cost meaningfully more than CHECK and should repeat across runs, workers or agents.</p></div>
@@ -43,9 +48,9 @@ and any fixed plan minimums.</pre></div>
 </section>
 
 <section class="section decision">
-<div class="section-head"><div><div class="eyebrow">CONCRETE LIST-PRICE ARITHMETIC</div><h2>100,000 repeated validations · 30% measured reusable.</h2></div><p>Illustrative arithmetic using public provider prices checked 26 August 2026. That 30% is an illustration, not a promised hit rate. Shadow Proof must measure your workload first.</p></div>
-<div class="proof-grid"><article><b>OpenAI Web Search</b><span>$10 / 1,000 calls → 100k calls = $1,000. If 30k validations are safely reusable, 70k paid searches = $700. <strong>$300 gross search-call spend avoided.</strong> Search-content token effects are excluded.</span></article><article><b>Firecrawl Pay As You Go</b><span>$5 / 1,000 credits and a standard scrape uses 1 credit. 100k scrapes = $500 of purchased credits. At 30% reusable: 70k scrapes = $350. <strong>$150 gross credit spend avoided</strong>, assuming the avoided credits would otherwise have been purchased.</span></article><article><b>Browserbase Extract</b><span>Published marginal Extract rate: $4 / 1,000 calls without proxies after plan allowance. For 100k billable marginal calls: $400 → $280 at 30% reuse. <strong>$120 gross marginal spend avoided.</strong></span></article><article><b>Fixed-tier counterexample</b><span>Firecrawl Standard is $83/month billed yearly for 100k credits. 100k scrapes → 70k still remains inside the same tier: <strong>$83 → $83</strong>. 30k credits are freed, but the bill falls only if lower usage changes tier, overage or future capacity needs.</span></article></div>
-<div class="trust-note">Price sources: <a href="https://platform.openai.com/pricing">OpenAI API pricing</a> · <a href="https://www.firecrawl.dev/pricing">Firecrawl pricing</a> · <a href="https://www.browserbase.com/pricing">Browserbase pricing</a>. Provider pricing can change; use your invoice for production decisions. Examples exclude SeenRelay network/compute overhead, taxes, fixed plan minimums and unmeasured conditional-request savings.</div>
+<div class="section-head"><div><div class="eyebrow">CONCRETE LIST-PRICE ARITHMETIC</div><h2>100,000 repeated validations · 30% measured reusable.</h2></div><p>Illustrative arithmetic using public provider prices checked ${prices.checked_at}. That 30% is an illustration, not a promised hit rate. Shadow Proof must measure your workload first.</p></div>
+<div class="proof-grid"><article><b>OpenAI Web Search</b><span>$${prices.openai_web_search.price_usd_per_1000_calls} / 1,000 calls. Dollar savings remain illustrative until the caller measures its own reuse rate.</span></article><article><b>Firecrawl basic scrape</b><span>${prices.firecrawl.basic_scrape_credits_per_page} credit per page. The measured basic-scrape smoke test avoided provider credits but lost on latency versus Firecrawl's own cache.</span></article><article><b>Firecrawl JSON extraction</b><span>${prices.firecrawl.json_extraction_total_credits_per_page} credits per full extraction. In the measured n=3 smoke benchmark, 3 eligible reuses avoided 15 credits and cut median latency from 1.266 s fresh / 1.040 s provider-cached to 0.618 s.</span></article><article><b>Fixed-tier counterexample</b><span>Firecrawl Standard snapshot: $${prices.firecrawl.standard_plan_usd_per_month_billed_yearly}/month billed yearly for ${prices.firecrawl.standard_plan_credits_per_month.toLocaleString()} credits. Avoided credits lower the invoice only if they change tier, overage or required capacity.</span></article></div>
+<div class="trust-note">Price sources are stored with verification dates in <a href="/product-facts.json">product-facts.json</a>. Provider pricing can change; use your invoice for production decisions. Examples exclude SeenRelay network/compute overhead, taxes, fixed plan minimums and unmeasured conditional-request savings.</div>
 </section>
 
 <section class="section split decision">

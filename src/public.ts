@@ -1,5 +1,7 @@
 import { config } from './config.js';
 import { standardsPosture } from './standards.js';
+import { publicProductFacts } from './public-facts.generated.js';
+import { latestVerifiedHtml, productFactsForOrigin, publicInstallHtml, verifiedBenchmarkHtml } from './public-facts-view.js';
 
 export function serviceDescriptor(origin: string) {
   const cfg = config();
@@ -35,7 +37,12 @@ export function serviceDescriptor(origin: string) {
         recommendation: 'Use when the application must execute SeenRelay CHECK whenever a selected validation path runs.',
         javascript_typescript: 'https://github.com/ovladon/seenrelay/tree/main/clients/typescript',
         python: 'https://github.com/ovladon/seenrelay/tree/main/clients/python',
-        failure_semantics: "Relay-side failure fails open into the application's existing validation path."
+        failure_semantics: "Relay-side failure fails open into the application's existing validation path.",
+        client_version: publicProductFacts.install.client_version,
+        npm_install: publicProductFacts.install.npm_command,
+        pypi_install: publicProductFacts.install.pypi_command,
+        runtime_dependencies: publicProductFacts.install.runtime_dependencies,
+        public_registry_verified_at: publicProductFacts.install.registry_install_verified_at
       },
       mcp: {
         role: 'Standard discovery and model/tool-routing interface.',
@@ -51,14 +58,9 @@ export function serviceDescriptor(origin: string) {
       shadow_proof: 'https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md',
       page: `${origin}/economics`,
       direct_usage_formula: 'gross provider spend avoided ~= protected_calls * measured_reusable_rate * marginal_full_validation_cost',
-      pricing_examples_checked_at: '2026-08-26',
-      examples: [
-        { workload: 'OpenAI Web Search', public_unit_price: '$10/1000 calls', calls: 100000, illustrative_reusable_rate: 0.30, baseline_usd: 1000, post_reuse_metered_usd: 700, gross_avoided_usd: 300, source: 'https://platform.openai.com/pricing' },
-        { workload: 'Firecrawl Pay As You Go base scrapes', public_unit_price: '$5/1000 credits', credits_per_standard_scrape: 1, calls: 100000, illustrative_reusable_rate: 0.30, baseline_usd: 500, post_reuse_metered_usd: 350, gross_avoided_usd: 150, source: 'https://www.firecrawl.dev/pricing' },
-        { workload: 'Firecrawl Standard plan base scrapes', public_plan: '$83/month billed yearly for 100000 credits', credits_per_standard_scrape: 1, calls: 100000, illustrative_reusable_rate: 0.30, baseline_plan_usd: 83, post_reuse_plan_usd: 83, direct_plan_fee_avoided_usd: 0, credits_freed: 30000, note: 'A fixed plan can stay at the same invoice even when calls fall; lower usage saves dollars only if it changes tier, overage or future capacity needs.', source: 'https://www.firecrawl.dev/pricing' },
-        { workload: 'Browserbase Extract marginal calls without proxies after included allowance', public_unit_price: '$4/1000 calls', calls: 100000, illustrative_reusable_rate: 0.30, baseline_usd: 400, post_reuse_metered_usd: 280, gross_avoided_usd: 120, source: 'https://www.browserbase.com/pricing' }
-      ],
-      caveat: 'Illustrative list-price arithmetic only. Actual savings depend on measured SAME_OBSERVED reuse accepted by caller policy, provider plan structure, included credits, network/compute overhead and current provider prices.'
+      pricing_snapshots: publicProductFacts.pricing_snapshots,
+      verified_benchmarks: publicProductFacts.verified_benchmarks,
+      caveat: 'Measured benchmark results are first-party smoke evidence, not a promised reuse rate. Actual savings depend on caller policy, repeat probability, provider plan structure and CHECK overhead.'
     },
     external_verification: false,
     source_validation_hints: {
@@ -79,8 +81,11 @@ export function serviceDescriptor(origin: string) {
       health: `${origin}/healthz`,
       public_stats: `${origin}/public-stats.json`,
       data_practices: `${origin}/data-practices.json`,
-      service_descriptor: `${origin}/service.json`
-    }
+      service_descriptor: `${origin}/service.json`,
+      product_facts: `${origin}/product-facts.json`
+    },
+    public_product_facts: productFactsForOrigin(origin),
+    latest_verified_updates: publicProductFacts.latest_verified_updates
   };
 }
 
@@ -102,7 +107,7 @@ export function publicLandingPage(origin: string): string {
 <link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/economics">Savings</a><a href="/quickstart">Quickstart</a><a href="/clients">Connect</a><a href="#network">Network</a><a href="#trust">Trust</a><a href="/service.json">Machine JSON</a></nav></header>
+<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="#install">Install</a><a href="#verified-results">Measured</a><a href="#latest">Latest</a><a href="/economics">Savings</a><a href="/quickstart">Quickstart</a><a href="/clients">Connect</a><a href="#network">Network</a><a href="#trust">Trust</a><a href="/service.json">Machine JSON</a></nav></header>
 <main>
 <section class="hero">
 <div class="eyebrow">COST AVOIDANCE FOR AI-AGENT FLEETS</div>
@@ -111,6 +116,9 @@ export function publicLandingPage(origin: string): string {
 <div class="cta"><a class="primary" href="/quickstart">Protect an expensive validation</a><a class="secondary" href="/economics">See the cost math</a><a class="secondary" href="/clients">Integration options</a><a class="secondary" href="/service.json">For machines</a></div>
 <div class="contract"><span>Exactly 2 operations</span><b>CHECK</b><b>OBSERVE</b><span>Currently free · no account · fleet reuse · no truth verdict</span></div>
 </section>
+${publicInstallHtml()}
+${verifiedBenchmarkHtml()}
+${latestVerifiedHtml()}
 
 <section id="how" class="section">
 <div class="section-head"><div><div class="eyebrow">THE IDEA IN 30 SECONDS</div><h2>A shared cache for freshness evidence, not content.</h2></div><p>An ordinary cache avoids fetching the same content again. SeenRelay lets agents reuse timestamped observations created while they were already doing normal work.</p></div>
