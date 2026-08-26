@@ -7,7 +7,7 @@ export function serviceDescriptor(origin: string) {
     service: cfg.brandName,
     version: cfg.version,
     canonical_origin: origin,
-    purpose: 'Share recent source-backed observations between AI agents so they can avoid redundant revalidation.',
+    purpose: 'Reduce repeated paid or slow fact revalidation across AI-agent fleets by sharing recent source-backed freshness evidence.',
     semantics: 'Reports what agents recently observed; it does not decide truth.',
     operations: ['CHECK', 'OBSERVE'],
     fact_identity: 'seenrelay-fact-v3',
@@ -35,12 +35,29 @@ export function serviceDescriptor(origin: string) {
         recommendation: 'Use when the application must execute SeenRelay CHECK whenever a selected validation path runs.',
         javascript_typescript: 'https://github.com/ovladon/seenrelay/tree/main/clients/typescript',
         python: 'https://github.com/ovladon/seenrelay/tree/main/clients/python',
-        failure_semantics: 'Relay-side failure fails open into the application existing validation path.'
+        failure_semantics: "Relay-side failure fails open into the application's existing validation path."
       },
       mcp: {
         role: 'Standard discovery and model/tool-routing interface.',
         url: `${origin}/mcp`
       }
+    },
+    economics: {
+      target_workloads: ['paid_web_search', 'metered_scraping', 'browser_or_extraction', 'multi_step_validation', 'rate_limited_api'],
+      poor_fit: ['cheap_one_off_fetch', 'fact_with_low_repeat_probability', 'policy_requires_live_authoritative_source_on_every_call'],
+      fleet_value: 'One necessary validation can create evidence that lets later runs or agents avoid repeating the same paid or slow validation.',
+      current_seenrelay_api_fee: 0,
+      measure_first: true,
+      shadow_proof: 'https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md',
+      page: `${origin}/economics`,
+      direct_usage_formula: 'gross provider spend avoided ~= protected_calls * measured_reusable_rate * marginal_full_validation_cost',
+      pricing_examples_checked_at: '2026-08-26',
+      examples: [
+        { workload: 'OpenAI Web Search', public_unit_price: '$10/1000 calls', calls: 100000, illustrative_reusable_rate: 0.30, baseline_usd: 1000, post_reuse_metered_usd: 700, gross_avoided_usd: 300, source: 'https://platform.openai.com/pricing' },
+        { workload: 'Firecrawl Standard plan base scrapes', public_plan: '$83/month billed yearly for 100000 credits', credits_per_standard_scrape: 1, calls: 100000, illustrative_reusable_rate: 0.30, baseline_plan_usd: 83, post_reuse_plan_usd: 83, direct_plan_fee_avoided_usd: 0, credits_freed: 30000, note: 'Current self-serve pricing is plan-based; reduced calls save dollars only when they change tier or overage.', source: 'https://www.firecrawl.dev/pricing' },
+        { workload: 'Browserbase Extract marginal calls without proxies after included allowance', public_unit_price: '$4/1000 calls', calls: 100000, illustrative_reusable_rate: 0.30, baseline_usd: 400, post_reuse_metered_usd: 280, gross_avoided_usd: 120, source: 'https://www.browserbase.com/pricing' }
+      ],
+      caveat: 'Illustrative list-price arithmetic only. Actual savings depend on measured SAME_OBSERVED reuse accepted by caller policy, provider plan structure, included credits, network/compute overhead and current provider prices.'
     },
     external_verification: false,
     source_validation_hints: {
@@ -71,26 +88,26 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Put a deterministic SeenRelay freshness preflight around existing validation with JavaScript or Python wrappers, or expose the same CHECK and OBSERVE operations through MCP.">
+<meta name="description" content="Reduce repeated paid search, scraping, browser extraction and other validation spend across AI-agent fleets with a cheap SeenRelay CHECK before the expensive work.">
 <link rel="canonical" href="${origin}/">
 <link rel="alternate" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SeenRelay — Shared freshness for AI agents">
-<meta property="og:description" content="Deterministic freshness preflight for application validation paths, with MCP available for agent tool routing.">
+<meta property="og:description" content="A cheap preflight before repeated paid or slow validation across AI-agent fleets. Measure first, then reuse only under caller policy.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
 <title>SeenRelay — Shared freshness for AI agents</title>
 <link rel="stylesheet" href="/site.css">
 </head>
 <body>
-<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="#how">How it works</a><a href="/clients">Connect</a><a href="/quickstart">Quickstart</a><a href="#network">Network</a><a href="#trust">Trust</a><a href="/service.json">Machine JSON</a></nav></header>
+<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/economics">Savings</a><a href="/quickstart">Quickstart</a><a href="/clients">Connect</a><a href="#network">Network</a><a href="#trust">Trust</a><a href="/service.json">Machine JSON</a></nav></header>
 <main>
 <section class="hero">
-<div class="eyebrow">SHARED FRESHNESS FOR AI AGENTS</div>
-<h1>Before repeating a fact validation, check whether recent evidence already exists.</h1>
-<p class="lead">SeenRelay is a small, low-cost freshness preflight. For application workflows that must run the preflight whenever a selected validation path executes, use the deterministic JavaScript/TypeScript or Python wrapper to place <b>CHECK</b> directly in that call path. MCP remains the standard discovery and model/tool-routing interface. If validation still runs, <b>OBSERVE</b> records what the caller independently found so later runs or other agents may avoid repeating the same work.</p>
-<div class="cta"><a class="primary" href="/clients">Use a deterministic wrapper</a><a class="secondary" href="/clients">Connect via MCP</a><a class="secondary" href="/quickstart">5-minute quickstart</a><a class="secondary" href="/service.json">For machines</a></div>
-<div class="contract"><span>Exactly 2 operations</span><b>CHECK</b><b>OBSERVE</b><span>Currently free · no account · no browse/search · no truth verdict</span></div>
+<div class="eyebrow">COST AVOIDANCE FOR AI-AGENT FLEETS</div>
+<h1>Stop paying to revalidate the same fact.</h1>
+<p class="lead">SeenRelay adds a cheap <b>CHECK</b> before repeated paid search, scraping, browser/extraction, rate-limited API or other expensive fact validation. If recent matching evidence meets your policy, skip the expensive operation. Otherwise validate normally and <b>OBSERVE</b> what you independently found so the next run or agent may avoid paying for the same work again.</p>
+<div class="cta"><a class="primary" href="/quickstart">Protect an expensive validation</a><a class="secondary" href="/economics">See the cost math</a><a class="secondary" href="/clients">Integration options</a><a class="secondary" href="/service.json">For machines</a></div>
+<div class="contract"><span>Exactly 2 operations</span><b>CHECK</b><b>OBSERVE</b><span>Currently free · no account · fleet reuse · no truth verdict</span></div>
 </section>
 
 <section id="how" class="section">
@@ -122,6 +139,11 @@ reuse or revalidate → caller policy</pre></div>
 <div class="proof-grid"><article><b>Empty network</b><span>CHECK returns UNKNOWN; the existing workflow continues normally.</span></article><article><b>First observation</b><span>An agent validates the source for its own task and sends OBSERVE.</span></article><article><b>Same integration or fleet</b><span>Later CHECKs can benefit from the observation before any public network effect exists.</span></article><article><b>Cheaper revalidation</b><span>Observer-supplied ETag or Last-Modified metadata can support a conditional source request before expensive downstream work.</span></article></div>
 </section>
 
+<section class="section split decision">
+<div><div class="eyebrow">THE ECONOMIC CASE</div><h2>Use SeenRelay where the operation you might skip costs real money or time.</h2><p>At current public list prices, 100,000 OpenAI Web Search calls cost $1,000 in search-call fees. If Shadow Proof measures 30% reusable matches that your policy accepts, 30,000 paid searches can be avoided: $700 instead of $1,000, before your own CHECK network/compute overhead.</p><p>That 30% is an illustration, not a promised hit rate. Your workload decides whether the math works.</p><p><a href="/economics">See OpenAI, Firecrawl and Browserbase examples plus the break-even formula →</a></p></div>
+<div class="proof-grid"><article><b>Paid search</b><span>Avoid repeated metered search calls.</span></article><article><b>Scrape / extract</b><span>Avoid repeated credits, browser work and downstream parsing.</span></article><article><b>Fleet effect</b><span>One necessary validation can serve later runs or agents.</span></article><article><b>Negative control</b><span>Do not use SeenRelay for a cheap one-off GET when the preflight cannot win.</span></article></div>
+</section>
+
 <section id="network" class="section">
 <div class="section-head"><div><div class="eyebrow">LIVE NETWORK</div><h2>Aggregate network activity.</h2></div><p>Privacy-safe operational measurements from the running service. Reuse metrics are activity signals, never truth scores.</p></div>
 <div class="metrics">
@@ -136,7 +158,7 @@ reuse or revalidate → caller policy</pre></div>
 </section>
 
 <section id="integrate" class="section split">
-<div><div class="eyebrow">INTEGRATION PATHS</div><h2>Deterministic in application code. MCP when tool routing is appropriate.</h2><p>If the application must execute CHECK whenever a selected validation path runs, vendor the zero-dependency JavaScript/TypeScript or Python wrapper. It fails open into the validation the application already planned. If model-selected tool use is appropriate, connect the same two SeenRelay operations through the remote MCP endpoint.</p><div class="flow"><span>need fact</span><i>→</i><span>CHECK</span><i>→</i><span>reuse or validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Choose the deterministic wrapper or MCP setup →</a></p></div>
+<div><div class="eyebrow">INTEGRATION PATHS</div><h2>Deterministic in application code. MCP when tool routing is appropriate.</h2><p>If the application must execute CHECK whenever a selected validation path runs, use the zero-dependency JavaScript/TypeScript or Python client. Bind it once around an existing fixed-fact validation, then each later revalidation is one protected call. It fails open into the validation the application already planned. If model-selected tool use is appropriate, connect the same two SeenRelay operations through the remote MCP endpoint.</p><div class="flow"><span>need fact</span><i>→</i><span>CHECK</span><i>→</i><span>reuse or validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Choose the deterministic wrapper or MCP setup →</a></p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>integration</b></div><pre>Deterministic application path
 JavaScript / TypeScript wrapper
 Python wrapper
@@ -160,7 +182,7 @@ OBSERVE</pre></div>
 <div class="trust-note"><a href="/data-practices">Inspect technical data practices →</a></div>
 </section>
 
-<section class="section final"><div><div class="eyebrow">CONNECT WITHOUT COMMITTING YOUR WORKFLOW</div><h2>Start free in shadow mode and let your own observations seed later reuse.</h2></div><div class="cta"><a class="primary" href="/clients">Use a deterministic wrapper</a><a class="secondary" href="/clients">Connect via MCP</a><a class="secondary" href="/quickstart">Start the pilot</a><a class="secondary" href="/service.json">Machine descriptor</a></div></section>
+<section class="section final"><div><div class="eyebrow">PROVE THE SAVINGS ON YOUR OWN WORKLOAD</div><h2>Start free in shadow mode. Keep it only where measured fleet-level reuse beats the overhead.</h2></div><div class="cta"><a class="primary" href="/quickstart">Protect a validation</a><a class="secondary" href="/economics">Cost examples</a><a class="secondary" href="/clients">Clients</a><a class="secondary" href="/service.json">Machine descriptor</a></div></section>
 </main>
 <footer><span>SeenRelay</span><span>Recent observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
 <script src="/site.js" defer></script>
