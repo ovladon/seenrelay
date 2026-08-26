@@ -59,12 +59,15 @@ grep -q '3/3 provider calls avoided' /tmp/site.html
 grep -q '15 credits avoided' /tmp/site.html
 grep -q 'Counterexample matters' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json" -o /tmp/product-facts.json
-grep -q '"npm_command":"npm install seenrelay"' /tmp/product-facts.json
-grep -q '"pypi_command":"pip install seenrelay"' /tmp/product-facts.json
-grep -q '"client_version":"0.1.0"' /tmp/product-facts.json
-grep -q '"id":"firecrawl-json-extraction-2026-08-26"' /tmp/product-facts.json
-grep -q '"provider_credits_avoided":15' /tmp/product-facts.json
-grep -q '"reuse_provider_calls":0' /tmp/product-facts.json
+node <<'NODE'
+const fs = require('fs');
+const x = JSON.parse(fs.readFileSync('/tmp/product-facts.json', 'utf8'));
+const b = x.verified_benchmarks?.find((item) => item.id === 'firecrawl-json-extraction-2026-08-26');
+if (x.install?.npm_command !== 'npm install seenrelay') process.exit(1);
+if (x.install?.pypi_command !== 'pip install seenrelay') process.exit(1);
+if (x.install?.client_version !== '0.1.0') process.exit(1);
+if (!b || b.provider_credits_avoided !== 15 || b.reuse_provider_calls !== 0) process.exit(1);
+NODE
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
@@ -136,6 +139,7 @@ JSON
 post same_b /tmp/same-check.json /v1/check /tmp/same-check.out
 grep -q '"status":"SAME_OBSERVED"' /tmp/same-check.out
 grep -q '"useful_reuse_awards":0' /tmp/same-check.out
+
 # CONTESTED and STALE.
 cat >/tmp/contest-a.json <<JSON
 {"fact":{"subject":"Contest","predicate":"status.current","source":"${BASE}/contest"},"value":"alpha","observer_id":"contest-a","idempotency_key":"a"}
