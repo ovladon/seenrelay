@@ -97,7 +97,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   offline-backup-temp:
-    name: Temporary Offline Source Backup
+    name: Temporary Offline Source and DB Backup
     if: github.event_name == 'pull_request' && github.head_ref == 'ops/offline-backup-2026-08-26'
     runs-on: ubuntu-latest
     permissions:
@@ -109,32 +109,79 @@ jobs:
           ref: 37c5f15c409f6f9eec5b6d81cfb350e01f9faf5f
           fetch-depth: 0
           persist-credentials: false
+
       - name: Build verified offline Git artifacts
         shell: bash
         run: |
           set -euo pipefail
           SHA='37c5f15c409f6f9eec5b6d81cfb350e01f9faf5f'
           test "$(git rev-parse HEAD)" = "$SHA"
-          mkdir -p /tmp/seenrelay-offline
-          git archive --format=tar.gz --prefix="seenrelay-source-${SHA}/" -o "/tmp/seenrelay-offline/seenrelay-source-${SHA}.tar.gz" "$SHA"
+          mkdir -p /tmp/seenrelay-offline/source /tmp/seenrelay-offline/database
+          git archive --format=tar.gz --prefix="seenrelay-source-${SHA}/" -o "/tmp/seenrelay-offline/source/seenrelay-source-${SHA}.tar.gz" "$SHA"
           git branch backup-main "$SHA"
-          git bundle create "/tmp/seenrelay-offline/seenrelay-main-history-${SHA}.bundle" backup-main --tags
-          git bundle verify "/tmp/seenrelay-offline/seenrelay-main-history-${SHA}.bundle"
-          git ls-tree -r --full-tree "$SHA" > /tmp/seenrelay-offline/source-tree.txt
-          git log --all --date=iso-strict --pretty='format:%H%x09%ad%x09%an%x09%s' > /tmp/seenrelay-offline/git-history.txt
+          git bundle create "/tmp/seenrelay-offline/source/seenrelay-main-history-${SHA}.bundle" backup-main --tags
+          git bundle verify "/tmp/seenrelay-offline/source/seenrelay-main-history-${SHA}.bundle"
+          git ls-tree -r --full-tree "$SHA" > /tmp/seenrelay-offline/source/source-tree.txt
+          git log --all --date=iso-strict --pretty='format:%H%x09%ad%x09%an%x09%s' > /tmp/seenrelay-offline/source/git-history.txt
           {
             echo "repository=ovladon/seenrelay"
             echo "commit=$SHA"
             echo "tree=$(git rev-parse "$SHA^{tree}")"
             echo "generated_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          } > /tmp/seenrelay-offline/SOURCE_IDENTITY.txt
-          cd /tmp/seenrelay-offline
+          } > /tmp/seenrelay-offline/source/SOURCE_IDENTITY.txt
+          cd /tmp/seenrelay-offline/source
           sha256sum SOURCE_IDENTITY.txt git-history.txt source-tree.txt seenrelay-source-${SHA}.tar.gz seenrelay-main-history-${SHA}.bundle > SHA256SUMS
           sha256sum -c SHA256SUMS
-      - name: Upload offline source backup
+
+      - name: Produce native PostgreSQL dump from frozen Neon checkpoint when repository Neon integration is available
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=/tmp/seenrelay-offline/database
+          if [ -z "${NEON_API_KEY:-}" ]; then
+            printf '%s\n' 'native_pg_dump=unavailable' 'reason=NEON_API_KEY repository secret is not available to this workflow' > "$out/DATABASE_BACKUP_STATUS.txt"
+            exit 0
+          fi
+
+          if ! command -v pg_dump >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+
+          api='https://console.neon.tech/api/v2/projects/jolly-rain-02207197/connection_uri?branch_id=br-sparkling-river-af1gcrbv&database_name=neondb&role_name=neondb_owner&pooled=false'
+          response="$(curl -fsS -H 'Accept: application/json' -H "Authorization: Bearer ${NEON_API_KEY}" "$api")" || {
+            printf '%s\n' 'native_pg_dump=unavailable' 'reason=Neon connection URI API request failed' > "$out/DATABASE_BACKUP_STATUS.txt"
+            exit 0
+          }
+          uri="$(printf '%s' "$response" | jq -r '.uri // empty')"
+          unset response
+          if [ -z "$uri" ]; then
+            printf '%s\n' 'native_pg_dump=unavailable' 'reason=Neon API did not return a connection URI' > "$out/DATABASE_BACKUP_STATUS.txt"
+            exit 0
+          fi
+
+          pg_dump "$uri" --format=custom --no-owner --file="$out/seenrelay-neon-checkpoint.dump"
+          pg_dump "$uri" --format=plain --no-owner --file="$out/seenrelay-neon-checkpoint.sql"
+          pg_restore -l "$out/seenrelay-neon-checkpoint.dump" > "$out/pg_restore_toc.txt"
+          unset uri
+          printf '%s\n' 'native_pg_dump=available' 'source_branch=br-sparkling-river-af1gcrbv' 'database=neondb' > "$out/DATABASE_BACKUP_STATUS.txt"
+          cd "$out"
+          sha256sum seenrelay-neon-checkpoint.dump seenrelay-neon-checkpoint.sql pg_restore_toc.txt DATABASE_BACKUP_STATUS.txt > SHA256SUMS
+          sha256sum -c SHA256SUMS
+
+      - name: Build artifact-level manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/seenrelay-offline
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > ALL_SHA256SUMS
+
+      - name: Upload offline recovery material
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
         with:
-          name: seenrelay-offline-source-backup-37c5f15c
-          path: /tmp/seenrelay-offline/*
+          name: seenrelay-offline-recovery-material-37c5f15c
+          path: /tmp/seenrelay-offline
           if-no-files-found: error
           retention-days: 1
