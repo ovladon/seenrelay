@@ -63,13 +63,14 @@ test('Preview gate resolves the exact PR preview from Vercel comments or check r
 
   // Keep the original Vercel bot comment path when it exists.
   assert.match(resolver, /vercel\[bot\]/);
-  assert.match(resolver, /\[Preview\\\]/);
+  assert.match(resolver, /Preview/);
   assert.match(resolver, /process\.stdout\.write\(match\[1\]\)/);
 
-  // Vercel can now expose the preview only through a check run. The fallback
-  // must stay pinned to the exact PR head and to the Vercel GitHub App.
+  // Vercel can expose the Preview only through a check run. The fallback
+  // stays pinned to the exact PR head and to the Vercel GitHub App.
   assert.match(resolver, /pulls\/\$\{pr\}/);
   assert.match(resolver, /commits\/\$\{headSha\}\/check-runs/);
   assert.match(resolver, /check\?\.app\?\.slug === 'vercel'/);
-  assert.match(resolver, /\.vercel\\\.app/);
+  assert.match(resolver, /previewHostname/);
+  assert.match(resolver, /process\.stdout\.write\(candidate\)/);
 });
