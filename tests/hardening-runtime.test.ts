@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeSource, ValidationError } from '../src/canonical';
 import { deriveClientKey, deriveReuseIndependenceKey } from '../src/identity';
+import { adminLogin } from '../src/admin';
+import { boundedRequest, PayloadTooLargeError, readJsonBody } from '../src/http';
+import { handleMcp } from '../src/mcp';
 
 const SALT = 'seenrelay-hardening-test-privacy-salt-0123456789abcdef';
 
@@ -71,3 +74,50 @@ test('credential-bearing or signed source URLs are rejected rather than collapse
     'https://example.com/item?a=1&b=2'
   );
 });
+
+test('bounded request rejects unknown-length/chunked bodies before downstream parsing', async () => {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(encoder.encode('12345678'));
+      controller.enqueue(encoder.encode('90abcdef'));
+      controller.close();
+    }
+  });
+  const request = new Request('https://seenrelay.test/mcp', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: stream, duplex: 'half'
+  } as RequestInit & { duplex: 'half' });
+  await assert.rejects(() => boundedRequest(request, 8), PayloadTooLargeError);
+});
+
+test('readJsonBody enforces the byte limit even when Content-Length is unavailable', async () => {
+  const request = new Request('https://seenrelay.test/v1/check', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ value: '0123456789' })
+  });
+  await assert.rejects(() => readJsonBody(request, 8), PayloadTooLargeError);
+});
+
+test('MCP rejects oversized transport bodies before SDK parsing', withEnv(
+  { MAX_BODY_BYTES: '64' },
+  async () => {
+    const request = new Request('https://seenrelay.test/mcp', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { filler: 'x'.repeat(256) } })
+    });
+    const response = await handleMcp(request);
+    assert.equal(response.status, 413);
+    const body = await response.json() as { error?: { code?: number } };
+    assert.equal(body.error?.code, -32001);
+  }
+));
+
+test('admin login rejects oversized bodies before credential comparison', withEnv(
+  { ADMIN_SECRET: 'admin-secret-'.padEnd(64, 's'), MAX_BODY_BYTES: '64' },
+  async () => {
+    const request = new Request('https://seenrelay.test/admin/login', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret: 'x'.repeat(256) })
+    });
+    const response = await adminLogin(request);
+    assert.equal(response.status, 413);
+    assert.deepEqual(await response.json(), { error: { code: 'PAYLOAD_TOO_LARGE' } });
+  }
+));
