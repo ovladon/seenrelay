@@ -8,7 +8,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, '..');
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
 
-test('Control Room separates first-party bootstrap from external adoption and degrades safely', () => {
+test('Control Room separates bootstrap and controlled benchmarks from external adoption and degrades safely', () => {
   const db = read('src', 'admin-db.ts');
   const admin = read('src', 'admin.ts');
   const ui = read('public', 'admin-v2.js');
@@ -18,15 +18,22 @@ test('Control Room separates first-party bootstrap from external adoption and de
   assert.match(db, /privacyScopedHash\('observer-self', REFERENCE_OBSERVER_ID\)/);
   assert.match(db, /export async function getAdminSnapshotData/);
   assert.match(db, /export async function getAdminAdoptionData/);
+  assert.match(db, /seenrelay_\(json_\)\?benchmark/);
+  assert.match(db, /seenrelay_internal_benchmark/);
   assert.match(db, /observations_first_party/);
+  assert.match(db, /observations_internal_benchmark/);
   assert.match(db, /observations_external/);
   assert.match(db, /leases_first_party/);
+  assert.match(db, /leases_internal_benchmark/);
   assert.match(db, /leases_external/);
-  assert.match(db, /checks_external_month/);
+  assert.match(db, /checks_internal_benchmark/);
+  assert.match(db, /SUM\(h\.check_count\).*meaningfulExternalLease/);
+  assert.doesNotMatch(db, /SUM\(checks\).*AS checks_external_month/);
   assert.match(db, /reuse_external_total/);
   assert.match(db, /e\.consumer_lease_id/);
   assert.match(db, /h\.check_count > 0/);
   assert.match(db, /ext\.observer_key <> \$1/);
+  assert.match(db, /reference-observer-and-controlled-benchmarks-excluded/);
 
   assert.match(admin, /try \{ adoption=await getAdminAdoptionData\(\); \} catch \(error\) \{ adoption=adoptionUnavailable\(error\); \}/);
   assert.match(admin, /admin_adoption_snapshot_error/);
