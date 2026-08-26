@@ -67,6 +67,31 @@ async function jsonRequest(url, options = {}) {
   return { body, headers: response.headers };
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function retryableFreshInteractError(error) {
+  const providerMessage = String(error?.body?.error ?? error?.body?.message ?? '');
+  return (error?.status === 404 && /job not found/i.test(providerMessage))
+    || error?.status === 429
+    || error?.status === 502;
+}
+
+async function freshInteractRequest(url, options) {
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      return await jsonRequest(url, options);
+    } catch (error) {
+      lastError = error;
+      if (!retryableFreshInteractError(error) || attempt === 3) throw error;
+      await sleep(500 * (2 ** (attempt - 1)));
+    }
+  }
+  throw lastError;
+}
+
 function scrapeIdOf(body) {
   return body?.metadata?.scrapeId
     || body?.data?.metadata?.scrapeId
@@ -123,7 +148,7 @@ async function runFirecrawlInteract(sample) {
     }
 
     const interactT0 = performance.now();
-    const interact = await jsonRequest(`${FIRECRAWL_BASE}/scrape/${encodeURIComponent(scrapeId)}/interact`, {
+    const interact = await freshInteractRequest(`${FIRECRAWL_BASE}/scrape/${encodeURIComponent(scrapeId)}/interact`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
