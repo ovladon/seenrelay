@@ -36,10 +36,29 @@ test('MCP gets an explicit bounded transport request before SDK handling', () =>
   assert.match(mcp, /handler\.fetch\(safeRequest\)/);
 });
 
-test('admin login route is transport-bounded before credential parsing', () => {
+test('all public fact-operation REST bodies are bounded before JSON parsing', () => {
   const index = read('src','index.ts');
-  assert.match(index, /boundedRequest\(c\.req\.raw, Math\.min\(config\(\)\.maxBodyBytes, 4096\)\)/);
-  assert.match(index, /return adminLogin\(bounded\.request\)/);
+  for (const route of ['/v1/check', '/v1/observe']) {
+    const start = index.indexOf(`app.post('${route}'`);
+    assert.notEqual(start, -1, `${route} route must exist`);
+    const nextRoute = index.indexOf('\napp.', start + 1);
+    const block = index.slice(start, nextRoute === -1 ? undefined : nextRoute);
+    assert.match(block, /boundedRequest\(c\.req\.raw, config\(\)\.maxBodyBytes\)/);
+    assert.match(block, /const request = bounded\.request/);
+    assert.match(block, /readJsonBody<.*>\(request, config\(\)\.maxBodyBytes\)/);
+  }
+});
+
+test('all admin POST routes are transport-bounded before handlers run', () => {
+  const index = read('src','index.ts');
+  for (const route of ['/admin/login', '/admin/logout', '/admin/api/control', '/admin/api/playbook', '/admin/api/housekeeping']) {
+    const start = index.indexOf(`app.post('${route}'`);
+    assert.notEqual(start, -1, `${route} route must exist`);
+    const nextRoute = index.indexOf('\napp.', start + 1);
+    const block = index.slice(start, nextRoute === -1 ? undefined : nextRoute);
+    assert.match(block, /boundedRequest\(c\.req\.raw, Math\.min\(config\(\)\.maxBodyBytes, 4096\)\)/);
+    assert.match(block, /if \('response' in bounded\) return bounded\.response/);
+  }
 });
 
 test('trust surface is discoverable to humans and coding agents', () => {
