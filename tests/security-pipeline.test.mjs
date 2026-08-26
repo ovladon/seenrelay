@@ -11,6 +11,7 @@ const admin = fs.readFileSync('src/admin.ts', 'utf8');
 test('security workflows are immutable-SHA pinned and least-privilege scoped', () => {
   assert.match(codeql, /github\/codeql-action\/init@[0-9a-f]{40}/);
   assert.match(codeql, /github\/codeql-action\/analyze@[0-9a-f]{40}/);
+  assert.match(codeql, /queries: security-extended/);
   assert.match(codeql, /security-events: write/);
   assert.doesNotMatch(codeql, /contents: write/);
   assert.match(dependencyReview, /actions\/dependency-review-action@[0-9a-f]{40}/);
