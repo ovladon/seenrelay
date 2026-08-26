@@ -6,6 +6,7 @@ on:
       - site/verified-benchmark-matrix-automation
     paths:
       - 'scripts/bootstrap-benchmark-matrix-v2.py'
+      - 'scripts/bootstrap-benchmark-matrix-typefix.py'
       - '.github/workflows/bootstrap-benchmark-matrix-automation.yml'
 
 permissions:
@@ -29,6 +30,7 @@ jobs:
       - name: Apply generic matrix and benchmark evidence publication changes
         run: |
           python3 scripts/bootstrap-benchmark-matrix-v2.py
+          python3 scripts/bootstrap-benchmark-matrix-typefix.py
           node scripts/sync-public-surfaces.mjs --write
           node scripts/benchmark-evidence.mjs
           npm run check
