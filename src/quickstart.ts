@@ -13,9 +13,9 @@ export function quickstartPage(origin: string): string {
 <main>
 <section class="hero">
 <div class="eyebrow">INTEGRATION QUICKSTART</div>
-<h1>Add one cheap question before expensive revalidation.</h1>
-<p class="lead">Keep your existing source-validation policy. CHECK first. Reuse only when your policy permits it. If you validate independently anyway, OBSERVE the result for the next agent.</p>
-<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Full quickstart</a><a class="secondary" href="/clients">Deterministic wrappers</a><a class="secondary" href="/openapi.json">REST / OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a></div>
+<h1>Put one cheap CHECK in front of an expensive validation.</h1>
+<p class="lead">Best targets are repeated paid search, scraping, browser/extraction, rate-limited APIs and multi-step validation across an agent fleet. Start in shadow mode, measure the savings opportunity, then reuse only where your policy permits it.</p>
+<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Full quickstart</a><a class="secondary" href="/economics">Cost examples</a><a class="secondary" href="/clients">Deterministic clients</a><a class="secondary" href="/openapi.json">REST / OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a></div>
 <div class="contract"><span>Registry</span><b>io.github.ovladon/seenrelay</b><span>No account · no API key · currently free</span></div>
 </section>
 
@@ -32,9 +32,17 @@ observe_fact ✓</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">DETERMINISTIC CALL PATH</div><h2>Use a wrapper when tool routing itself is the uncertainty.</h2><p>MCP remains the standard discovery interface. For applications that must execute the preflight every time a selected validation path runs, the reference JavaScript and Python wrappers put CHECK directly around that existing validation.</p><p>Relay timeout, 429, malformed output, or outage fails open into the original validation path. Shadow mode remains the default; skipping validation requires an explicit caller policy.</p></div>
-<div class="proof-grid"><article><b>JavaScript / TypeScript</b><span>Single-file, zero-dependency runtime client.</span></article><article><b>Python</b><span>Standard-library-only client.</span></article><article><b>Conditional hints</b><span>Safe ETag / Last-Modified hints can reach the existing validation without being trusted automatically.</span></article><article><b>Measure locally</b><span>In-process counters can quantify actual reuse and request overhead.</span></article></div>
-<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/tree/main/clients">Open wrappers</a><a class="secondary" href="/clients">Integration options</a></div>
+<div><div class="eyebrow">DETERMINISTIC CALL PATH</div><h2>Bind once. One protected call for every later revalidation.</h2><p>MCP remains the standard discovery interface. For application code, the JavaScript and Python clients can bind SeenRelay around one existing fixed-fact validation. The first configuration names the fact and existing validator; every later call supplies only the value already known.</p><p>Relay timeout, 429, malformed output, or outage fails open into the original validation path. Shadow mode remains the default; skipping validation requires an explicit caller policy.</p></div>
+<div class="proof-grid"><article><b>JavaScript / TypeScript</b><span><code>protectValidation(...)</code> binds one fixed-fact validator.</span></article><article><b>Python</b><span><code>protect_validation(...)</code> does the same with the standard library only.</span></article><article><b>Conditional hints</b><span>Safe ETag / Last-Modified hints can reach the existing validation without being trusted automatically.</span></article><article><b>Measure locally</b><span>In-process counters can quantify actual reuse and request overhead.</span></article></div>
+<div class="terminal"><pre>const validatePrice = relay.protectValidation({
+  fact,
+  validate: ({ conditionalHeaders }) =&gt;
+    expensiveValidation(conditionalHeaders)
+});
+
+// every later validation:
+const value = await validatePrice(knownValue);</pre></div>
+<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/tree/main/clients">Open clients</a><a class="secondary" href="/economics">See fleet economics</a><a class="secondary" href="/clients">Integration options</a></div>
 </section>
 
 <section class="section split decision">
