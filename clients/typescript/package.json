@@ -1,4 +1,47 @@
 {
-  "private": true,
-  "type": "module"
+  "name": "seenrelay",
+  "version": "0.1.0",
+  "description": "Deterministic zero-dependency SeenRelay client for repeated source-backed validation workflows.",
+  "type": "module",
+  "main": "./dist/seenrelay.js",
+  "types": "./dist/seenrelay.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/seenrelay.d.ts",
+      "import": "./dist/seenrelay.js"
+    },
+    "./shadow-proof": {
+      "types": "./dist/shadow-proof.d.ts",
+      "import": "./dist/shadow-proof.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ovladon/seenrelay.git",
+    "directory": "clients/typescript"
+  },
+  "homepage": "https://seenrelay.com/clients",
+  "bugs": {
+    "url": "https://github.com/ovladon/seenrelay/issues"
+  },
+  "keywords": [
+    "ai-agents",
+    "validation",
+    "freshness",
+    "cache",
+    "mcp"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

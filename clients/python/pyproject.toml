@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seenrelay"
+version = "0.1.0"
+description = "Deterministic zero-dependency SeenRelay client for repeated source-backed validation workflows."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "Vlad Belciug" }
+]
+keywords = ["ai-agents", "validation", "freshness", "cache", "mcp"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://seenrelay.com/clients"
+Repository = "https://github.com/ovladon/seenrelay"
+Issues = "https://github.com/ovladon/seenrelay/issues"
+
+[tool.setuptools]
+py-modules = ["seenrelay", "seenrelay_shadow"]
