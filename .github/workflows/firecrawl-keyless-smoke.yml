@@ -1,0 +1,35 @@
+name: Firecrawl Keyless Smoke
+
+on:
+  push:
+    branches: [benchmark/firecrawl-fixed-url-v1]
+    paths:
+      - '.github/workflows/firecrawl-keyless-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call Firecrawl v2 scrape without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /tmp/firecrawl.json -w '%{http_code}' \
+            -X POST https://api.firecrawl.dev/v2/scrape \
+            -H 'content-type: application/json' \
+            --data '{"url":"https://example.com","formats":["markdown"],"onlyMainContent":true}')
+          echo "HTTP $code"
+          test "$code" = 200
+          node - <<'NODE'
+          const fs = require('fs');
+          const body = JSON.parse(fs.readFileSync('/tmp/firecrawl.json', 'utf8'));
+          if (body.success !== true) throw new Error('Firecrawl did not return success=true');
+          const markdown = body?.data?.markdown;
+          if (typeof markdown !== 'string' || !markdown.includes('Example Domain')) throw new Error('Expected Example Domain markdown');
+          const metadata = body?.data?.metadata || {};
+          console.log(JSON.stringify({success: true, cacheState: metadata.cacheState ?? metadata.cache_state ?? null, sourceURL: metadata.sourceURL ?? metadata.sourceUrl ?? null}));
+          NODE
