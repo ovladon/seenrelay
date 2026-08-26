@@ -1,5 +1,9 @@
 # Changelog
 
+<!-- BEGIN GENERATED:PUBLIC-FACTS -->
+Current install/version/verified benchmark facts are generated from `public/product-facts.json`. See [`docs/VERIFIED_RESULTS.md`](docs/VERIFIED_RESULTS.md) and `https://seenrelay.com/product-facts.json`.
+<!-- END GENERATED:PUBLIC-FACTS -->
+
 ## Unreleased — Deterministic client wrappers
 
 - Add vendorable zero-third-party-runtime-dependency JavaScript/TypeScript and Python reference wrappers that put CHECK deterministically in front of an application's existing validation path.

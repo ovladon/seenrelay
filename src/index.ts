@@ -16,6 +16,7 @@ import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
 import { getPublicStats } from './public-db.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
 import { dataPracticesDescriptor, dataPracticesPage } from './data-practices.js';
+import { productFactsForOrigin } from './public-facts-view.js';
 import type { CheckRequest, ObserveRequest } from './types.js';
 
 const app = new Hono();
@@ -57,6 +58,10 @@ app.get('/', (c) => {
 app.get('/service.json', (c) => {
   c.header('cache-control', 'public, max-age=300');
   return c.json(serviceDescriptor(new URL(c.req.url).origin));
+});
+app.get('/product-facts.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  return c.json(productFactsForOrigin(new URL(c.req.url).origin));
 });
 app.get('/quickstart', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");

@@ -1,3 +1,5 @@
+import { machinePublicFactsText, publicInstallHtml } from './public-facts-view.js';
+
 export function clientsPage(origin: string): string {
   const cursorInstall = 'https://cursor.com/install-mcp?name=seenrelay&config=eyJ1cmwiOiJodHRwczovL3NlZW5yZWxheS5jb20vbWNwIn0%3D';
   return `<!doctype html>
@@ -25,14 +27,7 @@ export function clientsPage(origin: string): string {
 <div class="cta"><a class="primary" href="#install">Install SeenRelay</a><a class="secondary" href="/economics">See fleet savings</a><a class="secondary" href="${cursorInstall}">Add MCP to Cursor</a><a class="secondary" href="/quickstart">Pilot safely</a></div>
 <div class="contract"><span>2 operations</span><b>check_fact</b><b>observe_fact</b><span>Observations, not universal truth</span></div>
 </section>
-<section class="section split" id="install">
-<div><div class="eyebrow">PUBLIC INSTALL</div><h2>Two commands. No account or API key.</h2><p>Install the zero-dependency client from the standard registry, then bind SeenRelay around the expensive validator you already have. Version <code>0.1.0</code> is live on both registries and has been clean-install verified from the public indexes.</p></div>
-<div class="terminal"><pre>npm install seenrelay
-
-# or
-
-pip install seenrelay</pre></div>
-</section>
+${publicInstallHtml()}
 <section class="section split decision">
 <div><div class="eyebrow">DETERMINISTIC CLIENTS</div><h2>Do not depend on a model remembering to call MCP.</h2><p>The clients place a bounded SeenRelay preflight around validation your application already performs. <code>protectValidation</code> / <code>protect_validation</code> binds a fixed-fact validator once so every later revalidation becomes one protected call. Relay-side timeout, 429, malformed response, or outage fails open into the original validation path.</p><p>Shadow mode is the default. Reuse requires an explicit caller-supplied policy.</p></div>
 <div class="proof-grid"><article><b>JavaScript / TypeScript</b><span><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">Zero-dependency runtime wrapper</a></span></article><article><b>Python</b><span><a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Standard-library-only wrapper</a></span></article><article><b>No local TTL cache</b><span>Only overlapping equivalent CHECKs can share one in-flight request.</span></article><article><b>Local measurement</b><span>Telemetry and caller-supplied cost estimates remain local unless the application exports them.</span></article></div>
@@ -97,6 +92,8 @@ export function llmsText(origin: string): string {
 
 SeenRelay reports recent observations, not universal truth. It does not browse, search, externally verify facts, or use an LLM as a truth arbiter.
 
+${machinePublicFactsText(origin)}
+
 ## Use SeenRelay when
 
 - the caller already has a known value and is about to revalidate it;
@@ -116,8 +113,7 @@ SeenRelay reports recent observations, not universal truth. It does not browse, 
 - Fleet economics and current price examples: ${origin}/economics
 - Quickstart: ${origin}/quickstart
 - Client integrations: ${origin}/clients
-- Public JavaScript / TypeScript install: \`npm install seenrelay\`
-- Public Python install: \`pip install seenrelay\`
+- Canonical install/version/benchmark facts: ${origin}/product-facts.json
 - Deterministic client source and examples: https://github.com/ovladon/seenrelay/tree/main/clients
 - Shadow Proof / Economics Lab: https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md
 - Machine descriptor: ${origin}/service.json
@@ -146,12 +142,7 @@ gross provider spend avoided ~= N * r * C
 
 N = protected validations, C = marginal full-validation cost, r = measured reusable rate accepted by caller policy. Then subtract CHECK network/compute overhead and any fixed provider plan minimums.
 
-Current illustrative list-price arithmetic, checked 2026-08-26:
-- OpenAI Web Search: $10 / 1,000 calls. 100,000 calls = $1,000 in search-call fees; at an illustrative measured 30% reusable rate, 70,000 calls = $700, or $300 gross search-call spend avoided. Search-content token effects are excluded.
-- Browserbase Extract without proxies: $4 / 1,000 marginal calls after included allowance. 100,000 genuinely billable marginal calls = $400; at 30% reusable, $280, or $120 gross marginal spend avoided.
-- Firecrawl Standard: $83/month billed yearly for 100,000 credits; a standard scrape uses 1 credit. 100,000 scrapes reduced by 30% still remain in the same plan: $83 -> $83, so direct plan-fee saving is $0 while 30,000 credits are freed. Lower call count does not automatically mean a lower invoice.
-
-The 30% rate above is an illustration, not a promise. Use Shadow Proof on the actual workload before enabling reuse or making a savings claim.
+Current provider-price snapshots and measured benchmark evidence are maintained in ${origin}/product-facts.json and ${origin}/economics. Provider prices are freshness-gated in CI; do not treat a copied historical price as current. Use Shadow Proof on the actual workload before enabling reuse or making a savings claim.
 
 ## Cost path
 
