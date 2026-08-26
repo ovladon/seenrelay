@@ -39,7 +39,9 @@ Let:
 - `C` = average CHECK latency;
 - `O` = average OBSERVE latency for validations that still run.
 
-Ignoring conditional-request savings, active direct reuse has positive expected latency value when approximately:
+### Blocking OBSERVE
+
+The default wrappers await OBSERVE for compatibility and explicit completion. Ignoring conditional-request savings, active direct reuse has positive expected latency value when approximately:
 
 ```text
 r * V > C + (1 - r) * O
@@ -51,7 +53,25 @@ or equivalently:
 r > (C + O) / (V + O)
 ```
 
-The Shadow Proof helper computes this break-even rate from measured timings.
+### Caller-scheduled OBSERVE
+
+The clients also support an optional caller-owned scheduler. The wrapper itself never creates a background worker. The caller decides whether and where the supplied OBSERVE task runs, for example through a request-lifecycle `waitUntil` facility or an application-owned executor.
+
+If — and only if — that scheduler actually keeps OBSERVE outside the response critical path, the latency condition becomes approximately:
+
+```text
+r * V > C
+```
+
+or:
+
+```text
+r > C / V
+```
+
+This does **not** remove OBSERVE's monetary/network/compute cost; it removes its latency from the caller's critical response path. A scheduler that invokes the task synchronously is not off-critical-path just because the scheduler API was supplied.
+
+`SeenRelayShadowProof.report()` therefore models this case only when the caller explicitly sets `observeOffCriticalPath: true` in JavaScript or `observe_off_critical_path=True` in Python.
 
 For monetary cost, let:
 
@@ -59,7 +79,7 @@ For monetary cost, let:
 - `K_c` = caller-assigned cost of one CHECK request;
 - `K_o` = caller-assigned cost of one OBSERVE request.
 
-The corresponding direct-reuse threshold is:
+The corresponding direct-reuse threshold remains:
 
 ```text
 r > (K_c + K_o) / (K_v + K_o)
@@ -107,6 +127,7 @@ For every benchmark publish or retain:
 - validation latency distribution or at minimum average plus p50/p95 where available;
 - CHECK latency distribution;
 - OBSERVE latency distribution;
+- whether OBSERVE was actually outside the response critical path;
 - direct validation calls potentially avoided;
 - caller-measured cost per validation where monetary claims are made;
 - gross potential saving;
