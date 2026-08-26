@@ -1,0 +1,100 @@
+name: Package Registry Readiness
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'clients/**'
+      - '.github/workflows/publish-clients.yml'
+      - '.github/workflows/package-registry-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registry-ownership:
+    name: Registry ownership and install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check npm package ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          metadata="$(npm view seenrelay name version repository.url --json)"
+          echo "$metadata"
+          version="$(printf '%s' "$metadata" | jq -r '.version')"
+          repo="$(printf '%s' "$metadata" | jq -r '."repository.url" // .repository.url // empty' 2>/dev/null || true)"
+          if [ -z "$repo" ]; then
+            repo="$(printf '%s' "$metadata" | jq -r '.repository // empty' 2>/dev/null || true)"
+          fi
+          test "$version" = '0.1.0'
+          case "$repo" in
+            *github.com/ovladon/seenrelay*) echo 'npm package exists and points to the SeenRelay repository.' ;;
+            *) echo "npm package 'seenrelay' does not identify the SeenRelay repository: ${repo:-missing repository metadata}" >&2; exit 1 ;;
+          esac
+
+      - name: Install npm package from public registry in a clean project
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          cd "$tmp"
+          npm init -y >/dev/null
+          npm install --ignore-scripts --no-audit --no-fund seenrelay@0.1.0
+          node --input-type=module <<'NODE'
+          import { SeenRelayClient } from 'seenrelay';
+          import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
+          const client = new SeenRelayClient({ fetchImpl: async () => { throw new Error('network not used by import smoke'); } });
+          const proof = new SeenRelayShadowProof(client);
+          if (typeof client.protectValidation !== 'function' || typeof client.guardDetailed !== 'function' || !proof) {
+            throw new Error('public npm client API smoke failed');
+          }
+          console.log('npm public install OK: seenrelay@0.1.0');
+          NODE
+
+      - name: Check PyPI project ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import urllib.request
+
+          with urllib.request.urlopen('https://pypi.org/pypi/seenrelay/json', timeout=20) as response:
+              data = json.load(response)
+
+          info = data.get('info') or {}
+          if info.get('version') != '0.1.0':
+              raise SystemExit(f"Unexpected PyPI version: {info.get('version')!r}")
+          project_urls = info.get('project_urls') or {}
+          candidates = [
+              str(project_urls.get('Repository') or ''),
+              str(project_urls.get('Source') or ''),
+              str(project_urls.get('Homepage') or ''),
+              str(info.get('home_page') or ''),
+              str(info.get('project_url') or ''),
+          ]
+          if not any('github.com/ovladon/seenrelay' in value for value in candidates):
+              raise SystemExit("PyPI project 'seenrelay' does not identify the SeenRelay repository.")
+          print('PyPI project exists and points to the SeenRelay repository.')
+          PY
+
+      - name: Install PyPI package from public registry in a clean virtual environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/seenrelay-registry-install
+          /tmp/seenrelay-registry-install/bin/python -m pip install --disable-pip-version-check --no-cache-dir seenrelay==0.1.0
+          /tmp/seenrelay-registry-install/bin/python - <<'PY'
+          from seenrelay import SeenRelayClient
+          from seenrelay_shadow import SeenRelayShadowProof
+          from seenrelay_easy import protect_validation
+
+          client = SeenRelayClient(transport=lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('network not used by import smoke')))
+          proof = SeenRelayShadowProof(client)
+          assert client is not None
+          assert proof is not None
+          assert callable(protect_validation)
+          print('PyPI public install OK: seenrelay==0.1.0')
+          PY
