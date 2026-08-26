@@ -67,3 +67,5 @@ curl -fsS \"${bypass[@]}\" \"$PREVIEW_URL/service.json\" -o /tmp/service.json"""
           git diff --cached --check
           git commit -m 'Verify canonical public facts in Preview gate'
           git push origin HEAD:infra/public-facts-sync
+
+# retriggered 2026-08-26 after stale Preview assertions were observed
