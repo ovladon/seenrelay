@@ -16,10 +16,10 @@ export const publicProductFacts = {
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
+    "client_version": "0.1.0",
     "runtime_dependencies": 0,
     "registry_install_verified_at": "2026-08-26T09:10:00Z",
-    "verification": "Installed from public npm and PyPI indexes in clean GitHub-hosted environments and imported SeenRelayClient, SeenRelayShadowProof, protectValidation and protect_validation successfully.",
-    "client_version": "0.1.0"
+    "verification": "Installed from public npm and PyPI indexes in clean GitHub-hosted environments and imported SeenRelayClient, SeenRelayShadowProof, protectValidation and protect_validation successfully."
   },
   "fit": {
     "use_when": [
