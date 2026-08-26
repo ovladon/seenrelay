@@ -1,5 +1,11 @@
 # SeenRelay
 
+<!-- BEGIN GENERATED:PUBLIC-FACTS -->
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.1.0 · currently free · no account/API key.
+
+**Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
+<!-- END GENERATED:PUBLIC-FACTS -->
+
 **A cooperative freshness cache that reduces redundant validation spend across AI-agent fleets.**
 
 Think of SeenRelay as a shared cache for **freshness evidence rather than content**. Put a cheap CHECK before repeated paid search, scraping, browser/extraction, rate-limited API or other expensive fact validation. When recent matching evidence meets caller policy, a later run or agent can avoid paying for the same validation again. If not, the existing validation runs normally and OBSERVE records the independent result for later callers.

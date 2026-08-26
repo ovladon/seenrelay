@@ -1,5 +1,19 @@
 # SeenRelay Quickstart
 
+<!-- BEGIN GENERATED:PUBLIC-INSTALL -->
+Install the public client first:
+
+```bash
+# JavaScript / TypeScript
+npm install seenrelay
+
+# Python
+pip install seenrelay
+```
+
+Client v0.1.0 was clean-install verified from both public registries on 2026-08-26. Start in shadow mode; reuse stays caller policy.
+<!-- END GENERATED:PUBLIC-INSTALL -->
+
 SeenRelay adds a low-cost freshness check in front of work an AI agent would otherwise repeat. It has exactly two domain operations: **CHECK** and **OBSERVE**.
 
 SeenRelay reports observations, not universal truth. `UNKNOWN`, `STALE`, and `CONTESTED` are normal outcomes; the caller then continues with its existing validation policy.
