@@ -48,34 +48,34 @@ export function latestVerifiedHtml(): string {
 }
 
 export function verifiedWorkloadMapHtml(): string {
-  const byId = new Map(publicProductFacts.verified_benchmarks.map((item) => [item.id, item]));
-  const jsonExtraction = byId.get('firecrawl-json-extraction-2026-08-26');
-  const browser = byId.get('firecrawl-browser-interaction-2026-08-26');
-  const basic = byId.get('firecrawl-basic-scrape-2026-08-26');
-  if (
-    !jsonExtraction ||
-    !('provider_calls_avoided' in jsonExtraction) ||
-    !('fresh_baseline_median_ms' in jsonExtraction) ||
-    !browser ||
-    !('provider_calls_avoided' in browser) ||
-    !('baseline_median_ms' in browser) ||
-    !basic ||
-    !('baseline_provider_calls' in basic) ||
-    !('baseline_median_ms' in basic)
-  ) return '';
-
+  const latestBySeries = new Map<string, (typeof publicProductFacts.verified_benchmarks)[number]>();
+  for (const item of publicProductFacts.verified_benchmarks) {
+    if (!('matrix' in item)) continue;
+    const previous = latestBySeries.get(item.matrix.series_key);
+    if (!previous || item.verified_at > previous.verified_at) latestBySeries.set(item.matrix.series_key, item);
+  }
+  const rows = [...latestBySeries.values()]
+    .filter((item) => 'matrix' in item)
+    .sort((a, b) => b.verified_at.localeCompare(a.verified_at))
+    .map((item) => {
+      if (!('matrix' in item)) return '';
+      const m = item.matrix;
+      const costOutcome = String(m.cost_outcome);
+      const latencyOutcome = String(m.latency_outcome);
+      const fitValue = String(m.fit);
+      const cost = costOutcome === 'better' ? '↓ better' : costOutcome === 'worse' ? '↑ worse' : costOutcome;
+      const latency = latencyOutcome === 'better' ? '↓ better' : latencyOutcome === 'worse' ? '↑ worse' : latencyOutcome;
+      const fit = fitValue === 'good' ? 'GOOD' : fitValue === 'conditional' ? 'CONDITIONAL' : fitValue.toUpperCase();
+      return `<tr><td><span class="fit-badge fit-${esc(m.fit)}">${esc(fit)}</span></td><td><b>${esc(m.surface)}</b><small>${esc(item.provider)} · ${esc(m.configuration)}</small></td><td>${esc(m.evidence_level)} · n=${esc(item.samples)}</td><td>${esc(cost)}</td><td>${esc(latency)}</td><td>${esc(m.baseline_median_ms)} ms<small>${esc(m.baseline_context)}</small></td><td>${esc(item.reuse_median_ms)} ms</td><td>${esc(m.provider_calls_avoided)}/${esc(item.samples)} calls<small>${esc(m.provider_units_avoided)} ${esc(m.provider_unit_label)}</small></td><td>${esc(item.freshness_window_seconds)}s</td><td><a href="${esc(item.evidence_url)}" rel="noreferrer">${esc(item.verified_at.slice(0, 10))} ↗</a></td></tr>`;
+    })
+    .join('');
+  if (!rows) return '';
   return `<section class="section decision" id="workload-map">
-<div class="section-head"><div><div class="eyebrow">WHERE THE ECONOMICS HAVE HELD UP SO FAR</div><h2>Use the evidence, not a generic promise.</h2></div><p>These are small first-party smoke benchmarks on intentionally repeated source-backed facts. They show what happened when eligible reuse existed; they do not predict how often your own fleet will produce reusable matches.</p></div>
-<div class="proof-grid">
-<article><b>Structured JSON extraction · cost ↓ latency ↓</b><span>${esc(jsonExtraction.provider_calls_avoided)}/${esc(jsonExtraction.samples)} equivalent provider calls and ${esc(jsonExtraction.provider_credits_avoided)} credits avoided; median ${esc(jsonExtraction.fresh_baseline_median_ms)} ms fresh → ${esc(jsonExtraction.reuse_median_ms)} ms SeenRelay reuse.</span></article>
-<article><b>Browser interaction · cost ↓ latency ↓</b><span>${esc(browser.provider_calls_avoided)}/${esc(browser.samples)} equivalent provider calls and ${esc(browser.provider_credits_avoided)} reported credits avoided; median ${esc(browser.baseline_median_ms)} ms full browser validation → ${esc(browser.reuse_median_ms)} ms SeenRelay reuse.</span></article>
-<article><b>Basic cached scrape · cost ↓ latency ↑</b><span>${esc(basic.baseline_provider_calls - basic.reuse_provider_calls)}/${esc(basic.samples)} equivalent provider calls and ${esc(basic.provider_credits_avoided)} credits avoided, but the provider cache was faster (${esc(basic.baseline_median_ms)} ms vs ${esc(basic.reuse_median_ms)} ms).</span></article>
-<article><b>Cheap one-off fetch · poor fit</b><span>Do not add a network preflight where the operation is already cheap and unlikely to repeat. The Economics Lab keeps this negative control deliberately.</span></article>
-</div>
-<div class="trust-note"><a href="/economics">See the measurement rules, evidence and break-even logic →</a></div>
+<div class="section-head"><div><div class="eyebrow">VERIFIED WORKLOAD MATRIX</div><h2>Where SeenRelay has helped — and where it has not.</h2></div><p>Latest verified result per tested configuration. The table is generated from canonical benchmark evidence, so new verified configurations can appear without hand-editing this page. Small controlled tests do not predict how often your fleet will produce reusable matches.</p></div>
+<div class="benchmark-table-wrap"><table class="benchmark-table"><thead><tr><th>Fit</th><th>Surface / configuration</th><th>Evidence</th><th>Cost</th><th>Latency</th><th>Baseline median</th><th>Reuse median</th><th>Provider work avoided</th><th>Window</th><th>Verified</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="trust-note"><a href="/economics">Measurement rules, evidence and break-even logic →</a></div>
 </section>`;
 }
-
 export function siteFooterHtml(): string {
   const currentYear = new Date().getUTCFullYear();
   const copyrightYears = currentYear > 2026 ? `2026–${currentYear}` : '2026';
@@ -84,21 +84,17 @@ export function siteFooterHtml(): string {
 
 export function machinePublicFactsText(origin: string): string {
   const f = publicProductFacts;
-  const b = f.verified_benchmarks.find((item) => item.id === 'firecrawl-json-extraction-2026-08-26');
-  const negative = f.verified_benchmarks.find((item) => item.id === 'firecrawl-basic-scrape-2026-08-26');
-  const browser = f.verified_benchmarks.find((item) => item.id === 'firecrawl-browser-interaction-2026-08-26');
-  const benchmark = b && 'provider_calls_avoided' in b
-    ? `- First-party Firecrawl JSON extraction smoke benchmark (n=${b.samples}, ${b.freshness_window_seconds}s caller freshness window): ${b.provider_calls_avoided}/${b.samples} eligible provider calls avoided, ${b.provider_credits_avoided} provider credits avoided, median ${b.fresh_baseline_median_ms} ms fresh / ${b.provider_cached_baseline_median_ms} ms provider-cached -> ${b.reuse_median_ms} ms bounded reuse. This is not a promised natural-world reuse rate.`
-    : '- No verified benchmark currently published.';
-  const browserResult = browser && 'provider_calls_avoided' in browser && 'baseline_median_ms' in browser
-    ? `- First-party Firecrawl browser-interaction smoke benchmark (n=${browser.samples}, ${browser.freshness_window_seconds}s caller freshness window): ${browser.provider_calls_avoided}/${browser.samples} equivalent provider calls avoided, ${browser.provider_credits_avoided} reported provider credits avoided, median ${browser.baseline_median_ms} ms full browser validation -> ${browser.reuse_median_ms} ms bounded reuse. This is not a promised natural-world reuse rate.`
-    : '';
-  const counterexample = negative
-    ? `- Counterexample: basic Firecrawl scrape reuse avoided credits but was slower than the provider cache (${negative.baseline_median_ms} ms baseline vs ${negative.reuse_median_ms} ms SeenRelay). Do not use SeenRelay for cheap/fast work when the preflight cannot win.`
-    : '';
-  return `## Public install\n\n- JavaScript / TypeScript: ${f.install.npm_command}\n- Python: ${f.install.pypi_command}\n- Client version: ${f.install.client_version}\n- Runtime dependencies: ${f.install.runtime_dependencies}\n- Account/API key required: no\n- Current SeenRelay API fee: $0\n\n## Verified measured results\n\n${benchmark}\n${browserResult}\n${counterexample}\n- Canonical machine-readable product facts: ${origin}/product-facts.json\n- Full measured-result interpretation: https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md\n`;
+  const measured = f.verified_benchmarks
+    .filter((item) => 'matrix' in item)
+    .map((item) => {
+      if (!('matrix' in item)) return '';
+      const m = item.matrix;
+      return `- ${m.surface} / ${m.configuration}: fit=${m.fit}; cost=${m.cost_outcome}; latency=${m.latency_outcome}; n=${item.samples}; ${m.provider_calls_avoided}/${item.samples} equivalent provider calls avoided; ${m.provider_units_avoided} ${m.provider_unit_label} avoided; median ${m.baseline_median_ms} ms baseline -> ${item.reuse_median_ms} ms bounded reuse; verified ${item.verified_at.slice(0, 10)}. Evidence: ${item.evidence_url}.`;
+    })
+    .filter(Boolean)
+    .join('\n');
+  return `## Public install\n\n- JavaScript / TypeScript: ${f.install.npm_command}\n- Python: ${f.install.pypi_command}\n- Client version: ${f.install.client_version}\n- Runtime dependencies: ${f.install.runtime_dependencies}\n- Account/API key required: no\n- Current SeenRelay API fee: $0\n\n## Verified measured results\n\n${measured || '- No verified benchmark currently published.'}\n- These are controlled measurements, not promised natural-world reuse rates.\n- Canonical machine-readable product facts: ${origin}/product-facts.json\n- Full measured-result interpretation: https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md\n`;
 }
-
 export function productFactsForOrigin(origin: string) {
   return {
     ...publicProductFacts,

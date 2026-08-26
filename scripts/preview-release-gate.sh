@@ -73,7 +73,9 @@ NODE
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
-grep -q 'Firecrawl JSON extraction smoke benchmark' /tmp/llms.txt
+grep -q '## Verified measured results' /tmp/llms.txt
+grep -q 'Structured JSON extraction /' /tmp/llms.txt
+grep -q 'fit=good; cost=better; latency=better' /tmp/llms.txt
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/service.json" -o /tmp/service.json
 grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json

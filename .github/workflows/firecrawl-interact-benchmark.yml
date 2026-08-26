@@ -5,11 +5,14 @@ on:
     paths:
       - 'scripts/benchmark-firecrawl-interact.mjs'
       - 'scripts/run-firecrawl-interact-benchmark-fresh.mjs'
+      - 'scripts/benchmark-evidence.mjs'
+      - 'scripts/propose-benchmark-evidence.sh'
       - '.github/workflows/firecrawl-interact-benchmark.yml'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   benchmark:
@@ -29,6 +32,13 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: firecrawl-interact-benchmark
-          path: firecrawl-interact-benchmark.json
+          path: |
+            firecrawl-interact-benchmark.json
+            benchmark-evidence.json
           if-no-files-found: warn
           retention-days: 14
+      - name: Propose verified benchmark evidence
+        if: github.event_name == 'workflow_dispatch' && success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/propose-benchmark-evidence.sh benchmark-evidence.json
