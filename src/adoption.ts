@@ -116,8 +116,8 @@ SeenRelay reports recent observations, not universal truth. It does not browse, 
 - Fleet economics and current price examples: ${origin}/economics
 - Quickstart: ${origin}/quickstart
 - Client integrations: ${origin}/clients
-- Public JavaScript / TypeScript install: `npm install seenrelay`
-- Public Python install: `pip install seenrelay`
+- Public JavaScript / TypeScript install: \`npm install seenrelay\`
+- Public Python install: \`pip install seenrelay\`
 - Deterministic client source and examples: https://github.com/ovladon/seenrelay/tree/main/clients
 - Shadow Proof / Economics Lab: https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md
 - Machine descriptor: ${origin}/service.json
@@ -134,7 +134,7 @@ SeenRelay reports recent observations, not universal truth. It does not browse, 
 
 ## Deterministic application integration
 
-Use remote MCP when model/tool routing is appropriate. For application code, first install `seenrelay` from npm or PyPI, then bind the zero-dependency JavaScript or Python client around one existing fixed-fact validator with protectValidation / protect_validation. After binding, every later revalidation supplies only the value already known. Relay failures fail open into the application's existing validation.
+Use remote MCP when model/tool routing is appropriate. For application code, first install \`seenrelay\` from npm or PyPI, then bind the zero-dependency JavaScript or Python client around one existing fixed-fact validator with protectValidation / protect_validation. After binding, every later revalidation supplies only the value already known. Relay failures fail open into the application's existing validation.
 
 ## Fleet economics
 
