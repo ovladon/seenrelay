@@ -1,4 +1,5 @@
 import { config } from './config.js';
+import { PayloadTooLargeError, readJsonBody } from './http.js';
 import { getAdminAdoptionData, getAdminSnapshotData, getRuntimeControls, recordAdminAudit, setRuntimeControls, type RuntimeMode } from './admin-db.js';
 import { invalidateRuntimeControlCache } from './controls.js';
 import { runHiveHousekeeping } from './reuse.js';
@@ -90,7 +91,9 @@ async function csrfOk(request:Request,auth:{csrf:string}):Promise<boolean> { ret
 export async function adminPage(request: Request): Promise<Response> { return html(shell(Boolean(await verifySession(request)))); }
 export async function adminLogin(request: Request): Promise<Response> {
   if (!secret()) return json({error:{code:'ADMIN_NOT_CONFIGURED'}},503);
-  let supplied=''; try { supplied=String(((await request.json()) as {secret?:unknown})?.secret||''); } catch { return json({error:{code:'INVALID_REQUEST'}},400); }
+  let supplied='';
+  try { supplied=String((await readJsonBody<{secret?:unknown}>(request, config().maxBodyBytes))?.secret||''); }
+  catch (error) { return error instanceof PayloadTooLargeError ? json({error:{code:'PAYLOAD_TOO_LARGE'}},413) : json({error:{code:'INVALID_REQUEST'}},400); }
   const matched=await matchesConfiguredAdminSecret(supplied);
   if (!matched) { await new Promise(r=>setTimeout(r,250)); return json({error:{code:'ADMIN_UNAUTHORIZED'}},401); }
   const token=await makeSession(); await recordAdminAudit('ADMIN_LOGIN',{credential_generation:matched});
@@ -164,7 +167,9 @@ interface ControlPatch { mode?:RuntimeMode; checks_enabled?:boolean; observes_en
 export async function adminControl(request: Request): Promise<Response> {
   const auth=await requireAdmin(request); if (auth instanceof Response) return auth;
   if (!await csrfOk(request,auth)) return json({error:{code:'CSRF'}},403);
-  let body:Record<string,unknown>; try { body=await request.json() as Record<string,unknown>; } catch { return json({error:{code:'INVALID_REQUEST'}},400); }
+  let body:Record<string,unknown>;
+  try { body=await readJsonBody<Record<string,unknown>>(request, config().maxBodyBytes); }
+  catch (error) { return error instanceof PayloadTooLargeError ? json({error:{code:'PAYLOAD_TOO_LARGE'}},413) : json({error:{code:'INVALID_REQUEST'}},400); }
   const patch:ControlPatch={};
   if (body.mode!==undefined) { if(!validMode(body.mode)) return json({error:{code:'INVALID_MODE'}},400); patch.mode=body.mode; }
   for (const k of ['checks_enabled','observes_enabled','rewards_enabled'] as const) if(body[k]!==undefined) { if(typeof body[k]!=='boolean') return json({error:{code:'INVALID_CONTROL'}},400); patch[k]=body[k]; }
@@ -182,7 +187,9 @@ const PLAYBOOKS:Record<string,{label:string;patch:ControlPatch;explanation:strin
 export async function adminPlaybook(request: Request): Promise<Response> {
   const auth=await requireAdmin(request); if (auth instanceof Response) return auth;
   if (!await csrfOk(request,auth)) return json({error:{code:'CSRF'}},403);
-  let body:{playbook?:unknown}; try { body=await request.json() as {playbook?:unknown}; } catch { return json({error:{code:'INVALID_REQUEST'}},400); }
+  let body:{playbook?:unknown};
+  try { body=await readJsonBody<{playbook?:unknown}>(request, config().maxBodyBytes); }
+  catch (error) { return error instanceof PayloadTooLargeError ? json({error:{code:'PAYLOAD_TOO_LARGE'}},413) : json({error:{code:'INVALID_REQUEST'}},400); }
   const selected=PLAYBOOKS[String(body?.playbook||'')]; if(!selected) return json({error:{code:'UNKNOWN_PLAYBOOK'}},400);
   const next=await setRuntimeControls(selected.patch,'playbook'); invalidateRuntimeControlCache();
   await recordAdminAudit('PLAYBOOK',{label:selected.label,explanation:selected.explanation});
