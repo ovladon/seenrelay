@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/benchmark-firecrawl-interact.mjs'
+      - 'scripts/run-firecrawl-interact-benchmark-fresh.mjs'
       - '.github/workflows/firecrawl-interact-benchmark.yml'
   workflow_dispatch:
 
@@ -21,8 +22,8 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '22'
-      - name: Run bounded keyless Firecrawl Interact benchmark
-        run: node scripts/benchmark-firecrawl-interact.mjs
+      - name: Run bounded keyless Firecrawl Interact benchmark from a fresh scrape
+        run: node scripts/run-firecrawl-interact-benchmark-fresh.mjs
       - name: Upload benchmark evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
