@@ -110,6 +110,16 @@ export async function deriveReuseIndependenceKey(request: Request): Promise<stri
   return `network:${await privacyScopedHash('reuse-independence', networkHint)}`;
 }
 
+/**
+ * Coarse network bucket used only to damp bursts of NEW lease creation. It deliberately excludes
+ * user-controlled client and User-Agent hints, is domain-separated from reward independence, and
+ * is not an identity or Sybil-proof signal.
+ */
+export async function deriveAdmissionNetworkKey(request: Request): Promise<string> {
+  const networkHint = forwardedNetworkHint(request);
+  return `admission-network:${await privacyScopedHash('lease-admission', networkHint)}`;
+}
+
 export async function deriveObserverIdentity(
   request: Request | undefined,
   body: ObserveRequest,
