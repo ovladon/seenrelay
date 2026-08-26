@@ -1,0 +1,70 @@
+name: Package Registry Readiness
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'clients/**'
+      - '.github/workflows/publish-clients.yml'
+      - '.github/workflows/package-registry-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registry-ownership:
+    name: Registry ownership
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check npm package name
+        shell: bash
+        run: |
+          set -euo pipefail
+          if metadata="$(npm view seenrelay name version repository.url --json 2>/dev/null)"; then
+            echo "$metadata"
+            repo="$(printf '%s' "$metadata" | jq -r '."repository.url" // .repository.url // empty' 2>/dev/null || true)"
+            if [ -z "$repo" ]; then
+              repo="$(printf '%s' "$metadata" | jq -r '.repository // empty' 2>/dev/null || true)"
+            fi
+            case "$repo" in
+              *github.com/ovladon/seenrelay*) echo 'npm package exists and points to the SeenRelay repository.' ;;
+              *) echo "npm package 'seenrelay' already exists but does not identify the SeenRelay repository: ${repo:-missing repository metadata}" >&2; exit 1 ;;
+            esac
+          else
+            echo "npm package 'seenrelay' is not currently resolvable from the public registry; first publication bootstrap is expected."
+          fi
+
+      - name: Check PyPI project name
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import urllib.error
+          import urllib.request
+
+          url = 'https://pypi.org/pypi/seenrelay/json'
+          try:
+              with urllib.request.urlopen(url, timeout=20) as response:
+                  data = json.load(response)
+          except urllib.error.HTTPError as exc:
+              if exc.code == 404:
+                  print("PyPI project 'seenrelay' is not currently resolvable; pending trusted publisher / first publication bootstrap is expected.")
+                  raise SystemExit(0)
+              raise
+
+          info = data.get('info') or {}
+          project_urls = info.get('project_urls') or {}
+          candidates = [
+              str(project_urls.get('Repository') or ''),
+              str(project_urls.get('Source') or ''),
+              str(project_urls.get('Homepage') or ''),
+              str(info.get('home_page') or ''),
+              str(info.get('project_url') or ''),
+          ]
+          if any('github.com/ovladon/seenrelay' in value for value in candidates):
+              print("PyPI project exists and points to the SeenRelay repository.")
+          else:
+              raise SystemExit("PyPI project 'seenrelay' already exists but does not identify the SeenRelay repository.")
+          PY
