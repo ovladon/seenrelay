@@ -58,6 +58,32 @@ value = relay.guard(
 )
 ```
 
+## Optional caller-scheduled OBSERVE
+
+By default the client waits for best-effort OBSERVE before returning. Applications with a request-lifecycle/background scheduler can explicitly move OBSERVE out of the response critical path. The client never creates a hidden worker or thread of its own.
+
+JavaScript / TypeScript:
+
+```js
+const relay = new SeenRelayClient({
+  // Example shape for a platform waitUntil-style primitive:
+  scheduleObserve: (task) => waitUntil(task())
+});
+```
+
+Python:
+
+```python
+relay = SeenRelayClient(
+    # The application owns the executor and its lifecycle.
+    schedule_observe=lambda task: executor.submit(task),
+)
+```
+
+If no scheduler is supplied, behavior remains blocking and backward-compatible. If scheduling throws, validation still succeeds and the schedule failure is exposed in local telemetry. A scheduled OBSERVE failure is best-effort and can be reported through `onDeferredObserveError` / `on_deferred_observe_error`.
+
+Do not call this off-critical-path merely because a scheduler callback exists. A scheduler that executes the task synchronously still adds OBSERVE latency to the request path.
+
 ## Prove value in shadow mode
 
 Do not enable reuse because a generic benchmark says it should help. Measure the workload that would actually be protected.
@@ -112,6 +138,8 @@ Shadow Proof never supplies a reuse policy, so the application's original valida
 
 The report is deliberately conservative. Direct potential savings count only `SAME_OBSERVED`. Conditional ETag / Last-Modified savings are excluded until the consuming application measures them. If `SAME_OBSERVED` is zero, gross potential savings are reported as zero.
 
+If the application has verified that its scheduler actually keeps OBSERVE outside the response critical path, it may set `observeOffCriticalPath: true` / `observe_off_critical_path=True` in the Shadow Proof report. This affects the latency model only; OBSERVE still has network/compute cost.
+
 ## Safety and scope
 
 - no new SeenRelay operation;
@@ -119,6 +147,7 @@ The report is deliberately conservative. Direct potential savings count only `SA
 - no browser or search behavior;
 - no automatic truth decision;
 - no hidden telemetry upload;
+- no hidden background worker or thread;
 - ETag / Last-Modified hints remain observer-supplied and unverified;
 - only `If-None-Match` and `If-Modified-Since` are forwarded, with CR/LF rejected;
 - simultaneous identical CHECKs can be coalesced in-process, but completed CHECK results are not cached;
@@ -137,12 +166,15 @@ expected savings
 - OBSERVE overhead on validations that still run
 ```
 
-For time, if `V` is average validation latency, `C` average CHECK latency and `O` average OBSERVE latency, the direct-reuse break-even hit rate under the current blocking-observe wrapper is approximately:
+For latency, if `V` is average validation latency, `C` average CHECK latency and `O` average OBSERVE latency, the direct-reuse break-even hit rate is approximately:
 
 ```text
-(C + O) / (V + O)
+blocking OBSERVE:          (C + O) / (V + O)
+OBSERVE truly off-path:    C / V
 ```
 
-The Shadow Proof helper computes this from measured client/validation timing. Monetary break-even uses caller-supplied cost units rather than vendor pricing embedded in the library.
+The Shadow Proof helper computes these from measured client/validation timing. Monetary break-even continues to include OBSERVE cost even when it is off the response critical path.
+
+See [`docs/ECONOMICS_LAB.md`](../docs/ECONOMICS_LAB.md) for the full reproducible evaluation method.
 
 A package download, MCP initialize, tools/list request, or first-party Reference Observer run is not external adoption.
