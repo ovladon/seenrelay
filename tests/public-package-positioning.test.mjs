@@ -28,7 +28,7 @@ test('human and machine-facing surfaces advertise public package installation', 
 
 test('machine guidance says to install before binding the deterministic validator', () => {
   const adoption = read('src', 'adoption.ts');
-  assert.match(adoption, /first install `seenrelay` from npm or PyPI/);
-  assert.match(adoption, /Public JavaScript \/ TypeScript install: `npm install seenrelay`/);
-  assert.match(adoption, /Public Python install: `pip install seenrelay`/);
+  assert.ok(adoption.includes('first install \\`seenrelay\\` from npm or PyPI'));
+  assert.ok(adoption.includes('Public JavaScript / TypeScript install: \\`npm install seenrelay\\`'));
+  assert.ok(adoption.includes('Public Python install: \\`pip install seenrelay\\`'));
 });
