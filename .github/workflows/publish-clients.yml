@@ -124,7 +124,7 @@ jobs:
           set -euo pipefail
           TARBALL="$(find npm-release -maxdepth 1 -type f -name 'seenrelay-*.tgz' -print -quit)"
           test -n "$TARBALL"
-          npm publish "$TARBALL" --access public
+          npm publish "$TARBALL" --access public --provenance
 
   build-pypi:
     if: (github.event_name == 'release' && github.event.release.prerelease == false && startsWith(github.event.release.tag_name, 'clients-v')) || (github.event_name == 'push' && github.ref == 'refs/heads/main')

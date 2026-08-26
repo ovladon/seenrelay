@@ -3,7 +3,7 @@ import { assertBillingDisabled } from './billing.js';
 import { canonicalFact, ValidationError } from './canonical.js';
 import { config } from './config.js';
 import { admitHive, finishHiveCheck, finishHiveObserve } from './hive.js';
-import { readJsonBody, requestId } from './http.js';
+import { boundedRequest, readJsonBody, requestId } from './http.js';
 import { handleMcp } from './mcp.js';
 import { openApi } from './openapi.js';
 import { deriveClientKey } from './identity.js';
@@ -12,6 +12,7 @@ import { adminControl, adminHousekeeping, adminLogin, adminLogout, adminOperatio
 import { publicLandingPage, serviceDescriptor } from './public.js';
 import { quickstartPage } from './quickstart.js';
 import { economicsPage } from './economics.js';
+import { trustDescriptor, trustPage } from './trust.js';
 import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
 import { getPublicStats } from './public-db.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
@@ -68,6 +69,15 @@ app.get('/quickstart', (c) => {
   c.header('cache-control', 'public, max-age=300');
   return c.html(quickstartPage(new URL(c.req.url).origin));
 });
+app.get('/trust', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(trustPage(new URL(c.req.url).origin));
+});
+app.get('/trust.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  return c.json(trustDescriptor(new URL(c.req.url).origin));
+});
 app.get('/economics', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
@@ -121,7 +131,11 @@ app.get('/openapi.json', (c) => { c.header('cache-control', 'public, max-age=360
 app.all('/mcp', (c) => handleMcp(c.req.raw));
 
 app.get('/admin', (c) => adminPage(c.req.raw));
-app.post('/admin/login', (c) => adminLogin(c.req.raw));
+app.post('/admin/login', async (c) => {
+  const bounded = await boundedRequest(c.req.raw, Math.min(config().maxBodyBytes, 4096));
+  if ('response' in bounded) return bounded.response;
+  return adminLogin(bounded.request);
+});
 app.post('/admin/logout', (c) => adminLogout(c.req.raw));
 app.get('/admin/api/snapshot', (c) => adminSnapshot(c.req.raw));
 app.get('/admin/api/operations-export', (c) => adminOperationsExport(c.req.raw));

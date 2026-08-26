@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install SeenRelay development dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Install pinned AI SDK compatibility dependencies
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false --no-save ai@7.0.79 zod@3.25.76
       - name: Run deterministic paid-tool compatibility example

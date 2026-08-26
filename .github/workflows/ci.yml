@@ -23,7 +23,7 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Install locked dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Run project checks
         run: npm run check
       - name: Build verified source snapshot

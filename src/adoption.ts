@@ -34,7 +34,7 @@ ${publicInstallHtml()}
 </section>
 <section class="section split">
 <div><div class="eyebrow">CLAUDE CODE</div><h2>Remote Streamable HTTP.</h2><p>Anthropic documents remote HTTP MCP servers through <code>claude mcp add</code>.</p></div>
-<div class="terminal"><pre>claude mcp add --transport http seenrelay \\
+<div class="terminal"><pre>claude mcp add --transport http seenrelay \
   ${origin}/mcp
 
 claude mcp list</pre></div>
@@ -81,7 +81,7 @@ export function robotsText(origin: string): string {
 }
 
 export function sitemapXml(origin: string): string {
-  const urls = ['/', '/economics', '/quickstart', '/clients', '/data-practices'];
+  const urls = ['/', '/economics', '/quickstart', '/clients', '/trust', '/data-practices'];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((path) => `  <url><loc>${origin}${path}</loc></url>`).join('\n')}\n</urlset>\n`;
 }
 
@@ -120,6 +120,7 @@ ${machinePublicFactsText(origin)}
 - OpenAPI: ${origin}/openapi.json
 - MCP endpoint: ${origin}/mcp
 - MCP Registry: io.github.ovladon/seenrelay
+- Trust / verification posture: ${origin}/trust
 - Data practices: ${origin}/data-practices.json
 - Public aggregate metrics: ${origin}/public-stats.json
 
