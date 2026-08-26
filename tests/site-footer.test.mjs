@@ -12,6 +12,7 @@ test('human pages share one accurate legal footer', () => {
   assert.match(view, /export function siteFooterHtml/);
   assert.match(view, /All rights reserved/);
   assert.match(view, /Client libraries: MIT License/);
+  assert.match(view, /Recent observations, not universal truth/);
   assert.match(view, /currentYear > 2026/);
   assert.match(view, /2026–/);
 
