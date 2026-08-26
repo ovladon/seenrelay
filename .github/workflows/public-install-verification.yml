@@ -1,0 +1,59 @@
+name: Public Client Install Verification
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/public-install-verification.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  npm-public-install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      - name: Install seenrelay 0.1.0 from public npm registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d)"
+          cd "$TMP"
+          npm init -y >/dev/null
+          npm install seenrelay@0.1.0 --registry=https://registry.npmjs.org/ >/dev/null
+          node --input-type=module - <<'NODE'
+          import { SeenRelayClient } from 'seenrelay';
+          import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
+          const client = new SeenRelayClient({ fetchImpl: async () => { throw new Error('not called during import verification'); } });
+          const proof = new SeenRelayShadowProof(client);
+          if (typeof client.protectValidation !== 'function' || !proof) process.exit(1);
+          NODE
+
+  pypi-public-install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+
+      - name: Install seenrelay 0.1.0 from public PyPI registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/seenrelay-public-install
+          /tmp/seenrelay-public-install/bin/python -m pip install --disable-pip-version-check --index-url https://pypi.org/simple seenrelay==0.1.0
+          /tmp/seenrelay-public-install/bin/python - <<'PY'
+          from seenrelay import SeenRelayClient
+          from seenrelay_shadow import SeenRelayShadowProof
+          from seenrelay_easy import protect_validation
+          client = SeenRelayClient(transport=lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('not called during import verification')))
+          proof = SeenRelayShadowProof(client)
+          assert client is not None and proof is not None and callable(protect_validation)
+          PY
