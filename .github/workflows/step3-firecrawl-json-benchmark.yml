@@ -1,0 +1,140 @@
+name: Step 3 Firecrawl JSON Extraction Benchmark
+
+on:
+  push:
+    branches: [bench/step3-firecrawl-real]
+    paths:
+      - '.github/workflows/step3-firecrawl-json-benchmark.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+      - name: Install public SeenRelay client
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir bench
+          cd bench
+          npm init -y >/dev/null
+          npm install --ignore-scripts --no-audit --no-fund seenrelay@0.1.0 >/dev/null
+      - name: Run structured extraction benchmark
+        working-directory: bench
+        shell: bash
+        env:
+          BENCHMARK_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { performance } from 'node:perf_hooks';
+          import { SeenRelayClient, reuseKnownOnSameObserved } from 'seenrelay';
+
+          const N = 3;
+          const benchmarkId = `step3-json-${process.env.BENCHMARK_RUN_ID}-${Date.now()}`;
+          const sourceUrl = `https://example.com/?seenrelay_json_benchmark=${encodeURIComponent(benchmarkId)}`;
+          const knownValue = 'Example Domain';
+          const fact = {
+            subject: 'Example.com title extracted as structured JSON — internal Step 3 benchmark',
+            predicate: 'document.title.current',
+            source: sourceUrl,
+            qualifiers: { extraction: 'firecrawl-json-v2' },
+          };
+          const relay = new SeenRelayClient({
+            clientHint: `seenrelay-internal-benchmark-firecrawl-json-${benchmarkId}`,
+            checkTimeoutMs: 5000,
+            observeTimeoutMs: 5000,
+          });
+          let calls = 0;
+          const events = [];
+          const round = (x) => Math.round(x * 100) / 100;
+          const median = (xs) => { const s=[...xs].sort((a,b)=>a-b); return round(s[Math.floor(s.length/2)]); };
+
+          async function extract(label, maxAge) {
+            calls += 1;
+            const started = performance.now();
+            const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
+              method: 'POST', headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                url: sourceUrl,
+                formats: [{
+                  type: 'json',
+                  prompt: 'Extract the exact HTML document title.',
+                  schema: { type: 'object', properties: { title: { type: 'string' } }, required: ['title'] },
+                }],
+                onlyMainContent: true,
+                maxAge,
+              }),
+              signal: AbortSignal.timeout(120000),
+            });
+            const elapsedMs = performance.now() - started;
+            const body = await response.json();
+            if (!response.ok || body?.success !== true) throw new Error(`Firecrawl JSON failed (${response.status}): ${JSON.stringify(body).slice(0,1000)}`);
+            const value = body?.data?.json?.title;
+            if (value !== knownValue) throw new Error(`Unexpected JSON title: ${JSON.stringify(value)}`);
+            const m = body?.data?.metadata ?? {};
+            events.push({ label, maxAge, elapsedMs: round(elapsedMs), cacheState: m.cacheState ?? m.cache_state ?? null, creditsUsed: m.creditsUsed ?? m.credits_used ?? null });
+            return value;
+          }
+
+          const freshBaseline = [];
+          for (let i=0;i<N;i++) { const before=events.length; await extract(`fresh-baseline-${i+1}`, 0); freshBaseline.push(events[before].elapsedMs); }
+
+          const cachedBaseline = [];
+          for (let i=0;i<N;i++) { const before=events.length; await extract(`cached-baseline-${i+1}`, 172800000); cachedBaseline.push(events[before].elapsedMs); }
+
+          const cold = await relay.guardDetailed({
+            fact, knownValue, maxAgeSeconds: 300,
+            validate: async () => extract('cold-start-json', 0),
+            observation: async () => ({ observerId: 'first-party-step3-firecrawl-json-benchmark', idempotencyKey: `${benchmarkId}-cold` }),
+          });
+
+          const reuseTimes=[]; const reuseStatuses=[]; const beforeReuse=calls;
+          for (let i=0;i<N;i++) {
+            const started=performance.now();
+            const r=await relay.guardDetailed({
+              fact, knownValue, maxAgeSeconds: 300, reuse: reuseKnownOnSameObserved,
+              validate: async () => extract(`unexpected-json-reuse-${i+1}`, 0),
+              observation: async () => ({ observerId: 'first-party-step3-firecrawl-json-benchmark', idempotencyKey: `${benchmarkId}-fallback-${i+1}` }),
+            });
+            reuseTimes.push(performance.now()-started); reuseStatuses.push(r.check?.status ?? null);
+            if (r.path !== 'reused') throw new Error(`Expected reused path, got ${r.path}`);
+          }
+          const reuseProviderCalls=calls-beforeReuse;
+          const providerReportedCredits=events.map(e=>e.creditsUsed).filter(Number.isFinite);
+          const report={
+            benchmark:'SeenRelay Step 3 — Firecrawl JSON structured extraction', benchmarkId, timestamp:new Date().toISOString(), sourceUrl, samples:N,
+            documentedCreditModel:{baseScrape:1,jsonExtractionAdditional:4,totalPerJsonExtraction:5},
+            freshWithoutSeenRelay:{providerCalls:N, medianMs:median(freshBaseline), samplesMs:freshBaseline},
+            cachedWithoutSeenRelay:{providerCalls:N, medianMs:median(cachedBaseline), samplesMs:cachedBaseline},
+            coldStart:{checkStatus:cold.check?.status ?? null,path:cold.path},
+            boundedReuse:{providerCalls:reuseProviderCalls,medianMs:median(reuseTimes),samplesMs:reuseTimes.map(round),statuses:reuseStatuses,providerCreditsAvoidedVsFreshBaseline:(N-reuseProviderCalls)*5},
+            providerReportedCredits, events, seenRelayTelemetry:relay.getTelemetry(),
+            interpretation:{
+              cost:'Every eligible reused call avoids the entire Firecrawl request; under the documented JSON-mode tariff that is 5 credits per call.',
+              latency:'Compare bounded-reuse latency with both fresh and provider-cached JSON extraction. A cached provider response may remain faster even though it still consumes credits.',
+              semantics:'Bounded reuse uses a 300-second caller freshness window; it is not equivalent to a policy that requires a brand-new source fetch on every call.'
+            }
+          };
+          fs.writeFileSync('../step3-firecrawl-json-benchmark.json',JSON.stringify(report,null,2));
+          console.log(JSON.stringify(report,null,2));
+          if (cold.check?.status !== 'UNKNOWN') throw new Error(`Expected cold UNKNOWN, got ${cold.check?.status}`);
+          if (reuseProviderCalls !== 0) throw new Error(`Reuse invoked Firecrawl ${reuseProviderCalls} time(s)`);
+          if (reuseStatuses.some(s=>s!=='SAME_OBSERVED')) throw new Error(`Unexpected reuse statuses: ${reuseStatuses.join(',')}`);
+          NODE
+      - name: Upload benchmark evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: step3-firecrawl-json-benchmark
+          path: step3-firecrawl-json-benchmark.json
+          if-no-files-found: error
+          retention-days: 30
