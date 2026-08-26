@@ -66,17 +66,12 @@ function renderQuickstartSummary(facts) {
 }
 function renderVerifiedResults(facts) {
   const rows = facts.verified_benchmarks.map((b) => {
-    if (b.id.includes('json-extraction')) {
-      return `| ${b.provider} JSON structured extraction | first-party smoke, n=${b.samples} | ${b.provider_calls_avoided}/${b.samples} provider calls avoided; ${b.provider_credits_avoided} credits avoided | ${b.fresh_baseline_median_ms} ms fresh; ${b.provider_cached_baseline_median_ms} ms provider-cached | ${b.reuse_median_ms} ms | ${b.freshness_window_seconds}s |`;
-    }
-    if (b.id.includes('browser-interaction')) {
-      return `| ${b.provider} browser interaction | first-party smoke, n=${b.samples} | ${b.provider_calls_avoided}/${b.samples} provider calls avoided; ${b.provider_credits_avoided} credits avoided | ${b.baseline_median_ms} ms | ${b.reuse_median_ms} ms | ${b.freshness_window_seconds}s |`;
-    }
-    return `| ${b.provider} basic scrape | first-party smoke, n=${b.samples} | ${b.baseline_provider_calls - b.reuse_provider_calls}/${b.samples} provider calls avoided; ${b.provider_credits_avoided} credits avoided | ${b.baseline_median_ms} ms | ${b.reuse_median_ms} ms | ${b.freshness_window_seconds}s |`;
+    const m = b.matrix;
+    if (!m) fail(`Benchmark ${b.id} is missing normalized matrix evidence`);
+    return `| ${m.surface} · ${m.configuration} | ${m.evidence_level}, n=${b.samples} | ${m.fit} | ${m.cost_outcome} | ${m.latency_outcome} | ${m.provider_calls_avoided}/${b.samples} calls; ${m.provider_units_avoided} ${m.provider_unit_label} | ${m.baseline_median_ms} ms | ${b.reuse_median_ms} ms | ${b.freshness_window_seconds}s |`;
   }).join('\n');
-  return `# Verified results\n\nGenerated from \`public/product-facts.json\`. Do not edit measured claims here by hand.\n\n| Workload | Evidence | Provider work avoided | Baseline median | SeenRelay reuse median | Caller freshness window |\n| --- | --- | ---: | ---: | ---: | ---: |\n${rows}\n\n## Interpretation\n\nThe basic scrape benchmark demonstrated lower provider-credit consumption but worse latency than a Firecrawl cache hit. The JSON structured-extraction and browser-interaction benchmarks demonstrated both lower provider-credit consumption and lower median latency in these small first-party runs. None of these benchmarks establishes a universal reuse rate. A caller must measure its own workload in shadow mode and set its own freshness/reuse policy.\n\nEvidence:\n${facts.verified_benchmarks.map((b) => `- ${b.id}: ${b.evidence_url} (${b.artifact_digest})`).join('\n')}\n`;
+  return `# Verified results\n\nGenerated from public/product-facts.json. Do not edit measured claims here by hand.\n\n| Surface / configuration | Evidence | Fit | Cost | Latency | Provider work avoided | Baseline median | SeenRelay reuse median | Caller freshness window |\n| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: |\n${rows}\n\n## Interpretation\n\nRows are verification-gated measurements, not universal performance promises. A caller must measure its own workload in shadow mode and set its own freshness/reuse policy. The website shows the latest verified result per configuration while this document retains the published benchmark records.\n\nEvidence:\n${facts.verified_benchmarks.map((b) => `- ${b.id}: ${b.evidence_url} (${b.artifact_digest})\n  - ${b.caveat}`).join('\n')}\n`;
 }
-
 const sourceFacts = readJson('public/product-facts.json');
 const releaseVersion = read('clients/RELEASE_VERSION').trim();
 const npmVersion = readJson('clients/typescript/package.json').version;

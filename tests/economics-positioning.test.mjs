@@ -36,13 +36,18 @@ test('public and machine-facing guidance targets repeated expensive fleet valida
   assert.equal(browserBenchmark.provider_credits_avoided, 9);
   assert.equal(browserBenchmark.reuse_provider_calls, 0);
   assert.equal(browserBenchmark.samples, 3);
+  assert.equal(browserBenchmark.matrix.series_key, 'firecrawl-browser-interaction-code-v1');
+  assert.equal(browserBenchmark.matrix.fit, 'good');
+  assert.equal(browserBenchmark.matrix.cost_outcome, 'better');
+  assert.equal(browserBenchmark.matrix.latency_outcome, 'better');
 
   assert.match(economics, /publicProductFacts\.pricing_snapshots/);
   assert.match(economics, /verifiedBenchmarkHtml\(\)/);
   assert.match(publicView, /In one expensive extraction path, SeenRelay was cheaper and faster/);
   assert.match(publicView, /Counterexample matters/);
-  assert.match(publicView, /WHERE THE ECONOMICS HAVE HELD UP SO FAR/);
-  assert.match(publicView, /Browser interaction · cost ↓ latency ↓/);
+  assert.match(publicView, /VERIFIED WORKLOAD MATRIX/);
+  assert.match(publicView, /benchmark-table/);
+  assert.doesNotMatch(publicView, /firecrawl-browser-interaction-2026-08-26/);
   assert.doesNotMatch(economics + publicSource + adoption, /Firecrawl Pay As You Go/);
   assert.match(economics, /Fixed-tier counterexample/);
   assert.match(economics, /Poor fit:/);
