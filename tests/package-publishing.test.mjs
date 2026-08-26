@@ -6,10 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'publish-clients.yml'), 'utf8');
+const releaseVersion = fs.readFileSync(path.join(root, 'clients', 'RELEASE_VERSION'), 'utf8').trim();
 
-test('client package publishing is release-gated and uses scoped OIDC without long-lived publish secrets', () => {
+test('client package publishing is Git-audited and uses scoped OIDC without long-lived publish secrets', () => {
   assert.match(workflow, /release:\s*\n\s+types: \[published\]/);
+  assert.match(workflow, /push:\s*\n\s+branches: \[main\][\s\S]*?clients\/RELEASE_VERSION/);
   assert.match(workflow, /startsWith\(github\.event\.release\.tag_name, 'clients-v'\)/);
+  assert.match(workflow, /github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/);
   assert.match(workflow, /publish-npm:[\s\S]*?id-token: write/);
   assert.match(workflow, /publish-pypi:[\s\S]*?id-token: write/);
   assert.match(workflow, /npm publish \"\$TARBALL\" --access public/);
@@ -20,12 +23,19 @@ test('client package publishing is release-gated and uses scoped OIDC without lo
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|PYPI_TOKEN|TWINE_PASSWORD|password:\s*\$\{\{\s*secrets\./);
 });
 
-test('release builds verify tag and package versions before publishing', () => {
-  const tagChecks = workflow.match(/EXPECTED=\"\$\{GITHUB_REF_NAME#clients-v\}\"/g) || [];
-  assert.equal(tagChecks.length, 2);
+test('release builds verify the requested version against both package manifests', () => {
+  assert.equal(releaseVersion, '0.1.0');
+  const markerChecks = workflow.match(/clients\/RELEASE_VERSION/g) || [];
+  assert.ok(markerChecks.length >= 3);
+  assert.match(workflow, /GITHUB_REF_NAME#clients-v/);
   assert.match(workflow, /clients\/typescript\/package\.json/);
   assert.match(workflow, /clients\/python\/pyproject\.toml/);
   assert.match(workflow, /test \"\$EXPECTED\" = \"\$ACTUAL\"/);
   assert.match(workflow, /Install npm tarball in a clean project/);
   assert.match(workflow, /Install Python wheel in a clean virtual environment/);
+});
+
+test('npm bootstrap version is never republished when it already exists', () => {
+  assert.match(workflow, /npm view \"seenrelay@\$VERSION\" version --json/);
+  assert.match(workflow, /if: steps\.npm-version\.outputs\.exists != 'true'/);
 });
