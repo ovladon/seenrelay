@@ -49,8 +49,26 @@ grep -q 'Stop paying to revalidate the same fact' /tmp/site.html
 grep -q 'SAME_OBSERVED does not mean' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'FLEET-LEVEL COST AVOIDANCE' /tmp/economics.html
-grep -q 'Firecrawl Pay As You Go' /tmp/economics.html
-grep -q 'Firecrawl Standard' /tmp/economics.html
+grep -q 'MEASURED · FIRST-PARTY SMOKE BENCHMARK' /tmp/economics.html
+grep -q 'Firecrawl JSON extraction' /tmp/economics.html
+grep -q 'Fixed-tier counterexample' /tmp/economics.html
+! grep -q 'Firecrawl Pay As You Go' /tmp/economics.html
+grep -q 'npm install seenrelay' /tmp/site.html
+grep -q 'pip install seenrelay' /tmp/site.html
+grep -q '3/3 provider calls avoided' /tmp/site.html
+grep -q '15 credits avoided' /tmp/site.html
+grep -q 'Counterexample matters' /tmp/site.html
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json" -o /tmp/product-facts.json
+grep -q '"npm_command":"npm install seenrelay"' /tmp/product-facts.json
+grep -q '"pypi_command":"pip install seenrelay"' /tmp/product-facts.json
+grep -q '"client_version":"0.1.0"' /tmp/product-facts.json
+grep -q '"id":"firecrawl-json-extraction-2026-08-26"' /tmp/product-facts.json
+grep -q '"provider_credits_avoided":15' /tmp/product-facts.json
+grep -q '"reuse_provider_calls":0' /tmp/product-facts.json
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
+grep -q 'npm install seenrelay' /tmp/llms.txt
+grep -q 'pip install seenrelay' /tmp/llms.txt
+grep -q 'Firecrawl JSON extraction smoke benchmark' /tmp/llms.txt
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/service.json" -o /tmp/service.json
 grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json
@@ -118,7 +136,6 @@ JSON
 post same_b /tmp/same-check.json /v1/check /tmp/same-check.out
 grep -q '"status":"SAME_OBSERVED"' /tmp/same-check.out
 grep -q '"useful_reuse_awards":0' /tmp/same-check.out
-
 # CONTESTED and STALE.
 cat >/tmp/contest-a.json <<JSON
 {"fact":{"subject":"Contest","predicate":"status.current","source":"${BASE}/contest"},"value":"alpha","observer_id":"contest-a","idempotency_key":"a"}
