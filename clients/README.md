@@ -1,17 +1,18 @@
 # SeenRelay deterministic client wrappers
 
-These reference wrappers put SeenRelay directly in front of validation work an application already performs. They are an alternative integration path for applications that want deterministic behavior instead of relying on a model to decide whether to call an MCP tool.
+These reference clients put SeenRelay directly in front of validation work an application already performs. They are the recommended application path when CHECK must run deterministically instead of depending on a model to decide whether to call an MCP tool.
 
 They do **not** change the SeenRelay protocol. The server still has exactly two domain operations: CHECK and OBSERVE.
 
-## Available wrappers
+## Available clients
 
 - JavaScript / TypeScript runtime: [`typescript/dist/seenrelay.js`](typescript/dist/seenrelay.js)
-- Python: [`python/seenrelay.py`](python/seenrelay.py)
+- Python runtime: [`python/seenrelay.py`](python/seenrelay.py)
+- Python bind-once helper: [`python/seenrelay_easy.py`](python/seenrelay_easy.py)
 
-The wrappers have zero third-party runtime dependencies. Package metadata is prepared for npm and PyPI publication, but registry publication is a separate release step and must not be inferred from the repository metadata alone.
+The clients have zero third-party runtime dependencies. Package artifacts are continuously build/install validated for npm and PyPI publication, but registry publication is a separate release step and must not be inferred from repository metadata alone.
 
-The client wrappers are MIT licensed under [`clients/LICENSE`](LICENSE). This permissive client license does not change the repository-root license that governs the SeenRelay hosted service implementation.
+The client code is MIT licensed under [`clients/LICENSE`](LICENSE). This permissive client license does not change the repository-root license that governs the SeenRelay hosted service implementation.
 
 ## Default behavior
 
@@ -26,7 +27,44 @@ The default is shadow mode:
 
 Application validation errors are never hidden by SeenRelay fail-open behavior.
 
-## JavaScript / TypeScript
+## Smallest integration: bind once, one protected call after that
+
+### JavaScript / TypeScript
+
+```js
+const relay = new SeenRelayClient();
+
+const validatePrice = relay.protectValidation({
+  fact,
+  validate: ({ conditionalHeaders }) =>
+    expensiveValidation(conditionalHeaders)
+});
+
+const value = await validatePrice(knownValue);
+```
+
+### Python
+
+```python
+from seenrelay import SeenRelayClient
+from seenrelay_easy import protect_validation
+
+relay = SeenRelayClient()
+
+validate_price = protect_validation(
+    relay,
+    fact=fact,
+    validate=lambda ctx: expensive_validation(ctx.conditional_headers),
+)
+
+value = validate_price(known_value)
+```
+
+With no reuse policy supplied, both examples remain strict shadow mode. The original validation is **not** skipped just because SeenRelay was installed.
+
+After Shadow Proof demonstrates positive economics and the application's risk policy permits bounded reuse, add the explicit reuse helper (`reuseKnownOnSameObserved` / `reuse_known_on_same_observed`).
+
+## Direct JavaScript / TypeScript form
 
 ```js
 import { SeenRelayClient, reuseKnownOnSameObserved } from './seenrelay.js';
@@ -42,7 +80,7 @@ const value = await relay.guard({
 });
 ```
 
-## Python
+## Direct Python form
 
 ```python
 from seenrelay import SeenRelayClient, reuse_known_on_same_observed
@@ -140,6 +178,21 @@ The report is deliberately conservative. Direct potential savings count only `SA
 
 If the application has verified that its scheduler actually keeps OBSERVE outside the response critical path, it may set `observeOffCriticalPath: true` / `observe_off_critical_path=True` in the Shadow Proof report. This affects the latency model only; OBSERVE still has network/compute cost.
 
+## Where to use it
+
+Use SeenRelay around repeated validation that is materially more expensive than the preflight:
+
+- paid web search;
+- metered scraping/proxy work;
+- browser rendering or extraction;
+- rate-limited APIs;
+- model-assisted parsing;
+- multi-step validation chains.
+
+It is a poor fit for a one-off trivial GET with little chance of repeated work.
+
+For fleet-level examples using current public provider prices, see `https://seenrelay.com/economics`. Use your own invoice and Shadow Proof before making a production savings claim.
+
 ## Safety and scope
 
 - no new SeenRelay operation;
@@ -152,8 +205,6 @@ If the application has verified that its scheduler actually keeps OBSERVE outsid
 - only `If-None-Match` and `If-Modified-Since` are forwarded, with CR/LF rejected;
 - simultaneous identical CHECKs can be coalesced in-process, but completed CHECK results are not cached;
 - local telemetry exists only in process memory unless the consuming application explicitly exports it.
-
-Use the wrapper around work that is materially more expensive than the SeenRelay preflight: browser rendering, scraping/proxies, paid APIs, extraction, LLM parsing, rate-limited sources, or multi-step validation. It is a poor fit for a one-off trivial GET with little chance of repeated work.
 
 ## Economics
 

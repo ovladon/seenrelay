@@ -46,7 +46,7 @@ jobs:
           import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
           const client = new SeenRelayClient({ fetchImpl: async () => { throw new Error('not called during import test'); } });
           const proof = new SeenRelayShadowProof(client);
-          if (!client || !proof) process.exit(1);
+          if (typeof client.protectValidation !== 'function' || !proof) process.exit(1);
           NODE
       - name: Upload npm validation artifact
         uses: actions/upload-artifact@v4
@@ -79,9 +79,10 @@ jobs:
           /tmp/seenrelay-package-test/bin/python - <<'PY'
           from seenrelay import SeenRelayClient
           from seenrelay_shadow import SeenRelayShadowProof
+          from seenrelay_easy import protect_validation
           client = SeenRelayClient(transport=lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('not called during import test')))
           proof = SeenRelayShadowProof(client)
-          assert client is not None and proof is not None
+          assert client is not None and proof is not None and callable(protect_validation)
           PY
       - name: Upload PyPI validation artifacts
         uses: actions/upload-artifact@v4

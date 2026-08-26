@@ -128,6 +128,10 @@ export class SeenRelayClient {
         const relay = m.checkNetworkRequests * checkCost + m.observeNetworkRequests * observeCost;
         return { grossAvoidedValidationCost: gross, relayRequestCost: relay, netEstimatedSavings: gross - relay, excludesConditionalRequestSavings: true };
     }
+    protectValidation(options) {
+        if (!options || typeof options.validate !== 'function') throw new TypeError('validate must be a function');
+        return async (knownValue) => this.guard({ ...options, knownValue });
+    }
     async guard(options) { return (await this.guardDetailed(options)).value; }
     async guardDetailed(options) {
         this.metrics.guardCalls += 1;

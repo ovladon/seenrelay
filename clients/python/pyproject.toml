@@ -25,4 +25,4 @@ Repository = "https://github.com/ovladon/seenrelay"
 Issues = "https://github.com/ovladon/seenrelay/issues"
 
 [tool.setuptools]
-py-modules = ["seenrelay", "seenrelay_shadow"]
+py-modules = ["seenrelay", "seenrelay_shadow", "seenrelay_easy"]

@@ -14,7 +14,7 @@ test('public guidance distinguishes deterministic wrappers from MCP tool routing
   const clients = read('src', 'adoption.ts');
   const quickstart = read('src', 'quickstart.ts');
 
-  assert.match(publicSource, /Use a deterministic wrapper/);
+  assert.match(publicSource, /zero-dependency JavaScript\/TypeScript or Python client/i);
   assert.match(publicSource, /Deterministic in application code\. MCP when tool routing is appropriate\./);
   assert.match(publicSource, /integration_paths/);
   assert.match(publicSource, /Relay-side failure fails open/);
@@ -22,7 +22,8 @@ test('public guidance distinguishes deterministic wrappers from MCP tool routing
   assert.match(readme, /recommended path when application code must guarantee that CHECK runs/i);
   assert.match(readme, /MCP remains fully supported/i);
   assert.match(clients, /Do not depend on a model remembering to call MCP/);
-  assert.match(quickstart, /Use a wrapper when tool routing itself is the uncertainty/);
+  assert.match(quickstart, /MCP remains the standard discovery interface/);
+  assert.match(quickstart, /Bind once\. One protected call/);
 
   for (const text of [publicSource, readme, clients, quickstart]) {
     assert.match(text, /CHECK/);

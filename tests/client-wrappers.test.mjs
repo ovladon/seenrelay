@@ -103,3 +103,22 @@ test('economics uses only caller-supplied costs', async () => {
     excludesConditionalRequestSavings: true
   });
 });
+
+
+test('protectValidation makes repeated fixed-fact integration one-line per call', async () => {
+  let validations = 0;
+  const client = new SeenRelayClient({
+    fetchImpl: async (url) => String(url).endsWith('/v1/check')
+      ? reply({ status: 'SAME_OBSERVED' })
+      : reply({ accepted: true })
+  });
+  const validateStatus = client.protectValidation({
+    fact,
+    validate: async () => { validations += 1; return 'fresh'; }
+  });
+  assert.equal(await validateStatus('old'), 'fresh');
+  assert.equal(validations, 1, 'shadow mode must still validate');
+
+  const reuseStatus = client.protectValidation({ fact, validate: async () => 'should-not-run', reuse: reuseKnownOnSameObserved });
+  assert.equal(await reuseStatus('known'), 'known');
+});
