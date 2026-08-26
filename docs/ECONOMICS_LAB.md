@@ -15,6 +15,8 @@ A good candidate has all of these properties:
 
 A cheap one-off HTTP GET is an intentionally weak candidate. SeenRelay must not be assumed to improve it.
 
+For a fleet, measure aggregate repetition across the whole protected path, not only per-agent repetition. One agent's necessary validation can become another agent's avoided work if both refer to the same deterministic fact identity and the later caller's policy accepts the evidence.
+
 ## 2. Run strict shadow mode first
 
 Shadow mode keeps the original validation authoritative and skips nothing.
@@ -34,14 +36,14 @@ A first report should contain enough calls to represent the workload's normal re
 
 Let:
 
-- `r` = fraction of protected calls returning `SAME_OBSERVED`;
+- `r` = fraction of protected calls returning `SAME_OBSERVED` that the caller's policy would actually reuse;
 - `V` = average full-validation latency;
 - `C` = average CHECK latency;
 - `O` = average OBSERVE latency for validations that still run.
 
 ### Blocking OBSERVE
 
-The default wrappers await OBSERVE for compatibility and explicit completion. Ignoring conditional-request savings, active direct reuse has positive expected latency value when approximately:
+The default clients await OBSERVE for compatibility and explicit completion. Ignoring conditional-request savings, active direct reuse has positive expected latency value when approximately:
 
 ```text
 r * V > C + (1 - r) * O
@@ -55,7 +57,7 @@ r > (C + O) / (V + O)
 
 ### Caller-scheduled OBSERVE
 
-The clients also support an optional caller-owned scheduler. The wrapper itself never creates a background worker. The caller decides whether and where the supplied OBSERVE task runs, for example through a request-lifecycle `waitUntil` facility or an application-owned executor.
+The clients also support an optional caller-owned scheduler. The client itself never creates a background worker. The caller decides whether and where the supplied OBSERVE task runs, for example through a request-lifecycle `waitUntil` facility or an application-owned executor.
 
 If — and only if — that scheduler actually keeps OBSERVE outside the response critical path, the latency condition becomes approximately:
 
@@ -75,7 +77,7 @@ This does **not** remove OBSERVE's monetary/network/compute cost; it removes its
 
 For monetary cost, let:
 
-- `K_v` = caller-measured cost of one full validation;
+- `K_v` = caller-measured marginal cost of one full validation;
 - `K_c` = caller-assigned cost of one CHECK request;
 - `K_o` = caller-assigned cost of one OBSERVE request.
 
@@ -87,7 +89,28 @@ r > (K_c + K_o) / (K_v + K_o)
 
 SeenRelay currently charges no API fee during bootstrap. `K_c` and `K_o` can therefore be zero when the consuming application only wants invoice-level provider savings, or can include its own compute/network accounting if desired.
 
-## 4. Conditional revalidation is a separate benefit
+For purely usage-based provider billing, the first-order fleet arithmetic is:
+
+```text
+baseline provider spend ~= N * K_v
+provider spend after accepted reuse ~= N * (1 - r) * K_v
+gross provider spend avoided ~= N * r * K_v
+```
+
+where `N` is the number of protected validations. Fixed subscriptions, included credits and tier boundaries must be modeled separately.
+
+## 4. Public-price illustrations are not proof
+
+The public `/economics` page gives current list-price illustrations so a developer can understand the shape of the opportunity. As of 26 August 2026, examples include:
+
+- OpenAI Web Search at $10 / 1,000 calls;
+- Firecrawl Pay As You Go at $5 / 1,000 credits, with a standard scrape using 1 credit;
+- Browserbase Extract at a published marginal rate of $4 / 1,000 calls without proxies after included allowance;
+- Firecrawl Standard as a fixed-tier counterexample where 100,000 calls reduced to 70,000 can still leave the subscription fee unchanged.
+
+Those prices can change. Never use the public example as a production savings claim. Use the consuming application's current invoice, included allowances, overage rules and actual measured reusable rate.
+
+## 5. Conditional revalidation is a separate benefit
 
 A fresh CHECK may return an observer-supplied ETag or Last-Modified hint. That can let the application attempt a conditional source request before more expensive downstream work.
 
@@ -95,7 +118,7 @@ Shadow Proof counts how often such hints appear but deliberately does **not** co
 
 Do not add conditional savings to the direct-reuse estimate unless the application has measured them.
 
-## 5. Required benchmark classes
+## 6. Required benchmark classes
 
 A credible evaluation should include at least these three classes:
 
@@ -117,13 +140,14 @@ A source fetch followed by rendering, extraction, parsing, model inference, or a
 
 Measure the whole validation path that a reusable observation can actually prevent.
 
-## 6. Report without marketing arithmetic
+## 7. Report without marketing arithmetic
 
 For every benchmark publish or retain:
 
 - protected calls;
 - CHECK status distribution;
 - `SAME_OBSERVED` rate;
+- policy-accepted reusable rate;
 - validation latency distribution or at minimum average plus p50/p95 where available;
 - CHECK latency distribution;
 - OBSERVE latency distribution;
@@ -134,18 +158,20 @@ For every benchmark publish or retain:
 - relay overhead;
 - net potential saving;
 - conditional-hint frequency;
-- conditional savings separately measured or explicitly excluded.
+- conditional savings separately measured or explicitly excluded;
+- fixed plan minimums, included credits and tier effects when relevant.
 
 If `SAME_OBSERVED` is zero, direct gross potential savings are zero.
 
-## 7. Deployment decision
+## 8. Deployment decision
 
 Keep the integration in shadow mode when:
 
 - the observed reuse rate is below the measured break-even threshold;
 - the fact class is too risky for reuse under the application's policy;
 - the sample is too small;
-- `CONTESTED`, `STALE`, or `UNKNOWN` dominate and there is no useful conditional-validation benefit.
+- `CONTESTED`, `STALE`, or `UNKNOWN` dominate and there is no useful conditional-validation benefit;
+- a fixed provider plan means reduced calls do not create meaningful capacity or invoice value.
 
 Consider bounded reuse only when the consuming application's own measurements show positive value and its policy accepts the relevant fact class and freshness window.
 
