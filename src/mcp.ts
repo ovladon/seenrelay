@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { canonicalFact } from './canonical.js';
 import { checkFact, observeFact } from './service.js';
 import { config } from './config.js';
+import { boundedRequest, PayloadTooLargeError } from './http.js';
 import { admitHive, finishHiveCheck, finishHiveObserve } from './hive.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
 import { classifyMcpDiscoveryRequest, recordMcpDiscoveryEvents } from './discovery.js';
@@ -45,8 +46,6 @@ const handler = createMcpHandler(() => {
     inputSchema: CheckRequest,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
   }, async (args, ctx) => {
-    // Keep MCP security/order semantics identical to REST: reject invalid/credential-bearing
-    // fact descriptors before any lease creation, token consumption or Hive telemetry mutation.
     canonicalFact(args.fact);
     assertRuntimeFactAllowed(args.fact);
     const admission = await admitHive(ctx.http?.req, 'check');
@@ -75,8 +74,19 @@ const handler = createMcpHandler(() => {
 });
 
 export async function handleMcp(request: Request): Promise<Response> {
-  const discoveryEvents = classifyMcpDiscoveryRequest(request);
-  const response = await handler.fetch(request);
+  let bounded: Request;
+  try { bounded = await boundedRequest(request, config().maxBodyBytes); }
+  catch (error) {
+    if (error instanceof PayloadTooLargeError) {
+      return new Response(JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Request body exceeds SeenRelay transport limit.' } }), {
+        status: 413,
+        headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }
+      });
+    }
+    throw error;
+  }
+  const discoveryEvents = classifyMcpDiscoveryRequest(bounded);
+  const response = await handler.fetch(bounded);
   if (response.status < 500) {
     try {
       const events = await discoveryEvents;
