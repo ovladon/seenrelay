@@ -47,13 +47,22 @@ export function latestVerifiedHtml(): string {
 </section>`;
 }
 
-
 export function verifiedWorkloadMapHtml(): string {
   const byId = new Map(publicProductFacts.verified_benchmarks.map((item) => [item.id, item]));
   const jsonExtraction = byId.get('firecrawl-json-extraction-2026-08-26');
   const browser = byId.get('firecrawl-browser-interaction-2026-08-26');
   const basic = byId.get('firecrawl-basic-scrape-2026-08-26');
-  if (!jsonExtraction || !browser || !basic) return '';
+  if (
+    !jsonExtraction ||
+    !('provider_calls_avoided' in jsonExtraction) ||
+    !('fresh_baseline_median_ms' in jsonExtraction) ||
+    !browser ||
+    !('provider_calls_avoided' in browser) ||
+    !('baseline_median_ms' in browser) ||
+    !basic ||
+    !('baseline_provider_calls' in basic) ||
+    !('baseline_median_ms' in basic)
+  ) return '';
 
   return `<section class="section decision" id="workload-map">
 <div class="section-head"><div><div class="eyebrow">WHERE THE ECONOMICS HAVE HELD UP SO FAR</div><h2>Use the evidence, not a generic promise.</h2></div><p>These are small first-party smoke benchmarks on intentionally repeated source-backed facts. They show what happened when eligible reuse existed; they do not predict how often your own fleet will produce reusable matches.</p></div>
@@ -81,7 +90,7 @@ export function machinePublicFactsText(origin: string): string {
   const benchmark = b && 'provider_calls_avoided' in b
     ? `- First-party Firecrawl JSON extraction smoke benchmark (n=${b.samples}, ${b.freshness_window_seconds}s caller freshness window): ${b.provider_calls_avoided}/${b.samples} eligible provider calls avoided, ${b.provider_credits_avoided} provider credits avoided, median ${b.fresh_baseline_median_ms} ms fresh / ${b.provider_cached_baseline_median_ms} ms provider-cached -> ${b.reuse_median_ms} ms bounded reuse. This is not a promised natural-world reuse rate.`
     : '- No verified benchmark currently published.';
-  const browserResult = browser && 'provider_calls_avoided' in browser
+  const browserResult = browser && 'provider_calls_avoided' in browser && 'baseline_median_ms' in browser
     ? `- First-party Firecrawl browser-interaction smoke benchmark (n=${browser.samples}, ${browser.freshness_window_seconds}s caller freshness window): ${browser.provider_calls_avoided}/${browser.samples} equivalent provider calls avoided, ${browser.provider_credits_avoided} reported provider credits avoided, median ${browser.baseline_median_ms} ms full browser validation -> ${browser.reuse_median_ms} ms bounded reuse. This is not a promised natural-world reuse rate.`
     : '';
   const counterexample = negative
