@@ -10,13 +10,14 @@ test('canonical public facts drive install and measured-result surfaces',()=>{
   assert.equal(facts.install.npm_command,'npm install seenrelay');
   assert.equal(facts.install.pypi_command,'pip install seenrelay');
   assert.ok(facts.verified_benchmarks.some(b=>b.id==='firecrawl-json-extraction-2026-08-26'));
+  assert.ok(facts.verified_benchmarks.some(b=>b.id==='firecrawl-browser-interaction-2026-08-26'));
   for(const file of ['README.md','clients/README.md','docs/QUICKSTART.md']){
     const t=read(...file.split('/')); assert.match(t,/BEGIN GENERATED:/); assert.match(t,/npm install seenrelay/); assert.match(t,/pip install seenrelay/);
   }
 });
 test('runtime consumes shared renderers and exposes machine facts',()=>{
   const pub=read('src','public.ts'), ad=read('src','adoption.ts'), q=read('src','quickstart.ts'), e=read('src','economics.ts'), i=read('src','index.ts');
-  assert.match(pub,/publicInstallHtml\(\)/); assert.match(pub,/verifiedBenchmarkHtml\(\)/); assert.match(pub,/latestVerifiedHtml\(\)/);
+  assert.match(pub,/publicInstallHtml\(\)/); assert.match(pub,/verifiedBenchmarkHtml\(\)/); assert.match(pub,/verifiedWorkloadMapHtml\(\)/); assert.match(pub,/latestVerifiedHtml\(\)/);
   assert.match(ad,/machinePublicFactsText\(origin\)/); assert.match(q,/publicInstallHtml\(\)/); assert.match(e,/verifiedBenchmarkHtml\(\)/); assert.match(i,/\/product-facts\.json/);
   assert.doesNotMatch(pub+ad+e,/Firecrawl Pay As You Go/);
 });

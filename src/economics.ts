@@ -1,5 +1,5 @@
 import { publicProductFacts } from './public-facts.generated.js';
-import { verifiedBenchmarkHtml } from './public-facts-view.js';
+import { siteFooterHtml, verifiedBenchmarkHtml } from './public-facts-view.js';
 
 export function economicsPage(origin: string): string {
   const prices = publicProductFacts.pricing_snapshots;
@@ -85,7 +85,7 @@ value = validate_price(known_value)</pre></div>
 
 <section class="section final"><div><div class="eyebrow">PROVE IT ON YOUR BILL</div><h2>Run shadow mode first. Keep SeenRelay only where your own workload shows positive value.</h2></div><div class="cta"><a class="primary" href="/quickstart">Implement the preflight</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Economics Lab</a></div></section>
 </main>
-<footer><span>SeenRelay</span><span>Recent observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · CHECK · OBSERVE</span></footer>
+${siteFooterHtml()}
 </body>
 </html>`;
 }
