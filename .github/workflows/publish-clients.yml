@@ -93,7 +93,20 @@ jobs:
           name: seenrelay-npm-release
           path: npm-release
 
+      - name: Check whether this npm version already exists
+        id: npm-version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#clients-v}"
+          if npm view "seenrelay@$VERSION" version --json >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish npm package with trusted publishing
+        if: steps.npm-version.outputs.exists != 'true'
         shell: bash
         run: |
           set -euo pipefail
