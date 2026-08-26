@@ -1,0 +1,59 @@
+name: x402 Compatibility
+
+on:
+  pull_request:
+    paths:
+      - 'docs/X402.md'
+      - 'examples/x402-prepayment.mjs'
+      - 'tests/x402-prepayment.test.mjs'
+      - '.github/workflows/x402-compatibility.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - name: Verify SeenRelay pre-payment invariants
+        run: node --test tests/x402-prepayment.test.mjs
+      - name: Verify official x402 fetch API compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          cd "$tmp"
+          npm init -y >/dev/null
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false @x402/fetch@2.23.0
+          node --input-type=module <<'NODE'
+          import { x402Client, wrapFetchWithPayment } from '@x402/fetch';
+
+          const paymentClient = new x402Client();
+          if (typeof paymentClient.setSpendControls !== 'function') {
+            throw new Error('x402Client.setSpendControls is unavailable');
+          }
+          paymentClient.setSpendControls({ maxAmountPerPayment: '$1' });
+
+          let fetchCalls = 0;
+          const wrapped = wrapFetchWithPayment(async () => {
+            fetchCalls += 1;
+            return new Response(JSON.stringify({ ok: true }), {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            });
+          }, paymentClient);
+
+          const response = await wrapped('https://example.com/free-probe');
+          if (!response.ok || fetchCalls !== 1) {
+            throw new Error('wrapFetchWithPayment compatibility probe failed');
+          }
+          console.log('x402 compatibility OK: @x402/fetch 2.23.0');
+          NODE
