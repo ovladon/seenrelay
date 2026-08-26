@@ -1,0 +1,29 @@
+name: AI SDK Compatibility
+
+on:
+  pull_request:
+    paths:
+      - 'docs/AI_SDK.md'
+      - 'examples/ai-sdk-paid-tool.mjs'
+      - '.github/workflows/ai-sdk-compatibility.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+      - name: Install SeenRelay development dependencies
+        run: npm ci
+      - name: Install pinned AI SDK compatibility dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false --no-save ai@7.0.79 zod@3.25.76
+      - name: Run deterministic paid-tool compatibility example
+        run: node examples/ai-sdk-paid-tool.mjs
