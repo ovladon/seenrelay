@@ -68,6 +68,8 @@ export interface GuardDetailedResult<T> {
     relay: {
         checkOk: boolean;
         observeOk: boolean | null;
+        /** True when OBSERVE was handed to a caller-supplied scheduler instead of awaited. */
+        observeDeferred: boolean;
         checkError?: string;
         observeError?: string;
     };
@@ -87,6 +89,8 @@ export interface SeenRelayTelemetry {
     validationCalls: number;
     conditionalHintValidations: number;
     observeAttempts: number;
+    observeScheduled: number;
+    observeScheduleFailures: number;
     observeSuccesses: number;
     observeFailures: number;
     observeTimeouts: number;
@@ -120,6 +124,13 @@ export interface SeenRelayClientOptions {
     observeTimeoutMs?: number;
     /** Coalesce only request-equivalent CHECKs that overlap in time. No result cache is retained. */
     coalesceChecks?: boolean;
+    /**
+     * Optional caller-owned scheduler for best-effort OBSERVE. The wrapper never
+     * creates its own background worker. Example: task => waitUntil(task()).
+     */
+    scheduleObserve?: (task: () => Promise<void>) => void;
+    /** Called when a scheduled OBSERVE task later fails. Callback errors are ignored. */
+    onDeferredObserveError?: (error: unknown) => void;
     fetchImpl?: typeof fetch;
 }
 export declare function reuseKnownOnSameObserved<T>(check: CheckResult, knownValue: T): ReuseDecision<T>;

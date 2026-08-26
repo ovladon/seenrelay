@@ -14,6 +14,8 @@ export interface ShadowEconomicsInput {
   avoidedValidationCost?: number;
   checkRequestCost?: number;
   observeRequestCost?: number;
+  /** Set true only when the caller's scheduler actually keeps OBSERVE off the response critical path. */
+  observeOffCriticalPath?: boolean;
 }
 
 export interface ShadowEconomicsReport {
@@ -40,6 +42,7 @@ export interface ShadowEconomicsReport {
     activeModeWouldNotObserveDirectReuseHits: true;
     callerSuppliedCostUnits: true;
     noSavingsClaimWhenSameObservedIsZero: true;
+    observeOffCriticalPath: boolean;
   }>;
 }
 

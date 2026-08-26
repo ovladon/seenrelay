@@ -97,7 +97,7 @@ export class SeenRelayShadowProof {
     return result.value;
   }
 
-  report({ avoidedValidationCost = 0, checkRequestCost = 0, observeRequestCost = 0 } = {}) {
+  report({ avoidedValidationCost = 0, checkRequestCost = 0, observeRequestCost = 0, observeOffCriticalPath = false } = {}) {
     const avoided = nonNegativeFinite(avoidedValidationCost, 'avoidedValidationCost');
     const checkCost = nonNegativeFinite(checkRequestCost, 'checkRequestCost');
     const observeCost = nonNegativeFinite(observeRequestCost, 'observeRequestCost');
@@ -116,12 +116,15 @@ export class SeenRelayShadowProof {
     const checkAverageMs = relay.checkNetworkLatencyMsAverage || 0;
     const observeAverageMs = relay.observeNetworkLatencyMsAverage || 0;
     const validationAverageMs = proof.validationMsAverage;
-    const prospectiveRelayLatencyMs = relay.checkNetworkLatencyMsTotal + prospectiveObserveRequests * observeAverageMs;
+    const offCriticalPath = observeOffCriticalPath === true;
+    const prospectiveRelayLatencyMs = relay.checkNetworkLatencyMsTotal + (offCriticalPath ? 0 : prospectiveObserveRequests * observeAverageMs);
     const potentialNetTimeSavedMs = proof.sameObservedValidationMs - prospectiveRelayLatencyMs;
 
-    const breakEvenReuseRateByTime = validationAverageMs + observeAverageMs > 0
-      ? (checkAverageMs + observeAverageMs) / (validationAverageMs + observeAverageMs)
-      : null;
+    const breakEvenReuseRateByTime = offCriticalPath
+      ? (validationAverageMs > 0 ? checkAverageMs / validationAverageMs : null)
+      : (validationAverageMs + observeAverageMs > 0
+        ? (checkAverageMs + observeAverageMs) / (validationAverageMs + observeAverageMs)
+        : null);
     const breakEvenReuseRateByCost = avoided + observeCost > 0
       ? (checkCost + observeCost) / (avoided + observeCost)
       : null;
@@ -149,7 +152,8 @@ export class SeenRelayShadowProof {
         conditionalRequestSavingsExcluded: true,
         activeModeWouldNotObserveDirectReuseHits: true,
         callerSuppliedCostUnits: true,
-        noSavingsClaimWhenSameObservedIsZero: true
+        noSavingsClaimWhenSameObservedIsZero: true,
+        observeOffCriticalPath: offCriticalPath
       })
     });
   }

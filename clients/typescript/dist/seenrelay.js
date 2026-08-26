@@ -13,6 +13,8 @@ function emptyTelemetry() {
         validationCalls: 0,
         conditionalHintValidations: 0,
         observeAttempts: 0,
+        observeScheduled: 0,
+        observeScheduleFailures: 0,
         observeSuccesses: 0,
         observeFailures: 0,
         observeTimeouts: 0,
@@ -86,6 +88,8 @@ export class SeenRelayClient {
     checkTimeoutMs;
     observeTimeoutMs;
     coalesceChecks;
+    scheduleObserve;
+    onDeferredObserveError;
     fetchImpl;
     inflightChecks = new Map();
     metrics = emptyTelemetry();
@@ -98,6 +102,8 @@ export class SeenRelayClient {
         this.checkTimeoutMs = positiveFinite(options.checkTimeoutMs ?? 1000, 'checkTimeoutMs');
         this.observeTimeoutMs = positiveFinite(options.observeTimeoutMs ?? 750, 'observeTimeoutMs');
         this.coalesceChecks = options.coalesceChecks ?? true;
+        this.scheduleObserve = options.scheduleObserve;
+        this.onDeferredObserveError = options.onDeferredObserveError;
         this.fetchImpl = options.fetchImpl ?? fetch;
     }
     getLease() { return this.lease; }
@@ -142,7 +148,7 @@ export class SeenRelayClient {
             const decision = options.reuse(check, options.knownValue);
             if (decision.reuse) {
                 this.metrics.reuseHits += 1;
-                return { value: decision.value, path: 'reused', check, relay: { checkOk, observeOk: null, ...(checkError ? { checkError } : {}) } };
+                return { value: decision.value, path: 'reused', check, relay: { checkOk, observeOk: null, observeDeferred: false, ...(checkError ? { checkError } : {}) } };
             }
         }
         const conditionalHeaders = Object.freeze(safeConditionalHeaders(check));
@@ -152,19 +158,39 @@ export class SeenRelayClient {
         const value = await options.validate(context);
         let observeOk = null;
         let observeError;
+        let observeDeferred = false;
         this.metrics.observeAttempts += 1;
-        try {
-            const metadata = options.observation ? await options.observation(value, context) : undefined;
-            await this.observe(options.fact, value, metadata);
-            observeOk = true;
-            this.metrics.observeSuccesses += 1;
-        } catch (error) {
-            observeOk = false;
-            this.metrics.observeFailures += 1;
-            if (isAbortError(error)) this.metrics.observeTimeouts += 1;
-            observeError = errorText(error);
+        const performObserve = async (deferred) => {
+            try {
+                const metadata = options.observation ? await options.observation(value, context) : undefined;
+                await this.observe(options.fact, value, metadata);
+                this.metrics.observeSuccesses += 1;
+                return { ok: true };
+            } catch (error) {
+                this.metrics.observeFailures += 1;
+                if (isAbortError(error)) this.metrics.observeTimeouts += 1;
+                if (deferred) {
+                    try { this.onDeferredObserveError?.(error); } catch { /* caller callback must not affect validation */ }
+                }
+                return { ok: false, error: errorText(error) };
+            }
+        };
+        if (this.scheduleObserve) {
+            observeDeferred = true;
+            try {
+                this.scheduleObserve(async () => { await performObserve(true); });
+                this.metrics.observeScheduled += 1;
+            } catch (error) {
+                this.metrics.observeScheduleFailures += 1;
+                observeOk = false;
+                observeError = errorText(error);
+            }
+        } else {
+            const outcome = await performObserve(false);
+            observeOk = outcome.ok;
+            observeError = outcome.error;
         }
-        return { value, path: 'validated', check, relay: { checkOk, observeOk, ...(checkError ? { checkError } : {}), ...(observeError ? { observeError } : {}) } };
+        return { value, path: 'validated', check, relay: { checkOk, observeOk, observeDeferred, ...(checkError ? { checkError } : {}), ...(observeError ? { observeError } : {}) } };
     }
     commonHeaders() {
         return { 'content-type': 'application/json', ...(this.lease ? { 'x-seenrelay-lease': this.lease } : {}), ...(this.clientHint ? { 'x-seenrelay-client': this.clientHint } : {}) };
