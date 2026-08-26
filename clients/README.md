@@ -10,9 +10,25 @@ They do **not** change the SeenRelay protocol. The server still has exactly two 
 - Python runtime: [`python/seenrelay.py`](python/seenrelay.py)
 - Python bind-once helper: [`python/seenrelay_easy.py`](python/seenrelay_easy.py)
 
-The clients have zero third-party runtime dependencies. Package artifacts are continuously build/install validated for npm and PyPI publication, but registry publication is a separate release step and must not be inferred from repository metadata alone.
+The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.1.0` on npm and PyPI. Install with `npm install seenrelay` or `pip install seenrelay`. Public-registry installation and imports were verified in clean GitHub-hosted environments.
 
 The client code is MIT licensed under [`clients/LICENSE`](LICENSE). This permissive client license does not change the repository-root license that governs the SeenRelay hosted service implementation.
+
+## Install
+
+JavaScript / TypeScript:
+
+```bash
+npm install seenrelay
+```
+
+Python:
+
+```bash
+pip install seenrelay
+```
+
+No SeenRelay account or API key is required. Access is currently free.
 
 ## Default behavior
 
@@ -67,7 +83,7 @@ After Shadow Proof demonstrates positive economics and the application's risk po
 ## Direct JavaScript / TypeScript form
 
 ```js
-import { SeenRelayClient, reuseKnownOnSameObserved } from './seenrelay.js';
+import { SeenRelayClient, reuseKnownOnSameObserved } from 'seenrelay';
 
 const relay = new SeenRelayClient();
 
@@ -129,8 +145,8 @@ Do not enable reuse because a generic benchmark says it should help. Measure the
 JavaScript / TypeScript:
 
 ```js
-import { SeenRelayClient } from './seenrelay.js';
-import { SeenRelayShadowProof } from './shadow-proof.js';
+import { SeenRelayClient } from 'seenrelay';
+import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
 
 const proof = new SeenRelayShadowProof(new SeenRelayClient());
 

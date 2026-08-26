@@ -22,8 +22,16 @@ export function clientsPage(origin: string): string {
 <div class="eyebrow">CLIENT INTEGRATIONS</div>
 <h1>Put CHECK directly in the expensive call path.</h1>
 <p class="lead">For repeated paid search, scraping, browser/extraction or other costly validation, the deterministic JavaScript or Python client is the recommended application path. Bind one existing validator once; later calls supply only the value already known. MCP remains available for discovery and model-selected tool routing.</p>
-<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/tree/main/clients">Use a deterministic client</a><a class="secondary" href="/economics">See fleet savings</a><a class="secondary" href="${cursorInstall}">Add MCP to Cursor</a><a class="secondary" href="/quickstart">Pilot safely</a></div>
+<div class="cta"><a class="primary" href="#install">Install SeenRelay</a><a class="secondary" href="/economics">See fleet savings</a><a class="secondary" href="${cursorInstall}">Add MCP to Cursor</a><a class="secondary" href="/quickstart">Pilot safely</a></div>
 <div class="contract"><span>2 operations</span><b>check_fact</b><b>observe_fact</b><span>Observations, not universal truth</span></div>
+</section>
+<section class="section split" id="install">
+<div><div class="eyebrow">PUBLIC INSTALL</div><h2>Two commands. No account or API key.</h2><p>Install the zero-dependency client from the standard registry, then bind SeenRelay around the expensive validator you already have. Version <code>0.1.0</code> is live on both registries and has been clean-install verified from the public indexes.</p></div>
+<div class="terminal"><pre>npm install seenrelay
+
+# or
+
+pip install seenrelay</pre></div>
 </section>
 <section class="section split decision">
 <div><div class="eyebrow">DETERMINISTIC CLIENTS</div><h2>Do not depend on a model remembering to call MCP.</h2><p>The clients place a bounded SeenRelay preflight around validation your application already performs. <code>protectValidation</code> / <code>protect_validation</code> binds a fixed-fact validator once so every later revalidation becomes one protected call. Relay-side timeout, 429, malformed response, or outage fails open into the original validation path.</p><p>Shadow mode is the default. Reuse requires an explicit caller-supplied policy.</p></div>
@@ -108,7 +116,9 @@ SeenRelay reports recent observations, not universal truth. It does not browse, 
 - Fleet economics and current price examples: ${origin}/economics
 - Quickstart: ${origin}/quickstart
 - Client integrations: ${origin}/clients
-- Deterministic clients: https://github.com/ovladon/seenrelay/tree/main/clients
+- Public JavaScript / TypeScript install: \`npm install seenrelay\`
+- Public Python install: \`pip install seenrelay\`
+- Deterministic client source and examples: https://github.com/ovladon/seenrelay/tree/main/clients
 - Shadow Proof / Economics Lab: https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md
 - Machine descriptor: ${origin}/service.json
 - OpenAPI: ${origin}/openapi.json
@@ -124,7 +134,7 @@ SeenRelay reports recent observations, not universal truth. It does not browse, 
 
 ## Deterministic application integration
 
-Use remote MCP when model/tool routing is appropriate. For application code, bind the zero-dependency JavaScript or Python client around one existing fixed-fact validator with protectValidation / protect_validation. After binding, every later revalidation supplies only the value already known. Relay failures fail open into the application's existing validation.
+Use remote MCP when model/tool routing is appropriate. For application code, first install \`seenrelay\` from npm or PyPI, then bind the zero-dependency JavaScript or Python client around one existing fixed-fact validator with protectValidation / protect_validation. After binding, every later revalidation supplies only the value already known. Relay failures fail open into the application's existing validation.
 
 ## Fleet economics
 
