@@ -31,6 +31,15 @@ check_fact   ✓
 observe_fact ✓</pre></div>
 </section>
 
+<section class="section split" id="install">
+<div><div class="eyebrow">INSTALL</div><h2>Use the normal package manager.</h2><p>No vendoring and no copy-paste client file. Version <code>0.1.0</code> is publicly installable from npm and PyPI.</p></div>
+<div class="terminal"><pre>npm install seenrelay
+
+# or
+
+pip install seenrelay</pre></div>
+</section>
+
 <section class="section split decision">
 <div><div class="eyebrow">DETERMINISTIC CALL PATH</div><h2>Bind once. One protected call for every later revalidation.</h2><p>MCP remains the standard discovery interface. For application code, the JavaScript and Python clients can bind SeenRelay around one existing fixed-fact validation. The first configuration names the fact and existing validator; every later call supplies only the value already known.</p><p>Relay timeout, 429, malformed output, or outage fails open into the original validation path. Shadow mode remains the default; skipping validation requires an explicit caller policy.</p></div>
 <div class="proof-grid"><article><b>JavaScript / TypeScript</b><span><code>protectValidation(...)</code> binds one fixed-fact validator.</span></article><article><b>Python</b><span><code>protect_validation(...)</code> does the same with the standard library only.</span></article><article><b>Conditional hints</b><span>Safe ETag / Last-Modified hints can reach the existing validation without being trusted automatically.</span></article><article><b>Measure locally</b><span>In-process counters can quantify actual reuse and request overhead.</span></article></div>

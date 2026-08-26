@@ -18,12 +18,17 @@ Access is currently free and requires no account, API key, email, or OAuth.
 
 ### Deterministic reference clients — recommended for application code
 
-For applications that must run the SeenRelay preflight every time an existing validation path executes, the repository ships zero-third-party-runtime-dependency JavaScript and Python clients:
+For applications that must run the SeenRelay preflight every time an existing validation path executes, install the public zero-third-party-runtime-dependency client:
 
-- JavaScript / TypeScript: [`../clients/typescript/dist/seenrelay.js`](../clients/typescript/dist/seenrelay.js)
-- Python: [`../clients/python/seenrelay.py`](../clients/python/seenrelay.py)
-- Python bind-once helper: [`../clients/python/seenrelay_easy.py`](../clients/python/seenrelay_easy.py)
-- design, safety and examples: [`../clients/README.md`](../clients/README.md)
+```bash
+# JavaScript / TypeScript
+npm install seenrelay
+
+# Python
+pip install seenrelay
+```
+
+Design, safety and complete examples: [`../clients/README.md`](../clients/README.md). The exact package version currently published on both registries is `0.1.0`.
 
 The clients default to shadow mode and fail open on relay-side timeout, 429, malformed responses, or outages. They never hide an error from the application's own validation. They do not add a SeenRelay operation or persistent local fact cache.
 
@@ -48,6 +53,8 @@ Bind SeenRelay around one fixed source-backed validator once. Every later revali
 ### JavaScript / TypeScript
 
 ```js
+import { SeenRelayClient } from 'seenrelay';
+
 const relay = new SeenRelayClient();
 
 const validatePrice = relay.protectValidation({

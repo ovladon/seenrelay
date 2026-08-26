@@ -24,6 +24,7 @@ Access is **currently free** and requires no account or API key.
 
 ## Start here
 
+- Public install: `npm install seenrelay` or `pip install seenrelay`
 - Fleet economics and concrete cost examples: `https://seenrelay.com/economics`
 - Recommended deterministic application integration: [`clients/README.md`](clients/README.md)
 - Measure your own workload before enabling reuse: [`docs/ECONOMICS_LAB.md`](docs/ECONOMICS_LAB.md)
@@ -58,7 +59,7 @@ MCP remains fully supported as the standard discovery and tool interface when mo
 
 The wrappers default to shadow mode, fail open on relay-side failure, retain no completed CHECK result cache, and require an explicit caller policy before reuse can suppress validation. They do not add a SeenRelay domain operation.
 
-The client wrappers are separately MIT licensed so applications can integrate them without changing the repository-root license that governs the hosted service implementation. Package metadata is prepared for npm and PyPI publication; registry publication is a separate release step.
+The client wrappers are separately MIT licensed so applications can integrate them without changing the repository-root license that governs the hosted service implementation. Version `0.1.0` is publicly installable from both registries: `npm install seenrelay` and `pip install seenrelay`. Public-registry installation is verified in clean GitHub-hosted environments before the documentation claims availability.
 
 `SeenRelayShadowProof` measures the consuming application's own CHECK status distribution, validation time and relay latency while keeping every original validation. Potential direct savings count only measured `SAME_OBSERVED` cases, and conditional-request savings remain excluded until the application measures them separately. See [`docs/ECONOMICS_LAB.md`](docs/ECONOMICS_LAB.md).
 
