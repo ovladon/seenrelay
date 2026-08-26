@@ -37,13 +37,25 @@ jobs:
           category: /language:javascript-typescript
 
   dependency-review:
-    name: Dependency Review
-    if: github.event_name == 'pull_request'
+    name: Dependency Security
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: Diagnose dependency review API availability
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Audit complete locked dependency set
+        run: npm audit --audit-level=high
+      - name: Probe GitHub dependency review API
+        if: github.event_name == 'pull_request'
+        id: dependency-api
         env:
           GH_TOKEN: ${{ github.token }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -52,15 +64,34 @@ jobs:
         run: |
           set -euo pipefail
           url="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/dependency-graph/compare/${BASE_SHA}...${HEAD_SHA}"
-          status="$(curl -sS -D /tmp/dependency-review-headers.txt -o /tmp/dependency-review-body.json -w '%{http_code}' \
+          status="$(curl -sS -o /tmp/dependency-review-body.json -w '%{http_code}' \
             -H 'Accept: application/vnd.github+json' \
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H 'X-GitHub-Api-Version: 2022-11-28' \
             "$url")"
-          echo "dependency-review-api-status=${status}"
-          grep -Eai '^x-ratelimit-(limit|remaining|reset|resource):' /tmp/dependency-review-headers.txt || true
-          jq -c '{message, documentation_url, status}' /tmp/dependency-review-body.json 2>/dev/null || echo 'dependency-review-api-body=non-json'
+          echo "http_status=${status}" >> "$GITHUB_OUTPUT"
+          if [ "$status" = "200" ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          elif [ "$status" = "403" ]; then
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            echo '::warning::GitHub dependency-review API returned HTTP 403 for this public repository. Full locked-dependency audit still ran and passed; dependency-delta review is platform-unavailable for this run.'
+          else
+            echo "Unexpected dependency-review API status: ${status}" >&2
+            jq -c '{message, documentation_url, status}' /tmp/dependency-review-body.json 2>/dev/null || true
+            exit 1
+          fi
       - name: Review dependency changes
+        if: github.event_name == 'pull_request' && steps.dependency-api.outputs.available == 'true'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
+      - name: Record dependency review platform limitation
+        if: github.event_name == 'pull_request' && steps.dependency-api.outputs.available == 'false'
+        shell: bash
+        run: |
+          {
+            echo '### Dependency review API unavailable'
+            echo
+            echo 'GitHub returned HTTP 403 for the dependency-diff endpoint on this public repository.'
+            echo 'The complete locked dependency set was still audited at high severity in this job.'
+          } >> "$GITHUB_STEP_SUMMARY"
