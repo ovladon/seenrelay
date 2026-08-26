@@ -83,6 +83,7 @@ const serviceVersion = parseServiceVersion(read('src/version.ts'));
 if (!releaseVersion) fail('clients/RELEASE_VERSION is empty');
 if (npmVersion !== releaseVersion) fail(`npm client version ${npmVersion} != RELEASE_VERSION ${releaseVersion}`);
 if (pyVersion !== releaseVersion) fail(`PyPI client version ${pyVersion} != RELEASE_VERSION ${releaseVersion}`);
+if (sourceFacts.install?.client_version !== releaseVersion) fail(`public client version ${sourceFacts.install?.client_version ?? 'missing'} != RELEASE_VERSION ${releaseVersion}`);
 if (!serviceVersion) fail('Could not parse SERVICE_RELEASE');
 
 const facts = {
