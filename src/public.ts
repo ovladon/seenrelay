@@ -54,7 +54,8 @@ export function serviceDescriptor(origin: string) {
       pricing_examples_checked_at: '2026-08-26',
       examples: [
         { workload: 'OpenAI Web Search', public_unit_price: '$10/1000 calls', calls: 100000, illustrative_reusable_rate: 0.30, baseline_usd: 1000, post_reuse_metered_usd: 700, gross_avoided_usd: 300, source: 'https://platform.openai.com/pricing' },
-        { workload: 'Firecrawl Standard plan base scrapes', public_plan: '$83/month billed yearly for 100000 credits', credits_per_standard_scrape: 1, calls: 100000, illustrative_reusable_rate: 0.30, baseline_plan_usd: 83, post_reuse_plan_usd: 83, direct_plan_fee_avoided_usd: 0, credits_freed: 30000, note: 'Current self-serve pricing is plan-based; reduced calls save dollars only when they change tier or overage.', source: 'https://www.firecrawl.dev/pricing' },
+        { workload: 'Firecrawl Pay As You Go base scrapes', public_unit_price: '$5/1000 credits', credits_per_standard_scrape: 1, calls: 100000, illustrative_reusable_rate: 0.30, baseline_usd: 500, post_reuse_metered_usd: 350, gross_avoided_usd: 150, source: 'https://www.firecrawl.dev/pricing' },
+        { workload: 'Firecrawl Standard plan base scrapes', public_plan: '$83/month billed yearly for 100000 credits', credits_per_standard_scrape: 1, calls: 100000, illustrative_reusable_rate: 0.30, baseline_plan_usd: 83, post_reuse_plan_usd: 83, direct_plan_fee_avoided_usd: 0, credits_freed: 30000, note: 'A fixed plan can stay at the same invoice even when calls fall; lower usage saves dollars only if it changes tier, overage or future capacity needs.', source: 'https://www.firecrawl.dev/pricing' },
         { workload: 'Browserbase Extract marginal calls without proxies after included allowance', public_unit_price: '$4/1000 calls', calls: 100000, illustrative_reusable_rate: 0.30, baseline_usd: 400, post_reuse_metered_usd: 280, gross_avoided_usd: 120, source: 'https://www.browserbase.com/pricing' }
       ],
       caveat: 'Illustrative list-price arithmetic only. Actual savings depend on measured SAME_OBSERVED reuse accepted by caller policy, provider plan structure, included credits, network/compute overhead and current provider prices.'
@@ -70,6 +71,7 @@ export function serviceDescriptor(origin: string) {
       observe: `${origin}/v1/observe`,
       mcp: `${origin}/mcp`,
       openapi: `${origin}/openapi.json`,
+      economics: `${origin}/economics`,
       quickstart: `${origin}/quickstart`,
       clients: `${origin}/clients`,
       llms: `${origin}/llms.txt`,
