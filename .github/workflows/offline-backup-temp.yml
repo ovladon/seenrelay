@@ -43,7 +43,8 @@ jobs:
           sha256sum SOURCE_IDENTITY.txt git-history.txt source-tree.txt seenrelay-source-${SHA}.tar.gz seenrelay-main-history-${SHA}.bundle > SHA256SUMS
           sha256sum -c SHA256SUMS
           cd /tmp/seenrelay-offline
-          find . -type f -print0 | sort -z | xargs -0 sha256sum > ALL_SHA256SUMS
+          find . -type f ! -name ALL_SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > ALL_SHA256SUMS
+          sha256sum -c ALL_SHA256SUMS
 
       - name: Upload offline recovery material
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
