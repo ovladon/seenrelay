@@ -16,10 +16,16 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'seenrelay_runtime') THEN
     CREATE ROLE seenrelay_runtime
-      NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+      NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
   END IF;
 END
 $$;
+
+-- Reassert the grant role's defensive attributes on every migration run so an existing role cannot
+-- retain broader role attributes from an earlier/manual creation. Membership into this role is
+-- granted separately to the application LOGIN with INHERIT TRUE and SET FALSE.
+ALTER ROLE seenrelay_runtime
+  NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
 
 REVOKE CREATE ON SCHEMA public FROM seenrelay_runtime;
 DO $$
