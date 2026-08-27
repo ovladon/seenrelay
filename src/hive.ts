@@ -4,9 +4,9 @@ import {
   recordHiveMetric, recordHiveOperation, touchHiveObserve
 } from './db.js';
 import { runtimePolicy } from './controls.js';
-import { consumeHiveNewLeaseAdmission } from './hive-admission-db.js';
+import { consumeHiveNetworkBudget, consumeHiveNewLeaseAdmission } from './hive-admission-db.js';
 import { bindHiveIndependenceKey } from './hive-independence-db.js';
-import { deriveAdmissionNetworkKey, deriveClientKey, deriveReuseIndependenceKey, privacyScopedHash } from './identity.js';
+import { deriveAdmissionNetworkKey, deriveClientKey, deriveOperationNetworkKey, deriveReuseIndependenceKey, privacyScopedHash } from './identity.js';
 import { creditUsefulReuseGuarded } from './reuse.js';
 import type { CheckStatus, HiveClass, HiveLeaseRow, HivePublicState } from './types.js';
 
@@ -130,6 +130,11 @@ async function newLeaseAdmissionKey(request: Request | undefined): Promise<strin
   // Do not invent a transportless actor identity. All such calls share one conservative bucket.
   return `admission-transportless:${await privacyScopedHash('lease-admission', 'transportless')}`;
 }
+async function operationAdmissionKey(request: Request | undefined, operation: 'check' | 'observe'): Promise<string> {
+  if (request) return deriveOperationNetworkKey(request, operation);
+  // Transportless callers have no network evidence, so they share one conservative operation bucket.
+  return `operation-network:${operation}:${await privacyScopedHash(`operation-admission-${operation}`, 'transportless')}`;
+}
 type EnsureLeaseResult =
   | { allowed: true; row: HiveLeaseRow; token: string }
   | { allowed: false; retryAfterSeconds: number };
@@ -181,8 +186,25 @@ export async function admitHive(request: Request | undefined, operation: 'check'
   if (!policy.allowed) {
     return { allowed: false, reason: 'runtime_disabled', leaseId: '', token: '', state: disabledState(), rewardsEnabled: false };
   }
-  const nowIso = new Date().toISOString();
-  const ensured = await ensureLease(request, Date.now());
+
+  const nowMs = Date.now();
+  const nowIso = new Date(nowMs).toISOString();
+  const operationLimit = operation === 'check'
+    ? cfg.hiveMaxChecksPerNetworkPerMinute
+    : cfg.hiveMaxObservesPerNetworkPerMinute;
+  const operationAdmission = await consumeHiveNetworkBudget(
+    await operationAdmissionKey(request, operation), nowIso, operationLimit
+  );
+  if (!operationAdmission.allowed) {
+    return {
+      allowed: false, reason: 'admission_limited', leaseId: '', token: '',
+      state: emptyState(operationAdmission.retry_after_seconds), rewardsEnabled: policy.rewardsEnabled
+    };
+  }
+
+  // The aggregate network ceiling is deliberately consumed before lease lookup/creation. Changing a
+  // caller-controlled client hint can create a separate continuity lease, but cannot bypass this budget.
+  const ensured = await ensureLease(request, nowMs);
   if (!ensured.allowed) {
     return { allowed: false, reason: 'admission_limited', leaseId: '', token: '', state: emptyState(ensured.retryAfterSeconds), rewardsEnabled: policy.rewardsEnabled };
   }
