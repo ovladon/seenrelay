@@ -110,6 +110,26 @@ export async function deriveReuseIndependenceKey(request: Request): Promise<stri
   return `network:${await privacyScopedHash('reuse-independence', networkHint)}`;
 }
 
+/**
+ * Coarse network bucket used only to damp bursts of NEW lease creation. It deliberately excludes
+ * user-controlled client and User-Agent hints, is domain-separated from reward independence, and
+ * is not an identity or Sybil-proof signal.
+ */
+export async function deriveAdmissionNetworkKey(request: Request): Promise<string> {
+  const networkHint = forwardedNetworkHint(request);
+  return `admission-network:${await privacyScopedHash('lease-admission', networkHint)}`;
+}
+
+/**
+ * Coarse aggregate operation bucket spanning all leases behind the same observed network hint. CHECK
+ * and OBSERVE use separate domain-separated keys. This is a cost/abuse ceiling only; it must never be
+ * treated as agent identity, observer independence, or truth confidence.
+ */
+export async function deriveOperationNetworkKey(request: Request, operation: 'check' | 'observe'): Promise<string> {
+  const networkHint = forwardedNetworkHint(request);
+  return `operation-network:${operation}:${await privacyScopedHash(`operation-admission-${operation}`, networkHint)}`;
+}
+
 export async function deriveObserverIdentity(
   request: Request | undefined,
   body: ObserveRequest,
