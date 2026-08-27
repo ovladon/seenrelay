@@ -1,0 +1,54 @@
+name: Temporary Offline Backup
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/offline-backup-temp.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact Production source commit with history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 4d176c56227e8c2a181c11a6e2767530bebb5d6d
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build verified offline Git artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA='4d176c56227e8c2a181c11a6e2767530bebb5d6d'
+          test "$(git rev-parse HEAD)" = "$SHA"
+          mkdir -p /tmp/seenrelay-offline/source
+          git archive --format=tar.gz --prefix="seenrelay-source-${SHA}/" -o "/tmp/seenrelay-offline/source/seenrelay-source-${SHA}.tar.gz" "$SHA"
+          git branch backup-main "$SHA"
+          git bundle create "/tmp/seenrelay-offline/source/seenrelay-main-history-${SHA}.bundle" backup-main --tags
+          git bundle verify "/tmp/seenrelay-offline/source/seenrelay-main-history-${SHA}.bundle"
+          git ls-tree -r --full-tree "$SHA" > /tmp/seenrelay-offline/source/source-tree.txt
+          git log --all --date=iso-strict --pretty='format:%H%x09%ad%x09%an%x09%s' > /tmp/seenrelay-offline/source/git-history.txt
+          {
+            echo "repository=ovladon/seenrelay"
+            echo "commit=$SHA"
+            echo "tree=$(git rev-parse "$SHA^{tree}")"
+            echo "generated_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > /tmp/seenrelay-offline/source/SOURCE_IDENTITY.txt
+          cd /tmp/seenrelay-offline/source
+          sha256sum SOURCE_IDENTITY.txt git-history.txt source-tree.txt seenrelay-source-${SHA}.tar.gz seenrelay-main-history-${SHA}.bundle > SHA256SUMS
+          sha256sum -c SHA256SUMS
+          cd /tmp/seenrelay-offline
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > ALL_SHA256SUMS
+
+      - name: Upload offline recovery material
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.0
+        with:
+          name: seenrelay-offline-recovery-material-4d176c56
+          path: /tmp/seenrelay-offline
+          if-no-files-found: error
+          retention-days: 1
