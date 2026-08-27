@@ -90,14 +90,16 @@ test('aggregate network abuse ceiling is atomic, separate by operation, and prec
   assert.match(hive, /cfg\.hiveMaxObservesPerNetworkPerMinute/);
 });
 
-test('runtime database cutover keeps migration authority out of runtime and disables transitive/SET role escalation', () => {
+test('runtime database cutover keeps migration authority out of runtime and fails closed on role drift', () => {
   const migrationRunner = read('scripts','migrate.mjs');
   assert.match(migrationRunner, /process\.env\.DATABASE_ADMIN_URL/);
   assert.doesNotMatch(migrationRunner, /process\.env\.DATABASE_URL/);
 
   const migration = read('migrations','0006_runtime_db_and_admission.sql');
   assert.match(migration, /CREATE ROLE seenrelay_runtime\s+NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS/);
-  assert.match(migration, /ALTER ROLE seenrelay_runtime\s+NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS/);
+  assert.match(migration, /rolcanlogin OR rolsuper OR rolcreatedb OR rolcreaterole OR rolinherit OR rolreplication OR rolbypassrls/);
+  assert.match(migration, /RAISE EXCEPTION 'seenrelay_runtime exists with broader role attributes than allowed'/);
+  assert.doesNotMatch(migration, /ALTER ROLE seenrelay_runtime/);
 
   const guide = read('docs','RUNTIME_DATABASE_ROLE.md');
   assert.match(guide, /CREATE ROLE seenrelay_app[\s\S]*LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT/);
