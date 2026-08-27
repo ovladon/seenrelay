@@ -90,13 +90,14 @@ test('aggregate network abuse ceiling is atomic, separate by operation, and prec
   assert.match(hive, /cfg\.hiveMaxObservesPerNetworkPerMinute/);
 });
 
-test('runtime database cutover keeps migration authority out of runtime and disables SET ROLE', () => {
+test('runtime database cutover keeps migration authority out of runtime and disables transitive/SET role escalation', () => {
   const migrationRunner = read('scripts','migrate.mjs');
   assert.match(migrationRunner, /process\.env\.DATABASE_ADMIN_URL/);
   assert.doesNotMatch(migrationRunner, /process\.env\.DATABASE_URL/);
 
   const migration = read('migrations','0006_runtime_db_and_admission.sql');
-  assert.match(migration, /CREATE ROLE seenrelay_runtime\s+NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS/);
+  assert.match(migration, /CREATE ROLE seenrelay_runtime\s+NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS/);
+  assert.match(migration, /ALTER ROLE seenrelay_runtime\s+NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS/);
 
   const guide = read('docs','RUNTIME_DATABASE_ROLE.md');
   assert.match(guide, /CREATE ROLE seenrelay_app[\s\S]*LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT/);
