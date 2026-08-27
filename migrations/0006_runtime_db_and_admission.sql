@@ -35,7 +35,18 @@ BEGIN
 END
 $$;
 
-REVOKE CREATE ON SCHEMA public FROM seenrelay_runtime;
+-- Re-baseline direct privileges on every migration run. This removes accidental/manual grants
+-- before restoring the exact runtime matrix below. Privileges inherited from PostgreSQL's PUBLIC
+-- role are outside this direct-grant baseline and must not include SECURITY DEFINER escalation paths.
+DO $$
+BEGIN
+  EXECUTE format('REVOKE ALL PRIVILEGES ON DATABASE %I FROM seenrelay_runtime', current_database());
+END
+$$;
+REVOKE ALL PRIVILEGES ON SCHEMA public FROM seenrelay_runtime;
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM seenrelay_runtime;
+REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM seenrelay_runtime;
+
 DO $$
 BEGIN
   EXECUTE format('GRANT CONNECT ON DATABASE %I TO seenrelay_runtime', current_database());
