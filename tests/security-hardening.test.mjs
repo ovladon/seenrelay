@@ -69,3 +69,23 @@ test('trust surface is discoverable to humans and coding agents', () => {
   assert.match(adoption, /const urls = \[.*'\/trust'/);
   assert.match(adoption, /Trust \/ verification posture: \${origin}\/trust/);
 });
+
+test('aggregate network abuse ceiling is atomic, separate by operation, and precedes lease lookup', () => {
+  const budget = read('src','hive-admission-db.ts');
+  assert.match(budget, /export async function consumeHiveNetworkBudget/);
+  assert.match(budget, /ON CONFLICT \(admission_key, window_start\) DO UPDATE SET/);
+  assert.match(budget, /WHERE hive_admission_windows\.admissions < \$3::int/);
+
+  const identity = read('src','identity.ts');
+  assert.match(identity, /deriveOperationNetworkKey\(request: Request, operation: 'check' \| 'observe'\)/);
+  assert.match(identity, /operation-network:\$\{operation\}/);
+
+  const hive = read('src','hive.ts');
+  const aggregateBudget = hive.indexOf('const operationAdmission = await consumeHiveNetworkBudget');
+  const leaseLookup = hive.indexOf('const ensured = await ensureLease');
+  assert.notEqual(aggregateBudget, -1, 'aggregate operation budget must be consumed');
+  assert.notEqual(leaseLookup, -1, 'lease lookup must exist');
+  assert.ok(aggregateBudget < leaseLookup, 'aggregate network ceiling must run before lease lookup/creation');
+  assert.match(hive, /cfg\.hiveMaxChecksPerNetworkPerMinute/);
+  assert.match(hive, /cfg\.hiveMaxObservesPerNetworkPerMinute/);
+});
