@@ -36,6 +36,8 @@ export function config() {
     maxBodyBytes: int('MAX_BODY_BYTES', 16384),
     hiveLeaseTtlSeconds: int('HIVE_LEASE_TTL_SECONDS', 86400),
     hiveMaxNewLeasesPerNetworkPerMinute: Math.max(1, int('HIVE_MAX_NEW_LEASES_PER_NETWORK_PER_MINUTE', 300)),
+    hiveMaxChecksPerNetworkPerMinute: Math.max(1, int('HIVE_MAX_CHECKS_PER_NETWORK_PER_MINUTE', 3000)),
+    hiveMaxObservesPerNetworkPerMinute: Math.max(1, int('HIVE_MAX_OBSERVES_PER_NETWORK_PER_MINUTE', 1500)),
     hiveCheckCapacity: num('HIVE_CHECK_CAPACITY', 100),
     hiveCheckRefillPerMinute: num('HIVE_CHECK_REFILL_PER_MINUTE', 60),
     hiveCapacityBonusPerScore: num('HIVE_CAPACITY_BONUS_PER_SCORE', 10),
