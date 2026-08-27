@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeSource, ValidationError } from '../src/canonical';
-import { deriveClientKey, deriveReuseIndependenceKey } from '../src/identity';
+import { deriveAdmissionNetworkKey, deriveClientKey, deriveOperationNetworkKey, deriveReuseIndependenceKey } from '../src/identity';
 
 const SALT = 'seenrelay-hardening-test-privacy-salt-0123456789abcdef';
 
@@ -35,12 +35,29 @@ test('self-declared client hints separate lease continuity but not reward indepe
   }
 ));
 
+test('self-declared client and User-Agent hints cannot multiply aggregate network admission budgets', withEnv(
+  { PRIVACY_SALT: SALT, VERCEL_ENV: 'preview' },
+  async () => {
+    const a = new Request('https://seenrelay.test', { headers: {
+      'x-seenrelay-test-network': 'shared-egress', 'x-seenrelay-client': 'agent-a', 'user-agent': 'runtime-a'
+    }});
+    const b = new Request('https://seenrelay.test', { headers: {
+      'x-seenrelay-test-network': 'shared-egress', 'x-seenrelay-client': 'agent-b', 'user-agent': 'runtime-b'
+    }});
+    assert.equal(await deriveAdmissionNetworkKey(a), await deriveAdmissionNetworkKey(b));
+    assert.equal(await deriveOperationNetworkKey(a, 'check'), await deriveOperationNetworkKey(b, 'check'));
+    assert.equal(await deriveOperationNetworkKey(a, 'observe'), await deriveOperationNetworkKey(b, 'observe'));
+    assert.notEqual(await deriveOperationNetworkKey(a, 'check'), await deriveOperationNetworkKey(a, 'observe'));
+  }
+));
+
 test('different Preview network buckets are independently testable without weakening Production', withEnv(
   { PRIVACY_SALT: SALT, VERCEL_ENV: 'preview' },
   async () => {
     const a = new Request('https://seenrelay.test', { headers: { 'x-seenrelay-test-network': 'egress-a' }});
     const b = new Request('https://seenrelay.test', { headers: { 'x-seenrelay-test-network': 'egress-b' }});
     assert.notEqual(await deriveReuseIndependenceKey(a), await deriveReuseIndependenceKey(b));
+    assert.notEqual(await deriveOperationNetworkKey(a, 'check'), await deriveOperationNetworkKey(b, 'check'));
   }
 ));
 
@@ -54,6 +71,7 @@ test('Preview-only network override is ignored in Production', withEnv(
       'x-forwarded-for': '203.0.113.10', 'x-seenrelay-test-network': 'fake-b'
     }});
     assert.equal(await deriveReuseIndependenceKey(a), await deriveReuseIndependenceKey(b));
+    assert.equal(await deriveOperationNetworkKey(a, 'check'), await deriveOperationNetworkKey(b, 'check'));
   }
 ));
 

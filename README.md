@@ -154,6 +154,7 @@ Dependabot and Standards Watch prepare isolated maintenance work. Production cha
 ```bash
 npm ci
 npm run check
+# DATABASE_ADMIN_URL must be set only for this migration command
 npm run db:migrate
 ```
 

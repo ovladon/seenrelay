@@ -4,8 +4,9 @@ import {
   recordHiveMetric, recordHiveOperation, touchHiveObserve
 } from './db.js';
 import { runtimePolicy } from './controls.js';
+import { consumeHiveNetworkBudget, consumeHiveNewLeaseAdmission } from './hive-admission-db.js';
 import { bindHiveIndependenceKey } from './hive-independence-db.js';
-import { deriveClientKey, deriveReuseIndependenceKey, privacyScopedHash } from './identity.js';
+import { deriveAdmissionNetworkKey, deriveClientKey, deriveOperationNetworkKey, deriveReuseIndependenceKey, privacyScopedHash } from './identity.js';
 import { creditUsefulReuseGuarded } from './reuse.js';
 import type { CheckStatus, HiveClass, HiveLeaseRow, HivePublicState } from './types.js';
 
@@ -13,7 +14,7 @@ interface LeaseTokenPayload { v: 1; lease_id: string; issued_at: string; expires
 type LeaseVerification = { payload: LeaseTokenPayload; key: 'current' | 'previous' };
 export interface HiveAdmission {
   allowed: boolean;
-  reason?: 'rate_limited' | 'runtime_disabled';
+  reason?: 'rate_limited' | 'admission_limited' | 'runtime_disabled';
   leaseId: string;
   token: string;
   state: HivePublicState;
@@ -108,13 +109,14 @@ function publicState(row: HiveLeaseRow, token: string, retryAfterSeconds?: numbe
     free_bootstrap: true, ...(retryAfterSeconds ? { retry_after_seconds: retryAfterSeconds } : {})
   };
 }
-function disabledState(): HivePublicState {
+function emptyState(retryAfterSeconds: number): HivePublicState {
   return {
     lease: '', class: 'new', check_tokens_remaining: 0, contribution_score: 0,
     useful_reuse_generated: 0, useful_reuse_consumed: 0, free_bootstrap: true,
-    retry_after_seconds: 60
+    retry_after_seconds: retryAfterSeconds
   };
 }
+function disabledState(): HivePublicState { return emptyState(60); }
 async function operationalClientKey(request: Request | undefined): Promise<string> {
   if (request) return deriveClientKey(request);
   return `transportless:${await privacyScopedHash('transportless-hive', crypto.randomUUID())}`;
@@ -123,7 +125,21 @@ async function bindIndependence(request: Request | undefined, leaseId: string): 
   if (!request) return;
   await bindHiveIndependenceKey(leaseId, await deriveReuseIndependenceKey(request));
 }
-async function ensureLease(request: Request | undefined, nowMs: number): Promise<{row: HiveLeaseRow; token: string}> {
+async function newLeaseAdmissionKey(request: Request | undefined): Promise<string> {
+  if (request) return deriveAdmissionNetworkKey(request);
+  // Do not invent a transportless actor identity. All such calls share one conservative bucket.
+  return `admission-transportless:${await privacyScopedHash('lease-admission', 'transportless')}`;
+}
+async function operationAdmissionKey(request: Request | undefined, operation: 'check' | 'observe'): Promise<string> {
+  if (request) return deriveOperationNetworkKey(request, operation);
+  // Transportless callers have no network evidence, so they share one conservative operation bucket.
+  return `operation-network:${operation}:${await privacyScopedHash(`operation-admission-${operation}`, 'transportless')}`;
+}
+type EnsureLeaseResult =
+  | { allowed: true; row: HiveLeaseRow; token: string }
+  | { allowed: false; retryAfterSeconds: number };
+
+async function ensureLease(request: Request | undefined, nowMs: number): Promise<EnsureLeaseResult> {
   const cfg = config(); const nowIso = new Date(nowMs).toISOString();
   const supplied = request?.headers.get('x-seenrelay-lease') || null;
   const verified = await verifyLease(supplied, nowMs);
@@ -133,22 +149,29 @@ async function ensureLease(request: Request | undefined, nowMs: number): Promise
       await bindIndependence(request, row.lease_id);
       // A token accepted with the previous key is immediately re-issued under the current key.
       const token = verified.key === 'current' ? supplied! : await signLease({ v: 1, lease_id: row.lease_id, issued_at: row.issued_at, expires_at: row.expires_at });
-      return { row, token };
+      return { allowed: true, row, token };
     }
   }
   const clientKey = await operationalClientKey(request);
   const existing = await getActiveHiveLeaseByClientKey(clientKey, nowIso);
   if (existing) {
     await bindIndependence(request, existing.lease_id);
-    return { row: existing, token: await signLease({ v: 1, lease_id: existing.lease_id, issued_at: existing.issued_at, expires_at: existing.expires_at }) };
+    return { allowed: true, row: existing, token: await signLease({ v: 1, lease_id: existing.lease_id, issued_at: existing.issued_at, expires_at: existing.expires_at }) };
   }
+  const [admissionKey, independenceKey] = await Promise.all([
+    newLeaseAdmissionKey(request),
+    request ? deriveReuseIndependenceKey(request) : Promise.resolve(null)
+  ]);
+  const admission = await consumeHiveNewLeaseAdmission(admissionKey, nowIso, cfg.hiveMaxNewLeasesPerNetworkPerMinute);
+  if (!admission.allowed) return { allowed: false, retryAfterSeconds: admission.retry_after_seconds };
+
   const leaseId = crypto.randomUUID();
   const expiresIso = new Date(nowMs + cfg.hiveLeaseTtlSeconds * 1000).toISOString();
   const row = await createHiveLease(leaseId, clientKey, nowIso, expiresIso, cfg.hiveCheckCapacity);
-  await bindIndependence(request, row.lease_id);
+  if (independenceKey) await bindHiveIndependenceKey(row.lease_id, independenceKey);
   const token = await signLease({ v: 1, lease_id: row.lease_id, issued_at: row.issued_at, expires_at: row.expires_at });
   await recordHiveMetric('NEW_LEASE', 1, nowIso);
-  return { row, token };
+  return { allowed: true, row, token };
 }
 function retryAfter(row: HiveLeaseRow, refillPerMinute: number): number {
   if (refillPerMinute <= 0) return 60;
@@ -163,8 +186,28 @@ export async function admitHive(request: Request | undefined, operation: 'check'
   if (!policy.allowed) {
     return { allowed: false, reason: 'runtime_disabled', leaseId: '', token: '', state: disabledState(), rewardsEnabled: false };
   }
-  const nowIso = new Date().toISOString();
-  const ensured = await ensureLease(request, Date.now());
+
+  const nowMs = Date.now();
+  const nowIso = new Date(nowMs).toISOString();
+  const operationLimit = operation === 'check'
+    ? cfg.hiveMaxChecksPerNetworkPerMinute
+    : cfg.hiveMaxObservesPerNetworkPerMinute;
+  const operationAdmission = await consumeHiveNetworkBudget(
+    await operationAdmissionKey(request, operation), nowIso, operationLimit
+  );
+  if (!operationAdmission.allowed) {
+    return {
+      allowed: false, reason: 'admission_limited', leaseId: '', token: '',
+      state: emptyState(operationAdmission.retry_after_seconds), rewardsEnabled: policy.rewardsEnabled
+    };
+  }
+
+  // The aggregate network ceiling is deliberately consumed before lease lookup/creation. Changing a
+  // caller-controlled client hint can create a separate continuity lease, but cannot bypass this budget.
+  const ensured = await ensureLease(request, nowMs);
+  if (!ensured.allowed) {
+    return { allowed: false, reason: 'admission_limited', leaseId: '', token: '', state: emptyState(ensured.retryAfterSeconds), rewardsEnabled: policy.rewardsEnabled };
+  }
   if (operation === 'observe') {
     const touched = await touchHiveObserve(ensured.row.lease_id, nowIso) || ensured.row;
     return { allowed: true, leaseId: touched.lease_id, token: ensured.token, state: publicState(touched, ensured.token), rewardsEnabled: policy.rewardsEnabled };

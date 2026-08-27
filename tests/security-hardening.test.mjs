@@ -69,3 +69,45 @@ test('trust surface is discoverable to humans and coding agents', () => {
   assert.match(adoption, /const urls = \[.*'\/trust'/);
   assert.match(adoption, /Trust \/ verification posture: \${origin}\/trust/);
 });
+
+test('aggregate network abuse ceiling is atomic, separate by operation, and precedes lease lookup', () => {
+  const budget = read('src','hive-admission-db.ts');
+  assert.match(budget, /export async function consumeHiveNetworkBudget/);
+  assert.match(budget, /ON CONFLICT \(admission_key, window_start\) DO UPDATE SET/);
+  assert.match(budget, /WHERE hive_admission_windows\.admissions < \$3::int/);
+
+  const identity = read('src','identity.ts');
+  assert.match(identity, /deriveOperationNetworkKey\(request: Request, operation: 'check' \| 'observe'\)/);
+  assert.match(identity, /operation-network:\$\{operation\}/);
+
+  const hive = read('src','hive.ts');
+  const aggregateBudget = hive.indexOf('const operationAdmission = await consumeHiveNetworkBudget');
+  const leaseLookup = hive.indexOf('const ensured = await ensureLease');
+  assert.notEqual(aggregateBudget, -1, 'aggregate operation budget must be consumed');
+  assert.notEqual(leaseLookup, -1, 'lease lookup must exist');
+  assert.ok(aggregateBudget < leaseLookup, 'aggregate network ceiling must run before lease lookup/creation');
+  assert.match(hive, /cfg\.hiveMaxChecksPerNetworkPerMinute/);
+  assert.match(hive, /cfg\.hiveMaxObservesPerNetworkPerMinute/);
+});
+
+test('runtime database cutover keeps migration authority out of runtime and re-baselines direct grants', () => {
+  const migrationRunner = read('scripts','migrate.mjs');
+  assert.match(migrationRunner, /process\.env\.DATABASE_ADMIN_URL/);
+  assert.doesNotMatch(migrationRunner, /process\.env\.DATABASE_URL/);
+
+  const migration = read('migrations','0006_runtime_db_and_admission.sql');
+  assert.match(migration, /CREATE ROLE seenrelay_runtime\s+NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS/);
+  assert.match(migration, /rolcanlogin OR rolsuper OR rolcreatedb OR rolcreaterole OR rolinherit OR rolreplication OR rolbypassrls/);
+  assert.match(migration, /RAISE EXCEPTION 'seenrelay_runtime exists with broader role attributes than allowed'/);
+  assert.doesNotMatch(migration, /ALTER ROLE seenrelay_runtime/);
+  assert.match(migration, /REVOKE ALL PRIVILEGES ON DATABASE %I FROM seenrelay_runtime/);
+  assert.match(migration, /REVOKE ALL PRIVILEGES ON SCHEMA public FROM seenrelay_runtime/);
+  assert.match(migration, /REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM seenrelay_runtime/);
+  assert.match(migration, /REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM seenrelay_runtime/);
+
+  const guide = read('docs','RUNTIME_DATABASE_ROLE.md');
+  assert.match(guide, /CREATE ROLE seenrelay_app[\s\S]*LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT/);
+  assert.match(guide, /GRANT seenrelay_runtime TO seenrelay_app\s+WITH ADMIN FALSE, INHERIT TRUE, SET FALSE/);
+  assert.match(guide, /must not own application tables, schemas, functions, or migrations/);
+  assert.match(guide, /never deploy `DATABASE_ADMIN_URL`/);
+});
