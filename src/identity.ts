@@ -120,6 +120,16 @@ export async function deriveAdmissionNetworkKey(request: Request): Promise<strin
   return `admission-network:${await privacyScopedHash('lease-admission', networkHint)}`;
 }
 
+/**
+ * Coarse aggregate operation bucket spanning all leases behind the same observed network hint. CHECK
+ * and OBSERVE use separate domain-separated keys. This is a cost/abuse ceiling only; it must never be
+ * treated as agent identity, observer independence, or truth confidence.
+ */
+export async function deriveOperationNetworkKey(request: Request, operation: 'check' | 'observe'): Promise<string> {
+  const networkHint = forwardedNetworkHint(request);
+  return `operation-network:${operation}:${await privacyScopedHash(`operation-admission-${operation}`, networkHint)}`;
+}
+
 export async function deriveObserverIdentity(
   request: Request | undefined,
   body: ObserveRequest,
