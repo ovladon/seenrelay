@@ -6,17 +6,18 @@ function sql() {
   return neon(url);
 }
 
-export interface HiveNewLeaseAdmission { allowed: boolean; retry_after_seconds: number; }
+export interface HiveNetworkAdmission { allowed: boolean; retry_after_seconds: number; }
 
 /**
- * Atomically consumes one NEW-lease admission from a coarse minute bucket. Existing leases do not
- * call this function. The key is a privacy-scoped network bucket, not an actor identity.
+ * Atomically consumes one slot from a coarse fixed-minute network budget. The caller supplies a
+ * domain-separated, privacy-scoped key (new lease, CHECK, or OBSERVE). This is an abuse ceiling,
+ * not actor identity, observer provenance, reward independence, or a truth-confidence signal.
  */
-export async function consumeHiveNewLeaseAdmission(
-  admissionKey: string,
+export async function consumeHiveNetworkBudget(
+  budgetKey: string,
   nowIso: string,
-  maxAdmissionsPerMinute: number
-): Promise<HiveNewLeaseAdmission> {
+  maxPerMinute: number
+): Promise<HiveNetworkAdmission> {
   const rows = await sql().query(`WITH bucket AS (
       SELECT date_trunc('minute', $2::timestamptz) AS window_start
     ), admitted AS (
@@ -31,6 +32,17 @@ export async function consumeHiveNewLeaseAdmission(
     SELECT
       EXISTS(SELECT 1 FROM admitted) AS allowed,
       GREATEST(1, CEIL(EXTRACT(EPOCH FROM ((SELECT window_start FROM bucket) + interval '1 minute' - $2::timestamptz))))::int AS retry_after_seconds`,
-    [admissionKey, nowIso, maxAdmissionsPerMinute]) as HiveNewLeaseAdmission[];
+    [budgetKey, nowIso, maxPerMinute]) as HiveNetworkAdmission[];
   return rows[0] || { allowed: false, retry_after_seconds: 60 };
+}
+
+/**
+ * Separate flood brake for creation of NEW leases. Existing leases do not call this wrapper.
+ */
+export async function consumeHiveNewLeaseAdmission(
+  admissionKey: string,
+  nowIso: string,
+  maxAdmissionsPerMinute: number
+): Promise<HiveNetworkAdmission> {
+  return consumeHiveNetworkBudget(admissionKey, nowIso, maxAdmissionsPerMinute);
 }
