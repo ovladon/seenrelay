@@ -172,7 +172,7 @@ app.post('/v1/check', async (c) => {
     if (admission.reason === 'runtime_disabled') return c.json({ error: { code: 'SERVICE_CONTROLLED', detail: 'CHECK is temporarily disabled by the SeenRelay control plane.' }, hive: admission.state }, 503);
     if (admission.state.retry_after_seconds) c.header('retry-after', String(admission.state.retry_after_seconds));
     if (admission.reason === 'admission_limited') {
-      return c.json({ error: { code: 'HIVE_ADMISSION_LIMITED', detail: 'New free Hive leases from this network are temporarily limited. Reuse an existing lease or retry shortly.' }, hive: admission.state }, 429);
+      return c.json({ error: { code: 'HIVE_ADMISSION_LIMITED', detail: 'Hive operations from this network are temporarily limited. Retry shortly.' }, hive: admission.state }, 429);
     }
     c.header('x-seenrelay-lease', admission.token);
     return c.json({ error: { code: 'HIVE_RATE_LIMITED', detail: 'Free CHECK allowance is refilling.' }, hive: admission.state }, 429);
@@ -197,7 +197,7 @@ app.post('/v1/observe', async (c) => {
   if (!admission.allowed) {
     if (admission.reason === 'runtime_disabled') return c.json({ error: { code: 'SERVICE_CONTROLLED', detail: 'OBSERVE is temporarily disabled by the SeenRelay control plane.' }, hive: admission.state }, 503);
     if (admission.state.retry_after_seconds) c.header('retry-after', String(admission.state.retry_after_seconds));
-    return c.json({ error: { code: 'HIVE_ADMISSION_LIMITED', detail: 'New free Hive leases from this network are temporarily limited. Reuse an existing lease or retry shortly.' }, hive: admission.state }, 429);
+    return c.json({ error: { code: 'HIVE_ADMISSION_LIMITED', detail: 'Hive operations from this network are temporarily limited. Retry shortly.' }, hive: admission.state }, 429);
   }
   c.header('x-seenrelay-lease', admission.token);
   const result = await observeFact(request, body, admission.leaseId);
