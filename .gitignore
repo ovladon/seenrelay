@@ -6,3 +6,11 @@ node_modules/
 *.log
 coverage/
 dist/
+
+# Local recovery and private operational artifacts
+*[Rr]ecovery*[Cc]odes*
+*.secret
+*.secrets
+/private/
+/backup/
+/*.zip
