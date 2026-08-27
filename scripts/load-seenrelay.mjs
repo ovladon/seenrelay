@@ -28,9 +28,34 @@ const profiles = {
   ],
 };
 
+function parseStages(raw) {
+  const stages = raw.split(',').map((part) => {
+    const match = part.trim().match(/^(\d+)@(\d+)$/);
+    if (!match) throw new Error('SEENRELAY_LOAD_STAGES must look like 100@10,1000@50 (cases@concurrency).');
+    const cases = Number.parseInt(match[1], 10);
+    const concurrency = Number.parseInt(match[2], 10);
+    if (!Number.isSafeInteger(cases) || cases <= 0 || !Number.isSafeInteger(concurrency) || concurrency <= 0) {
+      throw new Error('SEENRELAY_LOAD_STAGES values must be positive integers.');
+    }
+    if (concurrency > cases) throw new Error('SEENRELAY_LOAD_STAGES concurrency cannot exceed cases in a stage.');
+    return { cases, concurrency };
+  });
+  if (stages.length === 0 || stages.length > 12) throw new Error('SEENRELAY_LOAD_STAGES must contain 1..12 stages.');
+  return stages;
+}
+
 const profileName = process.env.SEENRELAY_LOAD_PROFILE?.trim() || 'smoke';
-const selectedProfile = profiles[profileName];
-if (!selectedProfile) throw new Error(`Unknown SEENRELAY_LOAD_PROFILE=${profileName}. Use smoke, ramp, or scale.`);
+const customStagesRaw = process.env.SEENRELAY_LOAD_STAGES?.trim();
+const selectedProfile = customStagesRaw ? parseStages(customStagesRaw) : profiles[profileName];
+if (!selectedProfile) throw new Error(`Unknown SEENRELAY_LOAD_PROFILE=${profileName}. Use smoke, ramp, scale, or SEENRELAY_LOAD_STAGES.`);
+
+const networkMode = process.env.SEENRELAY_LOAD_NETWORK_MODE?.trim() || 'shared';
+if (!['shared', 'distributed'].includes(networkMode)) {
+  throw new Error('SEENRELAY_LOAD_NETWORK_MODE must be shared or distributed.');
+}
+if (isProduction && networkMode === 'distributed') {
+  throw new Error('Distributed network simulation is Preview-only; Production does not honor the test-network header.');
+}
 
 function parsePositiveInt(name, fallback) {
   const raw = process.env[name]?.trim();
@@ -69,10 +94,13 @@ const report = {
   started_at: new Date().toISOString(),
   target: baseUrl.origin,
   production_target: isProduction,
-  profile: profileName,
+  profile: customStagesRaw ? 'custom' : profileName,
+  network_mode: networkMode,
   configured_stages: selectedProfile,
+  maximum_operations_if_every_case_completes: selectedProfile.reduce((sum, stage) => sum + stage.cases * 3, 0),
   safety: {
     production_requires_explicit_opt_in: true,
+    distributed_network_simulation_preview_only: true,
     adoption_marker: 'seenrelay_internal_benchmark',
     timeout_ms: timeoutMs,
     p95_limit_ms: p95LimitMs,
@@ -112,7 +140,12 @@ async function requestJson(worker, endpoint, payload) {
     'x-seenrelay-client': `controlled-load-${runKey}-worker-${worker.id}`,
   });
   if (worker.lease) headers.set('x-seenrelay-lease', worker.lease);
-  if (!isProduction) headers.set('x-seenrelay-test-network', previewNetworkHint);
+  if (!isProduction) {
+    const networkHint = networkMode === 'distributed'
+      ? `${previewNetworkHint}-worker-${worker.id}`
+      : previewNetworkHint;
+    headers.set('x-seenrelay-test-network', networkHint);
+  }
 
   const started = performance.now();
   try {
