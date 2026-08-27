@@ -21,11 +21,19 @@ BEGIN
 END
 $$;
 
--- Reassert the grant role's defensive attributes on every migration run so an existing role cannot
--- retain broader role attributes from an earlier/manual creation. Membership into this role is
--- granted separately to the application LOGIN with INHERIT TRUE and SET FALSE.
-ALTER ROLE seenrelay_runtime
-  NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOREPLICATION NOBYPASSRLS;
+-- A pre-existing role is an operator/security boundary, not something a migration should silently
+-- broaden or rewrite. Fail closed if its defensive attributes do not match the intended grant role.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_roles
+    WHERE rolname = 'seenrelay_runtime'
+      AND (rolcanlogin OR rolsuper OR rolcreatedb OR rolcreaterole OR rolinherit OR rolreplication OR rolbypassrls)
+  ) THEN
+    RAISE EXCEPTION 'seenrelay_runtime exists with broader role attributes than allowed';
+  END IF;
+END
+$$;
 
 REVOKE CREATE ON SCHEMA public FROM seenrelay_runtime;
 DO $$
