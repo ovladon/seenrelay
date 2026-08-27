@@ -10,7 +10,7 @@ CREATE INDEX IF NOT EXISTS idx_hive_admission_windows_updated_at
   ON hive_admission_windows(updated_at);
 
 COMMENT ON TABLE hive_admission_windows IS
-  'Coarse per-network minute buckets for new-lease flood damping; not actor identity, observer provenance, or reward independence.';
+  'Coarse privacy-scoped network fixed-window counters for new-lease and aggregate CHECK/OBSERVE abuse ceilings; not actor identity, observer provenance, reward independence, or truth confidence.';
 
 DO $$
 BEGIN
