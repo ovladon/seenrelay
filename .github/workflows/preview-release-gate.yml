@@ -27,7 +27,7 @@ jobs:
   preview-release-gate:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 12
     env:
       BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.release_sha }}
@@ -55,39 +55,3 @@ jobs:
         env:
           PREVIEW_URL: ${{ github.event_name == 'pull_request' && steps.preview.outputs.url || inputs.preview_url }}
         run: bash scripts/run-preview-release-gate.sh
-
-      - name: Compare shared and distributed scale on isolated Preview
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'perf/controlled-load-harness'
-        shell: bash
-        env:
-          SEENRELAY_LOAD_BASE_URL: ${{ steps.preview.outputs.url }}
-          SEENRELAY_LOAD_PROFILE: scale
-        run: |
-          set -euo pipefail
-          cat >/tmp/seenrelay-vercel-bypass.mjs <<'NODE'
-          const originalFetch = globalThis.fetch;
-          const secret = process.env.BYPASS_SECRET?.trim();
-          if (!secret) throw new Error('BYPASS_SECRET is required for protected Preview load tests');
-          globalThis.fetch = (input, init = {}) => {
-            const headers = new Headers(init.headers || {});
-            headers.set('x-vercel-protection-bypass', secret);
-            return originalFetch(input, { ...init, headers });
-          };
-          NODE
-
-          for mode in shared distributed; do
-            export SEENRELAY_LOAD_NETWORK_MODE="$mode"
-            export SEENRELAY_LOAD_RUN_KEY="gha-topology-${mode}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-            export SEENRELAY_LOAD_OUTPUT="seenrelay-load-scale-${mode}.json"
-            echo "Running controlled scale topology: $mode"
-            node --import /tmp/seenrelay-vercel-bypass.mjs scripts/load-seenrelay.mjs
-          done
-
-      - name: Upload controlled topology reports
-        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'perf/controlled-load-harness'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: seenrelay-load-topology-${{ github.run_id }}-${{ github.run_attempt }}
-          path: seenrelay-load-scale-*.json
-          if-no-files-found: warn
-          retention-days: 7
