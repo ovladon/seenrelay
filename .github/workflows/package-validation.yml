@@ -46,9 +46,28 @@ jobs:
           node --input-type=module - <<'NODE'
           import { SeenRelayClient } from 'seenrelay';
           import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
+          import { SeenRelayZeroState, freshResult } from 'seenrelay/zero-state';
+          import { SeenRelayAuto, exactToolAdapter } from 'seenrelay/auto';
+          import { protectMcpClient } from 'seenrelay/mcp-auto';
+          import { firecrawlScrapePolicy } from 'seenrelay/firecrawl';
+
           const client = new SeenRelayClient({ fetchImpl: async () => { throw new Error('not called during import test'); } });
           const proof = new SeenRelayShadowProof(client);
-          if (typeof client.protectValidation !== 'function' || !proof) process.exit(1);
+          const edge = new SeenRelayZeroState();
+          const adapter = exactToolAdapter({ toolNames: ['example.read'] });
+          const auto = new SeenRelayAuto({ adapters: [adapter] });
+          const protectedClient = protectMcpClient({ async callTool(params) { return params; } }, { tools: {} });
+          const providerAdapter = firecrawlScrapePolicy({ publicEvidence: false });
+
+          if (
+            typeof client.protectValidation !== 'function' ||
+            !proof ||
+            typeof edge.guard !== 'function' ||
+            typeof freshResult !== 'function' ||
+            typeof auto.wrap !== 'function' ||
+            typeof protectedClient.callTool !== 'function' ||
+            !providerAdapter
+          ) process.exit(1);
           NODE
       - name: Upload npm validation artifact
         uses: actions/upload-artifact@v4
