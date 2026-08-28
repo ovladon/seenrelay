@@ -11,10 +11,19 @@ export interface ValidationContext<T = unknown> {
   priorSourceValidator?: SourceValidator;
 }
 
+export interface FreshObservationMetadata {
+  /** Source-observation time. Older timestamps reduce the remaining freshness window; future values are clamped to local now. */
+  observedAt?: string | number | Date;
+  /** False when the returned value was merely reused from an intermediary cache and must not be re-labeled as a new OBSERVE. Defaults to true. */
+  independentlyObtained?: boolean;
+}
+
 export interface FreshResult<T> {
   readonly __seenrelay_zero_state_result_v1: 'fresh';
   readonly value: T;
   readonly sourceValidator?: SourceValidator;
+  readonly observedAtMs?: number;
+  readonly independentlyObtained: boolean;
 }
 
 export interface NotModifiedResult {
@@ -22,8 +31,14 @@ export interface NotModifiedResult {
   readonly sourceValidator?: SourceValidator;
 }
 
-export declare function freshResult<T>(value: T, validator?: SourceValidator): FreshResult<T>;
+export interface UncacheableResult<T> {
+  readonly __seenrelay_zero_state_result_v1: 'uncacheable';
+  readonly value: T;
+}
+
+export declare function freshResult<T>(value: T, validator?: SourceValidator, observation?: FreshObservationMetadata): FreshResult<T>;
 export declare function notModifiedResult(validator?: SourceValidator): NotModifiedResult;
+export declare function uncacheableResult<T>(value: T): UncacheableResult<T>;
 export declare function sourceValidatorFromResponse(response: { headers?: { get(name: string): string | null } }): SourceValidator | undefined;
 export declare function sha256JsonFingerprint(value: unknown): string;
 
@@ -60,7 +75,7 @@ export interface ZeroStateGuardOptions<T = unknown, TEvidence = unknown> {
   coordinate: unknown;
   maxAgeMs?: number;
   privateMaxAgeMs?: number;
-  validate(context: ValidationContext<T>): Promise<T | FreshResult<T> | NotModifiedResult> | T | FreshResult<T> | NotModifiedResult;
+  validate(context: ValidationContext<T>): Promise<T | FreshResult<T> | NotModifiedResult | UncacheableResult<T>> | T | FreshResult<T> | NotModifiedResult | UncacheableResult<T>;
   relay?: ZeroStateRelayOptions<T, TEvidence>;
 }
 
@@ -95,6 +110,7 @@ export interface ZeroStateTelemetry {
   sourceConditionalAttempts: number;
   sourceNotModifiedHits: number;
   validationCalls: number;
+  validatedUncacheable: number;
   relayCheckCalls: number;
   relayCheckReuseHits: number;
   relayEvidenceFailures: number;
@@ -102,6 +118,7 @@ export interface ZeroStateTelemetry {
   relayObserveScheduleFailures: number;
   relayObserveBlocking: number;
   relayObserveSkippedNoScheduler: number;
+  relayObserveSkippedNotIndependent: number;
   relayObserveFailures: number;
   cacheEntries: number;
   inflightEntries: number;
