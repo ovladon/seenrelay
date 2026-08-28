@@ -25,6 +25,10 @@
     "./mcp-auto": {
       "types": "./dist/mcp-auto.d.ts",
       "import": "./dist/mcp-auto.js"
+    },
+    "./firecrawl": {
+      "types": "./dist/firecrawl.d.ts",
+      "import": "./dist/firecrawl.js"
     }
   },
   "files": [
@@ -36,7 +40,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ovladon/seenrelay.git",
+    "url": "https://github.com/ovladon/seenrelay.git",
     "directory": "clients/typescript"
   },
   "homepage": "https://seenrelay.com/clients",
