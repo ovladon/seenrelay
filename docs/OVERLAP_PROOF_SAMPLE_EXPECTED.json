@@ -1,0 +1,15 @@
+{
+  "mode": "overlap-proof",
+  "classification": "opportunity-only-not-safe-reuse",
+  "input_events": 3,
+  "unique_fact_keys": 1,
+  "default_max_age_seconds": 3600,
+  "overlap_events": 2,
+  "no_overlap_within_window": 1,
+  "overlap_rate": 0.6666666666666666,
+  "incremental_overlap": {
+    "same_process": { "events": 0, "rate": 0 },
+    "same_fleet_cross_process": { "events": 1, "rate": 0.3333333333333333 },
+    "cross_fleet": { "events": 1, "rate": 0.3333333333333333 }
+  }
+}
