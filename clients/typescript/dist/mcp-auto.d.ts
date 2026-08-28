@@ -1,8 +1,10 @@
 import type { SeenRelayZeroState, ZeroStateOptions } from './zero-state.js';
 
+export type McpFreshnessWindow = number | ((params: any, rest: unknown[]) => number | undefined);
+
 export interface McpToolPolicy {
-  maxAgeMs?: number;
-  privateMaxAgeMs?: number;
+  maxAgeMs?: McpFreshnessWindow;
+  privateMaxAgeMs?: McpFreshnessWindow;
   relay?: unknown | ((params: any, rest: unknown[]) => unknown);
   coordinate?: (params: any, rest: unknown[]) => unknown;
   eligible?: (params: any, rest: unknown[]) => boolean;
