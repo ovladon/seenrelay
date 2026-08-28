@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
 
-test('public and machine-facing guidance targets repeated expensive fleet validation without universal savings claims', () => {
+test('public and machine-facing guidance targets repeated expensive validation without universal savings claims', () => {
   const economics = read('src', 'economics.ts');
   const publicSource = read('src', 'public.ts');
   const publicView = read('src', 'public-facts-view.ts');
@@ -16,8 +16,9 @@ test('public and machine-facing guidance targets repeated expensive fleet valida
   const mcp = read('src', 'mcp.ts');
   const facts = JSON.parse(read('public', 'product-facts.json'));
 
-  assert.match(publicSource, /Stop paying to revalidate the same fact/);
-  assert.match(publicSource, /paid search, scraping, browser\/extraction/);
+  assert.match(publicSource, /Avoid redundant expensive validation from the first install/);
+  assert.match(publicSource, /javascript_typescript_zero_state/);
+  assert.match(publicSource, /shared_check_default:\s*'off'/);
   assert.match(publicSource, /poor_fit/);
   assert.match(publicSource, /cheap_one_off_fetch/);
   assert.match(publicSource, /pricing_snapshots: publicProductFacts\.pricing_snapshots/);
@@ -52,9 +53,10 @@ test('public and machine-facing guidance targets repeated expensive fleet valida
   assert.match(economics, /Fixed-tier counterexample/);
   assert.match(economics, /Poor fit:/);
 
-  assert.match(quickstart, /Bind once\. One protected call/);
-  assert.match(adoption, /protectValidation/);
-  assert.match(adoption, /protect_validation/);
+  assert.match(quickstart, /MCP BIND-ONCE/);
+  assert.match(quickstart, /original validation remains the fallback/i);
+  assert.match(adoption, /provider-independent local-first validation layer/i);
+  assert.match(adoption, /Shared CHECK is off by default/i);
   assert.match(mcp, /paid web search, metered scraping, browser\/extraction/);
 
   for (const text of [economics, publicSource, publicView, quickstart, adoption, mcp]) {

@@ -6,31 +6,59 @@ Official MCP Registry identifier: `io.github.ovladon/seenrelay`
 
 SeenRelay exposes exactly two domain operations through MCP and REST: `check_fact` / CHECK and `observe_fact` / OBSERVE. Treat it as freshness infrastructure, not as a browser, search engine, fact checker, truth oracle, or shared general memory.
 
-The integration policy is simple:
+## Recommended integration order
 
-1. call CHECK before source-backed revalidation work that might be redundant;
-2. if the result is not reusable under your own policy, perform the validation you already intended to perform;
-3. call OBSERVE only after your agent independently obtained the result for its own task.
+For JavaScript / TypeScript 0.2.0, the preferred application path is local-first for explicitly eligible read-only operations:
 
-## Deterministic JavaScript and Python wrappers
+1. exact in-flight / explicit-TTL local reuse;
+2. optional encrypted caller-owned private L1 reuse;
+3. source-native ETag / Last-Modified confirmation when available;
+4. optional shared CHECK only when configured and useful;
+5. the application's existing validation as fallback;
+6. OBSERVE only after genuinely fresh independent validation.
 
-MCP is the standard discovery and tool interface. Some applications, however, need the SeenRelay preflight to execute deterministically whenever a selected validation path runs instead of depending on model tool-routing behavior.
+The hosted CHECK/OBSERVE protocol is unchanged. Python 0.2.0 and the classic JavaScript / TypeScript client remain shadow-first.
 
-SeenRelay therefore also ships vendorable, zero-third-party-runtime-dependency reference wrappers:
+## JavaScript / TypeScript Zero-State
 
-- JavaScript / TypeScript runtime: [`../clients/typescript/dist/seenrelay.js`](../clients/typescript/dist/seenrelay.js)
-- Python: [`../clients/python/seenrelay.py`](../clients/python/seenrelay.py)
-- wrapper design and usage: [`../clients/README.md`](../clients/README.md)
+```js
+import { SeenRelayZeroState } from 'seenrelay/zero-state';
 
-The wrappers do not add a protocol operation or a local fact cache. Their default is shadow mode:
+const edge = new SeenRelayZeroState({ localMaxAgeMs: 30_000 });
 
-1. CHECK;
-2. unless the caller explicitly supplied a reuse policy that accepts the result, continue to the application's existing validation;
-3. pass only safe observer-supplied ETag / Last-Modified conditional hints to that validation when available;
-4. OBSERVE the independently obtained result best-effort;
-5. if SeenRelay times out, returns 429, returns malformed output, or is unavailable, fail open into the original validation path.
+const result = await edge.guard({
+  coordinate: {
+    tool: 'catalog.read',
+    arguments: { id: 42 }
+  },
+  validate: async () => expensiveRead()
+});
+```
 
-Application validation failures still propagate; fail-open applies to the relay, not to the application's own source validation.
+Zero-State does not place a shared CHECK on the hot path by default. Completed-result TTL defaults to `0`, so arbitrary freshness is not invented.
+
+### MCP bind-once interception
+
+```js
+import { protectMcpClient } from 'seenrelay/mcp-auto';
+
+const client = protectMcpClient(rawMcpClient, {
+  serverKey: 'catalog-server',
+  tools: {
+    'catalog.read': { maxAgeMs: 30_000 }
+  }
+});
+```
+
+Only explicitly allowlisted tool names are eligible. Unlisted tools pass through unchanged. The generic core does not infer read-only safety from a tool name, description, or untrusted annotation.
+
+### Generic dispatcher
+
+`seenrelay/auto` provides provider-independent adapter-based dispatch around an application's existing tool runner. Provider-specific adapters are optional integrations and cannot become runtime dependencies of SeenRelay Core.
+
+## Classic JavaScript and Python wrappers
+
+The classic wrappers remain available when an application specifically wants deterministic shared CHECK measurement/reuse around a selected fact validation.
 
 ### JavaScript / TypeScript
 
@@ -38,7 +66,7 @@ Application validation failures still propagate; fail-open applies to the relay,
 import {
   SeenRelayClient,
   reuseKnownOnSameObserved
-} from './clients/typescript/dist/seenrelay.js';
+} from 'seenrelay';
 
 const relay = new SeenRelayClient();
 
@@ -49,16 +77,7 @@ const value = await relay.guard({
 });
 ```
 
-The example above remains shadow mode because no reuse policy was supplied. If a narrowly defined application policy permits reusing its already-known value when CHECK returns `SAME_OBSERVED`, it can opt in explicitly:
-
-```js
-const value = await relay.guard({
-  fact,
-  knownValue,
-  validate: ({ conditionalHeaders }) => existingValidation(conditionalHeaders),
-  reuse: reuseKnownOnSameObserved
-});
-```
+The example above remains shadow mode because no reuse policy was supplied. Explicit bounded reuse remains caller policy.
 
 ### Python
 
@@ -74,20 +93,15 @@ value = relay.guard(
 )
 ```
 
-Explicit bounded reuse is opt-in:
+Python behavior remains shadow-first in 0.2.0. JavaScript / TypeScript Zero-State parity is not claimed for Python in this release.
 
-```python
-value = relay.guard(
-    fact=fact,
-    known_value=known_value,
-    validate=lambda context: existing_validation(context.conditional_headers),
-    reuse=reuse_known_on_same_observed,
-)
-```
+Relay-side timeout, 429, malformed response or outage fails open into the original validation path. Application validation failures still propagate.
 
-The wrappers also expose in-process telemetry for CHECK network requests, coalesced simultaneous checks, validations, reuse hits, OBSERVE attempts, failures, and request latency. They do not upload that telemetry. Cost estimation uses only caller-supplied cost units; SeenRelay does not invent provider pricing or count unmeasured conditional-request savings.
+## Source-native and private reuse
 
-Use this path around work that is materially more expensive than the SeenRelay preflight, such as browser rendering, proxies/scraping, paid APIs, extraction, LLM parsing, rate-limited sources, or multi-step validation. It is a poor fit for a one-off trivial request with little chance of repeated work.
+For ordinary HTTP reads, ETag / Last-Modified confirmation is preferable to guessing freshness. A `304 Not Modified` response confirms the retained result at the source.
+
+JavaScript / TypeScript Zero-State can also use a caller-supplied private store and AES-256-GCM codec helper. The caller owns its key, storage and namespace. Private values are not automatically sent to the public relay.
 
 ## Claude Code
 
@@ -98,7 +112,7 @@ claude mcp add --transport http seenrelay https://seenrelay.com/mcp
 claude mcp list
 ```
 
-Then ask Claude Code to use SeenRelay before repeating a source-backed validation. Keep your existing validation policy in place during the first pilot.
+Use MCP when model/tool routing is appropriate. MCP exposes the same CHECK and OBSERVE operations; it does not automatically apply the client-side Zero-State optimization to arbitrary third-party tools.
 
 Official reference: <https://docs.anthropic.com/en/docs/claude-code/mcp>
 
@@ -107,16 +121,6 @@ Official reference: <https://docs.anthropic.com/en/docs/claude-code/mcp>
 Cursor supports remote Streamable HTTP MCP servers in `.cursor/mcp.json` for a project or `~/.cursor/mcp.json` globally.
 
 **One-click install:** [Add SeenRelay to Cursor](https://cursor.com/install-mcp?name=seenrelay&config=eyJ1cmwiOiJodHRwczovL3NlZW5yZWxheS5jb20vbWNwIn0%3D)
-
-The deeplink encodes only this remote configuration:
-
-```json
-{
-  "url": "https://seenrelay.com/mcp"
-}
-```
-
-Manual project/global configuration remains:
 
 ```json
 {
@@ -128,7 +132,7 @@ Manual project/global configuration remains:
 }
 ```
 
-Cursor can then expose the SeenRelay tools to Agent when relevant. Tool approval and enterprise allowlists remain controlled by Cursor and your organization.
+Cursor tool approval and enterprise allowlists remain controlled by Cursor and your organization.
 
 Official references:
 
@@ -136,8 +140,6 @@ Official references:
 - <https://cursor.com/docs/mcp/install-links>
 
 ## VS Code / GitHub Copilot
-
-VS Code supports remote HTTP MCP servers in `mcp.json`.
 
 ```json
 {
@@ -150,9 +152,7 @@ VS Code supports remote HTTP MCP servers in `mcp.json`.
 }
 ```
 
-For workspace configuration, use `.vscode/mcp.json`. VS Code also supports user-profile configuration and centrally managed enterprise policies.
-
-On macOS/Linux shells, VS Code's documented `--add-mcp` CLI flow can add the same remote server directly:
+For workspace configuration, use `.vscode/mcp.json`.
 
 ```bash
 code --add-mcp '{"name":"seenrelay","type":"http","url":"https://seenrelay.com/mcp"}'
@@ -165,19 +165,17 @@ Official references:
 
 ## ChatGPT custom MCP apps
 
-Where the user's plan and workspace policy permit custom remote MCP apps, configure a custom app with:
+Where the user's plan and workspace policy permit custom remote MCP apps, configure:
 
 ```text
 MCP endpoint: https://seenrelay.com/mcp
 ```
 
-Use the ChatGPT Apps creation flow, provide the remote MCP endpoint, scan the tools, and review the resulting permissions before enabling the app. Full MCP availability and administrative controls vary by plan and can change; consult the current OpenAI documentation rather than assuming universal availability.
+Review the resulting permissions before enabling the app. Full MCP availability and administrative controls vary by plan and can change.
 
 Official reference: <https://help.openai.com/en/articles/12584461-developer-mode-and-full-mcp-connectors-in-chatgpt>
 
 ## REST clients and agent frameworks
-
-Clients that do not use MCP and do not use a reference wrapper can integrate directly through the stable REST contract:
 
 - OpenAPI: `https://seenrelay.com/openapi.json`
 - CHECK: `POST https://seenrelay.com/v1/check`
@@ -185,18 +183,12 @@ Clients that do not use MCP and do not use a reference wrapper can integrate dir
 
 See [`QUICKSTART.md`](QUICKSTART.md) for concrete requests and [`PROTOCOL.md`](PROTOCOL.md) for deterministic fact identity.
 
-## Recommended first deployment
+## Recommended rollout
 
-Do not immediately allow SeenRelay to suppress existing validation. Start in **shadow mode**:
+For JavaScript / TypeScript Zero-State, begin with only explicitly eligible read-only operations and a TTL of `0` unless the caller/source already supplies a defensible freshness window. Measure local/private/source-native savings before adding shared CHECK.
 
-- call CHECK;
-- record the result;
-- still perform the existing validation;
-- OBSERVE the independently obtained result;
-- measure potential avoided work, latency and cost.
-
-Only enable bounded reuse after the measured results and your risk policy justify it. The bounded sequence is documented in [`QUICKSTART.md`](QUICKSTART.md).
+For the classic shared-evidence path, start in **shadow mode**: keep the original validation, measure what CHECK would have saved, and enable bounded reuse only after the consuming application's own results and risk policy justify it.
 
 ## Security note
 
-Connecting any MCP server expands an agent's tool surface. Vendoring a client wrapper adds application code to the validation path. Review the server, endpoint, wrapper source, permissions and semantics before enabling either route. SeenRelay's public source is available in this repository, and its production surface is exercised by CI plus an isolated Preview Release Gate before promotion.
+Connecting any MCP server expands an agent's tool surface. Wrapping application validation adds code to the call path. Review endpoint, source, permissions and semantics before enabling either route. SeenRelay's public source is available in this repository, and Production changes are exercised by CI plus an isolated Preview Release Gate before promotion.

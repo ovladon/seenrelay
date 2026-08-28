@@ -8,22 +8,25 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, '..');
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
 
-test('public guidance distinguishes deterministic wrappers from MCP tool routing', () => {
+test('public guidance distinguishes local-first application placement from remote MCP routing', () => {
   const publicSource = read('src', 'public.ts');
   const readme = read('README.md');
   const clients = read('src', 'adoption.ts');
   const quickstart = read('src', 'quickstart.ts');
 
-  assert.match(publicSource, /zero-dependency JavaScript\/TypeScript or Python client/i);
-  assert.match(publicSource, /Deterministic in application code\. MCP when tool routing is appropriate\./);
+  assert.match(publicSource, /javascript_typescript_zero_state/);
+  assert.match(publicSource, /shared_check_default:\s*'off'/);
   assert.match(publicSource, /integration_paths/);
-  assert.match(publicSource, /Relay-side failure fails open/);
+  assert.match(publicSource, /fails open into the application's existing validation path/i);
 
-  assert.match(readme, /recommended path when application code must guarantee that CHECK runs/i);
-  assert.match(readme, /MCP remains fully supported/i);
-  assert.match(clients, /Do not depend on a model remembering to call MCP/);
-  assert.match(quickstart, /MCP remains the standard discovery interface/);
-  assert.match(quickstart, /Bind once\. One protected call/);
+  assert.match(readme, /JavaScript \/ TypeScript Zero-State/i);
+  assert.match(readme, /provider-independent/i);
+  assert.match(readme, /Classic shadow-first path/i);
+  assert.match(clients, /seenrelay\/mcp-auto/);
+  assert.match(clients, /MCP remains the standard remote discovery and tool interface/);
+  assert.match(quickstart, /MCP remains the standard discovery and model\/tool-routing interface/);
+  assert.match(quickstart, /MCP BIND-ONCE/);
+  assert.match(quickstart, /Shared SeenRelay CHECK is off by default/);
 
   for (const text of [publicSource, readme, clients, quickstart]) {
     assert.match(text, /CHECK/);

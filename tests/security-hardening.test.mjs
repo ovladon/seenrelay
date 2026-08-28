@@ -67,7 +67,7 @@ test('all admin POST routes are transport-bounded before handlers run', () => {
 test('trust surface is discoverable to humans and coding agents', () => {
   const adoption = read('src','adoption.ts');
   assert.match(adoption, /const urls = \[.*'\/trust'/);
-  assert.match(adoption, /Trust \/ verification posture: \${origin}\/trust/);
+  assert.match(adoption, /- Trust: \${origin}\/trust/);
 });
 
 test('aggregate network abuse ceiling is atomic, separate by operation, and precedes lease lookup', () => {

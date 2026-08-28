@@ -1,39 +1,42 @@
 # SeenRelay
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.1.0 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.0 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
-**A cooperative freshness cache that reduces redundant validation spend across AI-agent fleets.**
+**Local-first freshness optimization with optional shared evidence for AI-agent fleets.**
 
-Think of SeenRelay as a shared cache for **freshness evidence rather than content**. Put a cheap CHECK before repeated paid search, scraping, browser/extraction, rate-limited API or other expensive fact validation. When recent matching evidence meets caller policy, a later run or agent can avoid paying for the same validation again. If not, the existing validation runs normally and OBSERVE records the independent result for later callers.
+SeenRelay reduces redundant source-backed validation without requiring a populated public network. JavaScript/TypeScript 0.2.0 can reuse safe read-only work locally or privately, use source-native validators such as ETag / Last-Modified, and consult shared SeenRelay evidence only when it can add value. When a caller independently validates a source anyway, OBSERVE can contribute freshness evidence for later callers.
 
-> CHECK before repeating validation work. OBSERVE what you independently found while doing work you already needed to do.
+> Reuse locally first. CHECK shared evidence when useful. OBSERVE only what you independently validated.
 
-SeenRelay has exactly two domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
+SeenRelay still has exactly two domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
 
-For application workflows where `CHECK` must run whenever a selected validation path executes, use the deterministic JavaScript/TypeScript or Python wrapper. MCP remains the standard discovery and model/tool-routing interface. Both paths expose the same two SeenRelay operations; the wrapper changes execution placement, not protocol semantics.
+The hosted service, REST contract and MCP surface are unchanged by client 0.2.0. The new local-first path is provider-independent; provider-specific adapters are optional integrations, not dependencies of SeenRelay Core.
 
 ## Why connect now
 
-SeenRelay remains useful before broad network coverage exists:
+SeenRelay can provide value even when the shared network has no observation for your fact:
 
-- with no prior observation, `CHECK` returns `UNKNOWN` and your existing workflow continues;
-- when your agent validates the source anyway, `OBSERVE` can make that result reusable for later callers;
-- later runs in the same integration or fleet can benefit from observations produced by their own normal work;
-- when an observation carries an ETag or Last-Modified validator, CHECK can return it as an explicitly unverified conditional-request hint for cheaper source confirmation;
-- external observations add coverage as the network grows, but they are not required for the integration to function.
+- simultaneous identical eligible calls can be coalesced in-process;
+- completed read-only results can be reused only inside an explicit caller-defined freshness window;
+- optional encrypted caller-owned L1 storage can reuse values across workers or restarts;
+- ETag / Last-Modified can support source-native conditional confirmation without a shared CHECK;
+- shared CHECK is optional in Zero-State and is not placed on the hot path merely because SeenRelay is installed;
+- after a genuinely fresh independent validation, OBSERVE can add evidence that may help later callers.
+
+Python 0.2.0 remains shadow-first. The classic JavaScript/TypeScript `SeenRelayClient` and `SeenRelayShadowProof` APIs also remain available for conservative CHECK-first measurement.
 
 Access is **currently free** and requires no account or API key.
 
 ## Start here
 
 - Public install: `npm install seenrelay` or `pip install seenrelay`
-- Fleet economics and concrete cost examples: `https://seenrelay.com/economics`
-- Recommended deterministic application integration: [`clients/README.md`](clients/README.md)
-- Measure your own workload before enabling reuse: [`docs/ECONOMICS_LAB.md`](docs/ECONOMICS_LAB.md)
+- JavaScript / TypeScript Zero-State: [`clients/typescript/README.md`](clients/typescript/README.md)
+- Fleet economics and measured examples: `https://seenrelay.com/economics`
+- Client overview: [`clients/README.md`](clients/README.md)
 - Integration choices and MCP setup: [`docs/CLIENTS.md`](docs/CLIENTS.md)
 - Quickstart: [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
 - Protocol contract: [`docs/PROTOCOL.md`](docs/PROTOCOL.md)
@@ -47,33 +50,52 @@ Access is **currently free** and requires no account or API key.
 
 ## How it works
 
-1. An agent is about to validate a structured source-backed fact.
-2. It sends `CHECK` with the fact identity and the value it already knows.
-3. SeenRelay returns recent observation status for that exact fact.
-4. If policy still requires validation, the agent performs its normal source check.
-5. It sends `OBSERVE` with the independently obtained result so later callers can reuse the freshness evidence.
+For eligible JavaScript/TypeScript Zero-State calls, the preferred order is:
 
-Possible statuses are `SAME_OBSERVED`, `CHANGED_OBSERVED`, `CONTESTED`, `STALE`, and `UNKNOWN`.
+1. exact in-process reuse / coalescing when safe;
+2. optional caller-owned private reuse;
+3. source-native conditional confirmation when available;
+4. optional shared SeenRelay CHECK when configured and useful;
+5. the application's original validation as fallback;
+6. OBSERVE only after a fresh independent validation that is eligible for contribution.
+
+For direct REST/MCP or the classic wrapper, CHECK and OBSERVE remain available exactly as before.
+
+Possible CHECK statuses are `SAME_OBSERVED`, `CHANGED_OBSERVED`, `CONTESTED`, `STALE`, and `UNKNOWN`.
 
 `SAME_OBSERVED` means the same value was recently observed for the same deterministic fact identity. It is not a truth verdict. The consuming agent decides whether the evidence is sufficient for its own policy.
 
-## Deterministic client path
-
-The reference wrappers are the recommended path when application code must guarantee that CHECK runs before selected validation work. They put SeenRelay directly around the validation the application already performs rather than relying on a model to select the MCP tool.
-
-MCP remains fully supported as the standard discovery and tool interface when model-selected tool routing is appropriate.
-
-The wrappers default to shadow mode, fail open on relay-side failure, retain no completed CHECK result cache, and require an explicit caller policy before reuse can suppress validation. They do not add a SeenRelay domain operation.
-
-The client wrappers are separately MIT licensed so applications can integrate them without changing the repository-root license that governs the hosted service implementation. Version `0.1.0` is publicly installable from both registries: `npm install seenrelay` and `pip install seenrelay`. Public-registry installation is verified in clean GitHub-hosted environments before the documentation claims availability.
-
-`SeenRelayShadowProof` measures the consuming application's own CHECK status distribution, validation time and relay latency while keeping every original validation. Potential direct savings count only measured `SAME_OBSERVED` cases, and conditional-request savings remain excluded until the application measures them separately. See [`docs/ECONOMICS_LAB.md`](docs/ECONOMICS_LAB.md).
-
-## One-line-per-revalidation binding
-
-For a fixed source-backed fact, bind SeenRelay around the existing validator once. Shadow mode remains the default:
+## JavaScript / TypeScript Zero-State
 
 ```js
+import { SeenRelayZeroState } from 'seenrelay/zero-state';
+
+const edge = new SeenRelayZeroState({
+  localMaxAgeMs: 30_000
+});
+
+const result = await edge.guard({
+  coordinate: {
+    tool: 'catalog.read',
+    arguments: { id: 42 }
+  },
+  validate: async () => expensiveRead()
+});
+
+console.log(result.value);
+```
+
+The default completed-result freshness window is `0`. SeenRelay does not invent a TTL for arbitrary calls. Mutation/destructive operations must not be suppressed; generic core does not infer read-only safety from tool names, descriptions or untrusted annotations.
+
+For MCP clients, `seenrelay/mcp-auto` can bind once around explicitly allowlisted `callTool()` operations. Unlisted tools pass through unchanged.
+
+## Classic shadow-first path
+
+The original JavaScript/TypeScript and Python APIs remain available. Without an explicit reuse policy they CHECK, keep the original validation, and OBSERVE the independently obtained result best-effort.
+
+```js
+const relay = new SeenRelayClient();
+
 const validatePrice = relay.protectValidation({
   fact,
   validate: ({ conditionalHeaders }) => existingValidation(conditionalHeaders)
@@ -82,13 +104,19 @@ const validatePrice = relay.protectValidation({
 const value = await validatePrice(knownValue);
 ```
 
-Python exposes the equivalent `protect_validation(...)`. Add an explicit reuse policy only after Shadow Proof shows that the workload's measured reuse rate is above its cost/latency break-even threshold and the application's risk policy permits that reuse.
+Python exposes the equivalent `protect_validation(...)` path. Use Shadow Proof when you specifically want to measure public CHECK evidence before enabling classic bounded reuse.
 
-## Validator-assisted revalidation
+## Source-native revalidation
 
-`OBSERVE` can include source metadata such as an `etag` or `last_modified` value obtained during the caller's normal validation. When the newest usable observation carries one of those validators, a fresh `CHECK` can return it together with `source_validator_assurance: observer_supplied_unverified` and a safe `conditional_request_hint`.
+Source-native validators are preferable to guessing freshness. When a retained response carries a safe ETag or Last-Modified validator, a later eligible validation can try `If-None-Match` or `If-Modified-Since`. A `304 Not Modified` response is confirmation from the source, not from SeenRelay.
 
-That hint is an optimization, not a truth claim. If the caller's policy still requires source confirmation, it can attempt `If-None-Match` or `If-Modified-Since` before invoking a more expensive browser, extraction, API, or model pipeline. A `304 Not Modified` response is confirmation from the source, not from SeenRelay.
+The classic CHECK/OBSERVE path can also carry observer-supplied ETag / Last-Modified metadata as an explicitly unverified conditional-request hint. The caller still decides whether source confirmation is required.
+
+## Optional private L1
+
+JavaScript/TypeScript Zero-State can use a caller-supplied private store plus codec for reuse across workers or restarts. SeenRelay provides an AES-256-GCM codec helper; the caller owns the key, storage and namespace.
+
+Private values are not sent to the public SeenRelay service merely because private L1 is enabled. Store or codec failure fails open into the application's normal validation path.
 
 ## Fact identity
 
@@ -105,6 +133,8 @@ See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for the complete contract.
 
 `OBSERVE` supports optional transport-independent `ed25519-v1` proof-of-possession. A valid proof establishes key possession, continuity, and payload integrity. It does not establish legal identity, independent real-world actor identity, or truth.
 
+An intermediary provider-cache hit is not re-labeled as a new independent OBSERVE merely because a different caller received it.
+
 ## Access and contribution
 
 SeenRelay issues signed ephemeral operational leases without account creation. `CHECK` and `OBSERVE` are currently free to use. Contribution credit is based on later qualifying reuse rather than raw submission volume.
@@ -117,7 +147,7 @@ The canonical domain is `seenrelay.com`.
 
 - Browser `Accept: text/html` at `/` receives the public landing page.
 - Generic/API requests to `/` receive the machine descriptor.
-- `/service.json` exposes the explicit machine descriptor, including the deterministic-wrapper and MCP integration paths.
+- `/service.json` exposes the explicit machine descriptor.
 - `/public-stats.json` exposes privacy-safe aggregate activity.
 - `/openapi.json` exposes the REST contract.
 - `/mcp` exposes MCP `2026-07-28`.
@@ -125,7 +155,9 @@ The canonical domain is `seenrelay.com`.
 
 ## Product boundary
 
-SeenRelay itself does not browse or search fact sources, perform on-demand verification, call an LLM to decide truth, or expose a shared general-agent memory. `UNKNOWN` simply means no sufficiently recent reusable observation is available.
+SeenRelay itself does not browse or search fact sources, perform on-demand external verification, call an LLM to decide truth, or expose a shared general-agent memory. `UNKNOWN` simply means no sufficiently recent reusable shared observation is available.
+
+Client-side adapters can use source-native validation or integrate with existing providers, but provider adapters are optional and cannot become dependencies of the provider-independent core.
 
 ## Architecture
 
@@ -134,14 +166,14 @@ SeenRelay itself does not browse or search fact sources, perform on-demand verif
 - Hono + TypeScript / Node 22
 - REST/OpenAPI
 - MCP `2026-07-28` through the official v2 server SDK
-- deterministic JavaScript/TypeScript and Python client wrappers
+- provider-independent JavaScript/TypeScript Zero-State client plus classic JavaScript/TypeScript and Python wrappers
 - authenticated human-only Control Room for runtime operations and incident controls
 
 A2A is monitored but is not advertised as an implemented product interface.
 
 ## Verification
 
-`npm run check` performs TypeScript checks, product guardrails, production dependency auditing, structural tests, and runtime tests. The dedicated Client Wrappers workflow executes the JavaScript and Python wrapper regressions. The Preview Release Gate additionally exercises REST, MCP, fact identity, security boundaries, runtime controls, and reuse accounting against the exact Preview deployment SHA before Production promotion.
+`npm run check` performs TypeScript checks, product guardrails, production dependency auditing, structural tests, and runtime tests. Package Validation clean-installs built npm/PyPI artifacts. The Preview Release Gate additionally exercises REST, MCP, fact identity, security boundaries, runtime controls, and reuse accounting against the exact Preview deployment SHA before Production promotion.
 
 Builds use the committed lockfile and `npm ci`.
 
