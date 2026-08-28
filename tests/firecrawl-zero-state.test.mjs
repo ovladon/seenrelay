@@ -46,7 +46,7 @@ test('first scrape observes fingerprint, local hit stays local, expired candidat
   const client = protectMcpClient(upstream, {
     serverKey: 'firecrawl-test',
     edge,
-    tools: { firecrawl_scrape: firecrawlScrapePolicy({ maxAgeMs: 100 }) }
+    tools: { firecrawl_scrape: firecrawlScrapePolicy({ maxAgeMs: 1000 }) }
   });
   const call = { name: 'firecrawl_scrape', arguments: { url: 'https://example.com/page', formats: ['markdown'] } };
 
@@ -63,14 +63,14 @@ test('first scrape observes fingerprint, local hit stays local, expired candidat
   assert.equal(relay.observes[0].fact.predicate, 'document.scrape.result.sha256');
   assert.match(relay.observes[0].fact.qualifiers.options_sha256, /^sha256:[0-9a-f]{64}$/);
 
-  now += 50;
+  now += 500;
   const local = await client.callTool(call);
   assert.deepEqual(local, first);
   assert.equal(upstreamCalls, 1);
   assert.equal(relay.checks.length, 0);
   assert.equal(tasks.length, 0, 'local reuse must not be re-labeled as a new observation');
 
-  now += 100;
+  now += 600;
   const shared = await client.callTool(call);
   assert.deepEqual(shared, first);
   assert.equal(upstreamCalls, 1, 'SAME_OBSERVED fingerprint should reuse retained local result');
@@ -79,6 +79,13 @@ test('first scrape observes fingerprint, local hit stays local, expired candidat
   assert.equal(relay.checks[0].maxAgeSeconds, 1);
   assert.equal(tasks.length, 0, 'relay reuse is not a new independent observation');
   assert.equal(client.seenRelayZeroState.getTelemetry().edge.relayCheckReuseHits, 1);
+});
+
+test('sub-second caller freshness never widens into a one-second L2 window', () => {
+  const policy = firecrawlScrapePolicy({ maxAgeMs: 999 });
+  const relay = policy.relay({ name: 'firecrawl_scrape', arguments: { url: 'https://example.com/a' } }, []);
+  assert.equal(relay.mode, 'off');
+  assert.equal(relay.maxAgeSeconds, undefined);
 });
 
 test('Firecrawl maxAge declared in the tool call becomes the local freshness window', async () => {
