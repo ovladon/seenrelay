@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { canonicalFactKey } from '../src/canonical.js';
 import type { FactDescriptor } from '../src/types.js';
@@ -26,10 +27,10 @@ interface NormalizedEvent {
   index: number;
 }
 
-interface PriorEvent {
-  timestampMs: number;
-  processId: string;
-  fleetId: string;
+interface FactOverlapState {
+  latest: { timestampMs: number; fleetId: string } | null;
+  lastByProcess: Map<string, number>;
+  lastByFleet: Map<string, number>;
 }
 
 const FORBIDDEN_RAW_FIELDS = new Set([
@@ -100,23 +101,33 @@ async function normalizeEvent(
   };
 }
 
-function classifyOverlap(event: NormalizedEvent, history: PriorEvent[]): OverlapClass | null {
+function processKey(event: Pick<NormalizedEvent, 'fleetId' | 'processId'>): string {
+  return JSON.stringify([event.fleetId, event.processId]);
+}
+
+function emptyFactState(): FactOverlapState {
+  return { latest: null, lastByProcess: new Map(), lastByFleet: new Map() };
+}
+
+function classifyOverlap(event: NormalizedEvent, state: FactOverlapState): OverlapClass | null {
   const cutoffMs = event.timestampMs - event.maxAgeSeconds * 1000;
-  let sameFleet = false;
-  let crossFleet = false;
 
-  for (let i = history.length - 1; i >= 0; i--) {
-    const prior = history[i]!;
-    if (prior.timestampMs < cutoffMs) break;
-    if (prior.timestampMs > event.timestampMs) continue;
-    if (prior.processId === event.processId && prior.fleetId === event.fleetId) return 'same_process';
-    if (prior.fleetId === event.fleetId) sameFleet = true;
-    else crossFleet = true;
-  }
+  const sameProcessAt = state.lastByProcess.get(processKey(event));
+  if (sameProcessAt !== undefined && sameProcessAt >= cutoffMs) return 'same_process';
 
-  if (sameFleet) return 'same_fleet_cross_process';
-  if (crossFleet) return 'cross_fleet';
+  const sameFleetAt = state.lastByFleet.get(event.fleetId);
+  if (sameFleetAt !== undefined && sameFleetAt >= cutoffMs) return 'same_fleet_cross_process';
+
+  const latest = state.latest;
+  if (latest && latest.fleetId !== event.fleetId && latest.timestampMs >= cutoffMs) return 'cross_fleet';
+
   return null;
+}
+
+function rememberEvent(event: NormalizedEvent, state: FactOverlapState): void {
+  state.lastByProcess.set(processKey(event), event.timestampMs);
+  state.lastByFleet.set(event.fleetId, event.timestampMs);
+  state.latest = { timestampMs: event.timestampMs, fleetId: event.fleetId };
 }
 
 function ratio(numerator: number, denominator: number): number {
@@ -131,7 +142,7 @@ export async function analyzeOverlapEvents(
   const events = await Promise.all(inputs.map((event, index) => normalizeEvent(event, index, defaultMaxAgeSeconds)));
   events.sort((a, b) => a.timestampMs - b.timestampMs || a.index - b.index);
 
-  const historyByFact = new Map<string, PriorEvent[]>();
+  const stateByFact = new Map<string, FactOverlapState>();
   const counts: Record<OverlapClass, number> = {
     same_process: 0,
     same_fleet_cross_process: 0,
@@ -152,8 +163,8 @@ export async function analyzeOverlapEvents(
   let eventsWithValidatorCost = 0;
 
   for (const event of events) {
-    const history = historyByFact.get(event.factKey) ?? [];
-    const overlap = classifyOverlap(event, history);
+    const state = stateByFact.get(event.factKey) ?? emptyFactState();
+    const overlap = classifyOverlap(event, state);
     if (overlap) {
       counts[overlap] += 1;
       if (event.validatorMs !== undefined) validatorMsExposed[overlap] += event.validatorMs;
@@ -163,8 +174,8 @@ export async function analyzeOverlapEvents(
     }
     if (event.validatorMs !== undefined) eventsWithValidatorMs += 1;
     if (event.validatorCost !== undefined) eventsWithValidatorCost += 1;
-    history.push({ timestampMs: event.timestampMs, processId: event.processId, fleetId: event.fleetId });
-    historyByFact.set(event.factKey, history);
+    rememberEvent(event, state);
+    stateByFact.set(event.factKey, state);
   }
 
   const totalEvents = events.length;
@@ -174,7 +185,7 @@ export async function analyzeOverlapEvents(
     mode: 'overlap-proof',
     classification: 'opportunity-only-not-safe-reuse',
     input_events: totalEvents,
-    unique_fact_keys: historyByFact.size,
+    unique_fact_keys: stateByFact.size,
     default_max_age_seconds: defaultMaxAgeSeconds,
     overlap_events: totalOverlap,
     no_overlap_within_window: noOverlapWithinWindow,
@@ -225,7 +236,7 @@ async function main(): Promise<void> {
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   main().catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;
