@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - 'clients/RELEASE_VERSION'
+      - 'clients/RELEASE_REQUEST'
 
 permissions:
   contents: read
@@ -217,7 +218,33 @@ jobs:
           name: seenrelay-pypi-release
           path: pypi-release
 
+      - name: Check whether this PyPI version already exists
+        id: pypi-version
+        shell: bash
+        run: |
+          set -euo pipefail
+          WHEEL="$(find "$GITHUB_WORKSPACE/pypi-release" -maxdepth 1 -type f -name 'seenrelay-*.whl' -print -quit)"
+          test -n "$WHEEL"
+          VERSION="$(python - "$WHEEL" <<'PY'
+          import sys
+          import zipfile
+          from email.parser import Parser
+
+          with zipfile.ZipFile(sys.argv[1]) as wheel:
+              metadata_name = next(name for name in wheel.namelist() if name.endswith('.dist-info/METADATA'))
+              metadata = Parser().parsestr(wheel.read(metadata_name).decode('utf-8'))
+          print(metadata['Version'])
+          PY
+          )"
+          test -n "$VERSION"
+          if curl --fail --silent --show-error "https://pypi.org/pypi/seenrelay/$VERSION/json" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish Python package with trusted publishing
+        if: steps.pypi-version.outputs.exists != 'true'
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
         with:
           packages-dir: pypi-release/
