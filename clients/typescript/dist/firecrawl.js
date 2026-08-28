@@ -77,8 +77,8 @@ function scrapeIsSafeToSuppress(params) {
 
 function relayWindowSeconds(params, fallbackMs) {
   const ms = declaredMaxAgeMs(params, fallbackMs);
-  if (ms <= 0) return 0;
-  return Math.max(1, Math.min(604800, Math.ceil(ms / 1000)));
+  if (ms < 1000) return 0;
+  return Math.min(604800, Math.floor(ms / 1000));
 }
 
 export function firecrawlScrapePolicy(options = {}) {
