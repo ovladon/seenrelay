@@ -73,6 +73,7 @@ function emptyTelemetry() {
     relayCheckCalls: 0,
     relayCheckReuseHits: 0,
     relayObserveScheduled: 0,
+    relayObserveScheduleFailures: 0,
     relayObserveBlocking: 0,
     relayObserveSkippedNoScheduler: 0,
     relayObserveFailures: 0
@@ -108,7 +109,7 @@ function safeObserveMetadata(validator) {
 
 export class SeenRelayZeroState {
   constructor(options = {}) {
-    this.localMaxAgeMs = nonNegativeFinite(options.localMaxAgeMs ?? 30_000, 'localMaxAgeMs');
+    this.localMaxAgeMs = nonNegativeFinite(options.localMaxAgeMs ?? 0, 'localMaxAgeMs');
     this.validatorRetentionMs = nonNegativeFinite(options.validatorRetentionMs ?? 86_400_000, 'validatorRetentionMs');
     this.maxEntries = positiveInteger(options.maxEntries ?? 1000, 'maxEntries');
     this.relayMode = options.relayMode ?? 'off';
@@ -152,6 +153,7 @@ export class SeenRelayZeroState {
   }
 
   #freshLocalEntry(key, maxAgeMs) {
+    if (maxAgeMs <= 0) return null;
     const entry = this.cache.get(key);
     if (!entry) return null;
     if (this.now() - entry.confirmedAtMs > maxAgeMs) return null;
@@ -216,8 +218,12 @@ export class SeenRelayZeroState {
       catch { this.metrics.relayObserveFailures += 1; }
     };
     if (this.scheduleObserve) {
-      this.scheduleObserve(task);
-      this.metrics.relayObserveScheduled += 1;
+      try {
+        this.scheduleObserve(task);
+        this.metrics.relayObserveScheduled += 1;
+      } catch {
+        this.metrics.relayObserveScheduleFailures += 1;
+      }
       return;
     }
     if (this.observeDelivery === 'blocking') {
@@ -228,21 +234,7 @@ export class SeenRelayZeroState {
     this.metrics.relayObserveSkippedNoScheduler += 1;
   }
 
-  async #guardOne(key, options) {
-    const maxAgeMs = nonNegativeFinite(options.maxAgeMs ?? this.localMaxAgeMs, 'maxAgeMs');
-    const local = this.#freshLocalEntry(key, maxAgeMs);
-    if (local) {
-      this.metrics.localFreshHits += 1;
-      return { value: local.value, path: 'local_reuse', relay: { check: null }, source: { conditional: false, notModified: false } };
-    }
-
-    const relayOutcome = await this.#maybeRelayReuse(options);
-    if (relayOutcome?.path === 'relay_reuse') {
-      return { value: relayOutcome.value, path: 'relay_reuse', relay: { check: relayOutcome.check }, source: { conditional: false, notModified: false } };
-    }
-
-    const retained = this.#retainedEntry(key);
-    const headers = conditionalHeaders(retained?.sourceValidator);
+  async #runValidator(key, options, retained, headers, relayCheck = null) {
     const hasConditional = Object.keys(headers).length > 0;
     if (hasConditional) this.metrics.sourceConditionalAttempts += 1;
     this.metrics.validationCalls += 1;
@@ -263,7 +255,7 @@ export class SeenRelayZeroState {
         value: clone.value,
         path: 'source_not_modified',
         validationMs: elapsedMs,
-        relay: { check: relayOutcome?.check ?? null },
+        relay: { check: relayCheck },
         source: { conditional: hasConditional, notModified: true }
       };
     }
@@ -274,9 +266,31 @@ export class SeenRelayZeroState {
       value: result.value,
       path: 'validated',
       validationMs: elapsedMs,
-      relay: { check: relayOutcome?.check ?? null },
+      relay: { check: relayCheck },
       source: { conditional: hasConditional, notModified: false }
     };
+  }
+
+  async #guardOne(key, options) {
+    const maxAgeMs = nonNegativeFinite(options.maxAgeMs ?? this.localMaxAgeMs, 'maxAgeMs');
+    const local = this.#freshLocalEntry(key, maxAgeMs);
+    if (local) {
+      this.metrics.localFreshHits += 1;
+      return { value: local.value, path: 'local_reuse', relay: { check: null }, source: { conditional: false, notModified: false } };
+    }
+
+    const retained = this.#retainedEntry(key);
+    const headers = conditionalHeaders(retained?.sourceValidator);
+    if (Object.keys(headers).length > 0) {
+      return this.#runValidator(key, options, retained, headers, null);
+    }
+
+    const relayOutcome = await this.#maybeRelayReuse(options);
+    if (relayOutcome?.path === 'relay_reuse') {
+      return { value: relayOutcome.value, path: 'relay_reuse', relay: { check: relayOutcome.check }, source: { conditional: false, notModified: false } };
+    }
+
+    return this.#runValidator(key, options, retained, Object.freeze({}), relayOutcome?.check ?? null);
   }
 }
 
