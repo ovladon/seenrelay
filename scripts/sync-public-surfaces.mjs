@@ -23,6 +23,20 @@ function parsePyprojectVersion(text) {
 function parseServiceVersion(text) {
   return text.match(/SERVICE_RELEASE\s*=\s*'([^']+)'/)?.[1] ?? null;
 }
+function parseStableSemver(value, name) {
+  if (typeof value !== 'string') fail(`${name} is missing`);
+  const match = value.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!match) fail(`${name} must be a stable X.Y.Z version, got ${value}`);
+  return match.slice(1).map(Number);
+}
+function compareStableSemver(a, b) {
+  const left = parseStableSemver(a, 'left version');
+  const right = parseStableSemver(b, 'right version');
+  for (let i = 0; i < 3; i += 1) {
+    if (left[i] !== right[i]) return left[i] < right[i] ? -1 : 1;
+  }
+  return 0;
+}
 function markerBlock(name, body) {
   return `<!-- BEGIN GENERATED:${name} -->\n${body.trim()}\n<!-- END GENERATED:${name} -->`;
 }
@@ -77,20 +91,26 @@ const releaseVersion = read('clients/RELEASE_VERSION').trim();
 const npmVersion = readJson('clients/typescript/package.json').version;
 const pyVersion = parsePyprojectVersion(read('clients/python/pyproject.toml'));
 const serviceVersion = parseServiceVersion(read('src/version.ts'));
+const publicClientVersion = sourceFacts.install?.client_version;
 
 if (!releaseVersion) fail('clients/RELEASE_VERSION is empty');
+parseStableSemver(releaseVersion, 'RELEASE_VERSION');
 if (npmVersion !== releaseVersion) fail(`npm client version ${npmVersion} != RELEASE_VERSION ${releaseVersion}`);
 if (pyVersion !== releaseVersion) fail(`PyPI client version ${pyVersion} != RELEASE_VERSION ${releaseVersion}`);
-if (sourceFacts.install?.client_version !== releaseVersion) fail(`public client version ${sourceFacts.install?.client_version ?? 'missing'} != RELEASE_VERSION ${releaseVersion}`);
+parseStableSemver(publicClientVersion, 'public client version');
+if (compareStableSemver(publicClientVersion, releaseVersion) > 0) {
+  fail(`public client version ${publicClientVersion} is newer than RELEASE_VERSION ${releaseVersion}`);
+}
+if (!sourceFacts.install?.registry_install_verified_at) fail('public registry verification timestamp is missing');
+if (!sourceFacts.install?.verification) fail('public registry verification description is missing');
 if (!serviceVersion) fail('Could not parse SERVICE_RELEASE');
 
+// public/product-facts.json is the authority for what is already verified in public registries.
+// RELEASE_VERSION and the package manifests may be newer while a release candidate is staged.
+// Do not promote install.client_version until the new registry artifacts have been clean-install verified.
 const facts = {
   ...sourceFacts,
   service_release: serviceVersion,
-  install: {
-    ...sourceFacts.install,
-    client_version: releaseVersion,
-  },
 };
 
 if (enforceFreshness) {
@@ -151,4 +171,4 @@ if (drift && !writeMode) {
   process.exit(1);
 }
 
-console.log(`Public facts synchronized: service ${serviceVersion}, clients ${releaseVersion}, benchmark facts ${facts.verified_benchmarks.length}.`);
+console.log(`Public facts synchronized: service ${serviceVersion}, source clients ${releaseVersion}, public verified clients ${publicClientVersion}, benchmark facts ${facts.verified_benchmarks.length}.`);
