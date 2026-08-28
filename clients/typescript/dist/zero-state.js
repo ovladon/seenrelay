@@ -170,14 +170,20 @@ export class SeenRelayZeroState {
     return this.now() - entry.confirmedAtMs <= this.validatorRetentionMs ? entry : null;
   }
 
-  #remember(key, value, validator) {
+  #remember(key, value, validator, maxAgeMs) {
+    const normalizedValidator = sourceValidator(validator);
+    if (!normalizedValidator && maxAgeMs <= 0) {
+      this.cache.delete(key);
+      return;
+    }
     const clone = cloneForCache(value);
     if (!clone.ok) {
       this.metrics.localUncacheableValues += 1;
+      this.cache.delete(key);
       return;
     }
     this.cache.delete(key);
-    this.cache.set(key, { value: clone.value, sourceValidator: sourceValidator(validator), confirmedAtMs: this.now() });
+    this.cache.set(key, { value: clone.value, sourceValidator: normalizedValidator, confirmedAtMs: this.now() });
     while (this.cache.size > this.maxEntries) this.cache.delete(this.cache.keys().next().value);
   }
 
@@ -234,7 +240,7 @@ export class SeenRelayZeroState {
     this.metrics.relayObserveSkippedNoScheduler += 1;
   }
 
-  async #runValidator(key, options, retained, headers, relayCheck = null) {
+  async #runValidator(key, options, retained, headers, maxAgeMs, relayCheck = null) {
     const hasConditional = Object.keys(headers).length > 0;
     if (hasConditional) this.metrics.sourceConditionalAttempts += 1;
     this.metrics.validationCalls += 1;
@@ -248,7 +254,7 @@ export class SeenRelayZeroState {
       const clone = cloneForCache(retained.value);
       if (!clone.ok) throw new Error('retained local value cannot be cloned');
       const nextValidator = result.sourceValidator ?? retained.sourceValidator;
-      this.#remember(key, retained.value, nextValidator);
+      this.#remember(key, retained.value, nextValidator, maxAgeMs);
       this.metrics.sourceNotModifiedHits += 1;
       await this.#contribute(options, clone.value, nextValidator);
       return {
@@ -260,7 +266,7 @@ export class SeenRelayZeroState {
       };
     }
 
-    this.#remember(key, result.value, result.sourceValidator);
+    this.#remember(key, result.value, result.sourceValidator, maxAgeMs);
     await this.#contribute(options, result.value, result.sourceValidator);
     return {
       value: result.value,
@@ -282,7 +288,7 @@ export class SeenRelayZeroState {
     const retained = this.#retainedEntry(key);
     const headers = conditionalHeaders(retained?.sourceValidator);
     if (Object.keys(headers).length > 0) {
-      return this.#runValidator(key, options, retained, headers, null);
+      return this.#runValidator(key, options, retained, headers, maxAgeMs, null);
     }
 
     const relayOutcome = await this.#maybeRelayReuse(options);
@@ -290,7 +296,7 @@ export class SeenRelayZeroState {
       return { value: relayOutcome.value, path: 'relay_reuse', relay: { check: relayOutcome.check }, source: { conditional: false, notModified: false } };
     }
 
-    return this.#runValidator(key, options, retained, Object.freeze({}), relayOutcome?.check ?? null);
+    return this.#runValidator(key, options, retained, Object.freeze({}), maxAgeMs, relayOutcome?.check ?? null);
   }
 }
 
