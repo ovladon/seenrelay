@@ -14,6 +14,7 @@ const pyVersion = pyproject.match(/\[project\][\s\S]*?^version\s*=\s*"([^"]+)"/m
 test('client package publishing is Git-audited and uses scoped OIDC without long-lived publish secrets', () => {
   assert.match(workflow, /release:\s*\n\s+types: \[published\]/);
   assert.match(workflow, /push:\s*\n\s+branches: \[main\][\s\S]*?clients\/RELEASE_VERSION/);
+  assert.match(workflow, /clients\/RELEASE_REQUEST/);
   assert.match(workflow, /startsWith\(github\.event\.release\.tag_name, 'clients-v'\)/);
   assert.match(workflow, /github\.event_name == 'push' && github\.ref == 'refs\/heads\/main'/);
   assert.match(workflow, /publish-npm:[\s\S]*?id-token: write/);
@@ -40,7 +41,9 @@ test('release builds verify the requested version against both package manifests
   assert.match(workflow, /Install Python wheel in a clean virtual environment/);
 });
 
-test('npm bootstrap version is never republished when it already exists', () => {
+test('registry release retries are idempotent for npm and PyPI', () => {
   assert.match(workflow, /npm view \"seenrelay@\$VERSION\" version --json/);
   assert.match(workflow, /if: steps\.npm-version\.outputs\.exists != 'true'/);
+  assert.match(workflow, /pypi\.org\/pypi\/seenrelay\/\$VERSION\/json/);
+  assert.match(workflow, /if: steps\.pypi-version\.outputs\.exists != 'true'/);
 });
