@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { protectMcpClient } from '../clients/typescript/dist/mcp-auto.js';
+import { freshResult, uncacheableResult } from '../clients/typescript/dist/zero-state.js';
 
 function fakeClient() {
   return {
@@ -108,4 +109,51 @@ test('non-callTool methods remain correctly bound to the underlying client', () 
   assert.equal(client.ping(), 1);
   assert.equal(client.ping(), 2);
   assert.equal(raw.otherCalls, 2);
+});
+
+
+test('provider-independent normalizeResult can prevent caching in-band errors without changing MCP transport', async () => {
+  let calls = 0;
+  const raw = {
+    async callTool() {
+      calls += 1;
+      return { isError: true, content: [{ type: 'text', text: 'quota exceeded' }] };
+    }
+  };
+  const client = protectMcpClient(raw, {
+    tools: {
+      'provider.read': {
+        maxAgeMs: 60_000,
+        normalizeResult: (result) => result.isError ? uncacheableResult(result) : freshResult(result)
+      }
+    }
+  });
+  const call = { name: 'provider.read', arguments: { id: 1 } };
+  const a = await client.callTool(call);
+  const b = await client.callTool(call);
+  assert.deepEqual(a, b);
+  assert.equal(calls, 2);
+  assert.equal(client.seenRelayZeroState.getTelemetry().edge.validatedUncacheable, 2);
+});
+
+test('provider-independent normalizeResult can carry an older source timestamp into the generic MCP wrapper', async () => {
+  let now = 10_000;
+  let calls = 0;
+  const { SeenRelayZeroState } = await import('../clients/typescript/dist/zero-state.js');
+  const edge = new SeenRelayZeroState({ now: () => now });
+  const raw = { async callTool() { calls += 1; return { payload: 'x', observedAt: 9_300 }; } };
+  const client = protectMcpClient(raw, {
+    edge,
+    tools: {
+      'provider.read': {
+        maxAgeMs: 1_000,
+        normalizeResult: (result) => freshResult(result, undefined, { observedAt: result.observedAt })
+      }
+    }
+  });
+  const call = { name: 'provider.read', arguments: { id: 2 } };
+  await client.callTool(call);
+  now = 10_500;
+  await client.callTool(call);
+  assert.equal(calls, 2);
 });
