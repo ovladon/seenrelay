@@ -7,6 +7,9 @@ import { fileURLToPath } from 'node:url';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'publish-clients.yml'), 'utf8');
 const releaseVersion = fs.readFileSync(path.join(root, 'clients', 'RELEASE_VERSION'), 'utf8').trim();
+const npmManifest = JSON.parse(fs.readFileSync(path.join(root, 'clients', 'typescript', 'package.json'), 'utf8'));
+const pyproject = fs.readFileSync(path.join(root, 'clients', 'python', 'pyproject.toml'), 'utf8');
+const pyVersion = pyproject.match(/\[project\][\s\S]*?^version\s*=\s*"([^"]+)"/m)?.[1] ?? null;
 
 test('client package publishing is Git-audited and uses scoped OIDC without long-lived publish secrets', () => {
   assert.match(workflow, /release:\s*\n\s+types: \[published\]/);
@@ -24,7 +27,9 @@ test('client package publishing is Git-audited and uses scoped OIDC without long
 });
 
 test('release builds verify the requested version against both package manifests', () => {
-  assert.equal(releaseVersion, '0.1.0');
+  assert.match(releaseVersion, /^\d+\.\d+\.\d+$/);
+  assert.equal(npmManifest.version, releaseVersion);
+  assert.equal(pyVersion, releaseVersion);
   const markerChecks = workflow.match(/clients\/RELEASE_VERSION/g) || [];
   assert.ok(markerChecks.length >= 3);
   assert.match(workflow, /GITHUB_REF_NAME#clients-v/);

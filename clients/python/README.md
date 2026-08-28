@@ -2,9 +2,15 @@
 
 Deterministic, standard-library-only client for placing SeenRelay CHECK directly in front of repeated source-backed validation.
 
+Version 0.2.0 keeps the Python client on the conservative shadow-first behavior. The new local-first Zero-State, generic dispatcher and MCP interception modules in this release are JavaScript / TypeScript features; Python parity is not claimed.
+
 ## Install
 
-Package metadata is prepared and continuously validated for registry publication. Until the package is published, use the repository copy from `clients/python/`.
+```bash
+pip install seenrelay==0.2.0
+```
+
+If `0.2.0` has not yet been published in the registry, use the repository copy from `clients/python/` for release-candidate testing.
 
 ## Smallest integration: bind once, one line per revalidation
 
@@ -67,7 +73,7 @@ value = proof.guard(
 )
 
 print(proof.report(
-    avoided_validation_cost=0.01,  # use your own invoice/cost unit
+    avoided_validation_cost=0.01,
 ))
 ```
 
@@ -75,7 +81,9 @@ Shadow Proof always keeps the original validation. It measures CHECK status dist
 
 Use SeenRelay around repeated validation that is materially more expensive than the preflight: paid search, scraping/proxy work, browser or extraction calls, rate-limited APIs, model-assisted parsing, or multi-step validation. It is generally a poor fit for a cheap one-off GET.
 
-For fleet economics and current public-price illustrations, see `https://seenrelay.com/economics` and `docs/ECONOMICS_LAB.md` in the repository.
+## Protocol boundary
+
+The Python client does not add a SeenRelay operation. The hosted service still exposes only CHECK and OBSERVE and does not browse, search or verify arbitrary facts on demand.
 
 ## License
 
