@@ -10,22 +10,53 @@ For an eligible read-only coordinate, the client uses this order:
 
 1. coalesce an identical in-flight call in the current process;
 2. reuse a sufficiently recent in-process result only when an explicit local freshness window permits it;
-3. if a retained source-native validator exists, pass `If-None-Match` or `If-Modified-Since` to the caller's existing validator;
-4. only when no source-native validator is available, optionally query shared SeenRelay if the configured relay mode permits it;
-5. otherwise execute the caller's normal validator;
-6. optionally schedule OBSERVE after independently confirmed validation.
+3. optionally reuse a sufficiently recent caller-owned encrypted private L1 result when an explicit private freshness window permits it;
+4. if a retained local or private source-native validator exists, pass `If-None-Match` or `If-Modified-Since` to the caller's existing validator;
+5. only when no source-native validator is available, optionally query shared SeenRelay if the configured relay mode permits it;
+6. otherwise execute the caller's normal validator;
+7. optionally schedule OBSERVE after independently confirmed validation.
 
 The default relay mode is `off`. Therefore a new installation performs zero shared CHECK requests on the validation critical path until the integrator deliberately enables relay sampling or relay checking.
 
-## Local cache boundary
+## L0 process cache boundary
 
 The completed-result cache is process memory only and has a bounded entry count. The default local freshness window is `0`, which disables sequential completed-result reuse while preserving exact in-flight coalescing and retained source-validator support. A positive local TTL must be declared explicitly by the adapter or caller.
 
-With TTL `0`, a result that has no ETag or Last-Modified validator is not retained after the call. A cloneable result may be retained in process memory when a source-native validator is present so a later source `304 Not Modified` can return the previously confirmed value. Values that cannot be safely cloned with `structuredClone` are not retained. No local cache content is uploaded by the cache itself.
+With TTL `0`, a result that has no ETag or Last-Modified validator is not retained after the call. A cloneable result may be retained in process memory when a source-native validator is present so a later source `304 Not Modified` can return the previously confirmed value. Values that cannot be safely cloned with `structuredClone` are not retained.
+
+Local coordinate maps use SHA-256 keys rather than raw coordinate JSON as map keys. No local cache content is uploaded by the cache itself.
+
+## L1 private reuse
+
+Private L1 is optional and caller-owned. It is intended for reuse across workers or process restarts without sending those cached values to the public SeenRelay service.
+
+`privateStore` and `privateCodec` must be configured together. The built-in `createAesGcmPrivateCodec(...)` uses AES-256-GCM and requires a caller-supplied 32-byte key. The SHA-256 coordinate key is authenticated as additional data, so moving a ciphertext to another coordinate causes decryption failure.
+
+The store receives only an opaque SHA-256 coordinate key and the sealed payload produced by the codec. Store or decryption failures are fail-open and do not suppress the caller's original source validation.
+
+Private completed-result reuse also defaults to TTL `0`. A positive `privateMaxAgeMs` must be declared explicitly. Even with private TTL `0`, a result carrying ETag or Last-Modified may be stored encrypted so another worker can attempt source-native conditional confirmation rather than trusting stale private content.
+
+Example storage contract:
+
+```js
+import { randomBytes } from 'node:crypto';
+import { SeenRelayZeroState, createAesGcmPrivateCodec } from 'seenrelay/zero-state';
+
+const edge = new SeenRelayZeroState({
+  privateStore: {
+    get: async (key) => privateCache.get(key),
+    set: async (key, sealedValue) => privateCache.set(key, sealedValue)
+  },
+  privateCodec: createAesGcmPrivateCodec(randomBytes(32)),
+  privateMaxAgeMs: 30_000
+});
+```
+
+Production deployments must load a stable encryption key from an appropriate secret-management mechanism; generating a new key at startup, as in the isolated example above, intentionally prevents reuse after restart.
 
 ## Source-native confirmation
 
-A retained ETag or Last-Modified value may be supplied to the original source validation. A `304 Not Modified` result is treated as source confirmation and refreshes the local result timestamp. SeenRelay is not the authority for that confirmation.
+A retained ETag or Last-Modified value may be supplied to the original source validation. A `304 Not Modified` result is treated as confirmation from the source and refreshes the local/private receipt timestamp. SeenRelay is not the authority for that confirmation.
 
 When a source-native validator exists, that confirmation path is attempted before an optional shared CHECK. `createConditionalFetchValidator(...)` is restricted to GET and HEAD.
 
@@ -34,12 +65,14 @@ When a source-native validator exists, that confirmation path is attempted befor
 `relayMode: "off"` is the default.
 
 - `off`: no shared CHECK;
-- `sample`: CHECK only according to the configured sampling probability and only after local/source-native opportunities are exhausted;
-- `always`: CHECK on protected cache misses that do not already have a retained source-native validator.
+- `sample`: CHECK only according to the configured sampling probability and only after local/private/source-native opportunities are exhausted;
+- `always`: CHECK on protected misses that do not already have a retained source-native validator.
 
 A relay result never suppresses validation unless the caller supplied a reuse policy and that policy accepts the returned CHECK evidence.
 
 OBSERVE contribution is separate from CHECK placement. In the default `scheduled-only` mode, contribution occurs only when the consuming runtime supplies a scheduler such as a request-lifecycle `waitUntil` primitive. Without a scheduler it is skipped rather than adding hidden blocking latency. Scheduler and OBSERVE failures are fail-open and never invalidate the caller's successful source validation.
+
+A private L1 hit is not an independent observation and therefore does not itself justify a new OBSERVE. OBSERVE remains tied to independently confirmed source validation.
 
 ## Automatic dispatcher binding
 
@@ -80,11 +113,14 @@ Other client methods remain bound to the original MCP client object.
 - arguments differ => coordinates differ by default;
 - mutation calls remain untouched unless an integrator incorrectly allowlists them;
 - completed-result TTL is zero unless explicitly declared;
+- private completed-result TTL is zero unless explicitly declared;
 - TTL-zero results without source-native validators are not retained after completion;
+- persistent/private storage requires an explicit codec and store pair;
+- private store or decrypt failures fail open;
 - relay CHECK is off by default;
 - at relay hit probability zero, critical-path shared CHECK count is zero;
 - shared reuse requires an explicit caller reuse policy;
 - source-native `304` is distinguished from SeenRelay evidence;
 - scheduler/OBSERVE failure is fail-open;
 - MCP call request options bypass optimization by default unless identity handling is explicit;
-- the local layer remains useful when the shared network contains no observations.
+- the local/private layer remains useful when the shared network contains no observations.
