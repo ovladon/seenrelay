@@ -40,7 +40,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ovladon/seenrelay.git",
+    "url": "git+https://github.com/ovladon/seenrelay.git",
     "directory": "clients/typescript"
   },
   "homepage": "https://seenrelay.com/clients",
