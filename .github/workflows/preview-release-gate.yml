@@ -27,7 +27,7 @@ jobs:
   preview-release-gate:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 30
     env:
       BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.release_sha }}
@@ -56,15 +56,12 @@ jobs:
           PREVIEW_URL: ${{ github.event_name == 'pull_request' && steps.preview.outputs.url || inputs.preview_url }}
         run: bash scripts/run-preview-release-gate.sh
 
-      - name: Run controlled load smoke on isolated Preview
+      - name: Run controlled load sequence on isolated Preview
         if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'perf/controlled-load-harness'
         shell: bash
         env:
           SEENRELAY_LOAD_BASE_URL: ${{ steps.preview.outputs.url }}
-          SEENRELAY_LOAD_PROFILE: smoke
           SEENRELAY_LOAD_NETWORK_MODE: shared
-          SEENRELAY_LOAD_RUN_KEY: gha-smoke-${{ github.run_id }}-${{ github.run_attempt }}
-          SEENRELAY_LOAD_OUTPUT: seenrelay-load-smoke.json
         run: |
           set -euo pipefail
           cat >/tmp/seenrelay-vercel-bypass.mjs <<'NODE'
@@ -77,14 +74,20 @@ jobs:
             return originalFetch(input, { ...init, headers });
           };
           NODE
-          node --import /tmp/seenrelay-vercel-bypass.mjs scripts/load-seenrelay.mjs
-          cat seenrelay-load-smoke.json
 
-      - name: Upload controlled load smoke report
+          for profile in smoke ramp scale; do
+            export SEENRELAY_LOAD_PROFILE="$profile"
+            export SEENRELAY_LOAD_RUN_KEY="gha-${profile}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            export SEENRELAY_LOAD_OUTPUT="seenrelay-load-${profile}.json"
+            echo "Running controlled load profile: $profile"
+            node --import /tmp/seenrelay-vercel-bypass.mjs scripts/load-seenrelay.mjs
+          done
+
+      - name: Upload controlled load reports
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'perf/controlled-load-harness'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: seenrelay-load-smoke-${{ github.run_id }}-${{ github.run_attempt }}
-          path: seenrelay-load-smoke.json
+          name: seenrelay-load-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: seenrelay-load-*.json
           if-no-files-found: warn
           retention-days: 7
