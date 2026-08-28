@@ -44,9 +44,9 @@ grep -q '"operations":\["CHECK","OBSERVE"\]' /tmp/root.json
 grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
-grep -q 'COST AVOIDANCE FOR AI-AGENT FLEETS' /tmp/site.html
-grep -q 'Stop paying to revalidate the same fact' /tmp/site.html
-grep -q 'SAME_OBSERVED does not mean' /tmp/site.html
+grep -q 'LOCAL-FIRST VALIDATION COST AVOIDANCE' /tmp/site.html
+grep -q 'Avoid redundant expensive validation from the first install' /tmp/site.html
+grep -q 'No populated hive is required for first-user value' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'FLEET-LEVEL COST AVOIDANCE' /tmp/economics.html
 grep -q 'MEASURED · FIRST-PARTY SMOKE BENCHMARK' /tmp/economics.html
@@ -67,12 +67,14 @@ const x = JSON.parse(fs.readFileSync('/tmp/product-facts.json', 'utf8'));
 const b = x.verified_benchmarks?.find((item) => item.id === 'firecrawl-json-extraction-2026-08-26');
 if (x.install?.npm_command !== 'npm install seenrelay') process.exit(1);
 if (x.install?.pypi_command !== 'pip install seenrelay') process.exit(1);
-if (x.install?.client_version !== '0.1.0') process.exit(1);
+if (x.install?.client_version !== '0.2.0') process.exit(1);
 if (!b || b.provider_credits_avoided !== 15 || b.reuse_provider_calls !== 0) process.exit(1);
 NODE
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
+grep -q 'Local-first freshness optimization' /tmp/llms.txt
+grep -q 'Shared CHECK is off by default' /tmp/llms.txt
 grep -q '## Verified measured results' /tmp/llms.txt
 grep -q 'Structured JSON extraction /' /tmp/llms.txt
 grep -q 'fit=good; cost=better; latency=better' /tmp/llms.txt
@@ -81,6 +83,8 @@ grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json
 grep -q '"current_pricing":"free"' /tmp/service.json
 grep -q '"economics"' /tmp/service.json
+grep -q '"javascript_typescript_zero_state"' /tmp/service.json
+grep -q '"shared_check_default":"off"' /tmp/service.json
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/openapi.json" -o /tmp/openapi.json
 grep -q '"openapi":"3.1.0"' /tmp/openapi.json
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/data-practices.json" -o /tmp/data.json
