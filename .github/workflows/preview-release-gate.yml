@@ -56,12 +56,12 @@ jobs:
           PREVIEW_URL: ${{ github.event_name == 'pull_request' && steps.preview.outputs.url || inputs.preview_url }}
         run: bash scripts/run-preview-release-gate.sh
 
-      - name: Run controlled load sequence on isolated Preview
+      - name: Compare shared and distributed scale on isolated Preview
         if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'perf/controlled-load-harness'
         shell: bash
         env:
           SEENRELAY_LOAD_BASE_URL: ${{ steps.preview.outputs.url }}
-          SEENRELAY_LOAD_NETWORK_MODE: shared
+          SEENRELAY_LOAD_PROFILE: scale
         run: |
           set -euo pipefail
           cat >/tmp/seenrelay-vercel-bypass.mjs <<'NODE'
@@ -75,19 +75,19 @@ jobs:
           };
           NODE
 
-          for profile in smoke ramp scale; do
-            export SEENRELAY_LOAD_PROFILE="$profile"
-            export SEENRELAY_LOAD_RUN_KEY="gha-${profile}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-            export SEENRELAY_LOAD_OUTPUT="seenrelay-load-${profile}.json"
-            echo "Running controlled load profile: $profile"
+          for mode in shared distributed; do
+            export SEENRELAY_LOAD_NETWORK_MODE="$mode"
+            export SEENRELAY_LOAD_RUN_KEY="gha-topology-${mode}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            export SEENRELAY_LOAD_OUTPUT="seenrelay-load-scale-${mode}.json"
+            echo "Running controlled scale topology: $mode"
             node --import /tmp/seenrelay-vercel-bypass.mjs scripts/load-seenrelay.mjs
           done
 
-      - name: Upload controlled load reports
+      - name: Upload controlled topology reports
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'perf/controlled-load-harness'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: seenrelay-load-reports-${{ github.run_id }}-${{ github.run_attempt }}
-          path: seenrelay-load-*.json
+          name: seenrelay-load-topology-${{ github.run_id }}-${{ github.run_attempt }}
+          path: seenrelay-load-scale-*.json
           if-no-files-found: warn
           retention-days: 7
