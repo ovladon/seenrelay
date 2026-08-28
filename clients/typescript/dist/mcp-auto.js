@@ -12,6 +12,16 @@ function nonNegativeFinite(value, name) {
   return value;
 }
 
+function normalizeWindow(value, name) {
+  if (typeof value === 'function') return value;
+  return nonNegativeFinite(value ?? 0, name);
+}
+
+function resolveWindow(value, params, rest, name) {
+  const resolved = typeof value === 'function' ? value(params, rest) : value;
+  return nonNegativeFinite(resolved ?? 0, name);
+}
+
 function normalizePolicies(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('tools must be an object keyed by exact MCP tool name');
   const policies = new Map();
@@ -26,8 +36,8 @@ function normalizePolicies(input) {
       throw new TypeError(`tools.${name}.eligible must be a function when provided`);
     }
     policies.set(name, Object.freeze({
-      maxAgeMs: nonNegativeFinite(policy.maxAgeMs ?? 0, `tools.${name}.maxAgeMs`),
-      privateMaxAgeMs: nonNegativeFinite(policy.privateMaxAgeMs ?? 0, `tools.${name}.privateMaxAgeMs`),
+      maxAgeMs: normalizeWindow(policy.maxAgeMs, `tools.${name}.maxAgeMs`),
+      privateMaxAgeMs: normalizeWindow(policy.privateMaxAgeMs, `tools.${name}.privateMaxAgeMs`),
       relay: policy.relay,
       coordinate: policy.coordinate,
       eligible: policy.eligible
@@ -76,8 +86,8 @@ export function protectMcpClient(client, options = {}) {
         };
     const outcome = await edge.guard({
       coordinate,
-      maxAgeMs: policy.maxAgeMs,
-      privateMaxAgeMs: policy.privateMaxAgeMs,
+      maxAgeMs: resolveWindow(policy.maxAgeMs, params, rest, `tools.${name}.maxAgeMs`),
+      privateMaxAgeMs: resolveWindow(policy.privateMaxAgeMs, params, rest, `tools.${name}.privateMaxAgeMs`),
       ...(relay ? { relay } : {}),
       validate: async () => originalCallTool(params, ...rest)
     });
