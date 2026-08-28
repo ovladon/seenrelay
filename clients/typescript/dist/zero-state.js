@@ -52,6 +52,38 @@ function probability(value, name) {
   return value;
 }
 
+function observationTimeMs(value, name = 'observedAt') {
+  if (value === undefined || value === null) return undefined;
+  if (value instanceof Date) {
+    const ms = value.getTime();
+    if (!Number.isFinite(ms) || ms < 0) throw new TypeError(`${name} must be a valid non-negative timestamp`);
+    return ms;
+  }
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value < 0) throw new TypeError(`${name} must be a valid non-negative timestamp`);
+    return value;
+  }
+  if (typeof value === 'string') {
+    const ms = Date.parse(value);
+    if (!Number.isFinite(ms) || ms < 0) throw new TypeError(`${name} must be an ISO-8601 timestamp`);
+    return ms;
+  }
+  throw new TypeError(`${name} must be an ISO-8601 string, Date, or millisecond timestamp`);
+}
+
+function normalizeFreshObservation(input) {
+  if (input === undefined) return { observedAtMs: undefined, independentlyObtained: true };
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('freshResult observation metadata must be an object');
+  return {
+    observedAtMs: observationTimeMs(input.observedAt),
+    independentlyObtained: input.independentlyObtained !== false
+  };
+}
+
+function boundedConfirmationTime(observedAtMs, nowMs) {
+  return observedAtMs === undefined ? nowMs : Math.min(observedAtMs, nowMs);
+}
+
 function cloneForCache(value) {
   try {
     return { ok: true, value: structuredClone(value) };
@@ -105,6 +137,7 @@ function emptyTelemetry() {
     sourceConditionalAttempts: 0,
     sourceNotModifiedHits: 0,
     validationCalls: 0,
+    validatedUncacheable: 0,
     relayCheckCalls: 0,
     relayCheckReuseHits: 0,
     relayEvidenceFailures: 0,
@@ -112,35 +145,56 @@ function emptyTelemetry() {
     relayObserveScheduleFailures: 0,
     relayObserveBlocking: 0,
     relayObserveSkippedNoScheduler: 0,
+    relayObserveSkippedNotIndependent: 0,
     relayObserveFailures: 0
   };
 }
 
-export function freshResult(value, validator) {
-  return Object.freeze({ [ZERO_STATE_RESULT]: 'fresh', value, sourceValidator: sourceValidator(validator) });
+export function freshResult(value, validator, observation) {
+  const normalized = normalizeFreshObservation(observation);
+  return Object.freeze({
+    [ZERO_STATE_RESULT]: 'fresh',
+    value,
+    sourceValidator: sourceValidator(validator),
+    ...(normalized.observedAtMs !== undefined ? { observedAtMs: normalized.observedAtMs } : {}),
+    independentlyObtained: normalized.independentlyObtained
+  });
 }
 
 export function notModifiedResult(validator) {
   return Object.freeze({ [ZERO_STATE_RESULT]: 'not-modified', sourceValidator: sourceValidator(validator) });
 }
 
+export function uncacheableResult(value) {
+  return Object.freeze({ [ZERO_STATE_RESULT]: 'uncacheable', value });
+}
+
 function normalizeValidationResult(result) {
   if (result && typeof result === 'object' && result[ZERO_STATE_RESULT] === 'fresh') {
-    return { kind: 'fresh', value: result.value, sourceValidator: sourceValidator(result.sourceValidator) };
+    return {
+      kind: 'fresh',
+      value: result.value,
+      sourceValidator: sourceValidator(result.sourceValidator),
+      observedAtMs: observationTimeMs(result.observedAtMs),
+      independentlyObtained: result.independentlyObtained !== false
+    };
   }
   if (result && typeof result === 'object' && result[ZERO_STATE_RESULT] === 'not-modified') {
     return { kind: 'not-modified', sourceValidator: sourceValidator(result.sourceValidator) };
   }
-  return { kind: 'fresh', value: result, sourceValidator: undefined };
+  if (result && typeof result === 'object' && result[ZERO_STATE_RESULT] === 'uncacheable') {
+    return { kind: 'uncacheable', value: result.value };
+  }
+  return { kind: 'fresh', value: result, sourceValidator: undefined, observedAtMs: undefined, independentlyObtained: true };
 }
 
 function isRelayMode(value) { return value === 'off' || value === 'sample' || value === 'always'; }
 
-function safeObserveMetadata(validator) {
-  if (!validator) return undefined;
-  if (validator.etag) return { sourceValidator: { kind: 'etag', value: validator.etag } };
-  if (validator.lastModified) return { sourceValidator: { kind: 'last_modified', value: validator.lastModified } };
-  return undefined;
+function safeObserveMetadata(validator, observedAtMs) {
+  const observedAt = Number.isFinite(observedAtMs) ? new Date(observedAtMs).toISOString() : undefined;
+  if (validator?.etag) return { ...(observedAt ? { observedAt } : {}), sourceValidator: { kind: 'etag', value: validator.etag } };
+  if (validator?.lastModified) return { ...(observedAt ? { observedAt } : {}), sourceValidator: { kind: 'last_modified', value: validator.lastModified } };
+  return observedAt ? { observedAt } : undefined;
 }
 
 export function createAesGcmPrivateCodec(keyMaterial) {
@@ -250,7 +304,7 @@ export class SeenRelayZeroState {
     return this.now() - entry.confirmedAtMs <= this.validatorRetentionMs ? entry : null;
   }
 
-  #remember(key, value, validator, maxAgeMs) {
+  #remember(key, value, validator, maxAgeMs, confirmedAtMs = this.now()) {
     const normalizedValidator = sourceValidator(validator);
     if (!normalizedValidator && maxAgeMs <= 0) {
       this.cache.delete(key);
@@ -263,7 +317,7 @@ export class SeenRelayZeroState {
       return;
     }
     this.cache.delete(key);
-    this.cache.set(key, { value: clone.value, sourceValidator: normalizedValidator, confirmedAtMs: this.now() });
+    this.cache.set(key, { value: clone.value, sourceValidator: normalizedValidator, confirmedAtMs });
     while (this.cache.size > this.maxEntries) this.cache.delete(this.cache.keys().next().value);
   }
 
@@ -289,7 +343,7 @@ export class SeenRelayZeroState {
     }
   }
 
-  async #writePrivate(key, value, validator, privateMaxAgeMs) {
+  async #writePrivate(key, value, validator, privateMaxAgeMs, confirmedAtMs = this.now()) {
     if (!this.privateStore) return;
     const normalizedValidator = sourceValidator(validator);
     if (!normalizedValidator && privateMaxAgeMs <= 0) return;
@@ -299,7 +353,7 @@ export class SeenRelayZeroState {
       const sealed = await this.privateCodec.seal({
         value: clone.value,
         sourceValidator: normalizedValidator,
-        confirmedAtMs: this.now()
+        confirmedAtMs
       }, key);
       await this.privateStore.set(key, sealed);
       this.metrics.privateWrites += 1;
@@ -367,14 +421,18 @@ export class SeenRelayZeroState {
     }
   }
 
-  async #contribute(options, value, validator) {
+  async #contribute(options, value, validator, observedAtMs, independentlyObtained = true) {
     const relay = options.relay;
     if (!relay?.contribute || !relay.fact || !this.relayClient || typeof this.relayClient.observe !== 'function') return;
+    if (!independentlyObtained) {
+      this.metrics.relayObserveSkippedNotIndependent += 1;
+      return;
+    }
     const task = async () => {
       try {
         const observedValue = await this.#relayEvidence(relay, value);
         if (observedValue === undefined) return;
-        await this.relayClient.observe(relay.fact, observedValue, safeObserveMetadata(validator));
+        await this.relayClient.observe(relay.fact, observedValue, safeObserveMetadata(validator, observedAtMs));
       } catch {
         this.metrics.relayObserveFailures += 1;
       }
@@ -405,15 +463,27 @@ export class SeenRelayZeroState {
     const elapsedMs = Math.max(0, monotonicNowMs() - started);
     const result = normalizeValidationResult(raw);
 
+    if (result.kind === 'uncacheable') {
+      this.metrics.validatedUncacheable += 1;
+      return {
+        value: result.value,
+        path: 'validated_uncacheable',
+        validationMs: elapsedMs,
+        relay: { check: relayCheck },
+        source: { conditional: hasConditional, notModified: false }
+      };
+    }
+
     if (result.kind === 'not-modified') {
       if (!retained) throw new Error('notModifiedResult requires a retained value');
       const clone = cloneForCache(retained.value);
       if (!clone.ok) throw new Error('retained value cannot be cloned');
       const nextValidator = result.sourceValidator ?? retained.sourceValidator;
-      this.#remember(key, retained.value, nextValidator, maxAgeMs);
-      await this.#writePrivate(key, retained.value, nextValidator, privateMaxAgeMs);
+      const confirmedAtMs = this.now();
+      this.#remember(key, retained.value, nextValidator, maxAgeMs, confirmedAtMs);
+      await this.#writePrivate(key, retained.value, nextValidator, privateMaxAgeMs, confirmedAtMs);
       this.metrics.sourceNotModifiedHits += 1;
-      await this.#contribute(options, clone.value, nextValidator);
+      await this.#contribute(options, clone.value, nextValidator, confirmedAtMs, true);
       return {
         value: clone.value,
         path: 'source_not_modified',
@@ -423,9 +493,11 @@ export class SeenRelayZeroState {
       };
     }
 
-    this.#remember(key, result.value, result.sourceValidator, maxAgeMs);
-    await this.#writePrivate(key, result.value, result.sourceValidator, privateMaxAgeMs);
-    await this.#contribute(options, result.value, result.sourceValidator);
+    const nowMs = this.now();
+    const confirmedAtMs = boundedConfirmationTime(result.observedAtMs, nowMs);
+    this.#remember(key, result.value, result.sourceValidator, maxAgeMs, confirmedAtMs);
+    await this.#writePrivate(key, result.value, result.sourceValidator, privateMaxAgeMs, confirmedAtMs);
+    await this.#contribute(options, result.value, result.sourceValidator, confirmedAtMs, result.independentlyObtained);
     return {
       value: result.value,
       path: 'validated',
