@@ -2,17 +2,27 @@ import type { PrivateCodec, PrivateStore, RelayClientLike } from './zero-state.j
 import type { McpToolPolicy, ProtectedMcpClient } from './mcp-auto.js';
 
 export interface FirecrawlScrapePolicyOptions {
-  /** Fallback freshness window used only when the Firecrawl call does not provide maxAge. Defaults to 0. */
+  /** Caller-owned fallback freshness window used only when the Firecrawl call does not provide maxAge. Defaults to 0. */
   maxAgeMs?: number;
-  /** Share public-source URL + representation hash + result fingerprint with SeenRelay. Defaults to true for this explicit adapter. */
+  /**
+   * Allow automatic public SeenRelay evidence for public, credential-free URLs.
+   * Defaults to false. When enabled, raw scrape content is never sent; only the source URL,
+   * representation contract/hash and a deterministic result fingerprint are shared.
+   */
   publicEvidence?: boolean;
 }
 
 export declare function publicFirecrawlSource(value: unknown): string | null;
+export declare function firecrawlResultFingerprint(result: unknown): string;
 export declare function firecrawlScrapePolicy(options?: FirecrawlScrapePolicyOptions): McpToolPolicy;
 
 export interface ProtectFirecrawlMcpClientOptions extends FirecrawlScrapePolicyOptions {
-  relayClient: RelayClientLike;
+  /** Optional explicit SeenRelay client. If omitted, the adapter creates the standard public client. */
+  relayClient?: RelayClientLike;
+  /** SeenRelay service base URL used only when relayClient is omitted. */
+  baseUrl?: string;
+  /** Optional client continuity hint used only when relayClient is omitted. */
+  clientHint?: string;
   serverKey?: string;
   privateStore?: PrivateStore;
   privateCodec?: PrivateCodec;
@@ -23,5 +33,5 @@ export interface ProtectFirecrawlMcpClientOptions extends FirecrawlScrapePolicyO
 
 export declare function protectFirecrawlMcpClient<T extends object>(
   client: T,
-  options: ProtectFirecrawlMcpClientOptions
+  options?: ProtectFirecrawlMcpClientOptions
 ): ProtectedMcpClient<T>;
