@@ -22,10 +22,10 @@ function isPrivateIpv4(hostname) {
 }
 
 function isPrivateHostname(hostname) {
-  const host = hostname.toLowerCase().replace(/\.$/, '');
+  const host = hostname.toLowerCase().replace(/\.$/, '').replace(/^\[|\]$/g, '');
   if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) return true;
   if (isPrivateIpv4(host)) return true;
-  if (host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:')) return true;
+  if (host.includes(':') && (host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:'))) return true;
   return false;
 }
 
@@ -53,9 +53,9 @@ function scrapeArguments(params) {
     : {};
 }
 
-function declaredMaxAgeMs(params) {
+function declaredMaxAgeMs(params, fallbackMs = 0) {
   const value = scrapeArguments(params).maxAge;
-  return Number.isFinite(value) && value >= 0 ? value : 0;
+  return Number.isFinite(value) && value >= 0 ? value : fallbackMs;
 }
 
 function representationOptions(params) {
@@ -75,27 +75,25 @@ function scrapeIsSafeToSuppress(params) {
   return true;
 }
 
-function relayWindowSeconds(params, fallbackSeconds) {
-  const ms = declaredMaxAgeMs(params);
-  if (ms <= 0) return fallbackSeconds ?? 0;
+function relayWindowSeconds(params, fallbackMs) {
+  const ms = declaredMaxAgeMs(params, fallbackMs);
+  if (ms <= 0) return 0;
   return Math.max(1, Math.min(604800, Math.ceil(ms / 1000)));
 }
 
 export function firecrawlScrapePolicy(options = {}) {
   const publicEvidence = options.publicEvidence ?? true;
-  const fallbackRelayMaxAgeSeconds = Number.isFinite(options.relayMaxAgeSeconds) && options.relayMaxAgeSeconds > 0
-    ? Math.min(604800, Math.floor(options.relayMaxAgeSeconds))
-    : 0;
+  const fallbackMaxAgeMs = Number.isFinite(options.maxAgeMs) && options.maxAgeMs >= 0 ? options.maxAgeMs : 0;
   return Object.freeze({
     eligible: (params) => scrapeIsSafeToSuppress(params),
-    maxAgeMs: (params) => declaredMaxAgeMs(params),
-    privateMaxAgeMs: (params) => declaredMaxAgeMs(params),
+    maxAgeMs: (params) => declaredMaxAgeMs(params, fallbackMaxAgeMs),
+    privateMaxAgeMs: (params) => declaredMaxAgeMs(params, fallbackMaxAgeMs),
     relay: (params) => {
       if (!publicEvidence) return undefined;
       const args = scrapeArguments(params);
       const source = publicFirecrawlSource(args.url);
       if (!source) return undefined;
-      const maxAgeSeconds = relayWindowSeconds(params, fallbackRelayMaxAgeSeconds);
+      const maxAgeSeconds = relayWindowSeconds(params, fallbackMaxAgeMs);
       const optionsHash = sha256JsonFingerprint(representationOptions(params));
       return {
         mode: maxAgeSeconds > 0 ? 'always' : 'off',
@@ -139,7 +137,7 @@ export function protectFirecrawlMcpClient(client, options = {}) {
     tools: {
       firecrawl_scrape: firecrawlScrapePolicy({
         publicEvidence: options.publicEvidence,
-        relayMaxAgeSeconds: options.relayMaxAgeSeconds
+        maxAgeMs: options.maxAgeMs
       })
     }
   });
