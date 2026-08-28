@@ -62,7 +62,7 @@ export class SeenRelayAuto {
       this.metrics.calls += 1;
       const matches = this.adapters.filter((adapter) => adapter.matches(call));
       if (matches.length === 0) {
-        this.metrics.pashthroughCalls += 1;
+        this.metrics.passthroughCalls += 1;
         return execute(call);
       }
       if (matches.length > 1) {
