@@ -66,8 +66,8 @@ test('client and quickstart adoption guides are concrete and conservative', () =
   assert.match(quickstart, /currently free/i);
   assert.match(quickstart, /recommended JavaScript\/TypeScript 0\.2\.0 path is local-first/i);
   assert.match(quickstart, /UNKNOWN/);
-  assert.match(quickstart, /observer_supplied_unverified/);
-  assert.match(quickstart, /conditional_request_hint/);
+  assert.match(quickstart, /observer-supplied, unverified ETag \/ Last-Modified/i);
+  assert.match(quickstart, /conditional-request hint/i);
   assert.match(quickstart, /304 Not Modified/);
   assert.doesNotMatch(`${clients}\n${quickstart}`, /certified truth|guaranteed truth|kill criteria/i);
 });
