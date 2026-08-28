@@ -124,7 +124,7 @@ test('private L1 can carry a source-native validator across workers without gran
   assert.equal(outcome.path, 'source_not_modified');
   assert.deepEqual(outcome.value, { price: 9 });
   assert.equal(sourceCalls, 2);
-  assert.equal(relay.checks, 1, 'first worker had no prior validator and relayMode=always; second must not add another CHECK');
+  assert.equal(relay.checks, 0, 'relayMode alone cannot create a valid CHECK without relay fact/candidate data; the second worker uses the retained source validator instead');
   assert.equal(second.getTelemetry().relayCheckCalls, 0);
   assert.equal(second.getTelemetry().sourceNotModifiedHits, 1);
 });
