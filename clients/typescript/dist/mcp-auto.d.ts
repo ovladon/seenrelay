@@ -2,8 +2,10 @@ import type { SeenRelayZeroState, ZeroStateOptions } from './zero-state.js';
 
 export interface McpToolPolicy {
   maxAgeMs?: number;
+  privateMaxAgeMs?: number;
   relay?: unknown | ((params: any, rest: unknown[]) => unknown);
   coordinate?: (params: any, rest: unknown[]) => unknown;
+  eligible?: (params: any, rest: unknown[]) => boolean;
 }
 
 export interface ProtectMcpClientOptions {
@@ -18,6 +20,7 @@ export interface SeenRelayMcpTelemetry {
   protectedCalls: number;
   passthroughCalls: number;
   optionPassthroughCalls: number;
+  ineligiblePassthroughCalls: number;
   edge: unknown;
 }
 
