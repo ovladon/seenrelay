@@ -2,7 +2,7 @@
 
 Deterministic, standard-library-only client for placing SeenRelay CHECK directly in front of repeated source-backed validation.
 
-Version 0.2.0 keeps the Python client on the conservative shadow-first behavior. The new local-first Zero-State, generic dispatcher and MCP interception modules in this release are JavaScript / TypeScript features; Python parity is not claimed.
+Version 0.2.0 keeps the Python client on the conservative shadow-first behavior. The local-first Zero-State, generic dispatcher and MCP interception modules in this release are JavaScript / TypeScript features; Python parity is not claimed.
 
 ## Install
 
@@ -10,7 +10,7 @@ Version 0.2.0 keeps the Python client on the conservative shadow-first behavior.
 pip install seenrelay==0.2.0
 ```
 
-If `0.2.0` has not yet been published in the registry, use the repository copy from `clients/python/` for release-candidate testing.
+Version `0.2.0` is published on the public PyPI registry and release-gated through clean package installation.
 
 ## Smallest integration: bind once, one line per revalidation
 
@@ -45,8 +45,6 @@ validate_price = protect_validation(
 ```
 
 ## Direct client form
-
-The same behavior is available without the convenience binder:
 
 ```python
 value = relay.guard(
