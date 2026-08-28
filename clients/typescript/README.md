@@ -10,7 +10,7 @@ The classic client remains available and backward-compatible. Version 0.2.0 adds
 npm install seenrelay@0.2.0
 ```
 
-If `0.2.0` has not yet been published in the registry, use the repository copy from `clients/typescript/dist/` for release-candidate testing.
+Version `0.2.0` is published on the public npm registry and release-gated through clean package installation.
 
 ## Local-first Zero-State
 
