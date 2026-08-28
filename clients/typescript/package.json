@@ -13,6 +13,10 @@
     "./shadow-proof": {
       "types": "./dist/shadow-proof.d.ts",
       "import": "./dist/shadow-proof.js"
+    },
+    "./zero-state": {
+      "types": "./dist/zero-state.d.ts",
+      "import": "./dist/zero-state.js"
     }
   },
   "files": [
