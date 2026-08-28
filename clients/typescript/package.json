@@ -13,6 +13,22 @@
     "./shadow-proof": {
       "types": "./dist/shadow-proof.d.ts",
       "import": "./dist/shadow-proof.js"
+    },
+    "./zero-state": {
+      "types": "./dist/zero-state.d.ts",
+      "import": "./dist/zero-state.js"
+    },
+    "./auto": {
+      "types": "./dist/auto.d.ts",
+      "import": "./dist/auto.js"
+    },
+    "./mcp-auto": {
+      "types": "./dist/mcp-auto.d.ts",
+      "import": "./dist/mcp-auto.js"
+    },
+    "./firecrawl": {
+      "types": "./dist/firecrawl.d.ts",
+      "import": "./dist/firecrawl.js"
     }
   },
   "files": [
