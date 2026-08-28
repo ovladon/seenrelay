@@ -14,7 +14,7 @@ function wallNowMs() { return Date.now(); }
 function stableJson(value) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
   if (typeof value === 'number') {
-    if (!Number.isFinite(value)) throw new TypeError('coordinate contains a non-finite number');
+    if (!Number.isFinite(value)) throw new TypeError('value contains a non-finite number');
     return JSON.stringify(value);
   }
   if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
@@ -22,11 +22,19 @@ function stableJson(value) {
     const keys = Object.keys(value).sort();
     return `{${keys.map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
   }
-  throw new TypeError('coordinate must be JSON-serializable');
+  throw new TypeError('value must be JSON-serializable');
+}
+
+function sha256Text(value) {
+  return `sha256:${createHash('sha256').update(value, 'utf8').digest('hex')}`;
 }
 
 function opaqueCoordinateKey(value) {
-  return `sha256:${createHash('sha256').update(stableJson(value), 'utf8').digest('hex')}`;
+  return sha256Text(stableJson(value));
+}
+
+export function sha256JsonFingerprint(value) {
+  return sha256Text(stableJson(value));
 }
 
 function nonNegativeFinite(value, name) {
@@ -76,6 +84,12 @@ function validPrivateEntry(value) {
   );
 }
 
+function newestEntry(a, b) {
+  if (!a) return b ?? null;
+  if (!b) return a;
+  return a.confirmedAtMs >= b.confirmedAtMs ? a : b;
+}
+
 function emptyTelemetry() {
   return {
     guardCalls: 0,
@@ -93,6 +107,7 @@ function emptyTelemetry() {
     validationCalls: 0,
     relayCheckCalls: 0,
     relayCheckReuseHits: 0,
+    relayEvidenceFailures: 0,
     relayObserveScheduled: 0,
     relayObserveScheduleFailures: 0,
     relayObserveBlocking: 0,
@@ -302,18 +317,48 @@ export class SeenRelayZeroState {
     return rate > 0 && this.random() < rate;
   }
 
-  async #maybeRelayReuse(options) {
+  async #relayEvidence(relay, value) {
+    if (typeof relay.evidenceValue !== 'function') return value;
+    try {
+      return await relay.evidenceValue(value);
+    } catch {
+      this.metrics.relayEvidenceFailures += 1;
+      return undefined;
+    }
+  }
+
+  async #maybeRelayReuse(options, retained) {
     const relay = options.relay;
-    if (!relay || !this.relayClient || !this.#shouldRelayCheck(options)) return null;
-    if (!relay.fact || !Object.prototype.hasOwnProperty.call(relay, 'knownValue')) return null;
+    if (!relay || !this.relayClient || !this.#shouldRelayCheck(options) || !relay.fact) return null;
+
+    let knownValue;
+    let retainedClone = null;
+    if (Object.prototype.hasOwnProperty.call(relay, 'knownValue')) {
+      knownValue = relay.knownValue;
+    } else if (retained && typeof relay.evidenceValue === 'function') {
+      retainedClone = cloneForCache(retained.value);
+      if (!retainedClone.ok) return null;
+      knownValue = await this.#relayEvidence(relay, retainedClone.value);
+      if (knownValue === undefined) return null;
+    } else {
+      return null;
+    }
+
     this.metrics.relayCheckCalls += 1;
     try {
-      const check = await this.relayClient.check(relay.fact, relay.knownValue, relay.maxAgeSeconds);
+      const check = await this.relayClient.check(relay.fact, knownValue, relay.maxAgeSeconds);
       if (typeof relay.reuse === 'function') {
-        const decision = relay.reuse(check, relay.knownValue);
+        const decision = relay.reuse(check, knownValue);
         if (decision?.reuse) {
           this.metrics.relayCheckReuseHits += 1;
           return { value: decision.value, path: 'relay_reuse', check };
+        }
+      }
+      if (retainedClone?.ok && typeof relay.reuseRetained === 'function') {
+        const accepted = await relay.reuseRetained(check, retainedClone.value, knownValue);
+        if (accepted === true) {
+          this.metrics.relayCheckReuseHits += 1;
+          return { value: retainedClone.value, path: 'relay_reuse', check };
         }
       }
       return { check };
@@ -326,8 +371,13 @@ export class SeenRelayZeroState {
     const relay = options.relay;
     if (!relay?.contribute || !relay.fact || !this.relayClient || typeof this.relayClient.observe !== 'function') return;
     const task = async () => {
-      try { await this.relayClient.observe(relay.fact, value, safeObserveMetadata(validator)); }
-      catch { this.metrics.relayObserveFailures += 1; }
+      try {
+        const observedValue = await this.#relayEvidence(relay, value);
+        if (observedValue === undefined) return;
+        await this.relayClient.observe(relay.fact, observedValue, safeObserveMetadata(validator));
+      } catch {
+        this.metrics.relayObserveFailures += 1;
+      }
     };
     if (this.scheduleObserve) {
       try {
@@ -402,24 +452,24 @@ export class SeenRelayZeroState {
       return { value: privateEntry.value, path: 'private_reuse', relay: { check: null }, source: { conditional: false, notModified: false } };
     }
 
-    const privateRetained = privateEntry && privateEntry.sourceValidator &&
-      this.now() - privateEntry.confirmedAtMs <= this.privateValidatorRetentionMs
+    const privateCandidate = privateEntry && this.now() - privateEntry.confirmedAtMs <= this.privateValidatorRetentionMs
       ? privateEntry
       : null;
-    const retained = !localRetained ? privateRetained
-      : !privateRetained ? localRetained
-        : localRetained.confirmedAtMs >= privateRetained.confirmedAtMs ? localRetained : privateRetained;
-    const headers = conditionalHeaders(retained?.sourceValidator);
+    const retainedCandidate = newestEntry(localRetained, privateCandidate);
+    const localSource = localRetained?.sourceValidator ? localRetained : null;
+    const privateSource = privateCandidate?.sourceValidator ? privateCandidate : null;
+    const sourceRetained = newestEntry(localSource, privateSource);
+    const headers = conditionalHeaders(sourceRetained?.sourceValidator);
     if (Object.keys(headers).length > 0) {
-      return this.#runValidator(key, options, retained, headers, maxAgeMs, privateMaxAgeMs, null);
+      return this.#runValidator(key, options, sourceRetained, headers, maxAgeMs, privateMaxAgeMs, null);
     }
 
-    const relayOutcome = await this.#maybeRelayReuse(options);
+    const relayOutcome = await this.#maybeRelayReuse(options, retainedCandidate);
     if (relayOutcome?.path === 'relay_reuse') {
       return { value: relayOutcome.value, path: 'relay_reuse', relay: { check: relayOutcome.check }, source: { conditional: false, notModified: false } };
     }
 
-    return this.#runValidator(key, options, retained, Object.freeze({}), maxAgeMs, privateMaxAgeMs, relayOutcome?.check ?? null);
+    return this.#runValidator(key, options, retainedCandidate, Object.freeze({}), maxAgeMs, privateMaxAgeMs, relayOutcome?.check ?? null);
   }
 }
 
