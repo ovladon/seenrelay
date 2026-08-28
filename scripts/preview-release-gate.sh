@@ -8,6 +8,7 @@ bypass=()
 if [ -n "${BYPASS_SECRET:-}" ]; then bypass=(-H "x-vercel-protection-bypass: $BYPASS_SECRET"); fi
 json=(-H 'content-type: application/json' "${bypass[@]}")
 
+# Never accept a Preview alias that is still serving a different commit.
 wait_for_exact_deployment() {
   local stable=0 code
   for _ in $(seq 1 60); do
