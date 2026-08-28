@@ -26,6 +26,18 @@ export declare function freshResult<T>(value: T, validator?: SourceValidator): F
 export declare function notModifiedResult(validator?: SourceValidator): NotModifiedResult;
 export declare function sourceValidatorFromResponse(response: { headers?: { get(name: string): string | null } }): SourceValidator | undefined;
 
+export interface PrivateStore {
+  get(key: string): string | null | undefined | Promise<string | null | undefined>;
+  set(key: string, sealedValue: string): void | Promise<void>;
+}
+
+export interface PrivateCodec {
+  seal(entry: unknown, coordinateKey: string): string | Promise<string>;
+  open(sealedValue: string, coordinateKey: string): unknown | Promise<unknown>;
+}
+
+export declare function createAesGcmPrivateCodec(keyMaterial: Uint8Array): PrivateCodec;
+
 export interface RelayClientLike {
   check(fact: unknown, knownValue: unknown, maxAgeSeconds?: number): Promise<any>;
   observe(fact: unknown, value: unknown, metadata?: unknown): Promise<any>;
@@ -44,6 +56,7 @@ export interface ZeroStateRelayOptions<T = unknown> {
 export interface ZeroStateGuardOptions<T = unknown> {
   coordinate: unknown;
   maxAgeMs?: number;
+  privateMaxAgeMs?: number;
   validate(context: ValidationContext<T>): Promise<T | FreshResult<T> | NotModifiedResult> | T | FreshResult<T> | NotModifiedResult;
   relay?: ZeroStateRelayOptions<T>;
 }
@@ -51,6 +64,10 @@ export interface ZeroStateGuardOptions<T = unknown> {
 export interface ZeroStateOptions {
   localMaxAgeMs?: number;
   validatorRetentionMs?: number;
+  privateMaxAgeMs?: number;
+  privateValidatorRetentionMs?: number;
+  privateStore?: PrivateStore;
+  privateCodec?: PrivateCodec;
   maxEntries?: number;
   relayMode?: RelayMode;
   relaySampleRate?: number;
@@ -66,6 +83,12 @@ export interface ZeroStateTelemetry {
   inflightCoalesced: number;
   localFreshHits: number;
   localUncacheableValues: number;
+  privateReads: number;
+  privateReadHits: number;
+  privateFreshHits: number;
+  privateWrites: number;
+  privateReadFailures: number;
+  privateWriteFailures: number;
   sourceConditionalAttempts: number;
   sourceNotModifiedHits: number;
   validationCalls: number;
