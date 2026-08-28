@@ -37,10 +37,13 @@ test('quickstart exposes a bounded adoption path without changing product semant
   const page = read('src', 'quickstart.ts');
   const publicSource = read('src', 'public.ts');
   const index = read('src', 'index.ts');
+  assert.match(quickstart, /local-first/i);
   assert.match(quickstart, /shadow mode/i);
   assert.match(quickstart, /io\.github\.ovladon\/seenrelay/);
   assert.match(quickstart, /exactly two domain operations/i);
+  assert.match(quickstart, /original validation/i);
   assert.match(page, /io\.github\.ovladon\/seenrelay/);
+  assert.match(page, /Shared SeenRelay CHECK is off by default/);
   assert.match(publicSource, /quickstart:\s*`\$\{origin\}\/quickstart`/);
   assert.match(index, /app\.get\('\/quickstart'/);
   assert.doesNotMatch(quickstart, /certified truth|guaranteed truth/i);
@@ -57,9 +60,11 @@ test('client and quickstart adoption guides are concrete and conservative', () =
   assert.match(clients, /VS Code \/ GitHub Copilot/);
   assert.match(clients, /ChatGPT custom MCP apps/);
   assert.match(clients, /shadow mode/i);
+  assert.match(clients, /provider-independent/i);
   assert.match(adoption, /Add SeenRelay to Cursor/);
+  assert.match(adoption, /seenrelay\/mcp-auto/);
   assert.match(quickstart, /currently free/i);
-  assert.match(quickstart, /Useful from the first integration/);
+  assert.match(quickstart, /recommended JavaScript\/TypeScript 0\.2\.0 path is local-first/i);
   assert.match(quickstart, /UNKNOWN/);
   assert.match(quickstart, /observer_supplied_unverified/);
   assert.match(quickstart, /conditional_request_hint/);
@@ -82,8 +87,9 @@ test('public discovery surfaces expose clients without indexing admin', () => {
   assert.match(publicSource, /clients:\s*`\$\{origin\}\/clients`/);
   assert.match(publicSource, /mcp_name:\s*'io\.github\.ovladon\/seenrelay'/);
   assert.match(publicSource, /observer_supplied_unverified/);
-  assert.match(publicSource, /same integration or fleet/i);
-  assert.match(adoption, /conditional-request hint/i);
+  assert.match(publicSource, /javascript_typescript_zero_state/);
+  assert.match(publicSource, /shared_check_default:\s*'off'/);
+  assert.match(adoption, /source-native ETag \/ Last-Modified confirmation/i);
 });
 
 test('MCP Registry publishing uses GitHub OIDC and a checksum-pinned publisher binary', () => {
