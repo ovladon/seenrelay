@@ -1,7 +1,7 @@
 {
   "name": "seenrelay",
-  "version": "0.1.0",
-  "description": "Deterministic zero-dependency SeenRelay client for repeated source-backed validation workflows.",
+  "version": "0.2.0",
+  "description": "Provider-independent local-first SeenRelay client for repeated source-backed validation workflows.",
   "type": "module",
   "main": "./dist/seenrelay.js",
   "types": "./dist/seenrelay.d.ts",
