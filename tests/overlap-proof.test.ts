@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { analyzeOverlapEvents } from '../scripts/overlap-proof.js';
 
 const fact = (source = 'https://example.com/api/item/42?utm_source=agent') => ({
@@ -87,4 +88,15 @@ test('uses each event max-age window and reports exposure rather than savings', 
   assert.equal(report.incremental_overlap.cross_fleet.events, 1);
   assert.equal(report.validator_work_exposed_to_overlap.cost_units.cross_fleet, 5);
   assert.match(report.validator_work_exposed_to_overlap.caveat, /not a savings claim/i);
+});
+
+test('documented sample reproduces the complete expected aggregate report', async () => {
+  const [traceText, expectedText] = await Promise.all([
+    readFile(new URL('../docs/OVERLAP_PROOF_SAMPLE.jsonl', import.meta.url), 'utf8'),
+    readFile(new URL('../docs/OVERLAP_PROOF_SAMPLE_EXPECTED.json', import.meta.url), 'utf8')
+  ]);
+  const trace = traceText.trim().split(/\r?\n/).map((line) => JSON.parse(line));
+  const expected = JSON.parse(expectedText);
+  const report = await analyzeOverlapEvents(trace, { defaultMaxAgeSeconds: 3600 });
+  assert.deepEqual(report, expected);
 });
