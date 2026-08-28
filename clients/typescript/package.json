@@ -17,6 +17,10 @@
     "./zero-state": {
       "types": "./dist/zero-state.d.ts",
       "import": "./dist/zero-state.js"
+    },
+    "./auto": {
+      "types": "./dist/auto.d.ts",
+      "import": "./dist/auto.js"
     }
   },
   "files": [
