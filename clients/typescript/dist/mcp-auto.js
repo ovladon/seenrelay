@@ -35,12 +35,16 @@ function normalizePolicies(input) {
     if (policy.eligible !== undefined && typeof policy.eligible !== 'function') {
       throw new TypeError(`tools.${name}.eligible must be a function when provided`);
     }
+    if (policy.normalizeResult !== undefined && typeof policy.normalizeResult !== 'function') {
+      throw new TypeError(`tools.${name}.normalizeResult must be a function when provided`);
+    }
     policies.set(name, Object.freeze({
       maxAgeMs: normalizeWindow(policy.maxAgeMs, `tools.${name}.maxAgeMs`),
       privateMaxAgeMs: normalizeWindow(policy.privateMaxAgeMs, `tools.${name}.privateMaxAgeMs`),
       relay: policy.relay,
       coordinate: policy.coordinate,
-      eligible: policy.eligible
+      eligible: policy.eligible,
+      normalizeResult: policy.normalizeResult
     }));
   }
   return policies;
@@ -89,7 +93,12 @@ export function protectMcpClient(client, options = {}) {
       maxAgeMs: resolveWindow(policy.maxAgeMs, params, rest, `tools.${name}.maxAgeMs`),
       privateMaxAgeMs: resolveWindow(policy.privateMaxAgeMs, params, rest, `tools.${name}.privateMaxAgeMs`),
       ...(relay ? { relay } : {}),
-      validate: async () => originalCallTool(params, ...rest)
+      validate: async (context) => {
+        const result = await originalCallTool(params, ...rest);
+        return typeof policy.normalizeResult === 'function'
+          ? policy.normalizeResult(result, params, rest, context)
+          : result;
+      }
     });
     return outcome.value;
   };
