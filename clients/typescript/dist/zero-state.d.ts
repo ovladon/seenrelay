@@ -72,6 +72,7 @@ export interface ZeroStateTelemetry {
   relayCheckCalls: number;
   relayCheckReuseHits: number;
   relayObserveScheduled: number;
+  relayObserveScheduleFailures: number;
   relayObserveBlocking: number;
   relayObserveSkippedNoScheduler: number;
   relayObserveFailures: number;
