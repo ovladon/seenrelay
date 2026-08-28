@@ -1,4 +1,4 @@
-import type { SeenRelayZeroState, ZeroStateOptions } from './zero-state.js';
+import type { SeenRelayZeroState, ZeroStateOptions, ValidationContext } from './zero-state.js';
 
 export type McpFreshnessWindow = number | ((params: any, rest: unknown[]) => number | undefined);
 
@@ -8,6 +8,8 @@ export interface McpToolPolicy {
   relay?: unknown | ((params: any, rest: unknown[]) => unknown);
   coordinate?: (params: any, rest: unknown[]) => unknown;
   eligible?: (params: any, rest: unknown[]) => boolean;
+  /** Provider-independent result classifier. Return freshResult/notModifiedResult/uncacheableResult when the raw MCP result needs explicit freshness semantics. */
+  normalizeResult?: (result: any, params: any, rest: unknown[], context: ValidationContext) => unknown | Promise<unknown>;
 }
 
 export interface ProtectMcpClientOptions {
