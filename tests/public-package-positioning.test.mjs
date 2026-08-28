@@ -35,11 +35,12 @@ test('human and machine-facing surfaces advertise public package installation fr
   assert.doesNotMatch(combined, /must not be inferred from repository metadata alone/i);
 });
 
-test('machine guidance preserves install-before-bind semantics without duplicating package facts', () => {
+test('machine guidance preserves canonical install facts before integration guidance', () => {
   const adoption = read('src', 'adoption.ts');
   const view = read('src', 'public-facts-view.ts');
-  assert.ok(adoption.includes('first install \\`seenrelay\\` from npm or PyPI'));
-  assert.match(adoption, /Canonical install\/version\/benchmark facts/);
+  const factsIndex = adoption.indexOf('${machinePublicFactsText(origin)}');
+  const integrationIndex = adoption.indexOf('## Preferred JavaScript / TypeScript order');
+  assert.ok(factsIndex >= 0 && integrationIndex > factsIndex, 'canonical install facts must precede integration guidance');
   assert.match(view, /## Public install/);
   assert.match(view, /Client version:/);
   assert.match(view, /Canonical machine-readable product facts/);
