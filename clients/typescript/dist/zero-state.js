@@ -1,4 +1,5 @@
-import { createHash } from 'node:crypto';
+import { createHash, createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import { serialize, deserialize } from 'node:v8';
 
 const ZERO_STATE_RESULT = '__seenrelay_zero_state_result_v1';
 
@@ -67,12 +68,26 @@ function conditionalHeaders(validator) {
   return Object.freeze({});
 }
 
+function validPrivateEntry(value) {
+  return Boolean(
+    value && typeof value === 'object' &&
+    Number.isFinite(value.confirmedAtMs) && value.confirmedAtMs >= 0 &&
+    Object.prototype.hasOwnProperty.call(value, 'value')
+  );
+}
+
 function emptyTelemetry() {
   return {
     guardCalls: 0,
     inflightCoalesced: 0,
     localFreshHits: 0,
     localUncacheableValues: 0,
+    privateReads: 0,
+    privateReadHits: 0,
+    privateFreshHits: 0,
+    privateWrites: 0,
+    privateReadFailures: 0,
+    privateWriteFailures: 0,
     sourceConditionalAttempts: 0,
     sourceNotModifiedHits: 0,
     validationCalls: 0,
@@ -113,10 +128,43 @@ function safeObserveMetadata(validator) {
   return undefined;
 }
 
+export function createAesGcmPrivateCodec(keyMaterial) {
+  const key = Buffer.from(keyMaterial);
+  if (key.byteLength !== 32) throw new TypeError('private codec key must be exactly 32 bytes');
+  return Object.freeze({
+    seal(entry, coordinateKey) {
+      const iv = randomBytes(12);
+      const cipher = createCipheriv('aes-256-gcm', key, iv);
+      cipher.setAAD(Buffer.from(coordinateKey, 'utf8'));
+      const ciphertext = Buffer.concat([cipher.update(serialize(entry)), cipher.final()]);
+      const tag = cipher.getAuthTag();
+      return `aes256gcm-v1.${iv.toString('base64url')}.${tag.toString('base64url')}.${ciphertext.toString('base64url')}`;
+    },
+    open(sealed, coordinateKey) {
+      if (typeof sealed !== 'string') throw new TypeError('private store payload must be a string');
+      const parts = sealed.split('.');
+      if (parts.length !== 4 || parts[0] !== 'aes256gcm-v1') throw new Error('unsupported private store payload');
+      const iv = Buffer.from(parts[1], 'base64url');
+      const tag = Buffer.from(parts[2], 'base64url');
+      const ciphertext = Buffer.from(parts[3], 'base64url');
+      if (iv.byteLength !== 12 || tag.byteLength !== 16) throw new Error('invalid private store payload');
+      const decipher = createDecipheriv('aes-256-gcm', key, iv);
+      decipher.setAAD(Buffer.from(coordinateKey, 'utf8'));
+      decipher.setAuthTag(tag);
+      return deserialize(Buffer.concat([decipher.update(ciphertext), decipher.final()]));
+    }
+  });
+}
+
 export class SeenRelayZeroState {
   constructor(options = {}) {
     this.localMaxAgeMs = nonNegativeFinite(options.localMaxAgeMs ?? 0, 'localMaxAgeMs');
     this.validatorRetentionMs = nonNegativeFinite(options.validatorRetentionMs ?? 86_400_000, 'validatorRetentionMs');
+    this.privateMaxAgeMs = nonNegativeFinite(options.privateMaxAgeMs ?? 0, 'privateMaxAgeMs');
+    this.privateValidatorRetentionMs = nonNegativeFinite(
+      options.privateValidatorRetentionMs ?? this.validatorRetentionMs,
+      'privateValidatorRetentionMs'
+    );
     this.maxEntries = positiveInteger(options.maxEntries ?? 1000, 'maxEntries');
     this.relayMode = options.relayMode ?? 'off';
     if (!isRelayMode(this.relayMode)) throw new TypeError('relayMode must be off, sample, or always');
@@ -126,6 +174,17 @@ export class SeenRelayZeroState {
     this.observeDelivery = options.observeDelivery ?? 'scheduled-only';
     if (this.observeDelivery !== 'scheduled-only' && this.observeDelivery !== 'blocking') {
       throw new TypeError('observeDelivery must be scheduled-only or blocking');
+    }
+    this.privateStore = options.privateStore;
+    this.privateCodec = options.privateCodec;
+    if (Boolean(this.privateStore) !== Boolean(this.privateCodec)) {
+      throw new TypeError('privateStore and privateCodec must be configured together');
+    }
+    if (this.privateStore && (typeof this.privateStore.get !== 'function' || typeof this.privateStore.set !== 'function')) {
+      throw new TypeError('privateStore must provide get() and set()');
+    }
+    if (this.privateCodec && (typeof this.privateCodec.seal !== 'function' || typeof this.privateCodec.open !== 'function')) {
+      throw new TypeError('privateCodec must provide seal() and open()');
     }
     this.now = options.now ?? wallNowMs;
     this.random = options.random ?? Math.random;
@@ -193,6 +252,47 @@ export class SeenRelayZeroState {
     while (this.cache.size > this.maxEntries) this.cache.delete(this.cache.keys().next().value);
   }
 
+  async #readPrivate(key) {
+    if (!this.privateStore) return null;
+    this.metrics.privateReads += 1;
+    try {
+      const sealed = await this.privateStore.get(key);
+      if (sealed == null) return null;
+      const entry = await this.privateCodec.open(sealed, key);
+      if (!validPrivateEntry(entry)) throw new Error('invalid private store entry');
+      const clone = cloneForCache(entry.value);
+      if (!clone.ok) throw new Error('private store value cannot be cloned');
+      this.metrics.privateReadHits += 1;
+      return {
+        value: clone.value,
+        sourceValidator: sourceValidator(entry.sourceValidator),
+        confirmedAtMs: entry.confirmedAtMs
+      };
+    } catch {
+      this.metrics.privateReadFailures += 1;
+      return null;
+    }
+  }
+
+  async #writePrivate(key, value, validator, privateMaxAgeMs) {
+    if (!this.privateStore) return;
+    const normalizedValidator = sourceValidator(validator);
+    if (!normalizedValidator && privateMaxAgeMs <= 0) return;
+    const clone = cloneForCache(value);
+    if (!clone.ok) return;
+    try {
+      const sealed = await this.privateCodec.seal({
+        value: clone.value,
+        sourceValidator: normalizedValidator,
+        confirmedAtMs: this.now()
+      }, key);
+      await this.privateStore.set(key, sealed);
+      this.metrics.privateWrites += 1;
+    } catch {
+      this.metrics.privateWriteFailures += 1;
+    }
+  }
+
   #shouldRelayCheck(options) {
     const mode = options.relay?.mode ?? this.relayMode;
     if (!isRelayMode(mode)) throw new TypeError('relay.mode must be off, sample, or always');
@@ -246,7 +346,7 @@ export class SeenRelayZeroState {
     this.metrics.relayObserveSkippedNoScheduler += 1;
   }
 
-  async #runValidator(key, options, retained, headers, maxAgeMs, relayCheck = null) {
+  async #runValidator(key, options, retained, headers, maxAgeMs, privateMaxAgeMs, relayCheck = null) {
     const hasConditional = Object.keys(headers).length > 0;
     if (hasConditional) this.metrics.sourceConditionalAttempts += 1;
     this.metrics.validationCalls += 1;
@@ -256,11 +356,12 @@ export class SeenRelayZeroState {
     const result = normalizeValidationResult(raw);
 
     if (result.kind === 'not-modified') {
-      if (!retained) throw new Error('notModifiedResult requires a retained local value');
+      if (!retained) throw new Error('notModifiedResult requires a retained value');
       const clone = cloneForCache(retained.value);
-      if (!clone.ok) throw new Error('retained local value cannot be cloned');
+      if (!clone.ok) throw new Error('retained value cannot be cloned');
       const nextValidator = result.sourceValidator ?? retained.sourceValidator;
       this.#remember(key, retained.value, nextValidator, maxAgeMs);
+      await this.#writePrivate(key, retained.value, nextValidator, privateMaxAgeMs);
       this.metrics.sourceNotModifiedHits += 1;
       await this.#contribute(options, clone.value, nextValidator);
       return {
@@ -273,6 +374,7 @@ export class SeenRelayZeroState {
     }
 
     this.#remember(key, result.value, result.sourceValidator, maxAgeMs);
+    await this.#writePrivate(key, result.value, result.sourceValidator, privateMaxAgeMs);
     await this.#contribute(options, result.value, result.sourceValidator);
     return {
       value: result.value,
@@ -285,16 +387,31 @@ export class SeenRelayZeroState {
 
   async #guardOne(key, options) {
     const maxAgeMs = nonNegativeFinite(options.maxAgeMs ?? this.localMaxAgeMs, 'maxAgeMs');
+    const privateMaxAgeMs = nonNegativeFinite(options.privateMaxAgeMs ?? this.privateMaxAgeMs, 'privateMaxAgeMs');
     const local = this.#freshLocalEntry(key, maxAgeMs);
     if (local) {
       this.metrics.localFreshHits += 1;
       return { value: local.value, path: 'local_reuse', relay: { check: null }, source: { conditional: false, notModified: false } };
     }
 
-    const retained = this.#retainedEntry(key);
+    const localRetained = this.#retainedEntry(key);
+    const privateEntry = await this.#readPrivate(key);
+    if (privateEntry && privateMaxAgeMs > 0 && this.now() - privateEntry.confirmedAtMs <= privateMaxAgeMs) {
+      this.metrics.privateFreshHits += 1;
+      this.#remember(key, privateEntry.value, privateEntry.sourceValidator, maxAgeMs);
+      return { value: privateEntry.value, path: 'private_reuse', relay: { check: null }, source: { conditional: false, notModified: false } };
+    }
+
+    const privateRetained = privateEntry && privateEntry.sourceValidator &&
+      this.now() - privateEntry.confirmedAtMs <= this.privateValidatorRetentionMs
+      ? privateEntry
+      : null;
+    const retained = !localRetained ? privateRetained
+      : !privateRetained ? localRetained
+        : localRetained.confirmedAtMs >= privateRetained.confirmedAtMs ? localRetained : privateRetained;
     const headers = conditionalHeaders(retained?.sourceValidator);
     if (Object.keys(headers).length > 0) {
-      return this.#runValidator(key, options, retained, headers, maxAgeMs, null);
+      return this.#runValidator(key, options, retained, headers, maxAgeMs, privateMaxAgeMs, null);
     }
 
     const relayOutcome = await this.#maybeRelayReuse(options);
@@ -302,7 +419,7 @@ export class SeenRelayZeroState {
       return { value: relayOutcome.value, path: 'relay_reuse', relay: { check: relayOutcome.check }, source: { conditional: false, notModified: false } };
     }
 
-    return this.#runValidator(key, options, retained, Object.freeze({}), maxAgeMs, relayOutcome?.check ?? null);
+    return this.#runValidator(key, options, retained, Object.freeze({}), maxAgeMs, privateMaxAgeMs, relayOutcome?.check ?? null);
   }
 }
 
