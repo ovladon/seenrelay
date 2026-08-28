@@ -2,7 +2,7 @@
 
 Release tag: `clients-v0.2.0`
 
-This client release does not change the hosted SeenRelay service, database schema, Hive rules, billing state, MCP protocol surface, CHECK semantics or OBSERVE semantics.
+Client 0.2.0 is published on the public npm and PyPI registries. This release does not change the hosted SeenRelay service, database schema, Hive rules, billing state, MCP protocol surface, CHECK semantics or OBSERVE semantics.
 
 ## JavaScript / TypeScript
 
@@ -49,6 +49,6 @@ Deleting the provider adapter does not remove L0, L1, source-native conditional 
 
 ## Release verification
 
-Before publication, the release candidate must pass the repository's full required gate set. Package Validation clean-installs the built npm tarball and imports the classic client plus `shadow-proof`, `zero-state`, `auto`, `mcp-auto` and the optional provider-adapter subpath. The Python wheel is built, checked and installed in a clean environment.
+The release candidate passed the repository's required gate set. Package Validation clean-installed the built npm tarball and imported the classic client plus `shadow-proof`, `zero-state`, `auto`, `mcp-auto` and the optional provider-adapter subpath. The Python wheel was built, checked and installed in a clean environment.
 
-After publication, public registry installation must be verified before the website and generated public install facts are changed from 0.1.0 to 0.2.0.
+PyPI 0.2.0 was published through trusted publishing. npm 0.2.0 was published after configuring the package's GitHub Actions OIDC Trusted Publisher for `ovladon/seenrelay` and `publish-clients.yml`. Public install facts are promoted to 0.2.0 only after successful registry publication and package verification.
