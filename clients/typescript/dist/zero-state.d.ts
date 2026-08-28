@@ -25,6 +25,7 @@ export interface NotModifiedResult {
 export declare function freshResult<T>(value: T, validator?: SourceValidator): FreshResult<T>;
 export declare function notModifiedResult(validator?: SourceValidator): NotModifiedResult;
 export declare function sourceValidatorFromResponse(response: { headers?: { get(name: string): string | null } }): SourceValidator | undefined;
+export declare function sha256JsonFingerprint(value: unknown): string;
 
 export interface PrivateStore {
   get(key: string): string | null | undefined | Promise<string | null | undefined>;
@@ -43,22 +44,24 @@ export interface RelayClientLike {
   observe(fact: unknown, value: unknown, metadata?: unknown): Promise<any>;
 }
 
-export interface ZeroStateRelayOptions<T = unknown> {
+export interface ZeroStateRelayOptions<T = unknown, TEvidence = unknown> {
   mode?: RelayMode;
   sampleRate?: number;
   fact: unknown;
-  knownValue?: T;
+  knownValue?: TEvidence;
   maxAgeSeconds?: number;
   contribute?: boolean;
-  reuse?: (check: any, knownValue: T) => { reuse: boolean; value?: T };
+  evidenceValue?: (value: T) => TEvidence | Promise<TEvidence>;
+  reuse?: (check: any, knownValue: TEvidence) => { reuse: boolean; value?: T };
+  reuseRetained?: (check: any, retainedValue: T, evidenceValue: TEvidence) => boolean | Promise<boolean>;
 }
 
-export interface ZeroStateGuardOptions<T = unknown> {
+export interface ZeroStateGuardOptions<T = unknown, TEvidence = unknown> {
   coordinate: unknown;
   maxAgeMs?: number;
   privateMaxAgeMs?: number;
   validate(context: ValidationContext<T>): Promise<T | FreshResult<T> | NotModifiedResult> | T | FreshResult<T> | NotModifiedResult;
-  relay?: ZeroStateRelayOptions<T>;
+  relay?: ZeroStateRelayOptions<T, TEvidence>;
 }
 
 export interface ZeroStateOptions {
@@ -94,6 +97,7 @@ export interface ZeroStateTelemetry {
   validationCalls: number;
   relayCheckCalls: number;
   relayCheckReuseHits: number;
+  relayEvidenceFailures: number;
   relayObserveScheduled: number;
   relayObserveScheduleFailures: number;
   relayObserveBlocking: number;
@@ -108,8 +112,8 @@ export declare class SeenRelayZeroState {
   getTelemetry(): Readonly<ZeroStateTelemetry>;
   resetTelemetry(): void;
   clearLocal(): void;
-  protect<T>(options: ZeroStateGuardOptions<T>): () => Promise<any>;
-  guard<T>(options: ZeroStateGuardOptions<T>): Promise<any>;
+  protect<T, TEvidence = unknown>(options: ZeroStateGuardOptions<T, TEvidence>): () => Promise<any>;
+  guard<T, TEvidence = unknown>(options: ZeroStateGuardOptions<T, TEvidence>): Promise<any>;
 }
 
 export interface ConditionalFetchValidatorOptions<T = unknown> {
