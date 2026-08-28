@@ -22,6 +22,20 @@ function stableJson(value) {
   throw new TypeError('coordinate must be JSON-serializable');
 }
 
+function bytesToHex(buffer) {
+  return Array.from(new Uint8Array(buffer), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function opaqueCoordinateKey(value) {
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle || typeof subtle.digest !== 'function') {
+    throw new Error('SeenRelay zero-state requires Web Crypto SHA-256 support');
+  }
+  const encoded = new TextEncoder().encode(stableJson(value));
+  const digest = await subtle.digest('SHA-256', encoded);
+  return `sha256:${bytesToHex(digest)}`;
+}
+
 function nonNegativeFinite(value, name) {
   if (!Number.isFinite(value) || value < 0) throw new TypeError(`${name} must be a non-negative finite number`);
   return value;
@@ -140,7 +154,7 @@ export class SeenRelayZeroState {
   async guard(options) {
     if (!options || typeof options.validate !== 'function') throw new TypeError('validate must be a function');
     this.metrics.guardCalls += 1;
-    const key = stableJson(options.coordinate);
+    const key = await opaqueCoordinateKey(options.coordinate);
     const existing = this.inflight.get(key);
     if (existing) {
       this.metrics.inflightCoalesced += 1;
