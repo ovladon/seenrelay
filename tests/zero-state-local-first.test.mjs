@@ -4,6 +4,7 @@ import {
   SeenRelayZeroState,
   freshResult,
   notModifiedResult,
+  uncacheableResult,
   createConditionalFetchValidator
 } from '../clients/typescript/dist/zero-state.js';
 
@@ -185,4 +186,104 @@ test('conditional fetch helper permits read-only GET and turns source 304 into n
   assert.equal(captured.headers.get('If-None-Match'), '"abc"');
 
   assert.throws(() => createConditionalFetchValidator({ url: 'https://example.test', init: { method: 'POST' } }), /only supports GET or HEAD/);
+});
+
+
+test('source observation time bounds local freshness instead of restarting the TTL at receipt time', async () => {
+  let now = 10_000;
+  let validations = 0;
+  const edge = new SeenRelayZeroState({ relayMode: 'off', localMaxAgeMs: 1_000, now: () => now });
+  const options = {
+    coordinate: { kind: 'intermediary-cache-age' },
+    validate: async () => {
+      validations += 1;
+      return freshResult({ value: 1 }, undefined, { observedAt: 9_300 });
+    }
+  };
+
+  await edge.guard(options);
+  now = 10_500;
+  await edge.guard(options);
+  assert.equal(validations, 2, 'the remaining freshness budget was only 300ms, not a new 1000ms window');
+});
+
+test('future observation timestamps are conservatively clamped and cannot extend reuse', async () => {
+  let now = 20_000;
+  let validations = 0;
+  const edge = new SeenRelayZeroState({ relayMode: 'off', localMaxAgeMs: 1_000, now: () => now });
+  const options = {
+    coordinate: { kind: 'future-clock-skew' },
+    validate: async () => {
+      validations += 1;
+      return freshResult('value', undefined, { observedAt: 99_999_999 });
+    }
+  };
+  await edge.guard(options);
+  now += 1_001;
+  await edge.guard(options);
+  assert.equal(validations, 2);
+});
+
+test('intermediary cache reuse can be locally useful without being re-labeled as an independent OBSERVE', async () => {
+  const relay = { checks: 0, observes: [], async check() { this.checks += 1; return { status: 'UNKNOWN' }; }, async observe(f, v, m) { this.observes.push({ f, v, m }); } };
+  const tasks = [];
+  const edge = new SeenRelayZeroState({
+    relayClient: relay,
+    relayMode: 'off',
+    localMaxAgeMs: 60_000,
+    scheduleObserve: (task) => tasks.push(task)
+  });
+  const outcome = await edge.guard({
+    coordinate: { kind: 'provider-cache-hit' },
+    relay: { fact, contribute: true },
+    validate: async () => freshResult('cached-copy', undefined, {
+      observedAt: '2026-08-28T12:00:00.000Z',
+      independentlyObtained: false
+    })
+  });
+  assert.equal(outcome.value, 'cached-copy');
+  assert.equal(tasks.length, 0);
+  assert.equal(relay.observes.length, 0);
+  assert.equal(edge.getTelemetry().relayObserveSkippedNotIndependent, 1);
+});
+
+test('OBSERVE preserves the source observation timestamp supplied by a source-aware validator', async () => {
+  const relay = { observes: [], async check() { return { status: 'UNKNOWN' }; }, async observe(f, v, m) { this.observes.push({ f, v, m }); } };
+  const tasks = [];
+  const observedAt = '2026-08-28T12:34:56.000Z';
+  const edge = new SeenRelayZeroState({ relayClient: relay, scheduleObserve: (task) => tasks.push(task) });
+  await edge.guard({
+    coordinate: { kind: 'timestamped-observation' },
+    relay: { fact, contribute: true },
+    validate: async () => freshResult('v', undefined, { observedAt, independentlyObtained: true })
+  });
+  assert.equal(tasks.length, 1);
+  await tasks[0]();
+  assert.equal(relay.observes.length, 1);
+  assert.equal(relay.observes[0].m.observedAt, observedAt);
+});
+
+test('uncacheable successful results return to the caller but never persist or OBSERVE', async () => {
+  let validations = 0;
+  const relay = { observes: 0, async check() { return { status: 'UNKNOWN' }; }, async observe() { this.observes += 1; } };
+  const tasks = [];
+  const edge = new SeenRelayZeroState({
+    relayClient: relay,
+    localMaxAgeMs: 60_000,
+    scheduleObserve: (task) => tasks.push(task)
+  });
+  const options = {
+    coordinate: { kind: 'successful-but-unverifiable-age' },
+    relay: { fact, contribute: true },
+    validate: async () => uncacheableResult({ n: ++validations })
+  };
+  const first = await edge.guard(options);
+  const second = await edge.guard(options);
+  assert.equal(first.path, 'validated_uncacheable');
+  assert.equal(second.path, 'validated_uncacheable');
+  assert.equal(validations, 2);
+  assert.equal(edge.getTelemetry().cacheEntries, 0);
+  assert.equal(edge.getTelemetry().validatedUncacheable, 2);
+  assert.equal(tasks.length, 0);
+  assert.equal(relay.observes, 0);
 });
