@@ -19,6 +19,9 @@ function normalizePolicies(input) {
     const name = nonEmptyText(rawName, 'tool name');
     const policy = rawPolicy ?? {};
     if (!policy || typeof policy !== 'object' || Array.isArray(policy)) throw new TypeError(`tools.${name} must be an object`);
+    if (policy.coordinate !== undefined && typeof policy.coordinate !== 'function') {
+      throw new TypeError(`tools.${name}.coordinate must be a function when provided`);
+    }
     policies.set(name, Object.freeze({
       maxAgeMs: nonNegativeFinite(policy.maxAgeMs ?? 0, `tools.${name}.maxAgeMs`),
       relay: policy.relay,
@@ -36,7 +39,7 @@ export function protectMcpClient(client, options = {}) {
   const edge = options.edge ?? new SeenRelayZeroState(options.edgeOptions);
   const bindingId = options.serverKey?.trim() || `bound-client-${++bindingSequence}`;
   const originalCallTool = client.callTool.bind(client);
-  const metrics = { callToolCalls: 0, protectedCalls: 0, passthroughCalls: 0 };
+  const metrics = { callToolCalls: 0, protectedCalls: 0, passthroughCalls: 0, optionPassthroughCalls: 0 };
 
   const protectedCallTool = async (params, ...rest) => {
     metrics.callToolCalls += 1;
@@ -46,10 +49,15 @@ export function protectMcpClient(client, options = {}) {
       metrics.passthroughCalls += 1;
       return originalCallTool(params, ...rest);
     }
+    if (rest.length > 0 && typeof policy.coordinate !== 'function') {
+      metrics.passthroughCalls += 1;
+      metrics.optionPassthroughCalls += 1;
+      return originalCallTool(params, ...rest);
+    }
     metrics.protectedCalls += 1;
-    const relay = typeof policy.relay === 'function' ? policy.relay(params) : policy.relay;
+    const relay = typeof policy.relay === 'function' ? policy.relay(params, rest) : policy.relay;
     const coordinate = typeof policy.coordinate === 'function'
-      ? policy.coordinate(params)
+      ? policy.coordinate(params, rest)
       : {
           protocol: 'mcp-tools-call-v1',
           server: bindingId,
