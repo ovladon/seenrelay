@@ -52,3 +52,5 @@ Deleting the provider adapter does not remove L0, L1, source-native conditional 
 The release candidate passed the repository's required gate set. Package Validation clean-installed the built npm tarball and imported the classic client plus `shadow-proof`, `zero-state`, `auto`, `mcp-auto` and the optional provider-adapter subpath. The Python wheel was built, checked and installed in a clean environment.
 
 PyPI 0.2.0 was published through trusted publishing. npm 0.2.0 was published after configuring the package's GitHub Actions OIDC Trusted Publisher for `ovladon/seenrelay` and `publish-clients.yml`. Public install facts are promoted to 0.2.0 only after successful registry publication and package verification.
+
+<!-- Preview deployment refresh for the verified rollout candidate. -->
