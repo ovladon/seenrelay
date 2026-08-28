@@ -1,44 +1,110 @@
 # SeenRelay deterministic client wrappers
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.1.0 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.0 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
-These reference clients put SeenRelay directly in front of validation work an application already performs. They are the recommended application path when CHECK must run deterministically instead of depending on a model to decide whether to call an MCP tool.
+The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-They do **not** change the SeenRelay protocol. The server still has exactly two domain operations: CHECK and OBSERVE.
+Version 0.2.0 has two deliberately different execution modes:
+
+- **JavaScript / TypeScript Zero-State:** provider-independent, local-first optimization that can save work before any shared network evidence exists.
+- **Classic JavaScript / TypeScript and Python:** conservative shadow-first CHECK/validate/OBSERVE path for measuring or explicitly using shared evidence.
 
 ## Available clients
 
-- JavaScript / TypeScript runtime: [`typescript/dist/seenrelay.js`](typescript/dist/seenrelay.js)
-- Python runtime: [`python/seenrelay.py`](python/seenrelay.py)
-- Python bind-once helper: [`python/seenrelay_easy.py`](python/seenrelay_easy.py)
+- JavaScript / TypeScript package: [`typescript/README.md`](typescript/README.md)
+- Python package: [`python/README.md`](python/README.md)
+- JavaScript / TypeScript Zero-State: `seenrelay/zero-state`
+- Generic JavaScript / TypeScript dispatcher: `seenrelay/auto`
+- MCP bind-once interception: `seenrelay/mcp-auto`
+- Classic Shadow Proof: `seenrelay/shadow-proof`
 
-The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.1.0` on npm and PyPI. Install with `npm install seenrelay` or `pip install seenrelay`. Public-registry installation and imports were verified in clean GitHub-hosted environments.
-
-The client code is MIT licensed under [`clients/LICENSE`](LICENSE). This permissive client license does not change the repository-root license that governs the SeenRelay hosted service implementation.
+The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.0` on npm and PyPI.
 
 ## Install
 
-JavaScript / TypeScript:
-
 ```bash
+# JavaScript / TypeScript
 npm install seenrelay
-```
 
-Python:
-
-```bash
+# Python
 pip install seenrelay
 ```
 
 No SeenRelay account or API key is required. Access is currently free.
 
-## Default behavior
+## JavaScript / TypeScript: local-first Zero-State
 
-The default is shadow mode:
+```js
+import { SeenRelayZeroState } from 'seenrelay/zero-state';
+
+const edge = new SeenRelayZeroState({
+  localMaxAgeMs: 30_000
+});
+
+const result = await edge.guard({
+  coordinate: {
+    tool: 'catalog.read',
+    arguments: { id: 42 }
+  },
+  validate: async () => expensiveRead()
+});
+
+console.log(result.value);
+```
+
+Zero-State tries safe caller-side options before an optional shared relay lookup:
+
+1. in-flight exact-call coalescing;
+2. explicit-TTL local reuse;
+3. optional encrypted caller-owned private L1 reuse;
+4. source-native ETag / Last-Modified confirmation where available;
+5. optional shared CHECK only when configured and useful;
+6. the original validation as fallback;
+7. OBSERVE only after a genuinely fresh independent validation that is eligible for contribution.
+
+The default completed-result TTL is `0`. SeenRelay does not invent freshness for arbitrary calls.
+
+Private L1 data stays caller-owned. A provider or intermediary cache hit is not re-labeled as a fresh independent OBSERVE.
+
+### Bind once around MCP tool calls
+
+```js
+import { protectMcpClient } from 'seenrelay/mcp-auto';
+
+const client = protectMcpClient(rawMcpClient, {
+  serverKey: 'catalog-server',
+  tools: {
+    'catalog.read': { maxAgeMs: 30_000 }
+  }
+});
+```
+
+Only explicitly allowlisted tools are eligible. Unlisted tools pass through unchanged. The generic core does not infer read-only safety from tool names, descriptions, or untrusted annotations.
+
+### Optional private L1
+
+```js
+import {
+  SeenRelayZeroState,
+  createAesGcmPrivateCodec
+} from 'seenrelay/zero-state';
+
+const edge = new SeenRelayZeroState({
+  privateStore,
+  privateCodec: createAesGcmPrivateCodec(keyBytes),
+  privateMaxAgeMs: 30_000
+});
+```
+
+The application owns the storage, encryption key, namespace and retention policy. Store/codec failure fails open into the application's normal validation path.
+
+## Classic shadow-first client
+
+The original API remains available in JavaScript / TypeScript and Python. Its default behavior remains conservative:
 
 1. CHECK;
 2. if the caller supplied an explicit reuse policy and permits reuse, return the accepted value;
@@ -49,44 +115,7 @@ The default is shadow mode:
 
 Application validation errors are never hidden by SeenRelay fail-open behavior.
 
-## Smallest integration: bind once, one protected call after that
-
-### JavaScript / TypeScript
-
-```js
-const relay = new SeenRelayClient();
-
-const validatePrice = relay.protectValidation({
-  fact,
-  validate: ({ conditionalHeaders }) =>
-    expensiveValidation(conditionalHeaders)
-});
-
-const value = await validatePrice(knownValue);
-```
-
-### Python
-
-```python
-from seenrelay import SeenRelayClient
-from seenrelay_easy import protect_validation
-
-relay = SeenRelayClient()
-
-validate_price = protect_validation(
-    relay,
-    fact=fact,
-    validate=lambda ctx: expensive_validation(ctx.conditional_headers),
-)
-
-value = validate_price(known_value)
-```
-
-With no reuse policy supplied, both examples remain strict shadow mode. The original validation is **not** skipped just because SeenRelay was installed.
-
-After Shadow Proof demonstrates positive economics and the application's risk policy permits bounded reuse, add the explicit reuse helper (`reuseKnownOnSameObserved` / `reuse_known_on_same_observed`).
-
-## Direct JavaScript / TypeScript form
+### JavaScript / TypeScript classic form
 
 ```js
 import { SeenRelayClient, reuseKnownOnSameObserved } from 'seenrelay';
@@ -102,7 +131,7 @@ const value = await relay.guard({
 });
 ```
 
-## Direct Python form
+### Python classic form
 
 ```python
 from seenrelay import SeenRelayClient, reuse_known_on_same_observed
@@ -118,37 +147,11 @@ value = relay.guard(
 )
 ```
 
-## Optional caller-scheduled OBSERVE
+Python behavior remains shadow-first in 0.2.0. JavaScript / TypeScript Zero-State parity is not claimed for Python in this release.
 
-By default the client waits for best-effort OBSERVE before returning. Applications with a request-lifecycle/background scheduler can explicitly move OBSERVE out of the response critical path. The client never creates a hidden worker or thread of its own.
+## Shadow Proof
 
-JavaScript / TypeScript:
-
-```js
-const relay = new SeenRelayClient({
-  // Example shape for a platform waitUntil-style primitive:
-  scheduleObserve: (task) => waitUntil(task())
-});
-```
-
-Python:
-
-```python
-relay = SeenRelayClient(
-    # The application owns the executor and its lifecycle.
-    schedule_observe=lambda task: executor.submit(task),
-)
-```
-
-If no scheduler is supplied, behavior remains blocking and backward-compatible. If scheduling throws, validation still succeeds and the schedule failure is exposed in local telemetry. A scheduled OBSERVE failure is best-effort and can be reported through `onDeferredObserveError` / `on_deferred_observe_error`.
-
-Do not call this off-critical-path merely because a scheduler callback exists. A scheduler that executes the task synchronously still adds OBSERVE latency to the request path.
-
-## Prove value in shadow mode
-
-Do not enable reuse because a generic benchmark says it should help. Measure the workload that would actually be protected.
-
-JavaScript / TypeScript:
+Use Shadow Proof when you specifically want to measure the value of shared CHECK evidence while keeping every original validation.
 
 ```js
 import { SeenRelayClient } from 'seenrelay';
@@ -162,47 +165,18 @@ await proof.guard({
   validate: ({ conditionalHeaders }) => expensiveValidation(conditionalHeaders)
 });
 
-console.log(proof.report({
-  avoidedValidationCost: 0.01 // use your own cost or invoice unit
-}));
+console.log(proof.report({ avoidedValidationCost: 0.01 }));
 ```
 
-Python:
+Potential direct savings count only measured `SAME_OBSERVED` cases. Conditional ETag / Last-Modified savings remain excluded until the consuming application measures them separately.
 
-```python
-from seenrelay import SeenRelayClient
-from seenrelay_shadow import SeenRelayShadowProof
+## Optional caller-scheduled OBSERVE
 
-proof = SeenRelayShadowProof(SeenRelayClient())
-
-proof.guard(
-    fact=fact,
-    known_value=known_value,
-    validate=lambda ctx: expensive_validation(ctx.conditional_headers),
-)
-
-print(proof.report(
-    avoided_validation_cost=0.01,
-))
-```
-
-Shadow Proof never supplies a reuse policy, so the application's original validation still runs. It records locally:
-
-- CHECK status distribution;
-- `SAME_OBSERVED` rate;
-- validation time;
-- CHECK and OBSERVE network latency from the underlying client telemetry;
-- conditional-hint frequency;
-- potential validation calls avoided if direct reuse were later enabled;
-- caller-supplied monetary economics and time break-even estimates.
-
-The report is deliberately conservative. Direct potential savings count only `SAME_OBSERVED`. Conditional ETag / Last-Modified savings are excluded until the consuming application measures them. If `SAME_OBSERVED` is zero, gross potential savings are reported as zero.
-
-If the application has verified that its scheduler actually keeps OBSERVE outside the response critical path, it may set `observeOffCriticalPath: true` / `observe_off_critical_path=True` in the Shadow Proof report. This affects the latency model only; OBSERVE still has network/compute cost.
+Classic clients can move OBSERVE off the response critical path only when the caller supplies a lifecycle-safe scheduler. The clients do not create hidden workers or threads. If scheduling fails, validation still succeeds and the failure is exposed in local telemetry.
 
 ## Where to use it
 
-Use SeenRelay around repeated validation that is materially more expensive than the preflight:
+Good candidates are repeated **read-only** validations with deterministic identity and meaningful cost or latency:
 
 - paid web search;
 - metered scraping/proxy work;
@@ -211,43 +185,26 @@ Use SeenRelay around repeated validation that is materially more expensive than 
 - model-assisted parsing;
 - multi-step validation chains.
 
-It is a poor fit for a one-off trivial GET with little chance of repeated work.
-
-For fleet-level examples using current public provider prices, see `https://seenrelay.com/economics`. Use your own invoice and Shadow Proof before making a production savings claim.
+Do not suppress mutating/destructive operations. A cheap one-off GET with little repeat probability is usually a poor fit.
 
 ## Safety and scope
 
-- no new SeenRelay operation;
-- no persistent local fact cache;
-- no browser or search behavior;
-- no automatic truth decision;
-- no hidden telemetry upload;
-- no hidden background worker or thread;
-- ETag / Last-Modified hints remain observer-supplied and unverified;
-- only `If-None-Match` and `If-Modified-Since` are forwarded, with CR/LF rejected;
-- simultaneous identical CHECKs can be coalesced in-process, but completed CHECK results are not cached;
-- local telemetry exists only in process memory unless the consuming application explicitly exports it.
+- exactly two SeenRelay domain operations remain CHECK and OBSERVE;
+- no browser, search, crawler or LLM truth function is added to SeenRelay Core;
+- local/private/source-native/shared evidence can all fail open to the application's original validation;
+- raw private L1 values are not required by the public relay;
+- provider-specific adapters are optional and cannot become dependencies of the provider-independent core;
+- intermediary cache reuse is not treated as a new independent observation;
+- telemetry stays local unless the consuming application exports it.
 
 ## Economics
 
-For direct reuse, a useful first-order model is:
+Measure the actual protected workload. A useful first-order model is:
 
 ```text
 expected savings
-= reusable validations avoided
-- CHECK overhead on all protected validations
-- OBSERVE overhead on validations that still run
+= redundant validations actually avoided
+- SeenRelay/client overhead
 ```
 
-For latency, if `V` is average validation latency, `C` average CHECK latency and `O` average OBSERVE latency, the direct-reuse break-even hit rate is approximately:
-
-```text
-blocking OBSERVE:          (C + O) / (V + O)
-OBSERVE truly off-path:    C / V
-```
-
-The Shadow Proof helper computes these from measured client/validation timing. Monetary break-even continues to include OBSERVE cost even when it is off the response critical path.
-
-See [`docs/ECONOMICS_LAB.md`](../docs/ECONOMICS_LAB.md) for the full reproducible evaluation method.
-
-A package download, MCP initialize, tools/list request, or first-party Reference Observer run is not external adoption.
+For shared CHECK-specific economics, use [`docs/ECONOMICS_LAB.md`](../docs/ECONOMICS_LAB.md). Package downloads, MCP initialize, tools/list requests and first-party Reference Observer activity are not evidence of external adoption.
