@@ -19,7 +19,7 @@ export function exactToolAdapter(options) {
     throw new TypeError('toolNames must be a non-empty array');
   }
   const names = new Set(options.toolNames.map((name, index) => nonEmptyText(name, `toolNames[${index}]`)));
-  const maxAgeMs = nonNegativeFinite(options.maxAgeMs ?? 30_000, 'maxAgeMs');
+  const maxAgeMs = nonNegativeFinite(options.maxAgeMs ?? 0, 'maxAgeMs');
   return Object.freeze({
     name: options.name?.trim() || `exact:${[...names].sort().join(',')}`,
     matches(call) {
@@ -62,7 +62,7 @@ export class SeenRelayAuto {
       this.metrics.calls += 1;
       const matches = this.adapters.filter((adapter) => adapter.matches(call));
       if (matches.length === 0) {
-        this.metrics.passthroughCalls += 1;
+        this.metrics.pashthroughCalls += 1;
         return execute(call);
       }
       if (matches.length > 1) {
