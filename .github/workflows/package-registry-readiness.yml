@@ -17,8 +17,27 @@ jobs:
     name: Registry ownership and install
     runs-on: ubuntu-latest
     steps:
-      - name: Check npm package ownership
+      - name: Checkout release manifests
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Read allowed client versions
+        id: versions
         shell: bash
+        run: |
+          set -euo pipefail
+          PUBLIC_VERSION="$(jq -r '.install.client_version' public/product-facts.json)"
+          RELEASE_VERSION="$(tr -d '[:space:]' < clients/RELEASE_VERSION)"
+          test -n "$PUBLIC_VERSION"
+          test -n "$RELEASE_VERSION"
+          echo "public=$PUBLIC_VERSION" >> "$GITHUB_OUTPUT"
+          echo "release=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check npm package ownership
+        id: npm-version
+        shell: bash
+        env:
+          PUBLIC_VERSION: ${{ steps.versions.outputs.public }}
+          RELEASE_VERSION: ${{ steps.versions.outputs.release }}
         run: |
           set -euo pipefail
           metadata="$(npm view seenrelay name version repository.url --json)"
@@ -28,20 +47,27 @@ jobs:
           if [ -z "$repo" ]; then
             repo="$(printf '%s' "$metadata" | jq -r '.repository // empty' 2>/dev/null || true)"
           fi
-          test "$version" = '0.1.0'
+          if [ "$version" != "$PUBLIC_VERSION" ] && [ "$version" != "$RELEASE_VERSION" ]; then
+            echo "Unexpected npm version during staged rollout: $version (allowed: $PUBLIC_VERSION or $RELEASE_VERSION)" >&2
+            exit 1
+          fi
           case "$repo" in
             *github.com/ovladon/seenrelay*) echo 'npm package exists and points to the SeenRelay repository.' ;;
             *) echo "npm package 'seenrelay' does not identify the SeenRelay repository: ${repo:-missing repository metadata}" >&2; exit 1 ;;
           esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Install npm package from public registry in a clean project
         shell: bash
+        env:
+          CLIENT_VERSION: ${{ steps.npm-version.outputs.version }}
+          RELEASE_VERSION: ${{ steps.versions.outputs.release }}
         run: |
           set -euo pipefail
           tmp="$(mktemp -d)"
           cd "$tmp"
           npm init -y >/dev/null
-          npm install --ignore-scripts --no-audit --no-fund seenrelay@0.1.0
+          npm install --ignore-scripts --no-audit --no-fund "seenrelay@$CLIENT_VERSION"
           node --input-type=module <<'NODE'
           import { SeenRelayClient } from 'seenrelay';
           import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
@@ -50,14 +76,30 @@ jobs:
           if (typeof client.protectValidation !== 'function' || typeof client.guardDetailed !== 'function' || !proof) {
             throw new Error('public npm client API smoke failed');
           }
-          console.log('npm public install OK: seenrelay@0.1.0');
+          if (process.env.CLIENT_VERSION === process.env.RELEASE_VERSION && process.env.RELEASE_VERSION === '0.2.0') {
+            const zeroState = await import('seenrelay/zero-state');
+            const auto = await import('seenrelay/auto');
+            const mcpAuto = await import('seenrelay/mcp-auto');
+            if (
+              typeof zeroState.SeenRelayZeroState !== 'function' ||
+              typeof auto.SeenRelayAuto !== 'function' ||
+              typeof mcpAuto.protectMcpClient !== 'function'
+            ) {
+              throw new Error('public npm 0.2.0 subpath smoke failed');
+            }
+          }
+          console.log(`npm public install OK: seenrelay@${process.env.CLIENT_VERSION}`);
           NODE
 
       - name: Check PyPI project ownership
+        id: pypi-version
         shell: bash
+        env:
+          PUBLIC_VERSION: ${{ steps.versions.outputs.public }}
+          RELEASE_VERSION: ${{ steps.versions.outputs.release }}
         run: |
           set -euo pipefail
-          python - <<'PY'
+          version="$(python - <<'PY'
           import json
           import urllib.request
 
@@ -65,8 +107,6 @@ jobs:
               data = json.load(response)
 
           info = data.get('info') or {}
-          if info.get('version') != '0.1.0':
-              raise SystemExit(f"Unexpected PyPI version: {info.get('version')!r}")
           project_urls = info.get('project_urls') or {}
           candidates = [
               str(project_urls.get('Repository') or ''),
@@ -77,15 +117,25 @@ jobs:
           ]
           if not any('github.com/ovladon/seenrelay' in value for value in candidates):
               raise SystemExit("PyPI project 'seenrelay' does not identify the SeenRelay repository.")
-          print('PyPI project exists and points to the SeenRelay repository.')
+          print(info.get('version') or '')
           PY
+          )"
+          test -n "$version"
+          if [ "$version" != "$PUBLIC_VERSION" ] && [ "$version" != "$RELEASE_VERSION" ]; then
+            echo "Unexpected PyPI version during staged rollout: $version (allowed: $PUBLIC_VERSION or $RELEASE_VERSION)" >&2
+            exit 1
+          fi
+          echo 'PyPI project exists and points to the SeenRelay repository.'
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Install PyPI package from public registry in a clean virtual environment
         shell: bash
+        env:
+          CLIENT_VERSION: ${{ steps.pypi-version.outputs.version }}
         run: |
           set -euo pipefail
           python -m venv /tmp/seenrelay-registry-install
-          /tmp/seenrelay-registry-install/bin/python -m pip install --disable-pip-version-check --no-cache-dir seenrelay==0.1.0
+          /tmp/seenrelay-registry-install/bin/python -m pip install --disable-pip-version-check --no-cache-dir "seenrelay==$CLIENT_VERSION"
           /tmp/seenrelay-registry-install/bin/python - <<'PY'
           from seenrelay import SeenRelayClient
           from seenrelay_shadow import SeenRelayShadowProof
@@ -96,5 +146,5 @@ jobs:
           assert client is not None
           assert proof is not None
           assert callable(protect_validation)
-          print('PyPI public install OK: seenrelay==0.1.0')
+          print('PyPI public install OK')
           PY

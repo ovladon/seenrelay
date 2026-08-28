@@ -28,7 +28,6 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-          package-manager-cache: false
 
       - name: Verify requested version matches npm package
         shell: bash
@@ -107,7 +106,6 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
-          package-manager-cache: false
 
       - name: Install OIDC-capable npm CLI
         run: npm install --global npm@11.5.1
@@ -123,7 +121,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TARBALL="$(find npm-release -maxdepth 1 -type f -name 'seenrelay-*.tgz' -print -quit)"
+          TARBALL="$(find "$GITHUB_WORKSPACE/npm-release" -maxdepth 1 -type f -name 'seenrelay-*.tgz' -print -quit)"
           test -n "$TARBALL"
           VERSION="$(basename "$TARBALL")"
           VERSION="${VERSION#seenrelay-}"
@@ -140,7 +138,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TARBALL="$(find npm-release -maxdepth 1 -type f -name 'seenrelay-*.tgz' -print -quit)"
+          TARBALL="$(find "$GITHUB_WORKSPACE/npm-release" -maxdepth 1 -type f -name 'seenrelay-*.tgz' -print -quit)"
           test -n "$TARBALL"
           npm publish "$TARBALL" --access public --provenance
 
