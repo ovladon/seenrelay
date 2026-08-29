@@ -54,6 +54,7 @@ jobs:
         env:
           SEENRELAY_BASELINE_URL: https://seenrelay.com
           SEENRELAY_CANDIDATE_URL: ${{ steps.preview.outputs.url }}
+          # 21 retained CHECKs stays well below the default lease capacity while making tail comparison less sensitive to one sample.
           SEENRELAY_CHECK_PROBE_SAMPLES: '21'
         run: node scripts/check-hot-path-probe.mjs
 
