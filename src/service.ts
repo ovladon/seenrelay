@@ -1,7 +1,7 @@
 import { canonicalFactKey, ValidationError } from './canonical.js';
 import { config } from './config.js';
-import { acceptObservation, cleanupTouchedFact, getFact, getObserverState } from './db.js';
-import { getRecentValueGroupsWithValidators } from './check-evidence.js';
+import { acceptObservation, cleanupTouchedFact, getObserverState } from './db.js';
+import { getCheckSnapshotWithValidators } from './check-evidence.js';
 import type { SourceValidator } from './check-evidence.js';
 import { deriveObserverIdentity } from './identity.js';
 import { predicateGuidance } from './predicates.js';
@@ -59,7 +59,9 @@ export async function checkFact(body: CheckRequest) {
   const maxAge = clampMaxAge(body.max_age_seconds, cfg);
   const fact = await canonicalFactKey(body.fact);
   const known = await valueFingerprint(fact.factKey, body.known_value);
-  const stored = await getFact(fact.factKey);
+  const cutoffIso = isoFromMs(nowMs - maxAge * 1000);
+  const snapshot = await getCheckSnapshotWithValidators(fact.factKey, cutoffIso);
+  const stored = snapshot.fact;
 
   if (!stored || !stored.last_observed_at) {
     return {
@@ -73,8 +75,7 @@ export async function checkFact(body: CheckRequest) {
     };
   }
 
-  const cutoffIso = isoFromMs(nowMs - maxAge * 1000);
-  const groups = await getRecentValueGroupsWithValidators(fact.factKey, cutoffIso);
+  const groups = snapshot.groups;
   if (groups.length === 0) {
     return {
       status: 'STALE' as const,
