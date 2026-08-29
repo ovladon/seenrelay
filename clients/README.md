@@ -1,14 +1,14 @@
 # SeenRelay deterministic client wrappers
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.3 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.4 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-The source tree stages synchronized client 0.2.4 manifests while verified public registry metadata remains at 0.2.3 until clean-install verification succeeds. The 0.2.4 JavaScript / TypeScript candidate adds packaged shadow-economics helpers; Python behavior remains conservative and shadow-first and parity for those JS/TS helpers is not claimed.
+Client 0.2.4 is published and clean-install verified on npm and PyPI. JavaScript / TypeScript adds packaged shadow-economics helpers; Python behavior remains conservative and shadow-first and parity for those JS/TS helpers is not claimed.
 
 The clients have two deliberately different execution modes:
 
@@ -24,10 +24,10 @@ The clients have two deliberately different execution modes:
 - MCP bind-once interception: `seenrelay/mcp-auto`
 - Classic Shadow Proof: `seenrelay/shadow-proof`
 - Firecrawl active/local-first adapter: `seenrelay/firecrawl`
-- Firecrawl measurement-only shadow pilot candidate: `seenrelay/firecrawl-shadow`
-- Hostile benchmark evaluator candidate: `seenrelay/economics`
+- Firecrawl measurement-only shadow pilot: `seenrelay/firecrawl-shadow`
+- Hostile benchmark evaluator: `seenrelay/economics`
 
-The last verified public registry release remains `seenrelay` version `0.2.3` on npm and PyPI until the staged release is published and independently clean-install verified.
+The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.4` on npm and PyPI.
 
 ## Install
 
@@ -152,7 +152,7 @@ value = relay.guard(
 )
 ```
 
-Python behavior remains shadow-first in the staged 0.2.4 release. JavaScript / TypeScript Zero-State, natural-workload collector, Firecrawl shadow pilot and packaged economics evaluator parity are not claimed for Python.
+Python behavior remains shadow-first in 0.2.4. JavaScript / TypeScript Zero-State, natural-workload collector, Firecrawl shadow pilot and packaged economics evaluator parity are not claimed for Python.
 
 ## Shadow Proof
 
@@ -175,11 +175,11 @@ console.log(proof.report({ avoidedValidationCost: 0.01 }));
 
 JavaScript / TypeScript keeps authoritative validation enabled and can export bounded, sanitized natural-workload records directly into the hostile benchmark input format. The export excludes fact identity, source, raw values and per-call timestamps. CHECK-unavailable calls remain in the sample; an observed mismatch fails safety evidence, and an unavailable deterministic comparison leaves the evidence incomplete rather than safe.
 
-The staged 0.2.4 JavaScript / TypeScript candidate can evaluate that format directly through `seenrelay/economics`. The evaluator reports evidence only and never enables reuse.
+JavaScript / TypeScript 0.2.4 can evaluate that format directly through `seenrelay/economics`. The evaluator reports evidence only and never enables reuse.
 
 Potential direct savings count only measured `SAME_OBSERVED` cases. Conditional ETag / Last-Modified savings remain excluded until the consuming application measures them separately.
 
-## Firecrawl shadow economics candidate
+## Firecrawl shadow economics
 
 `seenrelay/firecrawl-shadow` is measurement-only. It leaves every eligible Firecrawl provider call authoritative, performs counterfactual CHECK after the provider result, and only then allows an independently obtained result to contribute OBSERVE. Firecrawl provider-cache hits are not re-labeled as independent observations.
 

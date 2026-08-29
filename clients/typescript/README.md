@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-The source tree stages client 0.2.4. JavaScript / TypeScript adds packaged Firecrawl shadow-economics measurement and the same hostile benchmark evaluator used by repository CI. Neither helper enables automatic reuse. Public registry availability is tracked separately by SeenRelay's verified install metadata.
+Client 0.2.4 is published and clean-install verified on npm. JavaScript / TypeScript adds packaged Firecrawl shadow-economics measurement and the same hostile benchmark evaluator used by repository CI. Neither helper enables automatic reuse.
 
 ## Install
 
