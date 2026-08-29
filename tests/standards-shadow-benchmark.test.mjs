@@ -11,6 +11,13 @@ export const standardsPosture = {
 };
 `;
 
+const SOURCE_BODIES = new Map([
+  ['https://api.github.com/repos/modelcontextprotocol/modelcontextprotocol/contents/docs/specification?ref=main', [{ name: '2026-03-01' }, { name: '2026-07-28' }]],
+  ['https://registry.npmjs.org/%40modelcontextprotocol%2Fserver/latest', { version: '2.0.0' }],
+  ['https://api.github.com/repos/a2aproject/A2A/releases/latest', { tag_name: 'v1.0.0' }],
+  ['https://api.github.com/repos/open-telemetry/semantic-conventions/releases/latest', { tag_name: 'v1.44.0' }]
+]);
+
 function response(body, { status = 200, etag = null } = {}) {
   const headers = new Headers({ 'content-type': 'application/json' });
   if (etag) headers.set('etag', etag);
@@ -18,13 +25,8 @@ function response(body, { status = 200, etag = null } = {}) {
 }
 
 function sourceBody(url) {
-  if (url.includes('modelcontextprotocol/modelcontextprotocol/contents/docs/specification')) {
-    return [{ name: '2026-03-01' }, { name: '2026-07-28' }];
-  }
-  if (url.includes('registry.npmjs.org')) return { version: '2.0.0' };
-  if (url.includes('a2aproject/A2A/releases/latest')) return { tag_name: 'v1.0.0' };
-  if (url.includes('open-telemetry/semantic-conventions/releases/latest')) return { tag_name: 'v1.44.0' };
-  throw new Error(`unexpected source ${url}`);
+  if (!SOURCE_BODIES.has(url)) throw new Error(`unexpected source ${url}`);
+  return SOURCE_BODIES.get(url);
 }
 
 test('standards shadow benchmark is CHECK-only and keeps exported evidence sanitized', async () => {
@@ -47,8 +49,8 @@ test('standards shadow benchmark is CHECK-only and keeps exported evidence sanit
     standardsSource
   });
 
-  assert.equal(calls.filter((call) => call.target.endsWith('/v1/check')).length, 4);
-  assert.equal(calls.filter((call) => call.target.endsWith('/v1/observe')).length, 0);
+  assert.equal(calls.filter((call) => call.target === 'https://relay.invalid/v1/check').length, 4);
+  assert.equal(calls.filter((call) => call.target === 'https://relay.invalid/v1/observe').length, 0);
   assert.equal(summary.observe_requests_sent, 0);
   assert.equal(summary.external_adoption_evidence, false);
   assert.equal(summary.first_party, true);
@@ -62,7 +64,22 @@ test('standards shadow benchmark is CHECK-only and keeps exported evidence sanit
   assert.equal(input.records.length, 4);
   assert.ok(input.records.every((record) => record.check_status === 'UNKNOWN'));
 
-  const allowed = [
+  assert.deepEqual(Object.keys(input).sort(), [
+    'baseline_definition',
+    'controls',
+    'observe_off_critical_path',
+    'records',
+    'sample_type',
+    'schema_version',
+    'workload_id'
+  ]);
+  assert.deepEqual(Object.keys(input.controls).sort(), [
+    'local_cache',
+    'provider_native_cache',
+    'source_native_conditional'
+  ]);
+
+  const allowedRecordKeys = [
     'baseline_cost',
     'baseline_ms',
     'check_cost',
@@ -75,15 +92,21 @@ test('standards shadow benchmark is CHECK-only and keeps exported evidence sanit
     'reuse_would_match_validation'
   ].sort();
   for (const record of input.records) {
-    assert.deepEqual(Object.keys(record).sort(), allowed);
+    assert.deepEqual(Object.keys(record).sort(), allowedRecordKeys);
   }
 
-  const serialized = JSON.stringify({ input, summary });
-  assert.equal(serialized.includes('2026-07-28'), false);
-  assert.equal(serialized.includes('2.0.0'), false);
-  assert.equal(serialized.includes('1.44.0'), false);
-  assert.equal(serialized.includes('api.github.com'), false);
-  assert.equal(serialized.includes('registry.npmjs.org'), false);
+  assert.deepEqual(Object.keys(summary).sort(), [
+    'benchmark_records',
+    'evaluation_reason',
+    'evaluation_state',
+    'external_adoption_evidence',
+    'first_party',
+    'observe_requests_sent',
+    'schema_version',
+    'source_count',
+    'source_native_validator_available_count',
+    'workload_id'
+  ]);
 });
 
 test('standards shadow benchmark can reach a conservative negative verdict when no stronger control is available', async () => {
