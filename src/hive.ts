@@ -244,15 +244,21 @@ export async function finishHiveCheck(admission: HiveAdmission, result: { status
     // one or many qualifying observations counts as exactly one useful-reuse CHECK.
     if (awards > 0) await recordHiveMetric('USEFUL_REUSE', 1, nowIso);
   }
-  const current = await getHiveLeaseById(admission.leaseId, nowIso);
-  return { state: current ? publicState(current, admission.token) : admission.state, usefulReuseAwards: awards };
+  // recordHiveOperation/recordHiveMetric do not change any public state field. A successful guarded
+  // reuse award changes only the consumer's useful_reuse_consumed counter, so reflect that known
+  // mutation locally instead of paying another database round-trip to read back the lease.
+  const state = awards > 0
+    ? { ...admission.state, useful_reuse_consumed: admission.state.useful_reuse_consumed + 1 }
+    : admission.state;
+  return { state, usefulReuseAwards: awards };
 }
 
 export async function finishHiveObserve(admission: HiveAdmission, factKey: string, outcome: 'accepted' | 'deduplicated'): Promise<HivePublicState> {
   const nowIso = new Date().toISOString();
   await Promise.all([recordHiveOperation(admission.leaseId, factKey, 'OBSERVE', outcome, nowIso), recordHiveMetric('OBSERVE', 1, nowIso)]);
-  const current = await getHiveLeaseById(admission.leaseId, nowIso);
-  return current ? publicState(current, admission.token) : admission.state;
+  // Admission already touched the lease. Finalization only records hidden operational metadata and
+  // aggregate telemetry, so the public state remains exactly the admission snapshot.
+  return admission.state;
 }
 
 export async function verifyHiveLeaseTokenForTest(token: string, nowMs = Date.now()): Promise<{ leaseId: string; key: 'current'|'previous' } | null> {
