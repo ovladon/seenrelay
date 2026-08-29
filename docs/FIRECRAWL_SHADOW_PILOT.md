@@ -29,7 +29,7 @@ Fixed subscription economics, included credits, auto-reload thresholds and the c
 
 ## Usage
 
-The source tree stages this helper for the JavaScript / TypeScript client 0.2.4 candidate. Use the package subpath only after the corresponding registry release has been verified.
+This helper is available in the verified JavaScript / TypeScript client 0.2.4 release through the `seenrelay/firecrawl-shadow` package subpath.
 
 ```js
 import { createFirecrawlShadowPilot } from 'seenrelay/firecrawl-shadow';
