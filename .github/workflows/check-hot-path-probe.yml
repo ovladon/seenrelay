@@ -54,7 +54,7 @@ jobs:
         env:
           SEENRELAY_BASELINE_URL: https://seenrelay.com
           SEENRELAY_CANDIDATE_URL: ${{ steps.preview.outputs.url }}
-          SEENRELAY_CHECK_PROBE_SAMPLES: '7'
+          SEENRELAY_CHECK_PROBE_SAMPLES: '21'
         run: node scripts/check-hot-path-probe.mjs
 
       - name: Verify probe classification contract
