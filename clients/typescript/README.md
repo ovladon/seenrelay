@@ -1,16 +1,16 @@
 # SeenRelay JavaScript / TypeScript client
 
-Provider-independent, zero-third-party-runtime-dependency client for reducing redundant source-backed validation while preserving the application's original validation policy.
+**Avoid redundant expensive validation.**
 
-The classic client remains available and backward-compatible. Version 0.2.0 adds an opt-in local-first Zero-State path that can provide value before any shared SeenRelay evidence exists.
+Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
+
+Version 0.2.1 is behavior-equivalent to 0.2.0; it refreshes package discovery metadata and documentation. The classic client remains backward-compatible, and Zero-State remains opt-in.
 
 ## Install
 
 ```bash
-npm install seenrelay@0.2.0
+npm install seenrelay@0.2.1
 ```
-
-Version `0.2.0` is published on the public npm registry and release-gated through clean package installation.
 
 ## Local-first Zero-State
 

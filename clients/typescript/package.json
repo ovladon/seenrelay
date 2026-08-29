@@ -1,7 +1,7 @@
 {
   "name": "seenrelay",
-  "version": "0.2.0",
-  "description": "Provider-independent local-first SeenRelay client for repeated source-backed validation workflows.",
+  "version": "0.2.1",
+  "description": "Avoid redundant expensive validation with local-first SeenRelay clients.",
   "type": "module",
   "main": "./dist/seenrelay.js",
   "types": "./dist/seenrelay.d.ts",

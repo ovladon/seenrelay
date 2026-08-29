@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "seenrelay"
-version = "0.2.0"
-description = "Deterministic zero-dependency SeenRelay client for repeated source-backed validation workflows."
+version = "0.2.1"
+description = "Measure and avoid redundant expensive validation with SeenRelay CHECK/OBSERVE."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
