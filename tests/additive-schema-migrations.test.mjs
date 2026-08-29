@@ -1,17 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import path from 'node:path';
 
 const migrationsDir = new URL('../migrations/', import.meta.url);
 const destructiveSchemaPatterns = [
   { name: 'DROP TABLE', pattern: /\bDROP\s+TABLE\b/i },
   { name: 'DROP COLUMN', pattern: /\bDROP\s+COLUMN\b/i },
+  { name: 'DROP SCHEMA', pattern: /\bDROP\s+SCHEMA\b/i },
+  { name: 'DROP TYPE', pattern: /\bDROP\s+TYPE\b/i },
   { name: 'TRUNCATE TABLE', pattern: /\bTRUNCATE(?:\s+TABLE)?\b/i },
-  { name: 'RENAME TABLE', pattern: /\bALTER\s+TABLE[\s\S]*?\bRENAME\s+TO\b/i },
-  { name: 'RENAME COLUMN', pattern: /\bRENAME\s+COLUMN\b/i },
-  { name: 'DROP CONSTRAINT', pattern: /\bDROP\s+CONSTRAINT\b/i },
-  { name: 'ALTER COLUMN TYPE', pattern: /\bALTER\s+COLUMN[\s\S]*?\bTYPE\b/i }
+  { name: 'RENAME TABLE', pattern: /\bALTER\s+TABLE\b[^;]*\bRENAME\s+TO\b/i },
+  { name: 'RENAME COLUMN', pattern: /\bALTER\s+TABLE\b[^;]*\bRENAME\s+COLUMN\b/i },
+  { name: 'DROP CONSTRAINT', pattern: /\bALTER\s+TABLE\b[^;]*\bDROP\s+CONSTRAINT\b/i },
+  { name: 'ALTER COLUMN TYPE', pattern: /\bALTER\s+TABLE\b[^;]*\bALTER\s+COLUMN\b[^;]*\bTYPE\b/i }
 ];
 
 test('database migrations remain additive and schema-compatible', () => {
