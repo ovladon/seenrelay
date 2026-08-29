@@ -22,6 +22,14 @@ Use `sample_type: "fixed_fact_smoke"` only to prove mechanics. Fixed-fact smoke 
 
 Use `sample_type: "natural_workload"` for captured or replayed workload evidence where the fact-frequency distribution was not manufactured to guarantee reuse.
 
+## Safety rule
+
+Shadow mode keeps the original validation authoritative. For every record that caller policy would reuse, record whether the hypothetical reuse would actually have matched that authoritative validation.
+
+One unsafe hypothetical reuse fails the evaluator's safety decision even if the projected latency or cost is lower.
+
+A baseline result is OBSERVE-eligible only when it was independently obtained under SeenRelay's provenance rules. Provider-cache or other intermediary-cache hits must not be relabeled as independent observations.
+
 ## Input format
 
 The evaluator accepts a JSON document:
@@ -42,6 +50,8 @@ The evaluator accepts a JSON document:
     {
       "check_status": "SAME_OBSERVED",
       "policy_reusable": true,
+      "reuse_would_match_validation": true,
+      "observe_after_baseline": true,
       "baseline_ms": 800,
       "baseline_cost": 1,
       "check_ms": 120,
@@ -55,7 +65,9 @@ The evaluator accepts a JSON document:
 
 Cost units are caller-defined but must remain consistent within one benchmark. They may be currency, provider credits, or another measured marginal unit.
 
-`policy_reusable` may be true only for `SAME_OBSERVED`. The evaluator rejects other statuses rather than treating them as reusable.
+`policy_reusable` may be true only for `SAME_OBSERVED`. For those records, `reuse_would_match_validation` is required and is determined by the authoritative shadow validation that still ran.
+
+`observe_after_baseline` states whether the baseline result is independently obtained and therefore eligible for OBSERVE. It must be false for intermediary cache hits that do not satisfy independent-observation provenance.
 
 ## Run
 
@@ -63,7 +75,7 @@ Cost units are caller-defined but must remain consistent within one benchmark. T
 node scripts/evaluate-hostile-benchmark.mjs benchmark.json
 ```
 
-The report compares the measured baseline with the prospective shared-relay path and returns aggregate cost and latency outcomes plus p50/p95 latency. OBSERVE cost is always counted. OBSERVE latency is excluded only when the caller explicitly states that it is genuinely outside the response critical path.
+The report compares the measured baseline with the prospective shared-relay path and returns aggregate cost and latency outcomes plus p50/p95 latency. OBSERVE cost is counted only for records that are OBSERVE-eligible. OBSERVE latency is excluded from the response path only when the caller explicitly states that it genuinely runs off the critical path.
 
 ## Interpretation
 
@@ -71,4 +83,4 @@ A positive fixed-fact smoke result demonstrates mechanics only.
 
 A natural-workload result is useful evidence only for the measured workload and policy. It is not a universal hit-rate or savings claim.
 
-If provider-native cache is available but unmeasured, the evaluator fails instead of producing a favorable comparison. If the prospective relay path is slower or more expensive than the best qualifying baseline, keep shared CHECK out of that path.
+If provider-native cache is available but unmeasured, the evaluator fails instead of producing a favorable comparison. If any hypothetical accepted reuse disagrees with the authoritative shadow validation, the safety decision fails. If the prospective relay path is slower or more expensive than the best qualifying baseline, keep shared CHECK out of that path.
