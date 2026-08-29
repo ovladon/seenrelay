@@ -36,8 +36,8 @@ function later(a: string, b: string): string { return Date.parse(a) >= Date.pars
 
 /**
  * CHECK evidence plus the validator attached to the newest observation in each value group.
- * Stored pre-L2 SHA-256 fingerprints are re-keyed in application memory and conservatively merged
- * with hmac-sha256-v1 rows. Raw submitted values are not read.
+ * Stored pre-L2 SHA-256 fingerprints are fact-scoped and re-keyed in application memory, then
+ * conservatively merged with hmac-sha256-v1 rows. Raw submitted values are not read.
  */
 export async function getRecentValueGroupsWithValidators(factKey: string, cutoffIso: string): Promise<CheckEvidenceRow[]> {
   const rows = await sql().query(`SELECT
@@ -65,7 +65,7 @@ export async function getRecentValueGroupsWithValidators(factKey: string, cutoff
 
   const merged = new Map<string, CheckEvidenceRow>();
   for (const row of rows) {
-    const valueHash = await normalizeStoredValueFingerprint(row.value_hash);
+    const valueHash = await normalizeStoredValueFingerprint(factKey, row.value_hash);
     const validator = parseSourceValidator(row.source_validator);
     const existing = merged.get(valueHash);
     if (!existing) {

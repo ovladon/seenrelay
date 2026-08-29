@@ -12,6 +12,10 @@ function fingerprintSecret(): string {
   return 'seenrelay-local-development-salt-not-for-production';
 }
 
+function assertFactKey(factKey: string): void {
+  if (!/^[0-9a-f]{64}$/.test(factKey)) throw new ValidationError('fact key is invalid for value fingerprinting');
+}
+
 function hex(bytes: Uint8Array): string {
   return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
@@ -34,32 +38,35 @@ export function isKeyedValueFingerprint(value: string): boolean {
 
 /**
  * Re-key a pre-L2 SHA-256 value fingerprint without needing the submitted raw value.
- * This lets legacy and new rows converge on the same comparison identity during transition.
+ * Fingerprints are fact-scoped, preventing unnecessary cross-fact value linkage in persistent state.
  */
-export async function keyedValueFingerprintFromLegacyHash(legacyValueHash: string): Promise<string> {
+export async function keyedValueFingerprintFromLegacyHash(factKey: string, legacyValueHash: string): Promise<string> {
+  assertFactKey(factKey);
   if (!LEGACY_SHA256.test(legacyValueHash)) throw new ValidationError('stored value fingerprint is invalid');
-  return `${PREFIX}${await hmacSha256Hex(`${DOMAIN}|${legacyValueHash}`)}`;
+  return `${PREFIX}${await hmacSha256Hex(`${DOMAIN}|${factKey}|${legacyValueHash}`)}`;
 }
 
-export async function normalizeStoredValueFingerprint(storedValueHash: string): Promise<string> {
+export async function normalizeStoredValueFingerprint(factKey: string, storedValueHash: string): Promise<string> {
+  assertFactKey(factKey);
   if (KEYED_H1.test(storedValueHash)) return storedValueHash;
-  return keyedValueFingerprintFromLegacyHash(storedValueHash);
+  return keyedValueFingerprintFromLegacyHash(factKey, storedValueHash);
 }
 
 /**
- * Server-keyed deterministic value fingerprint.
+ * Server-keyed, fact-scoped deterministic value fingerprint.
  *
  * The intermediate legacy SHA-256 exists only in request memory so old database fingerprints can be
- * re-keyed into the same identity. New observations persist only the keyed fingerprint.
+ * re-keyed into the same fact-local identity. New observations persist only the keyed fingerprint.
  */
-export async function valueFingerprint(value: unknown): Promise<{
+export async function valueFingerprint(factKey: string, value: unknown): Promise<{
   valueHash: string;
   legacyValueHash: string;
   version: 'hmac-sha256-v1';
 }> {
+  assertFactKey(factKey);
   const legacyValueHash = await sha256Hex(stableJson(value));
   return {
-    valueHash: await keyedValueFingerprintFromLegacyHash(legacyValueHash),
+    valueHash: await keyedValueFingerprintFromLegacyHash(factKey, legacyValueHash),
     legacyValueHash,
     version: 'hmac-sha256-v1'
   };

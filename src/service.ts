@@ -58,7 +58,7 @@ export async function checkFact(body: CheckRequest) {
   const nowMs = Date.now();
   const maxAge = clampMaxAge(body.max_age_seconds, cfg);
   const fact = await canonicalFactKey(body.fact);
-  const known = await valueFingerprint(body.known_value);
+  const known = await valueFingerprint(fact.factKey, body.known_value);
   const stored = await getFact(fact.factKey);
 
   if (!stored || !stored.last_observed_at) {
@@ -152,7 +152,7 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
   const receivedAtIso = isoFromMs(nowMs);
   const observedAtIso = parseObservedAt(body.observed_at, nowMs, cfg);
   const fact = await canonicalFactKey(body.fact);
-  const value = await valueFingerprint(body.value);
+  const value = await valueFingerprint(fact.factKey, body.value);
   const observer = await deriveObserverIdentity(request, body, nowMs, cfg.observerProofMaxSkewSeconds);
 
   if (body.evidence_fingerprint && body.evidence_fingerprint.length > 256) throw new ValidationError('evidence_fingerprint is too long');
@@ -165,7 +165,7 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
   }
 
   const prior = await getObserverState(fact.factKey, observer.key);
-  const priorValueHash = prior ? await normalizeStoredValueFingerprint(prior.last_value_hash) : null;
+  const priorValueHash = prior ? await normalizeStoredValueFingerprint(fact.factKey, prior.last_value_hash) : null;
   if (prior && priorValueHash === value.valueHash && nowMs - epochMs(prior.last_received_at) < cfg.dedupWindowSeconds * 1000) {
     return {
       accepted: false,
