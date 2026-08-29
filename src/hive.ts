@@ -1,11 +1,12 @@
 import { config } from './config.js';
 import {
-  consumeHiveCheck, createHiveLease, getActiveHiveLeaseByClientKey, getHiveLeaseById,
+  consumeHiveCheck, createHiveLease,
   recordHiveMetric, recordHiveOperation, touchHiveObserve
 } from './db.js';
 import { runtimePolicy } from './controls.js';
 import { consumeHiveNetworkBudget, consumeHiveNewLeaseAdmission } from './hive-admission-db.js';
 import { bindHiveIndependenceKey } from './hive-independence-db.js';
+import { getActiveHiveAdmissionLeaseByClientKey, getHiveAdmissionLeaseById } from './hive-lease-admission-db.js';
 import { deriveAdmissionNetworkKey, deriveClientKey, deriveOperationNetworkKey, deriveReuseIndependenceKey, privacyScopedHash } from './identity.js';
 import { creditUsefulReuseGuarded } from './reuse.js';
 import type { CheckStatus, HiveClass, HiveLeaseRow, HivePublicState } from './types.js';
@@ -144,18 +145,18 @@ async function ensureLease(request: Request | undefined, nowMs: number): Promise
   const supplied = request?.headers.get('x-seenrelay-lease') || null;
   const verified = await verifyLease(supplied, nowMs);
   if (verified) {
-    const row = await getHiveLeaseById(verified.payload.lease_id, nowIso);
+    const row = await getHiveAdmissionLeaseById(verified.payload.lease_id, nowIso);
     if (row) {
-      await bindIndependence(request, row.lease_id);
+      if (row.independence_key === null) await bindIndependence(request, row.lease_id);
       // A token accepted with the previous key is immediately re-issued under the current key.
       const token = verified.key === 'current' ? supplied! : await signLease({ v: 1, lease_id: row.lease_id, issued_at: row.issued_at, expires_at: row.expires_at });
       return { allowed: true, row, token };
     }
   }
   const clientKey = await operationalClientKey(request);
-  const existing = await getActiveHiveLeaseByClientKey(clientKey, nowIso);
+  const existing = await getActiveHiveAdmissionLeaseByClientKey(clientKey, nowIso);
   if (existing) {
-    await bindIndependence(request, existing.lease_id);
+    if (existing.independence_key === null) await bindIndependence(request, existing.lease_id);
     return { allowed: true, row: existing, token: await signLease({ v: 1, lease_id: existing.lease_id, issued_at: existing.issued_at, expires_at: existing.expires_at }) };
   }
   const [admissionKey, independenceKey] = await Promise.all([
