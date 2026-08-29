@@ -4,12 +4,12 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Version 0.2.1 is behavior-equivalent to 0.2.0; it refreshes package discovery metadata and documentation. The classic client remains backward-compatible, and Zero-State remains opt-in.
+The source tree stages client 0.2.2. It extends Shadow Proof with local safety-agreement counters while keeping authoritative validation enabled. Public registry availability is tracked separately by SeenRelay's verified install metadata.
 
 ## Install
 
 ```bash
-npm install seenrelay@0.2.1
+npm install seenrelay
 ```
 
 ## Local-first Zero-State
@@ -167,7 +167,9 @@ console.log(proof.report({
 }));
 ```
 
-Shadow Proof always keeps the original validation. It measures CHECK status distribution, validation time and SeenRelay request latency locally. Potential savings count only `SAME_OBSERVED` calls and subtract caller-supplied request costs.
+Shadow Proof always keeps the original validation authoritative. For `SAME_OBSERVED`, it can compare the caller's known deterministic JSON value with the validation result and retain only aggregate agreement counters. Any observed mismatch fails safety evidence; an unavailable deterministic comparison leaves evidence incomplete. Compared raw values are not included in the snapshot or report. Safety-adjusted savings remain unavailable until the observed `SAME_OBSERVED` set passes strict agreement.
+
+Potential economics still use caller-supplied costs and do not constitute a universal savings claim.
 
 ## Protocol boundary
 
