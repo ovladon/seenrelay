@@ -45,9 +45,9 @@ grep -q '"operations":\["CHECK","OBSERVE"\]' /tmp/root.json
 grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
-grep -q 'LOCAL-FIRST VALIDATION COST AVOIDANCE' /tmp/site.html
-grep -q 'Avoid redundant expensive validation from the first install' /tmp/site.html
-grep -q 'No populated hive is required for first-user value' /tmp/site.html
+grep -q 'VALIDATION COST AVOIDANCE' /tmp/site.html
+grep -q 'Avoid redundant expensive validation' /tmp/site.html
+grep -q 'Works without shared network data' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'FLEET-LEVEL COST AVOIDANCE' /tmp/economics.html
 grep -q 'MEASURED · FIRST-PARTY SMOKE BENCHMARK' /tmp/economics.html
@@ -74,7 +74,7 @@ NODE
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
-grep -q 'Local-first freshness optimization' /tmp/llms.txt
+grep -q 'Avoid redundant expensive validation' /tmp/llms.txt
 grep -q 'Shared CHECK is off by default' /tmp/llms.txt
 grep -q '## Verified measured results' /tmp/llms.txt
 grep -q 'Structured JSON extraction /' /tmp/llms.txt

@@ -25,7 +25,7 @@ test('trust surface does not claim third-party certification or unenforced merge
   const trust = read('src','trust.ts');
   assert.match(trust, /third_party_security_audit:\s*false/);
   assert.match(trust, /external_security_certification:\s*false/);
-  assert.match(trust, /Do not take SeenRelay on faith/);
+  assert.match(trust, /Verify SeenRelay/);
   assert.match(trust, /shadow mode/i);
   assert.match(trust, /Fail open/i);
   assert.match(trust, /required_merge_gates:\s*\['pull_request', 'verify', 'preview-release-gate'\]/);

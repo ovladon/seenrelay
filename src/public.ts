@@ -9,7 +9,7 @@ export function serviceDescriptor(origin: string) {
     service: cfg.brandName,
     version: cfg.version,
     canonical_origin: origin,
-    purpose: 'Reduce redundant source-backed validation with local/private/source-native optimization and optional shared freshness evidence.',
+    purpose: 'Avoid redundant expensive validation with local/private reuse, source-native checks and optional shared freshness evidence.',
     semantics: 'Reports what agents recently observed; it does not decide truth.',
     operations: ['CHECK', 'OBSERVE'],
     fact_identity: 'seenrelay-fact-v3',
@@ -62,7 +62,7 @@ export function serviceDescriptor(origin: string) {
     economics: {
       target_workloads: ['paid_web_search', 'metered_scraping', 'browser_or_extraction', 'multi_step_validation', 'rate_limited_api'],
       poor_fit: ['mutating_or_destructive_operation', 'cheap_one_off_fetch', 'fact_with_low_repeat_probability', 'policy_requires_live_authoritative_source_on_every_call'],
-      fleet_value: 'Local/private/source-native reuse can save work immediately; shared evidence can add coverage as independent observations accumulate.',
+      fleet_value: 'Local/private/source-native reuse can save work without network coverage. Shared evidence can save more when qualifying observations exist.',
       current_seenrelay_api_fee: 0,
       measure_first: true,
       shadow_proof: 'https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md',
@@ -105,24 +105,24 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Avoid redundant expensive read-only validation locally first, then use shared SeenRelay freshness evidence when it adds value.">
+<meta name="description" content="Avoid redundant expensive validation with safe local/private reuse, source-native checks and optional shared freshness evidence.">
 <link rel="canonical" href="${origin}/">
 <link rel="alternate" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — Local-first freshness optimization for AI agents">
-<meta property="og:description" content="Save locally from the first install; shared CHECK/OBSERVE evidence can add more coverage without becoming a truth oracle.">
+<meta property="og:title" content="SeenRelay — Avoid redundant expensive validation">
+<meta property="og:description" content="Local first. Source-native checks when available. Shared CHECK only when useful. Original validation remains the fallback.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
-<title>SeenRelay — Local-first freshness optimization for AI agents</title>
+<title>SeenRelay — Avoid redundant expensive validation</title>
 <link rel="stylesheet" href="/site.css">
 </head>
 <body>
 <header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="#install">Install</a><a href="#verified-results">Measured</a><a href="#latest">Latest</a><a href="/economics">Savings</a><a href="/quickstart">Quickstart</a><a href="/clients">Connect</a><a href="#network">Network</a><a href="#trust">Trust</a><a href="/service.json">Machine JSON</a></nav></header>
 <main>
 <section class="hero">
-<div class="eyebrow">LOCAL-FIRST VALIDATION COST AVOIDANCE</div>
-<h1>Avoid redundant expensive validation from the first install.</h1>
-<p class="lead">SeenRelay 0.2.0 lets JavaScript/TypeScript applications try safe local/private reuse and source-native confirmation before an optional shared <b>CHECK</b>. If validation still has to run, the original path remains the fallback; a genuinely fresh independent result can <b>OBSERVE</b> freshness evidence for later callers.</p>
+<div class="eyebrow">VALIDATION COST AVOIDANCE</div>
+<h1>Avoid redundant expensive validation</h1>
+<p class="lead">SeenRelay reuses eligible read-only validation locally first, uses source-native checks when available, and consults shared <b>CHECK</b> evidence only when useful. If reuse is not justified, run the original validation. <b>OBSERVE</b> only fresh independent results.</p>
 <div class="cta"><a class="primary" href="/quickstart">Protect a read-only validation</a><a class="secondary" href="/clients">Integration options</a><a class="secondary" href="/economics">See measured economics</a><a class="secondary" href="/service.json">For machines</a></div>
 <div class="contract"><span>Exactly 2 hosted operations</span><b>CHECK</b><b>OBSERVE</b><span>Currently free · no account · provider-independent core · no truth verdict</span></div>
 </section>
@@ -132,12 +132,12 @@ ${verifiedWorkloadMapHtml()}
 ${latestVerifiedHtml()}
 
 <section id="how" class="section">
-<div class="section-head"><div><div class="eyebrow">THE IDEA IN 30 SECONDS</div><h2>Useful alone; shared evidence can make it better.</h2></div><p>The public network is an accelerator, not a prerequisite. For eligible read-only work, start with the cheapest trustworthy caller-side path and preserve the original validation as fallback.</p></div>
-<div class="proof-grid"><article><b>1 · LOCAL / PRIVATE</b><span>Coalesce identical in-flight work or reuse completed results only inside an explicit caller-defined freshness window.</span></article><article><b>2 · SOURCE NATIVE</b><span>When available, use ETag or Last-Modified to ask the source whether the retained result changed.</span></article><article><b>3 · SHARED CHECK</b><span>Optionally consult recent SeenRelay observations when shared evidence can add value.</span></article><article><b>4 · VALIDATE + OBSERVE</b><span>If reuse is not justified, run the original validation. Contribute OBSERVE only after a genuinely fresh independent observation.</span></article></div>
+<div class="section-head"><div><div class="eyebrow">HOW IT WORKS</div><h2>Reuse safely. Validate when needed.</h2></div><p>For eligible read-only work: local/private reuse → source-native checks → optional shared CHECK → original validation.</p></div>
+<div class="proof-grid"><article><b>1 · LOCAL / PRIVATE</b><span>Reuse exact eligible work inside an explicit freshness window.</span></article><article><b>2 · SOURCE NATIVE</b><span>Use ETag or Last-Modified when available.</span></article><article><b>3 · SHARED CHECK</b><span>Consult recent SeenRelay evidence only when useful.</span></article><article><b>4 · VALIDATE + OBSERVE</b><span>Otherwise validate normally. OBSERVE only fresh independent results.</span></article></div>
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">ZERO-STATE</div><h2>No populated hive is required for first-user value.</h2><p>JavaScript/TypeScript 0.2.0 can save work through in-process coalescing, explicit-TTL L0 reuse, optional encrypted caller-owned L1 and source-native conditional validation. Shared CHECK is off by default.</p><p>The default completed-result TTL is zero. SeenRelay does not invent freshness for an arbitrary tool call, and generic core does not infer read-only safety from a name or untrusted annotation.</p></div>
+<div><div class="eyebrow">ZERO-STATE</div><h2>Works without shared network data.</h2><p>JavaScript/TypeScript 0.2.0 starts with in-process reuse, explicit-TTL L0, optional encrypted caller-owned L1 and source-native checks. Shared CHECK is off by default.</p><p>Completed-result TTL defaults to zero. SeenRelay does not invent freshness or infer that a tool is safe to suppress.</p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>zero-state</b></div><pre>L0 local
   ↓
 L1 private (optional)
@@ -152,22 +152,22 @@ OBSERVE fresh independent result</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">WHAT “FRESHNESS” MEANS</div><h2>Recent evidence — not a truth score.</h2><p>SeenRelay stores recent observations tied to deterministic source/fact identity. It can tell a caller that the same value, a changed value, conflicting values, or no usable shared observation was recently reported.</p><p>It does not browse the source, decide which observation is correct, or certify reality.</p></div>
+<div><div class="eyebrow">FRESHNESS</div><h2>Recent evidence, not truth.</h2><p>SeenRelay stores recent observations tied to deterministic source/fact identity. It can tell a caller that the same value, a changed value, conflicting values, or no usable shared observation was recently reported.</p><p>It does not browse the source, decide which observation is correct, or certify reality.</p></div>
 <div class="proof-grid"><article><b>SAME_OBSERVED</b><span>The caller-known value matches recent observations.</span></article><article><b>CHANGED_OBSERVED</b><span>A different recent value was observed.</span></article><article><b>CONTESTED</b><span>Recent observations disagree.</span></article><article><b>STALE / UNKNOWN</b><span>No sufficiently recent reusable shared evidence is available.</span></article></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">PROVENANCE BOUNDARY</div><h2>Reuse does not manufacture independence.</h2><p>An intermediary/provider cache hit can support caller-side reuse, but it is not automatically a new independent observation of the underlying source. OBSERVE is reserved for results whose independent observation semantics are actually satisfied.</p><p>Optional Ed25519 proof establishes key possession, continuity and payload integrity — not truth or legal identity.</p></div>
+<div><div class="eyebrow">PROVENANCE</div><h2>Reused data is not a new observation.</h2><p>A cache hit can support reuse, but it is not a fresh independent observation of the source. OBSERVE only results that were independently obtained.</p><p>Optional Ed25519 proof establishes key possession, continuity and payload integrity — not truth or legal identity.</p></div>
 <div class="proof-grid"><article><b>Fresh validation</b><span>May be eligible for OBSERVE.</span></article><article><b>Provider cache hit</b><span>Can help locally but is not re-labeled as new independent evidence.</span></article><article><b>Private L1</b><span>Caller-owned values remain private unless explicitly contributed under a valid evidence contract.</span></article><article><b>Fail open</b><span>If reuse cannot be justified, continue to the validation already planned.</span></article></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">THE ECONOMIC CASE</div><h2>Use SeenRelay where the operation you might skip costs real money or time.</h2><p>Local/private/source-native reuse can save work without public network coverage. Shared evidence can create additional savings where exact facts repeat across callers.</p><p>Verified benchmark rows are first-party smoke evidence, not promised hit rates. Your workload decides whether the math works.</p><p><a href="/economics">See current examples and the break-even model →</a></p></div>
+<div><div class="eyebrow">ECONOMICS</div><h2>Use SeenRelay where validation costs money or time.</h2><p>Local/private/source-native reuse can save work without public network coverage. Shared evidence can save more when exact facts repeat across callers.</p><p>Verified benchmark rows are first-party smoke evidence, not promised hit rates. Your workload decides whether the math works.</p><p><a href="/economics">See current examples and the break-even model →</a></p></div>
 <div class="proof-grid"><article><b>Paid search</b><span>Avoid repeated metered search where policy permits reuse.</span></article><article><b>Scrape / extract</b><span>Avoid repeated credits, browser work and downstream parsing.</span></article><article><b>Source validators</b><span>A 304 can avoid heavier work without consulting the public hive.</span></article><article><b>Negative control</b><span>Do not use SeenRelay for cheap one-off work or unsafe mutations.</span></article></div>
 </section>
 
 <section id="network" class="section">
-<div class="section-head"><div><div class="eyebrow">LIVE NETWORK</div><h2>Aggregate network activity.</h2></div><p>Privacy-safe operational measurements from the running service. Reuse metrics are activity signals, never truth scores.</p></div>
+<div class="section-head"><div><div class="eyebrow">LIVE NETWORK</div><h2>Network activity.</h2></div><p>Privacy-safe operational metrics. Reuse metrics measure activity, not truth.</p></div>
 <div class="metrics">
 <article><div class="label">Facts tracked</div><div class="metric" data-stat="facts">—</div><div class="hint">deterministic source-backed fact identities</div></article>
 <article><div class="label">Recent observations</div><div class="metric" data-stat="recent_observations">—</div><div class="hint">freshness evidence currently retained</div></article>
@@ -180,7 +180,7 @@ OBSERVE fresh independent result</pre></div>
 </section>
 
 <section id="integrate" class="section split">
-<div><div class="eyebrow">INTEGRATION PATHS</div><h2>Zero-State in JavaScript/TypeScript. Classic shadow-first and MCP remain available.</h2><p>Use the provider-independent JavaScript/TypeScript client when the application controls eligible read-only tool calls. Use the classic client when measuring shared CHECK evidence. Use remote MCP when model/tool routing is appropriate. Python remains shadow-first in client 0.2.0.</p><div class="flow"><span>local/private</span><i>→</i><span>source native</span><i>→</i><span>optional CHECK</span><i>→</i><span>validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Choose an integration path →</a></p></div>
+<div><div class="eyebrow">INTEGRATION</div><h2>JavaScript/TypeScript: local-first. Python: shadow-first.</h2><p>Use Zero-State for eligible read-only calls you control. Use classic clients to measure shared CHECK evidence. Use MCP or REST for the hosted CHECK/OBSERVE protocol.</p><div class="flow"><span>local/private</span><i>→</i><span>source native</span><i>→</i><span>optional CHECK</span><i>→</i><span>validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Choose an integration path →</a></p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>integration</b></div><pre>JavaScript / TypeScript 0.2.0
 seenrelay/zero-state
 seenrelay/auto
@@ -197,16 +197,16 @@ io.github.ovladon/seenrelay</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">SAFE ADOPTION</div><h2>Local first; start in shadow mode when evaluating shared evidence.</h2><p>Allow only explicitly eligible read-only operations. Keep completed-result TTL at zero unless a defensible caller/source freshness window exists. Measure work actually avoided and preserve the original validation as fallback.</p><p>For the classic CHECK-first path, start in shadow mode: keep every existing validation until measured results and caller policy justify bounded reuse.</p><p>Access is currently free, so evaluation can focus on correctness, workflow fit and measured savings rather than account setup.</p><p><a href="/quickstart">Open the integration sequence →</a></p></div>
+<div><div class="eyebrow">SAFE USE</div><h2>Allow only explicitly safe read-only operations.</h2><p>Allow only explicitly eligible read-only operations. Keep completed-result TTL at zero unless a defensible caller/source freshness window exists. Measure work actually avoided and preserve the original validation as fallback.</p><p>For the classic CHECK-first path, start in shadow mode: keep every existing validation until measured results and caller policy justify bounded reuse.</p><p>Access is currently free, so evaluation can focus on correctness, workflow fit and measured savings rather than account setup.</p><p><a href="/quickstart">Open the integration sequence →</a></p></div>
 <div class="proof-grid"><article><b>Best fit</b><span>Repeated deterministic read-only validations with meaningful cost or latency.</span></article><article><b>Never infer safety</b><span>Mutating/destructive or untrusted tools pass through unless explicitly governed.</span></article><article><b>Measure</b><span>Local hits, source-native confirmations, shared evidence and fallback validations.</span></article><article><b>Stay bounded</b><span>SeenRelay supplies optimization/evidence; the consuming workflow retains the final decision.</span></article></div>
 </section>
 
-<section id="trust" class="section trust"><div class="section-head"><div><div class="eyebrow">TRUST POSTURE</div><h2>Useful because its claims stay narrow.</h2></div></div>
+<section id="trust" class="section trust"><div class="section-head"><div><div class="eyebrow">TRUST</div><h2>Narrow claims. Verifiable behavior.</h2></div></div>
 <div class="trust-grid"><article><span class="ok">01</span><h3>No hidden research</h3><p>SeenRelay itself does not browse, search, fetch fact sources, or call a model to decide truth.</p></article><article><span class="ok">02</span><h3>Deterministic identity</h3><p>Shared fact matching uses source-native locators or canonical predicates, not fuzzy LLM similarity.</p></article><article><span class="ok">03</span><h3>Provider-independent core</h3><p>Provider-specific adapters are optional integrations and cannot become dependencies of the generic Zero-State core.</p></article><article><span class="ok">04</span><h3>Tested before release</h3><p>CI, package validation, security analysis and an isolated Preview Release Gate exercise the release surface before Production promotion.</p></article></div>
 <div class="trust-note"><a href="/data-practices">Inspect technical data practices →</a></div>
 </section>
 
-<section class="section final"><div><div class="eyebrow">START WITH ONE EXPENSIVE READ-ONLY PATH</div><h2>Install 0.2.0, measure the work it actually avoids, and keep the original validation as the safety net.</h2></div><div class="cta"><a class="primary" href="/quickstart">Protect a validation</a><a class="secondary" href="/clients">Clients</a><a class="secondary" href="/economics">Measured evidence</a><a class="secondary" href="/service.json">Machine descriptor</a></div></section>
+<section class="section final"><div><div class="eyebrow">START</div><h2>Install. Measure. Keep the original validation as fallback.</h2></div><div class="cta"><a class="primary" href="/quickstart">Protect a validation</a><a class="secondary" href="/clients">Clients</a><a class="secondary" href="/economics">Measured evidence</a><a class="secondary" href="/service.json">Machine descriptor</a></div></section>
 </main>
 ${siteFooterHtml()}
 <script src="/site.js" defer></script>

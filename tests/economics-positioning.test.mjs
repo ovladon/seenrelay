@@ -16,7 +16,7 @@ test('public and machine-facing guidance targets repeated expensive validation w
   const mcp = read('src', 'mcp.ts');
   const facts = JSON.parse(read('public', 'product-facts.json'));
 
-  assert.match(publicSource, /Avoid redundant expensive validation from the first install/);
+  assert.match(publicSource, /Avoid redundant expensive validation/);
   assert.match(publicSource, /javascript_typescript_zero_state/);
   assert.match(publicSource, /shared_check_default:\s*'off'/);
   assert.match(publicSource, /poor_fit/);
@@ -55,7 +55,7 @@ test('public and machine-facing guidance targets repeated expensive validation w
 
   assert.match(quickstart, /MCP BIND-ONCE/);
   assert.match(quickstart, /original validation remains the fallback/i);
-  assert.match(adoption, /provider-independent local-first validation layer/i);
+  assert.match(adoption, /JavaScript\/TypeScript: local-first Zero-State/i);
   assert.match(adoption, /Shared CHECK is off by default/i);
   assert.match(mcp, /paid web search, metered scraping, browser\/extraction/);
 
