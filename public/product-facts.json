@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-08-29T09:55:14Z",
+  "updated_at": "2026-08-29T14:31:01Z",
   "positioning": {
     "category": "validation cost avoidance and shared freshness evidence for AI agents",
     "headline": "Avoid redundant expensive validation",
-    "subheadline": "JavaScript/TypeScript 0.2.1 uses local/private reuse, source-native checks, then optional shared CHECK. Fresh independent validations may OBSERVE. Python remains shadow-first.",
+    "subheadline": "JavaScript/TypeScript 0.2.2 adds local shadow safety-agreement evidence while retaining local/private reuse, source-native checks and optional shared CHECK. Python remains shadow-first.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.1",
+    "client_version": "0.2.2",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-08-29T09:55:14Z",
-    "verification": "Client 0.2.1 was published to npm and PyPI through trusted publishing after clean package validation. JavaScript/TypeScript package validation imports SeenRelayClient, SeenRelayShadowProof, SeenRelayZeroState, freshResult, SeenRelayAuto, exactToolAdapter, protectMcpClient and the optional Firecrawl adapter; Python validates SeenRelayClient, SeenRelayShadowProof and protect_validation and remains shadow-first in this release."
+    "registry_install_verified_at": "2026-08-29T14:31:01Z",
+    "verification": "Client 0.2.2 was published to npm and PyPI through trusted publishing and clean-install verified from both public registries. JavaScript/TypeScript adds local Shadow Proof agreement counters that keep authoritative validation enabled and do not retain compared raw values in snapshots or reports; Zero-State and existing adapters remain available. Python remains shadow-first and does not claim the JavaScript/TypeScript safety-agreement feature in this release."
   },
   "fit": {
     "use_when": [
@@ -167,6 +167,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-08-29",
+      "title": "Public client 0.2.2",
+      "summary": "SeenRelay 0.2.2 is published on npm and PyPI. JavaScript/TypeScript Shadow Proof adds local agreement counters for hypothetical SAME_OBSERVED reuse while authoritative validation still runs; compared raw values are not retained in snapshots or reports. Python remains shadow-first."
+    },
     {
       "date": "2026-08-29",
       "title": "Public client 0.2.1",
