@@ -11,12 +11,12 @@ npm install seenrelay
 pip install seenrelay
 ```
 
-Client v0.2.2 was clean-install verified from both public registries on 2026-08-29. JavaScript/TypeScript 0.2.2 supports provider-independent local-first Zero-State; Python remains shadow-first in this release. Reuse remains caller policy.
+Client v0.2.3 was clean-install verified from both public registries on 2026-08-29. JavaScript/TypeScript 0.2.3 supports provider-independent local-first Zero-State; Python remains shadow-first in this release. Reuse remains caller policy.
 <!-- END GENERATED:PUBLIC-INSTALL -->
 
 SeenRelay reduces redundant source-backed validation while preserving the application's existing validation policy. It still has exactly two domain operations: **CHECK** and **OBSERVE**.
 
-The recommended JavaScript/TypeScript 0.2.2 path is local-first: use caller-side reuse and source-native confirmation before considering shared evidence. Python 0.2.2 and the classic JavaScript/TypeScript API remain shadow-first.
+The recommended JavaScript/TypeScript 0.2.3 path is local-first: use caller-side reuse and source-native confirmation before considering shared evidence. Python 0.2.3 and the classic JavaScript/TypeScript API remain shadow-first.
 
 ## Choose the right target
 
@@ -156,9 +156,9 @@ validate_price = protect_validation(
 value = validate_price(known_value)
 ```
 
-With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python behavior remains shadow-first in 0.2.2.
+With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python behavior remains shadow-first in 0.2.3.
 
-JavaScript / TypeScript 0.2.2 Shadow Proof can additionally retain aggregate agreement counters for deterministic `SAME_OBSERVED` candidates while the authoritative validation still runs. It does not retain the compared raw values in its snapshot or report, and it does not enable reuse.
+JavaScript / TypeScript 0.2.3 Shadow Proof can additionally retain bounded, sanitized natural-workload benchmark records while authoritative validation still runs. The export excludes fact identity, source, raw values and per-call timestamps; unavailable CHECKs remain in the sample, mismatches fail safety evidence and uncomparable hypothetical reuse remains incomplete. It does not enable reuse.
 
 ## MCP and REST
 
