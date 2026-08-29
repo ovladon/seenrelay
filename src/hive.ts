@@ -1,10 +1,11 @@
 import { config } from './config.js';
 import {
-  consumeHiveCheck, createHiveLease, getActiveHiveLeaseByClientKey, getHiveLeaseById,
+  consumeHiveCheck, createHiveLease, getHiveLeaseById,
   recordHiveMetric, recordHiveOperation, touchHiveObserve
 } from './db.js';
 import { runtimePolicy } from './controls.js';
 import { consumeHiveNetworkBudget, consumeHiveNewLeaseAdmission } from './hive-admission-db.js';
+import { getActiveHiveLeaseByClientKeyBound, getHiveLeaseByIdBound } from './hive-fast-db.js';
 import { bindHiveIndependenceKey } from './hive-independence-db.js';
 import { deriveAdmissionNetworkKey, deriveClientKey, deriveOperationNetworkKey, deriveReuseIndependenceKey, privacyScopedHash } from './identity.js';
 import { creditUsefulReuseGuarded } from './reuse.js';
@@ -121,10 +122,6 @@ async function operationalClientKey(request: Request | undefined): Promise<strin
   if (request) return deriveClientKey(request);
   return `transportless:${await privacyScopedHash('transportless-hive', crypto.randomUUID())}`;
 }
-async function bindIndependence(request: Request | undefined, leaseId: string): Promise<void> {
-  if (!request) return;
-  await bindHiveIndependenceKey(leaseId, await deriveReuseIndependenceKey(request));
-}
 async function newLeaseAdmissionKey(request: Request | undefined): Promise<string> {
   if (request) return deriveAdmissionNetworkKey(request);
   // Do not invent a transportless actor identity. All such calls share one conservative bucket.
@@ -142,26 +139,22 @@ type EnsureLeaseResult =
 async function ensureLease(request: Request | undefined, nowMs: number): Promise<EnsureLeaseResult> {
   const cfg = config(); const nowIso = new Date(nowMs).toISOString();
   const supplied = request?.headers.get('x-seenrelay-lease') || null;
+  const independenceKey = request ? await deriveReuseIndependenceKey(request) : null;
   const verified = await verifyLease(supplied, nowMs);
   if (verified) {
-    const row = await getHiveLeaseById(verified.payload.lease_id, nowIso);
+    const row = await getHiveLeaseByIdBound(verified.payload.lease_id, nowIso, independenceKey);
     if (row) {
-      await bindIndependence(request, row.lease_id);
       // A token accepted with the previous key is immediately re-issued under the current key.
       const token = verified.key === 'current' ? supplied! : await signLease({ v: 1, lease_id: row.lease_id, issued_at: row.issued_at, expires_at: row.expires_at });
       return { allowed: true, row, token };
     }
   }
   const clientKey = await operationalClientKey(request);
-  const existing = await getActiveHiveLeaseByClientKey(clientKey, nowIso);
+  const existing = await getActiveHiveLeaseByClientKeyBound(clientKey, nowIso, independenceKey);
   if (existing) {
-    await bindIndependence(request, existing.lease_id);
     return { allowed: true, row: existing, token: await signLease({ v: 1, lease_id: existing.lease_id, issued_at: existing.issued_at, expires_at: existing.expires_at }) };
   }
-  const [admissionKey, independenceKey] = await Promise.all([
-    newLeaseAdmissionKey(request),
-    request ? deriveReuseIndependenceKey(request) : Promise.resolve(null)
-  ]);
+  const admissionKey = await newLeaseAdmissionKey(request);
   const admission = await consumeHiveNewLeaseAdmission(admissionKey, nowIso, cfg.hiveMaxNewLeasesPerNetworkPerMinute);
   if (!admission.allowed) return { allowed: false, retryAfterSeconds: admission.retry_after_seconds };
 
@@ -237,15 +230,19 @@ export async function finishHiveCheck(admission: HiveAdmission, result: { status
   const nowIso = new Date().toISOString();
   await Promise.all([recordHiveOperation(admission.leaseId, result.fact_key, 'CHECK', result.status, nowIso), recordHiveMetric(result.status, 1, nowIso)]);
   let awards = 0;
+  let state = admission.state;
   if (admission.rewardsEnabled && (result.status === 'SAME_OBSERVED' || result.status === 'CHANGED_OBSERVED') && result.latest_value_hash) {
     const cfg = config(); const cutoffIso = new Date(Date.now() - result.max_age_seconds * 1000).toISOString();
     awards = await creditUsefulReuseGuarded(result.fact_key, result.latest_value_hash, cutoffIso, admission.leaseId, nowIso, cfg.usefulReuseScoreUnits, cfg.usefulReuseDailyAwardCap);
     // Public utility telemetry is CHECK-level, not contributor-award-level. One CHECK that reuses
     // one or many qualifying observations counts as exactly one useful-reuse CHECK.
-    if (awards > 0) await recordHiveMetric('USEFUL_REUSE', 1, nowIso);
+    if (awards > 0) {
+      await recordHiveMetric('USEFUL_REUSE', 1, nowIso);
+      const current = await getHiveLeaseById(admission.leaseId, nowIso);
+      if (current) state = publicState(current, admission.token);
+    }
   }
-  const current = await getHiveLeaseById(admission.leaseId, nowIso);
-  return { state: current ? publicState(current, admission.token) : admission.state, usefulReuseAwards: awards };
+  return { state, usefulReuseAwards: awards };
 }
 
 export async function finishHiveObserve(admission: HiveAdmission, factKey: string, outcome: 'accepted' | 'deduplicated'): Promise<HivePublicState> {
