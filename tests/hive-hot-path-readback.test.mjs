@@ -48,5 +48,6 @@ test('already-bound leases skip the redundant independence UPDATE', () => {
   const block = between(hive, 'async function ensureLease', 'function retryAfter');
   assert.match(block, /if \(row\.independence_key === null\) await bindIndependence\(request, row\.lease_id\);/);
   assert.match(block, /if \(existing\.independence_key === null\) await bindIndependence\(request, existing\.lease_id\);/);
-  assert.equal(block.includes('await bindIndependence(request, row.lease_id);\n      // A token'), false);
+  assert.doesNotMatch(block, /^\s*await bindIndependence\(request, row\.lease_id\);\s*$/m);
+  assert.doesNotMatch(block, /^\s*await bindIndependence\(request, existing\.lease_id\);\s*$/m);
 });
