@@ -1,7 +1,7 @@
 # SeenRelay
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.4 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.5 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
@@ -14,7 +14,7 @@ Reuse eligible read-only validation locally or privately, use source-native chec
 
 SeenRelay has exactly two domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
 
-JavaScript/TypeScript 0.2.4 is local-first. Python 0.2.4 and the classic JavaScript/TypeScript client remain shadow-first. Provider-specific adapters are optional.
+JavaScript/TypeScript 0.2.5 is local-first. Python 0.2.5 and the classic JavaScript/TypeScript client remain shadow-first. Provider-specific adapters are optional.
 
 ## What it can avoid
 

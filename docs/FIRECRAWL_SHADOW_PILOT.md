@@ -29,7 +29,7 @@ Fixed subscription economics, included credits, auto-reload thresholds and the c
 
 ## Usage
 
-The MCP helper is available in the verified JavaScript / TypeScript client 0.2.4 release through the `seenrelay/firecrawl-shadow` package subpath. Source 0.2.5 additionally stages `seenrelay/firecrawl-sdk-shadow` for direct JavaScript SDK clients; public registry verification remains 0.2.4 until the release verification cycle completes.
+The verified JavaScript / TypeScript client 0.2.5 provides the MCP helper through `seenrelay/firecrawl-shadow` and the direct JavaScript SDK helper through `seenrelay/firecrawl-sdk-shadow`.
 
 ```js
 import { createFirecrawlShadowPilot } from 'seenrelay/firecrawl-shadow';
@@ -57,7 +57,7 @@ console.log(measured.seenRelayFirecrawlShadowPilot.report());
 The pilot accepts only the same public/suppressible Firecrawl scrape class as the existing Firecrawl adapter. Private hosts, authentication-bearing URLs and other excluded operations remain outside public evidence.
 
 
-### Direct JavaScript SDK form (0.2.5 source candidate)
+### Direct JavaScript SDK form
 
 ```js
 import { createFirecrawlSdkShadowPilot } from 'seenrelay/firecrawl-sdk-shadow';

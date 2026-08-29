@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Client 0.2.4 is published and clean-install verified on npm. Source 0.2.5 stages a direct Firecrawl JavaScript SDK shadow adapter in addition to the existing MCP shadow helper. Neither helper enables automatic reuse; public verified registry state remains 0.2.4 until the publish and registry-verification cycle completes.
+Client 0.2.5 is published and clean-install verified on npm. JavaScript / TypeScript includes both the Firecrawl MCP shadow helper and a direct Firecrawl SDK shadow adapter. Neither helper enables automatic reuse.
 
 ## Install
 
@@ -253,7 +253,7 @@ Firecrawl provider-cache hits are retained as provider baseline evidence but are
 A favorable pilot result is evidence only for the measured workload. It does not enable reuse or establish a universal Firecrawl savings rate.
 
 
-### Direct Firecrawl JavaScript SDK shadow adapter (0.2.5 source candidate)
+### Direct Firecrawl JavaScript SDK shadow adapter
 
 For applications that use the Firecrawl JavaScript SDK directly, the staged `seenrelay/firecrawl-sdk-shadow` subpath wraps current `scrape(url, options)` and legacy `scrapeUrl(url, options)` calls without changing provider behavior:
 

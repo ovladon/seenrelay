@@ -46,7 +46,12 @@ jobs:
           node --input-type=module - <<'NODE'
           import { SeenRelayClient } from 'seenrelay';
           import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
-          if (typeof SeenRelayClient !== 'function' || typeof SeenRelayShadowProof !== 'function') process.exit(1);
+          import { createFirecrawlSdkShadowPilot } from 'seenrelay/firecrawl-sdk-shadow';
+          if (
+            typeof SeenRelayClient !== 'function' ||
+            typeof SeenRelayShadowProof !== 'function' ||
+            typeof createFirecrawlSdkShadowPilot !== 'function'
+          ) process.exit(1);
           NODE
 
       - name: Verify exact PyPI registry install
