@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - 'vercel.json'
       - 'src/hive.ts'
       - 'src/hive-lease-admission-db.ts'
       - 'src/reuse.ts'
