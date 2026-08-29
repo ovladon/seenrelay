@@ -162,10 +162,10 @@ test('public surface is dual human-machine and exposes only aggregate network st
   assert.match(index, /accept\.includes\('text\/html'\)/);
   assert.match(index, /\/service\.json/);
   assert.match(index, /\/public-stats\.json/);
-  assert.match(publicSource, /Avoid redundant expensive validation from the first install/);
-  assert.match(publicSource, /LOCAL-FIRST VALIDATION COST AVOIDANCE/);
-  assert.match(publicSource, /THE IDEA IN 30 SECONDS/);
-  assert.match(publicSource, /public network is an accelerator, not a prerequisite/i);
+  assert.match(publicSource, /Avoid redundant expensive validation/);
+  assert.match(publicSource, /VALIDATION COST AVOIDANCE/);
+  assert.match(publicSource, /HOW IT WORKS/);
+  assert.match(publicSource, /local\/private reuse → source-native checks → optional shared CHECK → original validation/i);
   assert.match(publicSource, /javascript_typescript_zero_state/);
   assert.match(publicSource, /shared_check_default:\s*'off'/);
   assert.match(publicSource, /current_pricing: 'free'/);

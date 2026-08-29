@@ -23,7 +23,7 @@ test('public guidance distinguishes local-first application placement from remot
   assert.match(readme, /provider-independent/i);
   assert.match(readme, /Classic shadow-first path/i);
   assert.match(clients, /seenrelay\/mcp-auto/);
-  assert.match(clients, /MCP remains the standard remote discovery and tool interface/);
+  assert.match(clients, /MCP\/REST: hosted CHECK\/OBSERVE/);
   assert.match(quickstart, /MCP remains the standard discovery and model\/tool-routing interface/);
   assert.match(quickstart, /MCP BIND-ONCE/);
   assert.match(quickstart, /Shared SeenRelay CHECK is off by default/);

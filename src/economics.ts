@@ -8,11 +8,11 @@ export function economicsPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Concrete fleet-level economics for using SeenRelay before repeated paid search, scraping, browser extraction and other expensive fact revalidation.">
+<meta name="description" content="Measure when SeenRelay can avoid repeated paid or slow validation.">
 <link rel="canonical" href="${origin}/economics">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay economics — pay once for validation work when evidence can be reused">
-<meta property="og:description" content="Measure whether a cheap SeenRelay CHECK can avoid repeated paid validation across an agent fleet.">
+<meta property="og:title" content="SeenRelay economics — avoid repeated validation cost">
+<meta property="og:description" content="Measure whether CHECK can avoid repeated paid or slow validation.">
 <meta property="og:url" content="${origin}/economics">
 <title>SeenRelay — Fleet economics</title>
 <link rel="stylesheet" href="/site.css">
@@ -22,21 +22,21 @@ export function economicsPage(origin: string): string {
 <main>
 <section class="hero">
 <div class="eyebrow">FLEET-LEVEL COST AVOIDANCE</div>
-<h1>Stop paying to revalidate the same fact across your agent fleet.</h1>
-<p class="lead">Put a SeenRelay <b>CHECK</b> before repeated paid or slow validation. When recent matching evidence meets your policy, skip the expensive operation. Otherwise validate exactly as you do today, then <b>OBSERVE</b> the independently obtained result for the next run or agent.</p>
+<h1>Stop paying to revalidate the same fact.</h1>
+<p class="lead"><b>CHECK</b> before repeated paid or slow validation. Reuse qualifying recent evidence when policy allows. Otherwise run the original validation, then <b>OBSERVE</b> the fresh independent result.</p>
 <div class="cta"><a class="primary" href="/quickstart">Add it to a validation path</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Run Shadow Proof</a><a class="secondary" href="/clients">Client options</a></div>
 <div class="contract"><span>SeenRelay API fee</span><b>Currently $0</b><span>Measure first · reuse remains caller policy</span></div>
 </section>
 ${verifiedBenchmarkHtml()}
 
 <section class="section decision">
-<div class="section-head"><div><div class="eyebrow">USE IT WHERE THE MATH CAN WIN</div><h2>Best fit: validation work with a visible marginal cost.</h2></div><p>SeenRelay is a preflight, not a replacement for every fetch. The protected operation should cost meaningfully more than CHECK and should repeat across runs, workers or agents.</p></div>
+<div class="section-head"><div><div class="eyebrow">USE IT WHERE THE MATH CAN WIN</div><h2>Use it where validation has real cost.</h2></div><p>SeenRelay is a preflight, not a replacement for every fetch. The protected operation should cost meaningfully more than CHECK and should repeat across runs, workers or agents.</p></div>
 <div class="proof-grid"><article><b>Paid web search</b><span>Search tool calls that are billed per request and repeat the same fact validation.</span></article><article><b>Metered scraping</b><span>Commercial scrape, proxy or fetch credits spent re-reading the same source-backed fact.</span></article><article><b>Browser / extraction</b><span>Headless browser, render or extraction work that can be skipped when policy accepts recent evidence.</span></article><article><b>Multi-step validation</b><span>Fetch → render → parse → model or other chains where one reusable observation can prevent the full downstream path.</span></article></div>
 <div class="trust-note"><b>Poor fit:</b> a cheap one-off GET, a fact that almost never repeats, or a policy that requires authoritative live source confirmation on every call.</div>
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">THE FLEET FORMULA</div><h2>Aggregate repetition is the opportunity.</h2><p>Let <b>N</b> be protected validations, <b>C</b> the marginal cost of one full validation and <b>r</b> the measured share of calls whose recent matching evidence your policy would actually reuse.</p><p>When the provider charge is purely usage-based and SeenRelay's current API fee is zero, the first-order direct provider-spend model is:</p></div>
+<div><div class="eyebrow">THE FLEET FORMULA</div><h2>Repeated validation is the opportunity.</h2><p>Let <b>N</b> be protected validations, <b>C</b> the marginal cost of one full validation and <b>r</b> the measured share of calls whose recent matching evidence your policy would actually reuse.</p><p>When the provider charge is purely usage-based and SeenRelay's current API fee is zero, the first-order direct provider-spend model is:</p></div>
 <div class="terminal"><pre>without SeenRelay ≈ N × C
 
 with reusable evidence ≈ N × (1 - r) × C
@@ -54,7 +54,7 @@ and any fixed plan minimums.</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">RIDICULOUSLY SMALL INTEGRATION</div><h2>Bind once. One line per revalidation after that.</h2><p>The deterministic clients bind SeenRelay around one existing fixed-fact validation. With no reuse policy they are automatically shadow mode: CHECK runs, your original validation still runs, and OBSERVE records the independent result.</p><p>After measurement, adding a caller-approved reuse policy can allow matching recent evidence to suppress the expensive validation.</p></div>
+<div><div class="eyebrow">BIND ONCE</div><h2>Bind once. One line per revalidation.</h2><p>The deterministic clients bind SeenRelay around one existing fixed-fact validation. With no reuse policy they are automatically shadow mode: CHECK runs, your original validation still runs, and OBSERVE records the independent result.</p><p>After measurement, adding a caller-approved reuse policy can allow matching recent evidence to suppress the expensive validation.</p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>JavaScript / TypeScript</b></div><pre>const validatePrice = relay.protectValidation({
   fact,
   validate: ({ conditionalHeaders }) =&gt;
@@ -65,7 +65,7 @@ const value = await validatePrice(knownValue);</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">PYTHON</div><h2>The same bind-once pattern.</h2><p>The Python helper keeps the same semantics and uses only the standard library.</p></div>
+<div><div class="eyebrow">PYTHON</div><h2>Same pattern in Python.</h2><p>The Python helper keeps the same semantics and uses only the standard library.</p></div>
 <div class="terminal"><pre>from seenrelay_easy import protect_validation
 
 validate_price = protect_validation(
@@ -79,11 +79,11 @@ value = validate_price(known_value)</pre></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">FOR AGENT FLEETS</div><h2>One agent's necessary validation can become another agent's avoided spend.</h2><p>A fleet does not need an external public network to start. The first run validates normally and OBSERVEs. Later runs in the same integration or fleet can CHECK that evidence. External observations expand coverage later.</p><p>The larger the fleet and the more duplicated the validation workload, the larger the aggregate opportunity — provided the measured reuse rate remains above your latency and cost break-even thresholds.</p></div>
+<div><div class="eyebrow">FOR AGENT FLEETS</div><h2>One fresh validation can save the next one.</h2><p>A fleet does not need an external public network to start. The first run validates normally and OBSERVEs. Later runs in the same integration or fleet can CHECK that evidence. External observations expand coverage later.</p><p>The larger the fleet and the more duplicated the validation workload, the larger the aggregate opportunity — provided the measured reuse rate remains above your latency and cost break-even thresholds.</p></div>
 <div class="proof-grid"><article><b>Agent A</b><span>CHECK → UNKNOWN → paid validation → OBSERVE.</span></article><article><b>Agent B</b><span>Same fact soon after → CHECK sees recent matching evidence.</span></article><article><b>Policy accepts</b><span>Skip the paid validation and reuse the already-known value.</span></article><article><b>Policy rejects</b><span>Validate normally. SeenRelay fails open and does not weaken the source policy.</span></article></div>
 </section>
 
-<section class="section final"><div><div class="eyebrow">PROVE IT ON YOUR BILL</div><h2>Run shadow mode first. Keep SeenRelay only where your own workload shows positive value.</h2></div><div class="cta"><a class="primary" href="/quickstart">Implement the preflight</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Economics Lab</a></div></section>
+<section class="section final"><div><div class="eyebrow">PROVE IT ON YOUR BILL</div><h2>Measure first. Keep SeenRelay only where it saves more than it costs.</h2></div><div class="cta"><a class="primary" href="/quickstart">Implement the preflight</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Economics Lab</a></div></section>
 </main>
 ${siteFooterHtml()}
 </body>

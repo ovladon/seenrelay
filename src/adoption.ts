@@ -7,11 +7,11 @@ export function clientsPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Use SeenRelay 0.2.0 as a provider-independent local-first validation layer in JavaScript/TypeScript, or connect the unchanged CHECK/OBSERVE protocol through MCP and REST.">
+<meta name="description" content="JavaScript/TypeScript local-first. Python shadow-first. CHECK/OBSERVE over MCP or REST.">
 <link rel="canonical" href="${origin}/clients">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SeenRelay client integrations">
-<meta property="og:description" content="JavaScript/TypeScript Zero-State local-first optimization, classic shadow-first clients, and remote MCP/REST CHECK/OBSERVE.">
+<meta property="og:description" content="JavaScript/TypeScript local-first. Python shadow-first. CHECK/OBSERVE over MCP or REST.">
 <meta property="og:url" content="${origin}/clients">
 <meta name="twitter:card" content="summary">
 <title>SeenRelay — Client integrations</title>
@@ -22,20 +22,20 @@ export function clientsPage(origin: string): string {
 <main>
 <section class="hero">
 <div class="eyebrow">CLIENT 0.2.0</div>
-<h1>Local-first when you control the call path. Shared evidence when it helps.</h1>
-<p class="lead">JavaScript/TypeScript Zero-State can reduce redundant read-only validation through local/private reuse and source-native confirmation before an optional shared CHECK. Python and the classic client remain shadow-first. MCP remains the standard remote discovery and tool interface.</p>
+<h1>Choose how to integrate SeenRelay.</h1>
+<p class="lead">JavaScript/TypeScript: local-first Zero-State. Python: shadow-first. MCP/REST: hosted CHECK/OBSERVE.</p>
 <div class="cta"><a class="primary" href="#install">Install SeenRelay</a><a class="secondary" href="/quickstart">Quickstart</a><a class="secondary" href="${cursorInstall}">Add MCP to Cursor</a><a class="secondary" href="/economics">Measured savings</a></div>
 <div class="contract"><span>Exactly 2 hosted operations</span><b>CHECK</b><b>OBSERVE</b><span>Provider-independent core · no truth verdict</span></div>
 </section>
 ${publicInstallHtml()}
 
 <section class="section split decision">
-<div><div class="eyebrow">JAVASCRIPT / TYPESCRIPT ZERO-STATE</div><h2>Useful even with zero shared observations.</h2><p>Eligible read-only calls can use in-flight coalescing, explicit-TTL local reuse, optional encrypted caller-owned L1 and source-native ETag / Last-Modified confirmation. Shared CHECK is off by default and remains an optional accelerator.</p><p>The original validation remains the fallback. Fresh independent validations may contribute OBSERVE evidence; intermediary cache reuse does not become a new independent observation.</p></div>
+<div><div class="eyebrow">JAVASCRIPT / TYPESCRIPT ZERO-STATE</div><h2>Works without shared observations.</h2><p>Eligible read-only calls can use in-flight coalescing, explicit-TTL local reuse, optional encrypted caller-owned L1 and source-native ETag / Last-Modified confirmation. Shared CHECK is off by default and remains an optional accelerator.</p><p>The original validation remains the fallback. Fresh independent validations may contribute OBSERVE evidence; intermediary cache reuse does not become a new independent observation.</p></div>
 <div class="proof-grid"><article><b>L0</b><span>Exact in-process reuse and concurrent-call coalescing.</span></article><article><b>L1</b><span>Optional caller-owned encrypted private reuse across workers/restarts.</span></article><article><b>Source native</b><span>ETag / Last-Modified can confirm unchanged content directly.</span></article><article><b>L2 optional</b><span>Shared SeenRelay evidence only where it can add value.</span></article></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">MCP AUTO</div><h2>Bind policy once around exact tool names.</h2><p><code>seenrelay/mcp-auto</code> wraps <code>callTool()</code> for explicitly allowlisted operations. Unlisted tools pass through unchanged. The generic core never decides that a tool is read-only from its name, description or an untrusted hint.</p></div>
+<div><div class="eyebrow">MCP AUTO</div><h2>Protect only explicitly allowlisted tools.</h2><p><code>seenrelay/mcp-auto</code> wraps <code>callTool()</code> for explicitly allowlisted operations. Unlisted tools pass through unchanged. The generic core never decides that a tool is read-only from its name, description or an untrusted hint.</p></div>
 <div class="terminal"><pre>import { protectMcpClient } from 'seenrelay/mcp-auto';
 
 const client = protectMcpClient(rawMcpClient, {
@@ -47,12 +47,12 @@ const client = protectMcpClient(rawMcpClient, {
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">CLASSIC CLIENTS</div><h2>Shadow-first shared-evidence measurement stays available.</h2><p>The classic JavaScript/TypeScript and Python APIs continue to CHECK a known fact, perform the original validation unless explicit caller policy permits reuse, and OBSERVE the independently obtained result best-effort.</p><p>Python behavior remains shadow-first in 0.2.0.</p></div>
+<div><div class="eyebrow">CLASSIC CLIENTS</div><h2>Classic clients remain shadow-first.</h2><p>The classic JavaScript/TypeScript and Python APIs continue to CHECK a known fact, perform the original validation unless explicit caller policy permits reuse, and OBSERVE the independently obtained result best-effort.</p><p>Python behavior remains shadow-first in 0.2.0.</p></div>
 <div class="proof-grid"><article><b>JavaScript / TypeScript</b><span><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">Zero-State plus classic APIs</a></span></article><article><b>Python</b><span><a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Classic shadow-first API</a></span></article><article><b>Shadow Proof</b><span>Measure public CHECK evidence without suppressing validation.</span></article><article><b>Fail open</b><span>Relay/store failures return to the existing validation path.</span></article></div>
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">CLAUDE CODE</div><h2>Remote Streamable HTTP.</h2><p>Anthropic documents remote HTTP MCP servers through <code>claude mcp add</code>.</p></div>
+<div><div class="eyebrow">CLAUDE CODE</div><h2>Remote MCP over HTTP.</h2><p>Anthropic documents remote HTTP MCP servers through <code>claude mcp add</code>.</p></div>
 <div class="terminal"><pre>claude mcp add --transport http seenrelay \
   ${origin}/mcp
 
@@ -60,7 +60,7 @@ claude mcp list</pre></div>
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">CURSOR</div><h2>One click or normal MCP configuration.</h2><p>The install link encodes only the SeenRelay remote MCP URL. Cursor still shows its installation prompt.</p><p><a href="${cursorInstall}">Add SeenRelay to Cursor →</a></p></div>
+<div><div class="eyebrow">CURSOR</div><h2>One-click MCP install.</h2><p>The install link encodes only the SeenRelay remote MCP URL. Cursor still shows its installation prompt.</p><p><a href="${cursorInstall}">Add SeenRelay to Cursor →</a></p></div>
 <div class="terminal"><pre>{
   "mcpServers": {
     "seenrelay": {
@@ -71,7 +71,7 @@ claude mcp list</pre></div>
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">VS CODE / COPILOT</div><h2>Remote HTTP MCP server.</h2><p>VS Code supports remote MCP servers through <code>mcp.json</code> and its documented <code>--add-mcp</code> flow.</p></div>
+<div><div class="eyebrow">VS CODE / COPILOT</div><h2>Remote MCP over HTTP.</h2><p>VS Code supports remote MCP servers through <code>mcp.json</code> and its documented <code>--add-mcp</code> flow.</p></div>
 <div class="terminal"><pre>{
   "servers": {
     "seenrelay": {
@@ -85,12 +85,12 @@ code --add-mcp '{"name":"seenrelay","type":"http","url":"${origin}/mcp"}'</pre><
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">CHATGPT CUSTOM MCP APPS</div><h2>Use the same remote endpoint where your plan and workspace permit it.</h2><p>Create a custom app, provide <code>${origin}/mcp</code>, scan the tools and review permissions before enabling it. MCP availability and administrative controls vary by plan and can change.</p></div>
+<div><div class="eyebrow">CHATGPT CUSTOM MCP APPS</div><h2>Use the same MCP endpoint.</h2><p>Create a custom app, provide <code>${origin}/mcp</code>, scan the tools and review permissions before enabling it. MCP availability and administrative controls vary by plan and can change.</p></div>
 <div class="proof-grid"><article><b>Endpoint</b><span>${origin}/mcp</span></article><article><b>Protocol rule</b><span>CHECK shared evidence when useful; OBSERVE only after independent observation.</span></article></div>
 </section>
 
 <section class="section decision">
-<div class="section-head"><div><div class="eyebrow">DEPLOY SAFELY</div><h2>Local first; shadow-first where shared evidence is being evaluated.</h2></div><p>Use only explicitly eligible read-only operations. Keep TTL zero unless a defensible freshness window exists. Measure actual work avoided and preserve the original validation as fallback.</p></div>
+<div class="section-head"><div><div class="eyebrow">DEPLOY SAFELY</div><h2>Use only safe read-only operations. Measure before reuse.</h2></div><p>Keep TTL zero unless a defensible freshness window exists. Preserve the original validation as fallback.</p></div>
 <div class="cta"><a class="primary" href="/quickstart">Run the quickstart</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/CLIENTS.md">Full client guide</a></div>
 </section>
 </main>
@@ -111,7 +111,7 @@ export function sitemapXml(origin: string): string {
 export function llmsText(origin: string): string {
   return `# SeenRelay
 
-> Local-first freshness optimization with optional shared evidence for AI-agent fleets. JavaScript/TypeScript 0.2.0 can reduce redundant read-only validation locally/private/source-natively before an optional shared CHECK. OBSERVE is for independently obtained source-backed observations.
+> Avoid redundant expensive validation. JavaScript/TypeScript 0.2.0 uses local/private reuse, source-native checks, then optional shared CHECK. OBSERVE only fresh independent source-backed results.
 
 SeenRelay reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
 
