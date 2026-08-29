@@ -68,6 +68,8 @@ jobs:
           import { SeenRelayAuto, exactToolAdapter } from 'seenrelay/auto';
           import { protectMcpClient } from 'seenrelay/mcp-auto';
           import { firecrawlScrapePolicy } from 'seenrelay/firecrawl';
+          import { createFirecrawlShadowPilot } from 'seenrelay/firecrawl-shadow';
+          import { evaluateHostileBenchmark } from 'seenrelay/economics';
 
           const client = new SeenRelayClient({ fetchImpl: async () => { throw new Error('not called during import test'); } });
           const proof = new SeenRelayShadowProof(client);
@@ -76,6 +78,39 @@ jobs:
           const auto = new SeenRelayAuto({ adapters: [adapter] });
           const protectedClient = protectMcpClient({ async callTool(params) { return params; } }, { tools: {} });
           const providerAdapter = firecrawlScrapePolicy({ publicEvidence: false });
+          const shadowClient = createFirecrawlShadowPilot(
+            { async callTool(params) { return params; } },
+            {
+              relayClient: {
+                async check() { return { status: 'UNKNOWN' }; },
+                async observe() { return { accepted: true }; }
+              }
+            }
+          );
+          const economics = evaluateHostileBenchmark({
+            schema_version: 2,
+            workload_id: 'clean-install-smoke',
+            sample_type: 'fixed_fact_smoke',
+            baseline_definition: 'best_existing_non_shared_path',
+            observe_off_critical_path: true,
+            controls: {
+              local_cache: { available: false, measured: false },
+              source_native_conditional: { available: false, measured: false },
+              provider_native_cache: { available: false, measured: false }
+            },
+            records: [{
+              check_status: 'UNKNOWN',
+              policy_reusable: false,
+              reuse_would_match_validation: null,
+              observe_after_baseline: false,
+              baseline_ms: 10,
+              baseline_cost: 1,
+              check_ms: 1,
+              observe_ms: 0,
+              check_cost: 0,
+              observe_cost: 0
+            }]
+          });
           if (
             typeof client.protectValidation !== 'function' ||
             !proof ||
@@ -83,7 +118,10 @@ jobs:
             typeof freshResult !== 'function' ||
             typeof auto.wrap !== 'function' ||
             typeof protectedClient.callTool !== 'function' ||
-            !providerAdapter
+            !providerAdapter ||
+            typeof shadowClient.callTool !== 'function' ||
+            typeof shadowClient.seenRelayFirecrawlShadowPilot?.evaluate !== 'function' ||
+            economics?.decision?.automatic_reuse_enabled_by_evaluator !== false
           ) process.exit(1);
           NODE
 
