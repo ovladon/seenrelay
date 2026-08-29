@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-08-29T14:26:02Z",
+  "updated_at": "2026-08-29T14:31:01Z",
   "positioning": {
     "category": "validation cost avoidance and shared freshness evidence for AI agents",
     "headline": "Avoid redundant expensive validation",
@@ -16,7 +16,7 @@
     "pypi_command": "pip install seenrelay",
     "client_version": "0.2.2",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-08-29T14:26:02Z",
+    "registry_install_verified_at": "2026-08-29T14:31:01Z",
     "verification": "Client 0.2.2 was published to npm and PyPI through trusted publishing and clean-install verified from both public registries. JavaScript/TypeScript adds local Shadow Proof agreement counters that keep authoritative validation enabled and do not retain compared raw values in snapshots or reports; Zero-State and existing adapters remain available. Python remains shadow-first and does not claim the JavaScript/TypeScript safety-agreement feature in this release."
   },
   "fit": {
