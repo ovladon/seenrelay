@@ -32,6 +32,25 @@ No proof telemetry is uploaded by the helper.
 
 A first report should contain enough calls to represent the workload's normal repetition pattern. Do not enable reuse merely because one call returned `SAME_OBSERVED`.
 
+### Natural-workload hostile input
+
+The staged JavaScript / TypeScript Shadow Proof can retain a bounded, sanitized per-call record and explicitly export schema-v2 input for `scripts/evaluate-hostile-benchmark.mjs`. This path remains strict shadow mode: a simulated reuse policy is evaluated only after the authoritative validation has completed and cannot suppress it.
+
+The exported record contains only:
+
+- CHECK status, including an explicit unavailable state when CHECK produced no usable status;
+- whether the caller's simulated policy would have reused the result;
+- whether that hypothetical reuse deterministically matched the authoritative validation, or `null` when comparison was unavailable;
+- measured baseline-validation, CHECK and blocking-OBSERVE milliseconds;
+- caller-supplied baseline, CHECK and OBSERVE cost units;
+- whether an active non-reuse path would have OBSERVEd after baseline validation.
+
+It does not contain the fact descriptor, source URL, known value, validated value or a per-call timestamp. Use only a non-sensitive opaque workload identifier when one is needed. Record overflow or an invalid simulated policy invalidates the export instead of silently truncating evidence.
+
+The hostile evaluator requires the baseline `best_existing_non_shared_path` and explicit measurement declarations for local cache, source-native conditional validation and provider-native caching. If one of those controls is available but was not measured, the evaluator rejects the benchmark as incomplete. CHECK-unavailable calls remain in the natural sample instead of disappearing. A policy-accepted hypothetical reuse that cannot be compared deterministically is `incomplete`, not a safety pass; any observed mismatch fails safety evidence.
+
+Python continues to support shadow measurement but does not claim parity with this natural-workload collector in the staged client release.
+
 ## 3. Direct-reuse economics
 
 Let:
@@ -145,9 +164,10 @@ Measure the whole validation path that a reusable observation can actually preve
 For every benchmark publish or retain:
 
 - protected calls;
-- CHECK status distribution;
+- CHECK status distribution, including unavailable CHECKs;
 - `SAME_OBSERVED` rate;
 - policy-accepted reusable rate;
+- safety state for the policy-accepted hypothetical reuses;
 - validation latency distribution or at minimum average plus p50/p95 where available;
 - CHECK latency distribution;
 - OBSERVE latency distribution;
@@ -161,7 +181,7 @@ For every benchmark publish or retain:
 - conditional savings separately measured or explicitly excluded;
 - fixed plan minimums, included credits and tier effects when relevant.
 
-If `SAME_OBSERVED` is zero, direct gross potential savings are zero.
+If `SAME_OBSERVED` is zero, direct gross potential savings are zero. If there are no policy-accepted reuse opportunities, that is not a safety pass. If any policy-accepted hypothetical reuse is uncomparable, evidence is incomplete. If any such reuse disagrees with authoritative validation, safety fails.
 
 ## 8. Deployment decision
 
@@ -169,8 +189,9 @@ Keep the integration in shadow mode when:
 
 - the observed reuse rate is below the measured break-even threshold;
 - the fact class is too risky for reuse under the application's policy;
-- the sample is too small;
-- `CONTESTED`, `STALE`, or `UNKNOWN` dominate and there is no useful conditional-validation benefit;
+- the sample is too small or incomplete;
+- hypothetical reuse safety is not a strict pass;
+- `CONTESTED`, `STALE`, `UNKNOWN` or CHECK-unavailable outcomes dominate and there is no useful conditional-validation benefit;
 - a fixed provider plan means reduced calls do not create meaningful capacity or invoice value.
 
 Consider bounded reuse only when the consuming application's own measurements show positive value and its policy accepts the relevant fact class and freshness window.
