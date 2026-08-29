@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'src/hive.ts'
+      - 'src/hive-lease-admission-db.ts'
       - 'src/reuse.ts'
       - 'scripts/check-hot-path-probe.mjs'
       - 'tests/hive-hot-path-readback.test.mjs'
