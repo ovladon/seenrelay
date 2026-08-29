@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - 'vercel.json'
       - 'src/service.ts'
       - 'src/check-evidence.ts'
       - 'scripts/check-semantic-probe.mjs'
