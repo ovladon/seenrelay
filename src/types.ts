@@ -77,18 +77,15 @@ export interface FactRow {
   source_url: string;
   last_observed_at: string | null;
   observation_total: number;
-  current_value_json: JsonValue | null;
   current_value_hash: string | null;
   current_first_seen_at: string | null;
   current_last_seen_at: string | null;
-  previous_value_json: JsonValue | null;
   previous_value_hash: string | null;
   previous_last_seen_at: string | null;
 }
 
 export interface AggregateRow {
   value_hash: string;
-  value_json: JsonValue;
   last_seen: string;
   first_seen: string;
   observations: number;
