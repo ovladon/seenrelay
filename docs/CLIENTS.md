@@ -8,7 +8,7 @@ SeenRelay exposes exactly two domain operations through MCP and REST: `check_fac
 
 ## Recommended integration order
 
-For JavaScript / TypeScript 0.2.0, the preferred application path is local-first for explicitly eligible read-only operations:
+For JavaScript / TypeScript 0.2.1, the preferred application path is local-first for explicitly eligible read-only operations:
 
 1. exact in-flight / explicit-TTL local reuse;
 2. optional encrypted caller-owned private L1 reuse;
@@ -17,7 +17,7 @@ For JavaScript / TypeScript 0.2.0, the preferred application path is local-first
 5. the application's existing validation as fallback;
 6. OBSERVE only after genuinely fresh independent validation.
 
-The hosted CHECK/OBSERVE protocol is unchanged. Python 0.2.0 and the classic JavaScript / TypeScript client remain shadow-first.
+The hosted CHECK/OBSERVE protocol is unchanged. Python 0.2.1 and the classic JavaScript / TypeScript client remain shadow-first.
 
 ## JavaScript / TypeScript Zero-State
 
@@ -93,7 +93,7 @@ value = relay.guard(
 )
 ```
 
-Python behavior remains shadow-first in 0.2.0. JavaScript / TypeScript Zero-State parity is not claimed for Python in this release.
+Python behavior remains shadow-first in 0.2.1. JavaScript / TypeScript Zero-State parity is not claimed for Python in this release.
 
 Relay-side timeout, 429, malformed response or outage fails open into the original validation path. Application validation failures still propagate.
 
