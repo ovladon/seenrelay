@@ -4,7 +4,7 @@
 
 Deterministic, standard-library-only client that places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default.
 
-The source tree stages client 0.2.2 to keep the synchronized client release manifests aligned. Python behavior remains conservative and shadow-first; the new shadow safety-agreement counters in this release candidate are a JavaScript / TypeScript capability. Python parity is not claimed.
+The source tree stages client 0.2.3 to keep the synchronized client release manifests aligned. Python behavior remains conservative and shadow-first. The JavaScript / TypeScript 0.2.3 source candidate adds sanitized natural-workload collection for the hostile benchmark; Python parity for that collector is not claimed in this release candidate.
 
 ## Install
 
@@ -75,7 +75,7 @@ print(proof.report(
 ))
 ```
 
-Shadow Proof always keeps the original validation. It measures CHECK status distribution, validation time and SeenRelay request latency locally. Potential savings count only `SAME_OBSERVED` calls and subtract caller-supplied request costs. Savings from conditional ETag / Last-Modified requests are deliberately excluded unless measured separately by the application.
+Python Shadow Proof keeps the original validation. It measures CHECK status distribution, validation time and SeenRelay request latency locally. Potential savings count only `SAME_OBSERVED` calls and subtract caller-supplied request costs. Savings from conditional ETag / Last-Modified requests are deliberately excluded unless measured separately by the application.
 
 Use SeenRelay around repeated validation that is materially more expensive than the preflight: paid search, scraping/proxy work, browser or extraction calls, rate-limited APIs, model-assisted parsing, or multi-step validation. It is generally a poor fit for a cheap one-off GET.
 
