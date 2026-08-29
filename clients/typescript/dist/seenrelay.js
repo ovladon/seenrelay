@@ -138,7 +138,9 @@ export class SeenRelayClient {
         let check = null;
         let checkOk = false;
         let checkError;
+        let checkMs = 0;
         this.metrics.checkCalls += 1;
+        const checkStarted = monotonicNowMs();
         try {
             check = await this.check(options.fact, options.knownValue, options.maxAgeSeconds);
             checkOk = true;
@@ -147,24 +149,41 @@ export class SeenRelayClient {
             this.metrics.checkFailures += 1;
             if (isAbortError(error)) this.metrics.checkTimeouts += 1;
             checkError = errorText(error);
+        } finally {
+            checkMs = Math.max(0, monotonicNowMs() - checkStarted);
         }
         if (check && options.reuse) {
             const decision = options.reuse(check, options.knownValue);
             if (decision.reuse) {
                 this.metrics.reuseHits += 1;
-                return { value: decision.value, path: 'reused', check, relay: { checkOk, observeOk: null, observeDeferred: false, ...(checkError ? { checkError } : {}) } };
+                return {
+                    value: decision.value,
+                    path: 'reused',
+                    check,
+                    relay: { checkOk, observeOk: null, observeDeferred: false, ...(checkError ? { checkError } : {}) },
+                    timings: Object.freeze({ checkMs, validationMs: 0, observeMs: 0 })
+                };
             }
         }
         const conditionalHeaders = Object.freeze(safeConditionalHeaders(check));
         const context = { check, conditionalHeaders };
         this.metrics.validationCalls += 1;
         if (Object.keys(conditionalHeaders).length > 0) this.metrics.conditionalHintValidations += 1;
-        const value = await options.validate(context);
+        let value;
+        let validationMs = 0;
+        const validationStarted = monotonicNowMs();
+        try {
+            value = await options.validate(context);
+        } finally {
+            validationMs = Math.max(0, monotonicNowMs() - validationStarted);
+        }
         let observeOk = null;
         let observeError;
         let observeDeferred = false;
+        let observeMs = 0;
         this.metrics.observeAttempts += 1;
         const performObserve = async (deferred) => {
+            const observeStarted = monotonicNowMs();
             try {
                 const metadata = options.observation ? await options.observation(value, context) : undefined;
                 await this.observe(options.fact, value, metadata);
@@ -177,6 +196,8 @@ export class SeenRelayClient {
                     try { this.onDeferredObserveError?.(error); } catch { /* caller callback must not affect validation */ }
                 }
                 return { ok: false, error: errorText(error) };
+            } finally {
+                if (!deferred) observeMs = Math.max(0, monotonicNowMs() - observeStarted);
             }
         };
         if (this.scheduleObserve) {
@@ -194,7 +215,13 @@ export class SeenRelayClient {
             observeOk = outcome.ok;
             observeError = outcome.error;
         }
-        return { value, path: 'validated', check, relay: { checkOk, observeOk, observeDeferred, ...(checkError ? { checkError } : {}), ...(observeError ? { observeError } : {}) } };
+        return {
+            value,
+            path: 'validated',
+            check,
+            relay: { checkOk, observeOk, observeDeferred, ...(checkError ? { checkError } : {}), ...(observeError ? { observeError } : {}) },
+            timings: Object.freeze({ checkMs, validationMs, observeMs })
+        };
     }
     commonHeaders() {
         return { 'content-type': 'application/json', ...(this.lease ? { 'x-seenrelay-lease': this.lease } : {}), ...(this.clientHint ? { 'x-seenrelay-client': this.clientHint } : {}) };
