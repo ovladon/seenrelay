@@ -12,6 +12,12 @@ function nonNegativeFinite(value, name) {
   return number;
 }
 
+function positiveInteger(value, name) {
+  const number = Number(value);
+  if (!Number.isInteger(number) || number <= 0) throw new TypeError(`${name} must be a positive integer`);
+  return number;
+}
+
 function stableJson(value) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
   if (typeof value === 'number') {
@@ -63,22 +69,43 @@ function safetySummary(metrics) {
   return { state: 'pass', pass: true, comparable, agreementRate };
 }
 
+function sanitizeControls(controls) {
+  const names = ['local_cache', 'source_native_conditional', 'provider_native_cache'];
+  if (!controls || typeof controls !== 'object' || Array.isArray(controls)) {
+    throw new TypeError('controls must be an object');
+  }
+  return Object.freeze(Object.fromEntries(names.map((name) => {
+    const control = controls[name];
+    if (!control || typeof control.available !== 'boolean' || typeof control.measured !== 'boolean') {
+      throw new TypeError(`controls.${name} must declare available and measured booleans`);
+    }
+    return [name, Object.freeze({ available: control.available, measured: control.measured })];
+  })));
+}
+
 /**
  * Measures SeenRelay in strict shadow mode: CHECK always runs, validation is
  * never suppressed, and the caller's existing validation remains authoritative.
  * No telemetry is uploaded by this helper. Raw values are not retained in its metrics.
  */
 export class SeenRelayShadowProof {
-  constructor(client) {
+  constructor(client, options = {}) {
     if (!client || typeof client.guardDetailed !== 'function' || typeof client.getTelemetry !== 'function') {
       throw new TypeError('client must be a SeenRelayClient-compatible instance');
     }
     this.client = client;
     this.metrics = emptyProof();
+    this.benchmarkRecordLimit = positiveInteger(options.benchmarkRecordLimit ?? 10000, 'benchmarkRecordLimit');
+    this.benchmarkRecords = [];
+    this.benchmarkRecordsDropped = 0;
+    this.benchmarkInvalidReasons = new Set();
   }
 
   reset() {
     this.metrics = emptyProof();
+    this.benchmarkRecords = [];
+    this.benchmarkRecordsDropped = 0;
+    this.benchmarkInvalidReasons = new Set();
     if (typeof this.client.resetTelemetry === 'function') this.client.resetTelemetry();
   }
 
@@ -103,13 +130,121 @@ export class SeenRelayShadowProof {
     });
   }
 
+  benchmarkSnapshot() {
+    return Object.freeze({
+      recordsRetained: this.benchmarkRecords.length,
+      recordsDropped: this.benchmarkRecordsDropped,
+      recordLimit: this.benchmarkRecordLimit,
+      invalidReasons: Object.freeze([...this.benchmarkInvalidReasons]),
+      rawValuesRetained: false,
+      factIdentityRetained: false,
+      timestampsRetained: false
+    });
+  }
+
+  captureBenchmarkRecord(options, result) {
+    const benchmark = options.benchmark;
+    if (!benchmark) return;
+
+    if (this.benchmarkRecords.length >= this.benchmarkRecordLimit) {
+      this.benchmarkRecordsDropped += 1;
+      return;
+    }
+
+    const timings = result?.timings;
+    if (!timings || !Number.isFinite(timings.checkMs) || !Number.isFinite(timings.validationMs) || !Number.isFinite(timings.observeMs)) {
+      this.benchmarkInvalidReasons.add('missing_or_invalid_call_timings');
+      return;
+    }
+
+    const status = STATUSES.includes(result?.check?.status) ? result.check.status : null;
+    let policyReusable = false;
+    let reuseWouldMatchValidation = null;
+
+    if (benchmark.reuse && result?.check) {
+      let decision;
+      try {
+        decision = benchmark.reuse(result.check, options.knownValue);
+      } catch {
+        this.benchmarkInvalidReasons.add('reuse_policy_threw');
+        return;
+      }
+      if (!decision || typeof decision.reuse !== 'boolean') {
+        this.benchmarkInvalidReasons.add('reuse_policy_returned_invalid_decision');
+        return;
+      }
+      if (decision.reuse) {
+        if (status !== 'SAME_OBSERVED') {
+          this.benchmarkInvalidReasons.add('reuse_policy_accepted_non_same_observed');
+          return;
+        }
+        policyReusable = true;
+        try {
+          reuseWouldMatchValidation = stableJson(decision.value) === stableJson(result.value);
+        } catch {
+          reuseWouldMatchValidation = null;
+        }
+      }
+    }
+
+    const observeAfterBaseline = benchmark.observeAfterBaseline ?? true;
+    if (typeof observeAfterBaseline !== 'boolean') {
+      this.benchmarkInvalidReasons.add('observe_after_baseline_not_boolean');
+      return;
+    }
+
+    let baselineCost;
+    let checkCost;
+    let observeCost;
+    try {
+      baselineCost = nonNegativeFinite(benchmark.baselineCost ?? 0, 'benchmark.baselineCost');
+      checkCost = nonNegativeFinite(benchmark.checkCost ?? 0, 'benchmark.checkCost');
+      observeCost = nonNegativeFinite(benchmark.observeCost ?? 0, 'benchmark.observeCost');
+    } catch {
+      this.benchmarkInvalidReasons.add('invalid_cost_input');
+      return;
+    }
+
+    this.benchmarkRecords.push(Object.freeze({
+      check_status: status,
+      policy_reusable: policyReusable,
+      reuse_would_match_validation: policyReusable ? reuseWouldMatchValidation : null,
+      observe_after_baseline: observeAfterBaseline,
+      baseline_ms: Math.max(0, timings.validationMs),
+      baseline_cost: baselineCost,
+      check_ms: Math.max(0, timings.checkMs),
+      observe_ms: Math.max(0, timings.observeMs),
+      check_cost: checkCost,
+      observe_cost: observeCost
+    }));
+  }
+
+  hostileBenchmarkInput({ workloadId = null, controls, observeOffCriticalPath = false } = {}) {
+    const benchmark = this.benchmarkSnapshot();
+    if (benchmark.recordsRetained === 0) throw new Error('no natural workload benchmark records were retained');
+    if (benchmark.recordsDropped > 0) throw new Error(`natural workload benchmark is incomplete: ${benchmark.recordsDropped} records exceeded the configured limit`);
+    if (benchmark.invalidReasons.length > 0) throw new Error(`natural workload benchmark is incomplete: ${benchmark.invalidReasons.join(', ')}`);
+    if (workloadId !== null && typeof workloadId !== 'string') throw new TypeError('workloadId must be a string or null');
+    if (typeof observeOffCriticalPath !== 'boolean') throw new TypeError('observeOffCriticalPath must be boolean');
+
+    return Object.freeze({
+      schema_version: 2,
+      workload_id: workloadId,
+      sample_type: 'natural_workload',
+      baseline_definition: 'best_existing_non_shared_path',
+      controls: sanitizeControls(controls),
+      observe_off_critical_path: observeOffCriticalPath,
+      records: Object.freeze(this.benchmarkRecords.map((record) => Object.freeze({ ...record })))
+    });
+  }
+
   async guard(options) {
     if (!options || typeof options.validate !== 'function') throw new TypeError('validate must be a function');
     let validationMs = 0;
     const originalValidate = options.validate;
     const result = await this.client.guardDetailed({
       ...options,
-      // Shadow proof must never suppress validation.
+      // Shadow proof must never suppress validation. benchmark.reuse is simulated only after validation.
       reuse: undefined,
       validate: async (context) => {
         const started = nowMs();
@@ -147,6 +282,7 @@ export class SeenRelayShadowProof {
       this.metrics.conditionalHintsSeen += 1;
     }
 
+    this.captureBenchmarkRecord(options, result);
     return result.value;
   }
 
