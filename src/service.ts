@@ -1,4 +1,4 @@
-import { canonicalFactKey, ValidationError, valueIdentity } from './canonical.js';
+import { canonicalFactKey, ValidationError } from './canonical.js';
 import { config } from './config.js';
 import { acceptObservation, cleanupTouchedFact, getFact, getObserverState } from './db.js';
 import { getRecentValueGroupsWithValidators } from './check-evidence.js';
@@ -6,6 +6,7 @@ import type { SourceValidator } from './check-evidence.js';
 import { deriveObserverIdentity } from './identity.js';
 import { predicateGuidance } from './predicates.js';
 import type { CheckRequest, JsonValue, ObserveRequest } from './types.js';
+import { normalizeStoredValueFingerprint, valueFingerprint } from './value-fingerprint.js';
 
 function isoFromMs(ms: number): string { return new Date(ms).toISOString(); }
 function epochMs(iso: string): number { return Date.parse(iso); }
@@ -57,7 +58,7 @@ export async function checkFact(body: CheckRequest) {
   const nowMs = Date.now();
   const maxAge = clampMaxAge(body.max_age_seconds, cfg);
   const fact = await canonicalFactKey(body.fact);
-  const known = await valueIdentity(body.known_value);
+  const known = await valueFingerprint(body.known_value);
   const stored = await getFact(fact.factKey);
 
   if (!stored || !stored.last_observed_at) {
@@ -80,6 +81,7 @@ export async function checkFact(body: CheckRequest) {
       fact_key: fact.factKey,
       ...factIdentityMetadata(fact),
       known_value_hash: known.valueHash,
+      value_fingerprint_version: known.version,
       last_observed_at: stored.last_observed_at,
       age_seconds: Math.max(0, Math.floor((nowMs - epochMs(stored.last_observed_at)) / 1000)),
       max_age_seconds: maxAge,
@@ -113,6 +115,7 @@ export async function checkFact(body: CheckRequest) {
       fact_key: fact.factKey,
       ...factIdentityMetadata(fact),
       known_value_hash: known.valueHash,
+      value_fingerprint_version: known.version,
       max_age_seconds: maxAge,
       conflict_window_seconds: cfg.conflictWindowSeconds,
       evidence,
@@ -127,6 +130,7 @@ export async function checkFact(body: CheckRequest) {
     ...factIdentityMetadata(fact),
     known_value_hash: known.valueHash,
     latest_value_hash: latest.value_hash,
+    value_fingerprint_version: known.version,
     first_seen_latest: latest.first_seen,
     last_seen_latest: latest.last_seen,
     age_seconds: Math.max(0, Math.floor((nowMs - epochMs(latest.last_seen)) / 1000)),
@@ -148,7 +152,7 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
   const receivedAtIso = isoFromMs(nowMs);
   const observedAtIso = parseObservedAt(body.observed_at, nowMs, cfg);
   const fact = await canonicalFactKey(body.fact);
-  const value = await valueIdentity(body.value);
+  const value = await valueFingerprint(body.value);
   const observer = await deriveObserverIdentity(request, body, nowMs, cfg.observerProofMaxSkewSeconds);
 
   if (body.evidence_fingerprint && body.evidence_fingerprint.length > 256) throw new ValidationError('evidence_fingerprint is too long');
@@ -161,13 +165,15 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
   }
 
   const prior = await getObserverState(fact.factKey, observer.key);
-  if (prior && prior.last_value_hash === value.valueHash && nowMs - epochMs(prior.last_received_at) < cfg.dedupWindowSeconds * 1000) {
+  const priorValueHash = prior ? await normalizeStoredValueFingerprint(prior.last_value_hash) : null;
+  if (prior && priorValueHash === value.valueHash && nowMs - epochMs(prior.last_received_at) < cfg.dedupWindowSeconds * 1000) {
     return {
       accepted: false,
       deduplicated: true,
       fact_key: fact.factKey,
       ...factIdentityMetadata(fact),
       value_hash: value.valueHash,
+      value_fingerprint_version: value.version,
       observer_identity: observer.kind,
       observer_assurance: observer.assurance,
       future_check_eligible: true,
@@ -208,6 +214,7 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
       fact_key: fact.factKey,
       ...factIdentityMetadata(fact),
       value_hash: value.valueHash,
+      value_fingerprint_version: value.version,
       observer_identity: observer.kind,
       observer_assurance: observer.assurance,
       future_check_eligible: true,
@@ -225,6 +232,7 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
     fact_key: fact.factKey,
     ...factIdentityMetadata(fact),
     value_hash: value.valueHash,
+    value_fingerprint_version: value.version,
     observed_at: observedAtIso,
     received_at: receivedAtIso,
     observer_identity: observer.kind,
