@@ -1,0 +1,68 @@
+name: Standards Shadow Benchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/standards-shadow-benchmark.mjs'
+      - 'tests/standards-shadow-benchmark.test.mjs'
+      - '.github/workflows/standards-shadow-benchmark.yml'
+  schedule:
+    - cron: '47 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seenrelay-standards-shadow-benchmark
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+
+      - name: Run read-only natural workload measurement
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SEENRELAY_ORIGIN: https://seenrelay.com
+        run: node scripts/standards-shadow-benchmark.mjs
+
+      - name: Verify sanitized measurement contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const input = JSON.parse(fs.readFileSync('standards-shadow-benchmark.json', 'utf8'));
+          const summary = JSON.parse(fs.readFileSync('standards-shadow-summary.json', 'utf8'));
+          if (summary.first_party !== true || summary.external_adoption_evidence !== false) process.exit(1);
+          if (summary.observe_requests_sent !== 0) process.exit(1);
+          const allowed = new Set([
+            'check_status','policy_reusable','reuse_would_match_validation','observe_after_baseline',
+            'baseline_ms','baseline_cost','check_ms','observe_ms','check_cost','observe_cost'
+          ]);
+          for (const record of input.records || []) {
+            for (const key of Object.keys(record)) if (!allowed.has(key)) process.exit(1);
+          }
+          NODE
+
+      - name: Upload sanitized natural-workload evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: standards-shadow-benchmark-${{ github.run_id }}
+          path: |
+            standards-shadow-benchmark.json
+            standards-shadow-summary.json
+            standards-shadow-evaluation.json
+          if-no-files-found: error
+          retention-days: 30
