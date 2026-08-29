@@ -53,6 +53,7 @@ jobs:
         env:
           SEENRELAY_BASELINE_URL: https://seenrelay.com
           SEENRELAY_CANDIDATE_URL: ${{ steps.preview.outputs.url }}
+          # Fixed replication sample: comfortably below the default per-lease CHECK capacity.
           SEENRELAY_CHECK_SEMANTIC_PROBE_SAMPLES: '21'
         run: node scripts/check-semantic-probe.mjs
 
