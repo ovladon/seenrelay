@@ -62,13 +62,19 @@ export function evaluateHostileBenchmark(input) {
   const prospectiveCost = [];
   const statusCounts = Object.fromEntries([...STATUSES].map((status) => [status, 0]));
   let policyAcceptedReuses = 0;
+  let unsafeHypotheticalReuses = 0;
+  let prospectiveObserveRequests = 0;
 
   input.records.forEach((record, index) => {
     if (!record || typeof record !== 'object' || Array.isArray(record)) throw new TypeError(`records[${index}] must be an object`);
     if (!STATUSES.has(record.check_status)) throw new TypeError(`records[${index}].check_status is invalid`);
     if (typeof record.policy_reusable !== 'boolean') throw new TypeError(`records[${index}].policy_reusable must be boolean`);
+    if (typeof record.observe_after_baseline !== 'boolean') throw new TypeError(`records[${index}].observe_after_baseline must be boolean`);
     if (record.policy_reusable && record.check_status !== 'SAME_OBSERVED') {
       throw new Error(`records[${index}] cannot be policy_reusable unless CHECK is SAME_OBSERVED`);
+    }
+    if (record.policy_reusable && typeof record.reuse_would_match_validation !== 'boolean') {
+      throw new TypeError(`records[${index}].reuse_would_match_validation must be boolean for policy-reusable records`);
     }
 
     const baseMs = nonNegative(record.baseline_ms, `records[${index}].baseline_ms`);
@@ -79,13 +85,18 @@ export function evaluateHostileBenchmark(input) {
     const observeCost = nonNegative(record.observe_cost, `records[${index}].observe_cost`);
 
     const reuse = record.check_status === 'SAME_OBSERVED' && record.policy_reusable;
+    const observe = !reuse && record.observe_after_baseline;
     statusCounts[record.check_status] += 1;
-    if (reuse) policyAcceptedReuses += 1;
+    if (reuse) {
+      policyAcceptedReuses += 1;
+      if (!record.reuse_would_match_validation) unsafeHypotheticalReuses += 1;
+    }
+    if (observe) prospectiveObserveRequests += 1;
 
     baselineLatency.push(baseMs);
     baselineCost.push(baseCost);
-    prospectiveLatency.push(checkMs + (reuse ? 0 : baseMs + (observeOffCriticalPath ? 0 : observeMs)));
-    prospectiveCost.push(checkCost + (reuse ? 0 : baseCost + observeCost));
+    prospectiveLatency.push(checkMs + (reuse ? 0 : baseMs) + (observe && !observeOffCriticalPath ? observeMs : 0));
+    prospectiveCost.push(checkCost + (reuse ? 0 : baseCost) + (observe ? observeCost : 0));
   });
 
   const baselineLatencyTotal = sum(baselineLatency);
@@ -93,6 +104,9 @@ export function evaluateHostileBenchmark(input) {
   const baselineCostTotal = sum(baselineCost);
   const prospectiveCostTotal = sum(prospectiveCost);
   const calls = input.records.length;
+  const safetyPass = unsafeHypotheticalReuses === 0;
+  const positiveOnLatency = prospectiveLatencyTotal < baselineLatencyTotal;
+  const positiveOnCost = prospectiveCostTotal < baselineCostTotal;
 
   return Object.freeze({
     schema_version: 1,
@@ -106,6 +120,13 @@ export function evaluateHostileBenchmark(input) {
     status_counts: statusCounts,
     policy_accepted_reuses: policyAcceptedReuses,
     policy_accepted_reuse_rate: policyAcceptedReuses / calls,
+    unsafe_hypothetical_reuses: unsafeHypotheticalReuses,
+    prospective_observe_requests: prospectiveObserveRequests,
+    safety: {
+      authoritative_shadow_validation_required: true,
+      unsafe_hypothetical_reuses: unsafeHypotheticalReuses,
+      pass: safetyPass
+    },
     latency: {
       baseline_total_ms: baselineLatencyTotal,
       prospective_total_ms: prospectiveLatencyTotal,
@@ -125,9 +146,10 @@ export function evaluateHostileBenchmark(input) {
       improvement_percent: baselineCostTotal > 0 ? ((baselineCostTotal - prospectiveCostTotal) / baselineCostTotal) * 100 : null
     },
     decision: {
-      positive_on_latency: prospectiveLatencyTotal < baselineLatencyTotal,
-      positive_on_cost: prospectiveCostTotal < baselineCostTotal,
-      beats_baseline_on_both: prospectiveLatencyTotal < baselineLatencyTotal && prospectiveCostTotal < baselineCostTotal,
+      safety_pass: safetyPass,
+      positive_on_latency: positiveOnLatency,
+      positive_on_cost: positiveOnCost,
+      beats_baseline_on_both: safetyPass && positiveOnLatency && positiveOnCost,
       automatic_reuse_enabled_by_evaluator: false
     }
   });
