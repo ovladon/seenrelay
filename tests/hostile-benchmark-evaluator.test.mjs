@@ -53,7 +53,7 @@ test('hostile benchmark compares shared CHECK to the best measured non-shared pa
   assert.equal(report.latency.prospective_total_ms, 1300);
   assert.equal(report.latency.outcome, 'better');
   assert.equal(report.cost.baseline_total_units, 10);
-  assert.equal(report.cost.prospective_total_units, 5.3);
+  assert.ok(Math.abs(report.cost.prospective_total_units - 5.3) < 1e-12);
   assert.equal(report.cost.outcome, 'better');
   assert.equal(report.decision.safety_pass, true);
   assert.equal(report.decision.beats_baseline_on_both, true);
@@ -97,5 +97,5 @@ test('provider-cache baseline can be modeled without falsely adding an OBSERVE',
   const report = evaluateHostileBenchmark(cached);
   assert.equal(report.prospective_observe_requests, 0);
   assert.equal(report.latency.prospective_total_ms, 1200);
-  assert.equal(report.cost.prospective_total_units, 5.2);
+  assert.ok(Math.abs(report.cost.prospective_total_units - 5.2) < 1e-12);
 });
