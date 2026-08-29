@@ -74,7 +74,7 @@ NODE
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
-grep -q 'Local-first freshness optimization' /tmp/llms.txt
+grep -q 'Avoid redundant expensive validation' /tmp/llms.txt
 grep -q 'Shared CHECK is off by default' /tmp/llms.txt
 grep -q '## Verified measured results' /tmp/llms.txt
 grep -q 'Structured JSON extraction /' /tmp/llms.txt
