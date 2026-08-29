@@ -17,6 +17,7 @@
     "test": "npm run test:structural && npm run test:runtime",
     "check": "npm run public:sync:check && npm run typecheck:core && npm run typecheck:full && npm run guardrails && npm run audit:all && npm test",
     "benchmark:evaluate": "node scripts/evaluate-hostile-benchmark.mjs",
+    "economics:surface": "node scripts/model-break-even-surface.mjs",
     "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
