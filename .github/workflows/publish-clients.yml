@@ -69,6 +69,7 @@ jobs:
           import { protectMcpClient } from 'seenrelay/mcp-auto';
           import { firecrawlScrapePolicy } from 'seenrelay/firecrawl';
           import { createFirecrawlShadowPilot } from 'seenrelay/firecrawl-shadow';
+          import { createFirecrawlSdkShadowPilot } from 'seenrelay/firecrawl-sdk-shadow';
           import { evaluateHostileBenchmark } from 'seenrelay/economics';
 
           const client = new SeenRelayClient({ fetchImpl: async () => { throw new Error('not called during import test'); } });
@@ -81,6 +82,16 @@ jobs:
           const shadowClient = createFirecrawlShadowPilot(
             { async callTool(params) { return params; } },
             {
+              relayClient: {
+                async check() { return { status: 'UNKNOWN' }; },
+                async observe() { return { accepted: true }; }
+              }
+            }
+          );
+          const sdkShadowClient = createFirecrawlSdkShadowPilot(
+            { async scrape(url, options) { return { markdown: url, metadata: { cacheState: 'miss', creditsUsed: 1 }, options }; } },
+            {
+              maxAgeMs: 60_000,
               relayClient: {
                 async check() { return { status: 'UNKNOWN' }; },
                 async observe() { return { accepted: true }; }
@@ -121,6 +132,8 @@ jobs:
             !providerAdapter ||
             typeof shadowClient.callTool !== 'function' ||
             typeof shadowClient.seenRelayFirecrawlShadowPilot?.evaluate !== 'function' ||
+            typeof sdkShadowClient.scrape !== 'function' ||
+            typeof sdkShadowClient.seenRelayFirecrawlSdkShadowPilot?.evaluate !== 'function' ||
             economics?.decision?.automatic_reuse_enabled_by_evaluator !== false
           ) process.exit(1);
           NODE

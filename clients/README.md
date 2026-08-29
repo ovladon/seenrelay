@@ -8,7 +8,7 @@
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-Client 0.2.4 is published and clean-install verified on npm and PyPI. JavaScript / TypeScript adds packaged shadow-economics helpers; Python behavior remains conservative and shadow-first and parity for those JS/TS helpers is not claimed.
+Client 0.2.4 is published and clean-install verified on npm and PyPI. Source 0.2.5 stages a JavaScript / TypeScript direct Firecrawl SDK shadow adapter; Python version metadata is synchronized for release packaging but Python behavior remains conservative and shadow-first, with no parity claim for JS/TS shadow-economics helpers.
 
 The clients have two deliberately different execution modes:
 
@@ -24,10 +24,11 @@ The clients have two deliberately different execution modes:
 - MCP bind-once interception: `seenrelay/mcp-auto`
 - Classic Shadow Proof: `seenrelay/shadow-proof`
 - Firecrawl active/local-first adapter: `seenrelay/firecrawl`
-- Firecrawl measurement-only shadow pilot: `seenrelay/firecrawl-shadow`
+- Firecrawl MCP measurement-only shadow pilot: `seenrelay/firecrawl-shadow`
+- Firecrawl JavaScript SDK measurement-only shadow pilot (0.2.5 source candidate): `seenrelay/firecrawl-sdk-shadow`
 - Hostile benchmark evaluator: `seenrelay/economics`
 
-The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.4` on npm and PyPI.
+The clients have zero third-party runtime dependencies. The verified public registry version remains `0.2.4`; source release metadata is staged at `0.2.5` until the next trusted-publish and registry-verification cycle completes.
 
 ## Install
 

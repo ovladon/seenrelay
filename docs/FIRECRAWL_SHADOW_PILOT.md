@@ -29,7 +29,7 @@ Fixed subscription economics, included credits, auto-reload thresholds and the c
 
 ## Usage
 
-This helper is available in the verified JavaScript / TypeScript client 0.2.4 release through the `seenrelay/firecrawl-shadow` package subpath.
+The MCP helper is available in the verified JavaScript / TypeScript client 0.2.4 release through the `seenrelay/firecrawl-shadow` package subpath. Source 0.2.5 additionally stages `seenrelay/firecrawl-sdk-shadow` for direct JavaScript SDK clients; public registry verification remains 0.2.4 until the release verification cycle completes.
 
 ```js
 import { createFirecrawlShadowPilot } from 'seenrelay/firecrawl-shadow';
@@ -55,6 +55,26 @@ console.log(measured.seenRelayFirecrawlShadowPilot.report());
 ```
 
 The pilot accepts only the same public/suppressible Firecrawl scrape class as the existing Firecrawl adapter. Private hosts, authentication-bearing URLs and other excluded operations remain outside public evidence.
+
+
+### Direct JavaScript SDK form (0.2.5 source candidate)
+
+```js
+import { createFirecrawlSdkShadowPilot } from 'seenrelay/firecrawl-sdk-shadow';
+
+const measured = createFirecrawlSdkShadowPilot(existingFirecrawlSdkClient, {
+  maxAgeMs: 60_000
+});
+
+const result = await measured.scrape('https://example.com/public-page', {
+  formats: ['markdown']
+});
+
+await measured.seenRelayFirecrawlSdkShadowPilot.flush();
+console.log(measured.seenRelayFirecrawlSdkShadowPilot.report());
+```
+
+The adapter also supports legacy SDK clients exposing `scrapeUrl(url, options)`. The original SDK method always runs with the caller's original argument list and its raw result is returned unchanged. `maxAgeMs` belongs only to SeenRelay measurement policy and is not injected into the Firecrawl request. The SDK result is converted to an MCP-like envelope only inside the measurement bridge so the established Firecrawl shadow logic can be reused without creating a second semantics implementation. A measurement serialization failure after a successful Firecrawl response fails open to that response and does not become an application error.
 
 ## Hostile benchmark evaluation
 
