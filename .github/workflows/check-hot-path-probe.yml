@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'src/hive.ts'
+      - 'src/hive-lease-admission-db.ts'
       - 'src/reuse.ts'
       - 'scripts/check-hot-path-probe.mjs'
       - 'tests/hive-hot-path-readback.test.mjs'
@@ -53,7 +54,8 @@ jobs:
         env:
           SEENRELAY_BASELINE_URL: https://seenrelay.com
           SEENRELAY_CANDIDATE_URL: ${{ steps.preview.outputs.url }}
-          SEENRELAY_CHECK_PROBE_SAMPLES: '7'
+          # 21 retained CHECKs stays well below the default lease capacity while making tail comparison less sensitive to one sample.
+          SEENRELAY_CHECK_PROBE_SAMPLES: '21'
         run: node scripts/check-hot-path-probe.mjs
 
       - name: Verify probe classification contract

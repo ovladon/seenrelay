@@ -6,7 +6,11 @@ import {
 import { runtimePolicy } from './controls.js';
 import { consumeHiveNetworkBudget, consumeHiveNewLeaseAdmission } from './hive-admission-db.js';
 import { bindHiveIndependenceKey } from './hive-independence-db.js';
-import { getActiveHiveAdmissionLeaseByClientKey, getHiveAdmissionLeaseById } from './hive-lease-admission-db.js';
+import {
+  consumeVerifiedHiveCheckLease,
+  getActiveHiveAdmissionLeaseByClientKey,
+  getHiveAdmissionLeaseById
+} from './hive-lease-admission-db.js';
 import { deriveAdmissionNetworkKey, deriveClientKey, deriveOperationNetworkKey, deriveReuseIndependenceKey, privacyScopedHash } from './identity.js';
 import { creditUsefulReuseGuarded } from './reuse.js';
 import type { CheckStatus, HiveClass, HiveLeaseRow, HivePublicState } from './types.js';
@@ -203,8 +207,56 @@ export async function admitHive(request: Request | undefined, operation: 'check'
     };
   }
 
-  // The aggregate network ceiling is deliberately consumed before lease lookup/creation. Changing a
-  // caller-controlled client hint can create a separate continuity lease, but cannot bypass this budget.
+  // Common CHECK path: after the aggregate network ceiling has been consumed, a valid signed lease
+  // can bind (only when still unbound) and consume its token bucket in one atomic database update.
+  if (operation === 'check') {
+    const supplied = request?.headers.get('x-seenrelay-lease') || null;
+    const verified = await verifyLease(supplied, nowMs);
+    if (verified) {
+      const mCap = policy.capacityMultiplier;
+      const mRefill = policy.refillMultiplier;
+      const baseRefill = cfg.hiveCheckRefillPerMinute * mRefill;
+      const independenceKey = request ? await deriveReuseIndependenceKey(request) : null;
+      const consumed = await consumeVerifiedHiveCheckLease(
+        verified.payload.lease_id,
+        nowIso,
+        independenceKey,
+        cfg.hiveCheckCapacity * mCap,
+        cfg.hiveCapacityBonusPerScore * mCap,
+        cfg.hiveMaxCapacityBonus * mCap,
+        baseRefill,
+        cfg.hiveRefillBonusPerScorePerMinute * mRefill,
+        cfg.hiveMaxRefillBonusPerMinute * mRefill
+      );
+      if (consumed) {
+        const token = verified.key === 'current' ? supplied! : await signLease(verified.payload);
+        if (!consumed.allowed) {
+          const refill = baseRefill + Math.min(
+            cfg.hiveMaxRefillBonusPerMinute * mRefill,
+            consumed.contribution_score * cfg.hiveRefillBonusPerScorePerMinute * mRefill
+          );
+          return {
+            allowed: false,
+            reason: 'rate_limited',
+            leaseId: consumed.lease_id,
+            token,
+            state: publicState(consumed, token, retryAfter(consumed, refill)),
+            rewardsEnabled: policy.rewardsEnabled
+          };
+        }
+        return {
+          allowed: true,
+          leaseId: consumed.lease_id,
+          token,
+          state: publicState(consumed, token),
+          rewardsEnabled: policy.rewardsEnabled
+        };
+      }
+    }
+  }
+
+  // Fallback covers OBSERVE, missing/invalid tokens, expired/missing lease rows, and continuity lookup.
+  // The aggregate network ceiling above remains mandatory for every path.
   const ensured = await ensureLease(request, nowMs);
   if (!ensured.allowed) {
     return { allowed: false, reason: 'admission_limited', leaseId: '', token: '', state: emptyState(ensured.retryAfterSeconds), rewardsEnabled: policy.rewardsEnabled };

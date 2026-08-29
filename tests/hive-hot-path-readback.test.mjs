@@ -51,3 +51,21 @@ test('already-bound leases skip the redundant independence UPDATE', () => {
   assert.doesNotMatch(block, /^\s*await bindIndependence\(request, row\.lease_id\);\s*$/m);
   assert.doesNotMatch(block, /^\s*await bindIndependence\(request, existing\.lease_id\);\s*$/m);
 });
+
+test('verified CHECK lease consumption preserves immutable independence in one atomic update', () => {
+  assert.match(admissionDb, /export async function consumeVerifiedHiveCheckLease/);
+  assert.match(admissionDb, /independence_key\s*=\s*COALESCE\(h\.independence_key, \$3::text\)/);
+  assert.match(admissionDb, /check_tokens\s*=\s*CASE WHEN calc\.replenished >= 1/);
+  assert.match(admissionDb, /WHERE lease_id = \$1 AND expires_at > \$2::timestamptz/);
+});
+
+test('aggregate network admission still precedes verified-lease CHECK fast path', () => {
+  const block = between(hive, 'export async function admitHive', 'export async function finishHiveCheck');
+  const networkBudget = block.indexOf('consumeHiveNetworkBudget(');
+  const fastConsume = block.indexOf('consumeVerifiedHiveCheckLease(');
+  const fallback = block.indexOf('const ensured = await ensureLease(request, nowMs);');
+  assert.ok(networkBudget >= 0);
+  assert.ok(fastConsume > networkBudget);
+  assert.ok(fallback > fastConsume);
+  assert.match(block, /if \(operation === 'check'\)[\s\S]*?const verified = await verifyLease\(supplied, nowMs\);/);
+});
