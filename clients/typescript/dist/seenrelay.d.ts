@@ -60,6 +60,14 @@ export interface GuardOptions<T> {
     maxAgeSeconds?: number;
     observation?: (value: T, context: ValidationContext) => Promise<ObservationMetadata | undefined> | ObservationMetadata | undefined;
 }
+export interface GuardTimings {
+    /** Wall-clock time spent awaiting this call's CHECK, including coalesced wait time. */
+    checkMs: number;
+    /** Wall-clock time spent in the caller's authoritative validation; zero on actual reuse. */
+    validationMs: number;
+    /** Blocking OBSERVE wall-clock time. Zero when OBSERVE is deferred or not attempted. */
+    observeMs: number;
+}
 export interface GuardDetailedResult<T> {
     value: T;
     path: 'reused' | 'validated';
@@ -72,6 +80,8 @@ export interface GuardDetailedResult<T> {
         checkError?: string;
         observeError?: string;
     };
+    /** Local timing only; no value, fact identity, source, or timestamp is included. */
+    timings: Readonly<GuardTimings>;
 }
 export interface SeenRelayTelemetry {
     guardCalls: number;

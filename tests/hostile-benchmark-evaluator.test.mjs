@@ -55,6 +55,7 @@ test('hostile benchmark compares shared CHECK to the best measured non-shared pa
   assert.equal(report.cost.baseline_total_units, 10);
   assert.ok(Math.abs(report.cost.prospective_total_units - 5.3) < 1e-12);
   assert.equal(report.cost.outcome, 'better');
+  assert.equal(report.safety.state, 'pass');
   assert.equal(report.decision.safety_pass, true);
   assert.equal(report.decision.beats_baseline_on_both, true);
   assert.equal(report.decision.automatic_reuse_enabled_by_evaluator, false);
@@ -87,6 +88,7 @@ test('one unsafe hypothetical reuse fails the safety decision', () => {
   bad.records[0].reuse_would_match_validation = false;
   const report = evaluateHostileBenchmark(bad);
   assert.equal(report.unsafe_hypothetical_reuses, 1);
+  assert.equal(report.safety.state, 'fail');
   assert.equal(report.decision.safety_pass, false);
   assert.equal(report.decision.beats_baseline_on_both, false);
 });
@@ -98,4 +100,42 @@ test('provider-cache baseline can be modeled without falsely adding an OBSERVE',
   assert.equal(report.prospective_observe_requests, 0);
   assert.equal(report.latency.prospective_total_ms, 1200);
   assert.ok(Math.abs(report.cost.prospective_total_units - 5.2) < 1e-12);
+});
+
+test('schema v2 retains CHECK-unavailable calls as non-reusable workload evidence', () => {
+  const v2 = structuredClone(baseInput);
+  v2.schema_version = 2;
+  v2.records[1].check_status = null;
+  v2.records[1].reuse_would_match_validation = null;
+  const report = evaluateHostileBenchmark(v2);
+  assert.equal(report.calls, 2);
+  assert.equal(report.status_counts.CHECK_UNAVAILABLE, 1);
+  assert.equal(report.policy_accepted_reuses, 1);
+  assert.equal(report.safety.state, 'pass');
+});
+
+test('schema v2 marks an uncomparable hypothetical reuse incomplete instead of safe', () => {
+  const v2 = structuredClone(baseInput);
+  v2.schema_version = 2;
+  v2.records[0].reuse_would_match_validation = null;
+  const report = evaluateHostileBenchmark(v2);
+  assert.equal(report.reuse_comparison_unavailable, 1);
+  assert.equal(report.safety.state, 'incomplete');
+  assert.equal(report.decision.safety_pass, null);
+  assert.equal(report.decision.evidence_ready, false);
+  assert.equal(report.decision.beats_baseline_on_both, false);
+});
+
+test('zero policy reuse opportunities are not labeled a safety pass', () => {
+  const v2 = structuredClone(baseInput);
+  v2.schema_version = 2;
+  for (const record of v2.records) {
+    record.policy_reusable = false;
+    record.reuse_would_match_validation = null;
+  }
+  const report = evaluateHostileBenchmark(v2);
+  assert.equal(report.policy_accepted_reuses, 0);
+  assert.equal(report.safety.state, 'no_opportunities');
+  assert.equal(report.decision.safety_pass, null);
+  assert.equal(report.decision.evidence_ready, false);
 });
