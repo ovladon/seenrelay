@@ -4,6 +4,7 @@ import fs from 'node:fs';
 
 const hive = fs.readFileSync(new URL('../src/hive.ts', import.meta.url), 'utf8');
 const reuse = fs.readFileSync(new URL('../src/reuse.ts', import.meta.url), 'utf8');
+const admissionDb = fs.readFileSync(new URL('../src/hive-lease-admission-db.ts', import.meta.url), 'utf8');
 
 function between(source, start, end) {
   const from = source.indexOf(start);
@@ -35,4 +36,17 @@ test('local CHECK state update matches guarded reuse consumer mutation', () => {
   );
   const block = between(hive, 'export async function finishHiveCheck', 'export async function finishHiveObserve');
   assert.equal(block.includes('useful_reuse_consumed: admission.state.useful_reuse_consumed + awards'), false);
+});
+
+test('admission lease reads expose immutable independence binding', () => {
+  assert.match(admissionDb, /independence_key/);
+  assert.match(admissionDb, /getHiveAdmissionLeaseById/);
+  assert.match(admissionDb, /getActiveHiveAdmissionLeaseByClientKey/);
+});
+
+test('already-bound leases skip the redundant independence UPDATE', () => {
+  const block = between(hive, 'async function ensureLease', 'function retryAfter');
+  assert.match(block, /if \(row\.independence_key === null\) await bindIndependence\(request, row\.lease_id\);/);
+  assert.match(block, /if \(existing\.independence_key === null\) await bindIndependence\(request, existing\.lease_id\);/);
+  assert.equal(block.includes('await bindIndependence(request, row.lease_id);\n      // A token'), false);
 });
