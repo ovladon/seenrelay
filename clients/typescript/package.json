@@ -1,6 +1,6 @@
 {
   "name": "seenrelay",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Avoid redundant expensive validation with local-first SeenRelay clients.",
   "type": "module",
   "main": "./dist/seenrelay.js",
@@ -29,6 +29,14 @@
     "./firecrawl": {
       "types": "./dist/firecrawl.d.ts",
       "import": "./dist/firecrawl.js"
+    },
+    "./firecrawl-shadow": {
+      "types": "./dist/firecrawl-shadow.d.ts",
+      "import": "./dist/firecrawl-shadow.js"
+    },
+    "./economics": {
+      "types": "./dist/economics.d.ts",
+      "import": "./dist/economics.js"
     }
   },
   "files": [

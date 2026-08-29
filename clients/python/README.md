@@ -4,7 +4,7 @@
 
 Deterministic, standard-library-only client that places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default.
 
-The source tree stages client 0.2.3 to keep the synchronized client release manifests aligned. Python behavior remains conservative and shadow-first. The JavaScript / TypeScript 0.2.3 source candidate adds sanitized natural-workload collection for the hostile benchmark; Python parity for that collector is not claimed in this release candidate.
+The source tree stages client 0.2.4 to keep the synchronized client release manifests aligned. Python behavior remains conservative and shadow-first. The JavaScript / TypeScript 0.2.4 source candidate adds packaged Firecrawl shadow-economics and hostile-evaluator helpers; Python parity for those JS/TS-specific helpers is not claimed in this release candidate.
 
 ## Install
 

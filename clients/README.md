@@ -8,7 +8,9 @@
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-Version 0.2.3 has two deliberately different execution modes:
+The source tree stages synchronized client 0.2.4 manifests while verified public registry metadata remains at 0.2.3 until clean-install verification succeeds. The 0.2.4 JavaScript / TypeScript candidate adds packaged shadow-economics helpers; Python behavior remains conservative and shadow-first and parity for those JS/TS helpers is not claimed.
+
+The clients have two deliberately different execution modes:
 
 - **JavaScript / TypeScript Zero-State:** provider-independent, local-first optimization that can save work before any shared network evidence exists.
 - **Classic JavaScript / TypeScript and Python:** conservative shadow-first CHECK/validate/OBSERVE path for measuring or explicitly using shared evidence.
@@ -21,8 +23,11 @@ Version 0.2.3 has two deliberately different execution modes:
 - Generic JavaScript / TypeScript dispatcher: `seenrelay/auto`
 - MCP bind-once interception: `seenrelay/mcp-auto`
 - Classic Shadow Proof: `seenrelay/shadow-proof`
+- Firecrawl active/local-first adapter: `seenrelay/firecrawl`
+- Firecrawl measurement-only shadow pilot candidate: `seenrelay/firecrawl-shadow`
+- Hostile benchmark evaluator candidate: `seenrelay/economics`
 
-The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.3` on npm and PyPI.
+The last verified public registry release remains `seenrelay` version `0.2.3` on npm and PyPI until the staged release is published and independently clean-install verified.
 
 ## Install
 
@@ -147,7 +152,7 @@ value = relay.guard(
 )
 ```
 
-Python behavior remains shadow-first in 0.2.3. JavaScript / TypeScript Zero-State and natural-workload collector parity are not claimed for Python in this release.
+Python behavior remains shadow-first in the staged 0.2.4 release. JavaScript / TypeScript Zero-State, natural-workload collector, Firecrawl shadow pilot and packaged economics evaluator parity are not claimed for Python.
 
 ## Shadow Proof
 
@@ -168,9 +173,17 @@ await proof.guard({
 console.log(proof.report({ avoidedValidationCost: 0.01 }));
 ```
 
-JavaScript / TypeScript 0.2.3 keeps authoritative validation enabled and can export bounded, sanitized natural-workload records directly into the hostile benchmark input format. The export excludes fact identity, source, raw values and per-call timestamps. CHECK-unavailable calls remain in the sample; an observed mismatch fails safety evidence, and an unavailable deterministic comparison leaves the evidence incomplete rather than safe.
+JavaScript / TypeScript keeps authoritative validation enabled and can export bounded, sanitized natural-workload records directly into the hostile benchmark input format. The export excludes fact identity, source, raw values and per-call timestamps. CHECK-unavailable calls remain in the sample; an observed mismatch fails safety evidence, and an unavailable deterministic comparison leaves the evidence incomplete rather than safe.
+
+The staged 0.2.4 JavaScript / TypeScript candidate can evaluate that format directly through `seenrelay/economics`. The evaluator reports evidence only and never enables reuse.
 
 Potential direct savings count only measured `SAME_OBSERVED` cases. Conditional ETag / Last-Modified savings remain excluded until the consuming application measures them separately.
+
+## Firecrawl shadow economics candidate
+
+`seenrelay/firecrawl-shadow` is measurement-only. It leaves every eligible Firecrawl provider call authoritative, performs counterfactual CHECK after the provider result, and only then allows an independently obtained result to contribute OBSERVE. Firecrawl provider-cache hits are not re-labeled as independent observations.
+
+The pilot evaluates Firecrawl's actual provider-cache behavior rather than disabling it. Missing provider-credit metadata makes cost evidence incomplete unless the caller supplies an explicitly justified fallback in the same provider-credit unit. Local cache and source-native controls must also be declared truthfully before evaluation.
 
 ## Optional caller-scheduled OBSERVE
 
