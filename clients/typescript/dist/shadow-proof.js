@@ -221,9 +221,9 @@ export class SeenRelayShadowProof {
 
   hostileBenchmarkInput({ workloadId = null, controls, observeOffCriticalPath = false } = {}) {
     const benchmark = this.benchmarkSnapshot();
-    if (benchmark.recordsRetained === 0) throw new Error('no natural workload benchmark records were retained');
-    if (benchmark.recordsDropped > 0) throw new Error(`natural workload benchmark is incomplete: ${benchmark.recordsDropped} records exceeded the configured limit`);
     if (benchmark.invalidReasons.length > 0) throw new Error(`natural workload benchmark is incomplete: ${benchmark.invalidReasons.join(', ')}`);
+    if (benchmark.recordsDropped > 0) throw new Error(`natural workload benchmark is incomplete: ${benchmark.recordsDropped} records exceeded the configured limit`);
+    if (benchmark.recordsRetained === 0) throw new Error('no natural workload benchmark records were retained');
     if (workloadId !== null && typeof workloadId !== 'string') throw new TypeError('workloadId must be a string or null');
     if (typeof observeOffCriticalPath !== 'boolean') throw new TypeError('observeOffCriticalPath must be boolean');
 
