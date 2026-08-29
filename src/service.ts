@@ -83,7 +83,6 @@ export async function checkFact(body: CheckRequest) {
       last_observed_at: stored.last_observed_at,
       age_seconds: Math.max(0, Math.floor((nowMs - epochMs(stored.last_observed_at)) / 1000)),
       max_age_seconds: maxAge,
-      last_observed_value: stored.current_value_json,
       observation_total: stored.observation_total,
       next_step: 'VALIDATE_THEN_OBSERVE' as const,
       accepted_observation_can_answer_later_checks: true
@@ -94,7 +93,6 @@ export async function checkFact(body: CheckRequest) {
   const second = groups[1];
   const contested = Boolean(second && Math.abs(epochMs(latest.last_seen) - epochMs(second.last_seen)) <= cfg.conflictWindowSeconds * 1000);
   const evidence = groups.map((g) => ({
-    value: g.value_json,
     value_hash: g.value_hash,
     first_seen: g.first_seen,
     last_seen: g.last_seen,
@@ -128,7 +126,6 @@ export async function checkFact(body: CheckRequest) {
     fact_key: fact.factKey,
     ...factIdentityMetadata(fact),
     known_value_hash: known.valueHash,
-    latest_observed_value: latest.value_json,
     latest_value_hash: latest.value_hash,
     first_seen_latest: latest.first_seen,
     last_seen_latest: latest.last_seen,
