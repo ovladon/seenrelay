@@ -42,20 +42,17 @@ function parseFirecrawlMcpResult(result) {
   const metadata = document.metadata && typeof document.metadata === 'object' && !Array.isArray(document.metadata)
     ? document.metadata
     : {};
-  return { parsed, document, metadata };
+  return { document, metadata };
 }
 
 function providerCredits(result) {
   const parsed = parseFirecrawlMcpResult(result);
   const credits = Number(parsed?.metadata?.creditsUsed);
-  // Firecrawl documents a standard successful scrape as one credit per page. When response metadata
-  // exposes a larger creditsUsed value, retain it; otherwise use the documented one-credit floor.
-  return Number.isFinite(credits) && credits > 0 ? credits : 1;
+  return Number.isFinite(credits) && credits >= 0 ? credits : null;
 }
 
 function providerCacheState(result) {
-  const parsed = parseFirecrawlMcpResult(result);
-  const state = parsed?.metadata?.cacheState;
+  const state = parseFirecrawlMcpResult(result)?.metadata?.cacheState;
   return state === 'hit' || state === 'miss' ? state : 'unknown';
 }
 
@@ -108,6 +105,7 @@ export class FirecrawlShadowPilot {
       provider_cache_hits: 0,
       provider_cache_misses: 0,
       provider_cache_unknown: 0,
+      provider_credit_unknown_calls: 0,
       independent_observations: 0,
       observe_calls: 0,
       observe_failures: 0,
@@ -165,10 +163,9 @@ export class FirecrawlShadowPilot {
     if (cacheState === 'hit') this.metrics.provider_cache_hits += 1;
     else if (cacheState === 'miss') this.metrics.provider_cache_misses += 1;
     else this.metrics.provider_cache_unknown += 1;
+    if (credits === null) this.metrics.provider_credit_unknown_calls += 1;
 
-    if (fingerprint) {
-      this.retained.set(key, Object.freeze({ result, fingerprint, relay }));
-    }
+    if (fingerprint) this.retained.set(key, Object.freeze({ fingerprint }));
 
     const measurement = async () => {
       let checkStatus = null;
@@ -216,11 +213,8 @@ export class FirecrawlShadowPilot {
         reuse_would_match_validation: policyReusable ? reuseWouldMatchValidation : null,
         observe_after_baseline: independentlyObtained && Boolean(fingerprint),
         baseline_ms: nonNegativeFinite(providerMs, 'baseline_ms'),
-        baseline_cost: nonNegativeFinite(credits, 'baseline_cost'),
+        baseline_cost: credits,
         check_ms: nonNegativeFinite(checkMs, 'check_ms'),
-        observe_ms: 0,
-        check_cost: 0,
-        observe_cost: 0,
         provider_cache_state: cacheState,
         prior_value_available: Boolean(prior?.fingerprint),
         ...(checkError ? { check_error: checkError } : {})
@@ -230,9 +224,9 @@ export class FirecrawlShadowPilot {
       else this.metrics.overflowed_records += 1;
     };
 
-    // Measurement work is serialized and deliberately starts after the authoritative provider call.
-    // CHECK therefore cannot delay or suppress the provider result, and the current call's OBSERVE
-    // is recorded only after its counterfactual pre-validation CHECK has completed.
+    // Measurement starts only after the authoritative provider call. CHECK therefore cannot delay
+    // or suppress the caller's result, and the current call is OBSERVEd only after its own
+    // counterfactual pre-validation CHECK has finished.
     this.pending = this.pending.then(measurement, measurement);
     return result;
   }
@@ -242,7 +236,8 @@ export class FirecrawlShadowPilot {
   }
 
   report() {
-    const credits = this.records.reduce((sum, record) => sum + record.baseline_cost, 0);
+    const knownCreditRecords = this.records.filter((record) => record.baseline_cost !== null);
+    const credits = knownCreditRecords.reduce((sum, record) => sum + record.baseline_cost, 0);
     const reusable = this.records.filter((record) => record.policy_reusable).length;
     const comparable = this.records.filter((record) => record.policy_reusable && record.reuse_would_match_validation !== null).length;
     return Object.freeze({
@@ -250,7 +245,10 @@ export class FirecrawlShadowPilot {
       pilot: 'firecrawl-shadow-economics-v1',
       behavior: 'authoritative_provider_call_never_suppressed',
       records: this.records.length,
-      provider_credit_units_observed_or_floor: credits,
+      provider_credit_records: knownCreditRecords.length,
+      provider_credit_unknown_records: this.records.length - knownCreditRecords.length,
+      provider_credit_evidence_complete: knownCreditRecords.length === this.records.length,
+      provider_credit_units_measured: credits,
       policy_reusable_calls: reusable,
       policy_reusable_rate: this.records.length ? reusable / this.records.length : 0,
       comparable_hypothetical_reuses: comparable,
@@ -259,12 +257,17 @@ export class FirecrawlShadowPilot {
   }
 
   hostileBenchmarkInput(options = {}) {
-    if (this.metrics.overflowed_records > 0) {
-      throw new Error('pilot evidence incomplete: record limit overflowed');
-    }
+    if (this.metrics.overflowed_records > 0) throw new Error('pilot evidence incomplete: record limit overflowed');
     if (this.records.length === 0) throw new Error('pilot evidence incomplete: no records');
     const localCache = control(options.local_cache, 'local_cache');
     const sourceNative = control(options.source_native_conditional, 'source_native_conditional');
+    const fallbackProvided = options.provider_credit_fallback_units !== undefined;
+    const fallback = fallbackProvided
+      ? nonNegativeFinite(options.provider_credit_fallback_units, 'provider_credit_fallback_units')
+      : null;
+    if (this.records.some((record) => record.baseline_cost === null) && fallback === null) {
+      throw new Error('pilot cost evidence incomplete: provider credits missing; declare provider_credit_fallback_units in the same provider-credit unit or do not make a cost claim');
+    }
 
     return Object.freeze({
       schema_version: 2,
@@ -277,8 +280,8 @@ export class FirecrawlShadowPilot {
       controls: {
         local_cache: localCache,
         source_native_conditional: sourceNative,
-        // The actual Firecrawl call remains authoritative in every pilot record, so its own cache
-        // behavior is included in the measured provider latency and credit baseline.
+        // The actual Firecrawl call remains authoritative, so provider-native cache behavior is
+        // already included in every measured latency and provider-credit record.
         provider_native_cache: { available: true, measured: true }
       },
       records: this.records.map((record) => Object.freeze({
@@ -287,9 +290,11 @@ export class FirecrawlShadowPilot {
         reuse_would_match_validation: record.reuse_would_match_validation,
         observe_after_baseline: record.observe_after_baseline,
         baseline_ms: record.baseline_ms,
-        baseline_cost: record.baseline_cost,
+        baseline_cost: record.baseline_cost ?? fallback,
         check_ms: record.check_ms,
         observe_ms: 0,
+        // These are Firecrawl provider-credit units. SeenRelay network/compute overhead is assessed
+        // in the latency dimension unless the caller supplies a separate consistent cost model.
         check_cost: 0,
         observe_cost: 0
       }))
@@ -302,6 +307,5 @@ export class FirecrawlShadowPilot {
 }
 
 export function createFirecrawlShadowPilot(client, options = {}) {
-  const pilot = new FirecrawlShadowPilot(client, options);
-  return pilot.bind();
+  return new FirecrawlShadowPilot(client, options).bind();
 }
