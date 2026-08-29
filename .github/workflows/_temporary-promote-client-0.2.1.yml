@@ -27,7 +27,7 @@ jobs:
           set -euo pipefail
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add README.md clients/README.md docs/CLIENTS.md docs/QUICKSTART.md public/product-facts.json scripts/sync-public-surfaces.mjs src/adoption.ts src/public.ts src/quickstart.ts src/public-facts.generated.ts .github/workflows/package-registry-readiness.yml
+          git add README.md clients/README.md docs/CLIENTS.md docs/QUICKSTART.md public/product-facts.json scripts/sync-public-surfaces.mjs src/adoption.ts src/public.ts src/quickstart.ts src/public-facts.generated.ts
           if git diff --cached --quiet; then
             echo 'No promotion drift to commit.'
             exit 0
