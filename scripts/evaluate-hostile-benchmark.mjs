@@ -31,9 +31,17 @@ function compare(candidate, baseline) {
   return 'equal';
 }
 
+function safetySummary(opportunities, unsafe, unavailable) {
+  if (opportunities === 0) return { state: 'no_opportunities', pass: null };
+  if (unsafe > 0) return { state: 'fail', pass: false };
+  if (unavailable > 0) return { state: 'incomplete', pass: null };
+  return { state: 'pass', pass: true };
+}
+
 export function evaluateHostileBenchmark(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('benchmark input must be an object');
-  if (input.schema_version !== 1) throw new TypeError('schema_version must be 1');
+  if (![1, 2].includes(input.schema_version)) throw new TypeError('schema_version must be 1 or 2');
+  const schemaV2 = input.schema_version === 2;
   if (!['natural_workload', 'fixed_fact_smoke'].includes(input.sample_type)) {
     throw new TypeError('sample_type must be natural_workload or fixed_fact_smoke');
   }
@@ -61,20 +69,33 @@ export function evaluateHostileBenchmark(input) {
   const baselineCost = [];
   const prospectiveCost = [];
   const statusCounts = Object.fromEntries([...STATUSES].map((status) => [status, 0]));
+  statusCounts.CHECK_UNAVAILABLE = 0;
   let policyAcceptedReuses = 0;
   let unsafeHypotheticalReuses = 0;
+  let comparisonUnavailable = 0;
   let prospectiveObserveRequests = 0;
 
   input.records.forEach((record, index) => {
     if (!record || typeof record !== 'object' || Array.isArray(record)) throw new TypeError(`records[${index}] must be an object`);
-    if (!STATUSES.has(record.check_status)) throw new TypeError(`records[${index}].check_status is invalid`);
+    const checkStatus = record.check_status;
+    if (schemaV2) {
+      if (checkStatus !== null && !STATUSES.has(checkStatus)) throw new TypeError(`records[${index}].check_status is invalid`);
+    } else if (!STATUSES.has(checkStatus)) {
+      throw new TypeError(`records[${index}].check_status is invalid`);
+    }
     if (typeof record.policy_reusable !== 'boolean') throw new TypeError(`records[${index}].policy_reusable must be boolean`);
     if (typeof record.observe_after_baseline !== 'boolean') throw new TypeError(`records[${index}].observe_after_baseline must be boolean`);
-    if (record.policy_reusable && record.check_status !== 'SAME_OBSERVED') {
+    if (record.policy_reusable && checkStatus !== 'SAME_OBSERVED') {
       throw new Error(`records[${index}] cannot be policy_reusable unless CHECK is SAME_OBSERVED`);
     }
-    if (record.policy_reusable && typeof record.reuse_would_match_validation !== 'boolean') {
-      throw new TypeError(`records[${index}].reuse_would_match_validation must be boolean for policy-reusable records`);
+    if (record.policy_reusable) {
+      if (schemaV2) {
+        if (record.reuse_would_match_validation !== null && typeof record.reuse_would_match_validation !== 'boolean') {
+          throw new TypeError(`records[${index}].reuse_would_match_validation must be boolean or null for policy-reusable records`);
+        }
+      } else if (typeof record.reuse_would_match_validation !== 'boolean') {
+        throw new TypeError(`records[${index}].reuse_would_match_validation must be boolean for policy-reusable records`);
+      }
     }
 
     const baseMs = nonNegative(record.baseline_ms, `records[${index}].baseline_ms`);
@@ -84,12 +105,14 @@ export function evaluateHostileBenchmark(input) {
     const checkCost = nonNegative(record.check_cost, `records[${index}].check_cost`);
     const observeCost = nonNegative(record.observe_cost, `records[${index}].observe_cost`);
 
-    const reuse = record.check_status === 'SAME_OBSERVED' && record.policy_reusable;
+    const reuse = checkStatus === 'SAME_OBSERVED' && record.policy_reusable;
     const observe = !reuse && record.observe_after_baseline;
-    statusCounts[record.check_status] += 1;
+    if (checkStatus === null) statusCounts.CHECK_UNAVAILABLE += 1;
+    else statusCounts[checkStatus] += 1;
     if (reuse) {
       policyAcceptedReuses += 1;
-      if (!record.reuse_would_match_validation) unsafeHypotheticalReuses += 1;
+      if (record.reuse_would_match_validation === false) unsafeHypotheticalReuses += 1;
+      if (record.reuse_would_match_validation === null) comparisonUnavailable += 1;
     }
     if (observe) prospectiveObserveRequests += 1;
 
@@ -104,12 +127,13 @@ export function evaluateHostileBenchmark(input) {
   const baselineCostTotal = sum(baselineCost);
   const prospectiveCostTotal = sum(prospectiveCost);
   const calls = input.records.length;
-  const safetyPass = unsafeHypotheticalReuses === 0;
+  const safety = safetySummary(policyAcceptedReuses, unsafeHypotheticalReuses, comparisonUnavailable);
   const positiveOnLatency = prospectiveLatencyTotal < baselineLatencyTotal;
   const positiveOnCost = prospectiveCostTotal < baselineCostTotal;
 
   return Object.freeze({
-    schema_version: 1,
+    schema_version: input.schema_version,
+    evaluator_version: 2,
     workload_id: typeof input.workload_id === 'string' ? input.workload_id : null,
     sample_type: input.sample_type,
     evidence_scope: input.sample_type === 'natural_workload' ? 'workload_evidence' : 'mechanics_only',
@@ -121,11 +145,15 @@ export function evaluateHostileBenchmark(input) {
     policy_accepted_reuses: policyAcceptedReuses,
     policy_accepted_reuse_rate: policyAcceptedReuses / calls,
     unsafe_hypothetical_reuses: unsafeHypotheticalReuses,
+    reuse_comparison_unavailable: comparisonUnavailable,
     prospective_observe_requests: prospectiveObserveRequests,
     safety: {
       authoritative_shadow_validation_required: true,
+      policy_reuse_opportunities: policyAcceptedReuses,
       unsafe_hypothetical_reuses: unsafeHypotheticalReuses,
-      pass: safetyPass
+      comparison_unavailable: comparisonUnavailable,
+      state: safety.state,
+      pass: safety.pass
     },
     latency: {
       baseline_total_ms: baselineLatencyTotal,
@@ -146,10 +174,11 @@ export function evaluateHostileBenchmark(input) {
       improvement_percent: baselineCostTotal > 0 ? ((baselineCostTotal - prospectiveCostTotal) / baselineCostTotal) * 100 : null
     },
     decision: {
-      safety_pass: safetyPass,
+      safety_pass: safety.pass,
+      evidence_ready: safety.pass === true,
       positive_on_latency: positiveOnLatency,
       positive_on_cost: positiveOnCost,
-      beats_baseline_on_both: safetyPass && positiveOnLatency && positiveOnCost,
+      beats_baseline_on_both: safety.pass === true && positiveOnLatency && positiveOnCost,
       automatic_reuse_enabled_by_evaluator: false
     }
   });
