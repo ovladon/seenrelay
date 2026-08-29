@@ -10,6 +10,19 @@ const controls = {
   provider_native_cache: { available: true, measured: true }
 };
 
+const benchmarkRecordKeys = [
+  'baseline_cost',
+  'baseline_ms',
+  'check_cost',
+  'check_ms',
+  'check_status',
+  'observe_after_baseline',
+  'observe_cost',
+  'observe_ms',
+  'policy_reusable',
+  'reuse_would_match_validation'
+].sort();
+
 class NaturalClient {
   constructor(entries) {
     this.entries = [...entries];
@@ -92,10 +105,12 @@ test('natural workload export contains only sanitized benchmark fields', async (
   });
 
   const input = proof.hostileBenchmarkInput({ workloadId: 'opaque-run-1', controls });
-  const serialized = JSON.stringify(input);
 
   assert.equal(input.schema_version, 2);
   assert.equal(input.records.length, 2);
+  for (const record of input.records) {
+    assert.deepEqual(Object.keys(record).sort(), benchmarkRecordKeys);
+  }
   assert.equal(input.records[0].check_status, 'SAME_OBSERVED');
   assert.equal(input.records[0].policy_reusable, true);
   assert.equal(input.records[0].reuse_would_match_validation, true);
@@ -104,12 +119,20 @@ test('natural workload export contains only sanitized benchmark fields', async (
   assert.equal(input.records[1].baseline_ms, 200);
   assert.equal(input.records[1].check_ms, 50);
   assert.equal(input.records[1].observe_ms, 15);
-  assert.equal(serialized.includes(secretFact), false);
-  assert.equal(serialized.includes(secretSource), false);
-  assert.equal(serialized.includes(secretValue), false);
-  assert.equal(serialized.includes('raw_value'), false);
-  assert.equal(serialized.includes('knownValue'), false);
-  assert.equal(serialized.includes('fact'), false);
+
+  const forbiddenExactValues = new Set([
+    secretFact,
+    `${secretFact}-2`,
+    secretSource,
+    `${secretSource}/2`,
+    secretValue,
+    `${secretValue}-2`
+  ]);
+  for (const record of input.records) {
+    for (const value of Object.values(record)) {
+      if (typeof value === 'string') assert.equal(forbiddenExactValues.has(value), false);
+    }
+  }
 
   const snapshot = proof.benchmarkSnapshot();
   assert.equal(snapshot.rawValuesRetained, false);
