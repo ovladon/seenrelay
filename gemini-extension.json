@@ -1,11 +1,11 @@
 {
   "name": "seenrelay",
-  "version": "0.3.8",
-  "description": "Cooperative freshness for AI agents. CHECK before revalidating; OBSERVE what you independently saw.",
+  "version": "0.3.9",
+  "description": "Avoid redundant expensive validation. CHECK recent evidence; OBSERVE fresh independent results.",
   "mcpServers": {
     "seenrelay": {
       "httpUrl": "https://seenrelay.com/mcp",
-      "description": "Recent source-backed freshness evidence for AI agents.",
+      "description": "Avoid redundant expensive validation with recent source-backed evidence.",
       "includeTools": [
         "check_fact",
         "observe_fact"
