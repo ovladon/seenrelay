@@ -14,6 +14,19 @@ test('new observation persistence is fingerprint-only', () => {
   assert.match(db, /previous_value_json\s*=\s*NULL/);
 });
 
+test('runtime fact reads do not depend on legacy raw-value columns', () => {
+  const db = read('../src/db.ts');
+  const getFact = db.match(/export async function getFact[\s\S]*?\n}\n/)?.[0] || '';
+  const getRecentValueGroups = db.match(/export async function getRecentValueGroups[\s\S]*?\n}\n/)?.[0] || '';
+
+  assert.ok(getFact, 'getFact implementation must remain discoverable by the compatibility guard');
+  assert.ok(getRecentValueGroups, 'getRecentValueGroups implementation must remain discoverable by the compatibility guard');
+  assert.doesNotMatch(getFact, /current_value_json|previous_value_json/);
+  assert.doesNotMatch(getRecentValueGroups, /value_json/);
+  assert.match(getFact, /current_value_hash/);
+  assert.match(getRecentValueGroups, /value_hash/);
+});
+
 test('CHECK grouping does not read raw observation values', () => {
   const evidence = read('../src/check-evidence.ts');
   assert.doesNotMatch(evidence, /o\.value_json/);
