@@ -1,6 +1,6 @@
 {
   "name": "seenrelay",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Avoid redundant expensive validation with local-first SeenRelay clients.",
   "type": "module",
   "main": "./dist/seenrelay.js",

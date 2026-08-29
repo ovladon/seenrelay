@@ -1,5 +1,7 @@
 import type { SeenRelayClient } from './seenrelay.js';
 
+export type ShadowSafetyEvidence = 'no_opportunities' | 'pass' | 'fail' | 'incomplete';
+
 export interface ShadowProofSnapshot {
   readonly calls: number;
   readonly checksWithoutUsableResponse: number;
@@ -7,6 +9,17 @@ export interface ShadowProofSnapshot {
   readonly validationMsTotal: number;
   readonly validationMsAverage: number;
   readonly sameObservedValidationMs: number;
+  /** SAME_OBSERVED calls whose known JSON value matched the authoritative validation result. */
+  readonly sameObservedMatchesValidation: number;
+  /** SAME_OBSERVED calls whose known JSON value disagreed with the authoritative validation result. */
+  readonly sameObservedMismatchesValidation: number;
+  /** SAME_OBSERVED calls that could not be compared as deterministic JSON values. */
+  readonly sameObservedComparisonUnavailable: number;
+  readonly sameObservedComparable: number;
+  readonly sameObservedAgreementRate: number | null;
+  readonly safetyEvidence: ShadowSafetyEvidence;
+  /** True only with at least one SAME_OBSERVED opportunity and no mismatch/unavailable comparison. */
+  readonly safetyPass: boolean | null;
   readonly statuses: Readonly<Record<'SAME_OBSERVED' | 'CHANGED_OBSERVED' | 'CONTESTED' | 'STALE' | 'UNKNOWN', number>>;
 }
 
@@ -32,6 +45,17 @@ export interface ShadowEconomicsReport {
   readonly prospectiveRelayRequestCost: number;
   readonly netPotentialSavings: number;
   readonly sameObservedValidationMs: number;
+  readonly sameObservedMatchesValidation: number;
+  readonly sameObservedMismatchesValidation: number;
+  readonly sameObservedComparisonUnavailable: number;
+  readonly sameObservedComparable: number;
+  readonly sameObservedAgreementRate: number | null;
+  readonly safetyEvidence: ShadowSafetyEvidence;
+  readonly safetyPass: boolean | null;
+  /** Populated only when the observed SAME_OBSERVED set passes strict shadow agreement. */
+  readonly safetyAdjustedGrossPotentialSavings: number | null;
+  /** Populated only when the observed SAME_OBSERVED set passes strict shadow agreement. */
+  readonly safetyAdjustedNetPotentialSavings: number | null;
   readonly prospectiveRelayLatencyMs: number;
   readonly potentialNetTimeSavedMs: number;
   readonly breakEvenReuseRateByTime: number | null;
@@ -42,6 +66,8 @@ export interface ShadowEconomicsReport {
     activeModeWouldNotObserveDirectReuseHits: true;
     callerSuppliedCostUnits: true;
     noSavingsClaimWhenSameObservedIsZero: true;
+    authoritativeValidationAlwaysRuns: true;
+    rawValuesRetainedByShadowProof: false;
     observeOffCriticalPath: boolean;
   }>;
 }

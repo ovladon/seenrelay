@@ -12,6 +12,20 @@ function nonNegativeFinite(value, name) {
   return number;
 }
 
+function stableJson(value) {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new TypeError('non-finite number');
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (typeof value === 'object') {
+    const keys = Object.keys(value).sort();
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
+  }
+  throw new TypeError('value is not JSON-serializable');
+}
+
 function emptyProof() {
   return {
     calls: 0,
@@ -19,6 +33,9 @@ function emptyProof() {
     conditionalHintsSeen: 0,
     validationMsTotal: 0,
     sameObservedValidationMs: 0,
+    sameObservedMatchesValidation: 0,
+    sameObservedMismatchesValidation: 0,
+    sameObservedComparisonUnavailable: 0,
     statuses: {
       SAME_OBSERVED: 0,
       CHANGED_OBSERVED: 0,
@@ -29,10 +46,27 @@ function emptyProof() {
   };
 }
 
+function safetySummary(metrics) {
+  const opportunities = metrics.statuses.SAME_OBSERVED;
+  const comparable = metrics.sameObservedMatchesValidation + metrics.sameObservedMismatchesValidation;
+  const agreementRate = comparable > 0 ? metrics.sameObservedMatchesValidation / comparable : null;
+
+  if (opportunities === 0) {
+    return { state: 'no_opportunities', pass: null, comparable, agreementRate };
+  }
+  if (metrics.sameObservedMismatchesValidation > 0) {
+    return { state: 'fail', pass: false, comparable, agreementRate };
+  }
+  if (metrics.sameObservedComparisonUnavailable > 0) {
+    return { state: 'incomplete', pass: null, comparable, agreementRate };
+  }
+  return { state: 'pass', pass: true, comparable, agreementRate };
+}
+
 /**
  * Measures SeenRelay in strict shadow mode: CHECK always runs, validation is
  * never suppressed, and the caller's existing validation remains authoritative.
- * No telemetry is uploaded by this helper.
+ * No telemetry is uploaded by this helper. Raw values are not retained in its metrics.
  */
 export class SeenRelayShadowProof {
   constructor(client) {
@@ -50,6 +84,7 @@ export class SeenRelayShadowProof {
 
   snapshot() {
     const m = this.metrics;
+    const safety = safetySummary(m);
     return Object.freeze({
       calls: m.calls,
       checksWithoutUsableResponse: m.checksWithoutUsableResponse,
@@ -57,6 +92,13 @@ export class SeenRelayShadowProof {
       validationMsTotal: m.validationMsTotal,
       validationMsAverage: m.calls > 0 ? m.validationMsTotal / m.calls : 0,
       sameObservedValidationMs: m.sameObservedValidationMs,
+      sameObservedMatchesValidation: m.sameObservedMatchesValidation,
+      sameObservedMismatchesValidation: m.sameObservedMismatchesValidation,
+      sameObservedComparisonUnavailable: m.sameObservedComparisonUnavailable,
+      sameObservedComparable: safety.comparable,
+      sameObservedAgreementRate: safety.agreementRate,
+      safetyEvidence: safety.state,
+      safetyPass: safety.pass,
       statuses: Object.freeze({ ...m.statuses })
     });
   }
@@ -85,7 +127,18 @@ export class SeenRelayShadowProof {
     const status = result?.check?.status;
     if (STATUSES.includes(status)) {
       this.metrics.statuses[status] += 1;
-      if (status === 'SAME_OBSERVED') this.metrics.sameObservedValidationMs += validationMs;
+      if (status === 'SAME_OBSERVED') {
+        this.metrics.sameObservedValidationMs += validationMs;
+        try {
+          if (stableJson(options.knownValue) === stableJson(result.value)) {
+            this.metrics.sameObservedMatchesValidation += 1;
+          } else {
+            this.metrics.sameObservedMismatchesValidation += 1;
+          }
+        } catch {
+          this.metrics.sameObservedComparisonUnavailable += 1;
+        }
+      }
     } else {
       this.metrics.checksWithoutUsableResponse += 1;
     }
@@ -129,6 +182,9 @@ export class SeenRelayShadowProof {
       ? (checkCost + observeCost) / (avoided + observeCost)
       : null;
 
+    const safetyAdjustedGrossPotentialSavings = proof.safetyPass === true ? grossPotentialSavings : null;
+    const safetyAdjustedNetPotentialSavings = proof.safetyPass === true ? netPotentialSavings : null;
+
     return Object.freeze({
       mode: 'shadow-proof',
       calls,
@@ -143,6 +199,15 @@ export class SeenRelayShadowProof {
       prospectiveRelayRequestCost,
       netPotentialSavings,
       sameObservedValidationMs: proof.sameObservedValidationMs,
+      sameObservedMatchesValidation: proof.sameObservedMatchesValidation,
+      sameObservedMismatchesValidation: proof.sameObservedMismatchesValidation,
+      sameObservedComparisonUnavailable: proof.sameObservedComparisonUnavailable,
+      sameObservedComparable: proof.sameObservedComparable,
+      sameObservedAgreementRate: proof.sameObservedAgreementRate,
+      safetyEvidence: proof.safetyEvidence,
+      safetyPass: proof.safetyPass,
+      safetyAdjustedGrossPotentialSavings,
+      safetyAdjustedNetPotentialSavings,
       prospectiveRelayLatencyMs,
       potentialNetTimeSavedMs,
       breakEvenReuseRateByTime,
@@ -153,6 +218,8 @@ export class SeenRelayShadowProof {
         activeModeWouldNotObserveDirectReuseHits: true,
         callerSuppliedCostUnits: true,
         noSavingsClaimWhenSameObservedIsZero: true,
+        authoritativeValidationAlwaysRuns: true,
+        rawValuesRetainedByShadowProof: false,
         observeOffCriticalPath: offCriticalPath
       })
     });
