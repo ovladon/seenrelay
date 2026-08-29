@@ -23,7 +23,9 @@ Firecrawl already has provider-native caching through `maxAge`, so SeenRelay mus
 
 The provider's own cache remains inside the measured baseline. The pilot records `cacheState` when available and never asks callers to disable Firecrawl caching for a favorable comparison.
 
-Cost is expressed in Firecrawl credit units, not currency. `metadata.creditsUsed` is used when present; otherwise the pilot uses the documented standard one-credit-per-page scrape floor. Fixed subscription economics, included credits, auto-reload thresholds, and the caller's actual monetary value per credit remain caller-specific and must be analyzed separately.
+Cost is expressed in Firecrawl provider-credit units, not currency. `metadata.creditsUsed` is used when the provider exposes it. If the response does not expose a credit value, the pilot marks the cost record unknown instead of inventing one. A caller that has an independently justified provider-credit fallback may supply `provider_credit_fallback_units` during evaluation; otherwise cost evaluation is rejected as incomplete.
+
+Fixed subscription economics, included credits, auto-reload thresholds and the caller's actual monetary value per credit remain caller-specific and must be analyzed separately. A provider-credit result is not automatically an invoice-savings result.
 
 ## Usage
 
@@ -66,13 +68,26 @@ const evaluation = measured.seenRelayFirecrawlShadowPilot.evaluate({
 
 Do not declare a control unavailable merely because the pilot does not implement it. `baseline_definition` remains `best_existing_non_shared_path`.
 
+If one or more provider responses do not expose `creditsUsed`, a cost evaluation requires an explicit fallback in the same Firecrawl provider-credit unit:
+
+```js
+const evaluation = measured.seenRelayFirecrawlShadowPilot.evaluate({
+  workload_id: 'opaque-workload-id',
+  local_cache: { available: false, measured: false },
+  source_native_conditional: { available: false, measured: false },
+  provider_credit_fallback_units: 1
+});
+```
+
+Only use such a fallback when the consuming workload's actual Firecrawl billing/credit contract justifies it. Do not use it for self-hosted or otherwise non-credit deployments merely because the public cloud documentation describes a standard credit cost.
+
 The provider-native Firecrawl cache is always declared available and measured because the actual Firecrawl call, including its own cache behavior, is the authoritative baseline for every retained pilot record.
 
 ## Interpretation
 
 A favorable credit result means only that, for the measured workload, policy-accepted hypothetical reuse would have avoided some Firecrawl provider calls while matching the authoritative results in the sample.
 
-A favorable latency result requires CHECK latency to beat the measured Firecrawl baseline after the observed reuse rate is included. Provider-cache hits may be faster than SeenRelay even when SeenRelay has positive credit value.
+A favorable latency result requires CHECK latency to beat the measured Firecrawl baseline after the observed reuse rate is included. Provider-cache hits may be faster than SeenRelay even when SeenRelay has positive provider-credit value.
 
 One hypothetical reuse mismatch fails the safety decision. A CHECK result that cannot be compared is incomplete rather than safe.
 
