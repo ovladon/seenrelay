@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Client 0.2.4 is published and clean-install verified on npm. JavaScript / TypeScript adds packaged Firecrawl shadow-economics measurement and the same hostile benchmark evaluator used by repository CI. Neither helper enables automatic reuse.
+Client 0.2.4 is published and clean-install verified on npm. Source 0.2.5 stages a direct Firecrawl JavaScript SDK shadow adapter in addition to the existing MCP shadow helper. Neither helper enables automatic reuse; public verified registry state remains 0.2.4 until the publish and registry-verification cycle completes.
 
 ## Install
 
@@ -251,6 +251,28 @@ The authoritative Firecrawl request always runs and returns before the counterfa
 Firecrawl provider-cache hits are retained as provider baseline evidence but are not re-labeled as independent OBSERVEs. If Firecrawl does not expose a usable `creditsUsed` value, cost evaluation remains incomplete unless the caller explicitly supplies a justified `provider_credit_fallback_units` in the same provider-credit unit. Local cache and source-native controls must be declared truthfully; an available but unmeasured control makes the hostile evaluator reject the evidence.
 
 A favorable pilot result is evidence only for the measured workload. It does not enable reuse or establish a universal Firecrawl savings rate.
+
+
+### Direct Firecrawl JavaScript SDK shadow adapter (0.2.5 source candidate)
+
+For applications that use the Firecrawl JavaScript SDK directly, the staged `seenrelay/firecrawl-sdk-shadow` subpath wraps current `scrape(url, options)` and legacy `scrapeUrl(url, options)` calls without changing provider behavior:
+
+```js
+import { createFirecrawlSdkShadowPilot } from 'seenrelay/firecrawl-sdk-shadow';
+
+const measured = createFirecrawlSdkShadowPilot(existingFirecrawlSdkClient, {
+  // SeenRelay measurement horizon only. It is not added to the Firecrawl request.
+  maxAgeMs: 60_000
+});
+
+const result = await measured.scrape('https://example.com/public-page', {
+  formats: ['markdown']
+});
+
+await measured.seenRelayFirecrawlSdkShadowPilot.flush();
+```
+
+The original SDK method always runs with the exact argument list supplied by the application, and the exact raw provider result is returned. The adapter converts the successful result only inside the measurement bridge so it can reuse the existing Firecrawl shadow semantics. If that internal measurement serialization fails after Firecrawl succeeds, the provider result still returns successfully and shadow evidence for that call is simply unavailable.
 
 ## Protocol boundary
 
