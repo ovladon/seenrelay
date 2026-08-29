@@ -1,14 +1,14 @@
 # SeenRelay deterministic client wrappers
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.2 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.3 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-Version 0.2.2 has two deliberately different execution modes:
+Version 0.2.3 has two deliberately different execution modes:
 
 - **JavaScript / TypeScript Zero-State:** provider-independent, local-first optimization that can save work before any shared network evidence exists.
 - **Classic JavaScript / TypeScript and Python:** conservative shadow-first CHECK/validate/OBSERVE path for measuring or explicitly using shared evidence.
@@ -22,7 +22,7 @@ Version 0.2.2 has two deliberately different execution modes:
 - MCP bind-once interception: `seenrelay/mcp-auto`
 - Classic Shadow Proof: `seenrelay/shadow-proof`
 
-The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.2` on npm and PyPI.
+The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.3` on npm and PyPI.
 
 ## Install
 
@@ -147,7 +147,7 @@ value = relay.guard(
 )
 ```
 
-Python behavior remains shadow-first in 0.2.2. JavaScript / TypeScript Zero-State parity is not claimed for Python in this release.
+Python behavior remains shadow-first in 0.2.3. JavaScript / TypeScript Zero-State and natural-workload collector parity are not claimed for Python in this release.
 
 ## Shadow Proof
 
@@ -168,7 +168,7 @@ await proof.guard({
 console.log(proof.report({ avoidedValidationCost: 0.01 }));
 ```
 
-JavaScript / TypeScript 0.2.2 can compare deterministic `SAME_OBSERVED` candidates with the authoritative validation that still runs. It retains aggregate agreement counters rather than the compared raw values; any observed mismatch fails the safety evidence and an unavailable deterministic comparison remains incomplete.
+JavaScript / TypeScript 0.2.3 keeps authoritative validation enabled and can export bounded, sanitized natural-workload records directly into the hostile benchmark input format. The export excludes fact identity, source, raw values and per-call timestamps. CHECK-unavailable calls remain in the sample; an observed mismatch fails safety evidence, and an unavailable deterministic comparison leaves the evidence incomplete rather than safe.
 
 Potential direct savings count only measured `SAME_OBSERVED` cases. Conditional ETag / Last-Modified savings remain excluded until the consuming application measures them separately.
 
