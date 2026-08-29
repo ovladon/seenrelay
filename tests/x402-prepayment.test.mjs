@@ -22,7 +22,7 @@ test('accepted reuse prevents the paid validation from being invoked', async () 
   const client = new SeenRelayClient({
     fetchImpl: async (url) => {
       if (String(url).endsWith('/v1/check')) {
-        return jsonResponse({ status: 'SAME_OBSERVED', latest_observed_value: 17 });
+        return jsonResponse({ status: 'SAME_OBSERVED' });
       }
       if (String(url).endsWith('/v1/observe')) {
         observes += 1;

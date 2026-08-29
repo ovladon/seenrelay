@@ -21,7 +21,6 @@ export interface SourceValidator {
 export interface CheckResult {
     status: CheckStatus;
     fact_key?: string;
-    latest_observed_value?: JsonValue;
     source_validator?: SourceValidator;
     source_validator_assurance?: 'observer_supplied_unverified';
     conditional_request_hint?: {

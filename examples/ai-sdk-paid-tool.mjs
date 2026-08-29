@@ -12,7 +12,6 @@ const relay = new SeenRelayClient({
     if (String(url).endsWith('/v1/check')) {
       return new Response(JSON.stringify({
         status: 'SAME_OBSERVED',
-        latest_observed_value: 17,
       }), { status: 200, headers: { 'content-type': 'application/json' } });
     }
     if (String(url).endsWith('/v1/observe')) {

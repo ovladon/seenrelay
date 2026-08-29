@@ -13,7 +13,7 @@ async function paidValidation() {
 
 const responses = [
   { status: 'UNKNOWN', next_step: 'VALIDATE_THEN_OBSERVE' },
-  { status: 'SAME_OBSERVED', latest_observed_value: 17 },
+  { status: 'SAME_OBSERVED' },
 ];
 
 const fetchImpl = async (url) => {
