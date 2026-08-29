@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-08-29T19:09:27Z",
+  "updated_at": "2026-08-29T19:38:54Z",
   "positioning": {
     "category": "validation cost avoidance and shared freshness evidence for AI agents",
     "headline": "Avoid redundant expensive validation",
@@ -16,8 +16,8 @@
     "pypi_command": "pip install seenrelay",
     "client_version": "0.2.3",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-08-29T19:09:27Z",
-    "verification": "Promotion candidate: client 0.2.3 completed trusted publishing to npm and PyPI. This promotion PR must independently clean-install exact 0.2.3 from both public registries before this metadata can be merged as verified public state. JavaScript/TypeScript adds sanitized natural-workload Shadow Proof export; Python remains shadow-first and does not claim collector parity in this release."
+    "registry_install_verified_at": "2026-08-29T19:38:54Z",
+    "verification": "Client 0.2.3 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. JavaScript/TypeScript adds bounded, sanitized natural-workload Shadow Proof export for hostile benchmarking while authoritative validation remains enabled; Python remains shadow-first and does not claim collector parity in this release."
   },
   "fit": {
     "use_when": [
@@ -167,6 +167,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-08-29",
+      "title": "Public client 0.2.3",
+      "summary": "SeenRelay 0.2.3 is published on npm and PyPI. JavaScript/TypeScript Shadow Proof can export bounded, sanitized natural-workload records directly into the hostile benchmark format while authoritative validation continues; unavailable CHECKs remain in the sample and unsafe or uncomparable hypothetical reuse cannot be reported as safe. Python remains shadow-first."
+    },
     {
       "date": "2026-08-29",
       "title": "Public client 0.2.2",
