@@ -32,12 +32,12 @@ function parseSourceValidator(value: JsonValue | null): SourceValidator | null {
 
 /**
  * CHECK evidence plus the validator attached to the newest observation in each value group.
+ * Values are grouped only by their deterministic fingerprint; raw submitted values are not read.
  * The validator is observer-supplied metadata. Returning it does not verify it or make it identity-bearing.
  */
 export async function getRecentValueGroupsWithValidators(factKey: string, cutoffIso: string): Promise<CheckEvidenceRow[]> {
   const rows = await sql().query(`SELECT
       o.value_hash,
-      o.value_json,
       MAX(o.observed_at)::text AS last_seen,
       MIN(o.observed_at)::text AS first_seen,
       COUNT(*)::int AS observations,
@@ -55,7 +55,7 @@ export async function getRecentValueGroupsWithValidators(factKey: string, cutoff
       ) AS source_validator
     FROM observations_recent o
     WHERE o.fact_key = $1 AND o.observed_at >= $2::timestamptz
-    GROUP BY o.fact_key, o.value_hash, o.value_json
+    GROUP BY o.fact_key, o.value_hash
     ORDER BY MAX(o.observed_at) DESC
     LIMIT 4`, [factKey, cutoffIso]) as Array<AggregateRow & { source_validator: JsonValue | null }>;
 

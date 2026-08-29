@@ -10,12 +10,12 @@ function databaseUrl(): string {
 function sql() { return neon(databaseUrl()); }
 
 export async function getFact(factKey: string): Promise<FactRow | null> {
-  const rows = await sql().query(`SELECT fact_key, subject, predicate, qualifiers_json, source_url, last_observed_at, observation_total::int, current_value_json, current_value_hash, current_first_seen_at, current_last_seen_at, previous_value_json, previous_value_hash, previous_last_seen_at FROM facts WHERE fact_key = $1`, [factKey]) as FactRow[];
+  const rows = await sql().query(`SELECT fact_key, subject, predicate, qualifiers_json, source_url, last_observed_at, observation_total::int, current_value_hash, current_first_seen_at, current_last_seen_at, previous_value_hash, previous_last_seen_at FROM facts WHERE fact_key = $1`, [factKey]) as FactRow[];
   return rows[0] || null;
 }
 
 export async function getRecentValueGroups(factKey: string, cutoffIso: string): Promise<AggregateRow[]> {
-  return await sql().query(`SELECT value_hash, value_json, MAX(observed_at)::text AS last_seen, MIN(observed_at)::text AS first_seen, COUNT(*)::int AS observations, COUNT(DISTINCT observer_key)::int AS observers, COUNT(DISTINCT CASE WHEN observer_key LIKE 'ed25519:%' THEN observer_key END)::int AS cryptographic_observers, COUNT(DISTINCT CASE WHEN observer_key NOT LIKE 'ed25519:%' THEN observer_key END)::int AS unverified_observers FROM observations_recent WHERE fact_key = $1 AND observed_at >= $2::timestamptz GROUP BY value_hash, value_json ORDER BY MAX(observed_at) DESC LIMIT 4`, [factKey, cutoffIso]) as AggregateRow[];
+  return await sql().query(`SELECT value_hash, MAX(observed_at)::text AS last_seen, MIN(observed_at)::text AS first_seen, COUNT(*)::int AS observations, COUNT(DISTINCT observer_key)::int AS observers, COUNT(DISTINCT CASE WHEN observer_key LIKE 'ed25519:%' THEN observer_key END)::int AS cryptographic_observers, COUNT(DISTINCT CASE WHEN observer_key NOT LIKE 'ed25519:%' THEN observer_key END)::int AS unverified_observers FROM observations_recent WHERE fact_key = $1 AND observed_at >= $2::timestamptz GROUP BY value_hash ORDER BY MAX(observed_at) DESC LIMIT 4`, [factKey, cutoffIso]) as AggregateRow[];
 }
 
 export async function getObserverState(factKey: string, observerKey: string) {
@@ -30,7 +30,6 @@ export interface AcceptObservationInput {
   predicate: string;
   qualifiersJson: string;
   sourceUrl: string;
-  valueJson: string;
   valueHash: string;
   observedAtIso: string;
   receivedAtIso: string;
@@ -42,9 +41,8 @@ export interface AcceptObservationInput {
 
 /**
  * Atomically writes an accepted observation and its materialized fact summary.
- * A newly-created fact is initialized from its first observation directly; an existing fact is
- * updated only when the observation insert succeeds. This avoids sibling-CTE snapshot visibility
- * traps and guarantees that accepted=true cannot leave a fact summary at observation_total=0.
+ * The submitted value is fingerprinted before this function is called. Persistent state keeps the
+ * fingerprint, timing and provenance needed for CHECK; legacy raw-value columns receive no new raw data.
  */
 export async function acceptObservation(input: AcceptObservationInput): Promise<boolean> {
   const rows = await sql().query(`
@@ -56,8 +54,8 @@ export async function acceptObservation(input: AcceptObservationInput): Promise<
       )
       SELECT
         $1, $2, $3, $4::jsonb, $5,
-        $7::timestamptz, $7::timestamptz, $10::timestamptz, 1,
-        $8::jsonb, $9, $10::timestamptz, $10::timestamptz
+        $7::timestamptz, $7::timestamptz, $9::timestamptz, 1,
+        NULL, $8, $9::timestamptz, $9::timestamptz
       WHERE NOT EXISTS (
         SELECT 1 FROM observations_recent WHERE observation_id = $6
       )
@@ -76,8 +74,8 @@ export async function acceptObservation(input: AcceptObservationInput): Promise<
         observer_key, lease_id, evidence_fingerprint, source_validator_json
       )
       SELECT
-        $6, fact_key, $8::jsonb, $9, $10::timestamptz, $11::timestamptz,
-        $12, $13, $14, $15::jsonb
+        $6, fact_key, 'null'::jsonb, $8, $9::timestamptz, $7::timestamptz,
+        $10, $11, $12, $13::jsonb
       FROM fact_ref
       ON CONFLICT (observation_id) DO NOTHING
       RETURNING *
@@ -97,36 +95,31 @@ export async function acceptObservation(input: AcceptObservationInput): Promise<
     ),
     updated_existing AS (
       UPDATE facts f SET
-        updated_at = $11::timestamptz,
-        last_observed_at = GREATEST(COALESCE(f.last_observed_at, $10::timestamptz), $10::timestamptz),
+        updated_at = $7::timestamptz,
+        last_observed_at = GREATEST(COALESCE(f.last_observed_at, $9::timestamptz), $9::timestamptz),
         observation_total = f.observation_total + 1,
-        previous_value_json = CASE
-          WHEN (f.current_last_seen_at IS NULL OR $10::timestamptz >= f.current_last_seen_at)
-            AND f.current_value_hash IS NOT NULL AND f.current_value_hash <> $9
-          THEN f.current_value_json ELSE f.previous_value_json END,
+        previous_value_json = NULL,
         previous_value_hash = CASE
-          WHEN (f.current_last_seen_at IS NULL OR $10::timestamptz >= f.current_last_seen_at)
-            AND f.current_value_hash IS NOT NULL AND f.current_value_hash <> $9
+          WHEN (f.current_last_seen_at IS NULL OR $9::timestamptz >= f.current_last_seen_at)
+            AND f.current_value_hash IS NOT NULL AND f.current_value_hash <> $8
           THEN f.current_value_hash ELSE f.previous_value_hash END,
         previous_last_seen_at = CASE
-          WHEN (f.current_last_seen_at IS NULL OR $10::timestamptz >= f.current_last_seen_at)
-            AND f.current_value_hash IS NOT NULL AND f.current_value_hash <> $9
+          WHEN (f.current_last_seen_at IS NULL OR $9::timestamptz >= f.current_last_seen_at)
+            AND f.current_value_hash IS NOT NULL AND f.current_value_hash <> $8
           THEN f.current_last_seen_at ELSE f.previous_last_seen_at END,
-        current_value_json = CASE
-          WHEN f.current_last_seen_at IS NULL OR $10::timestamptz >= f.current_last_seen_at
-          THEN $8::jsonb ELSE f.current_value_json END,
+        current_value_json = NULL,
         current_value_hash = CASE
-          WHEN f.current_last_seen_at IS NULL OR $10::timestamptz >= f.current_last_seen_at
-          THEN $9 ELSE f.current_value_hash END,
+          WHEN f.current_last_seen_at IS NULL OR $9::timestamptz >= f.current_last_seen_at
+          THEN $8 ELSE f.current_value_hash END,
         current_first_seen_at = CASE
-          WHEN f.current_last_seen_at IS NULL THEN $10::timestamptz
-          WHEN $10::timestamptz >= f.current_last_seen_at AND f.current_value_hash <> $9 THEN $10::timestamptz
+          WHEN f.current_last_seen_at IS NULL THEN $9::timestamptz
+          WHEN $9::timestamptz >= f.current_last_seen_at AND f.current_value_hash <> $8 THEN $9::timestamptz
           ELSE f.current_first_seen_at END,
         current_last_seen_at = CASE
-          WHEN f.current_last_seen_at IS NULL THEN $10::timestamptz
-          WHEN $10::timestamptz >= f.current_last_seen_at AND f.current_value_hash = $9
-            THEN GREATEST(f.current_last_seen_at, $10::timestamptz)
-          WHEN $10::timestamptz >= f.current_last_seen_at THEN $10::timestamptz
+          WHEN f.current_last_seen_at IS NULL THEN $9::timestamptz
+          WHEN $9::timestamptz >= f.current_last_seen_at AND f.current_value_hash = $8
+            THEN GREATEST(f.current_last_seen_at, $9::timestamptz)
+          WHEN $9::timestamptz >= f.current_last_seen_at THEN $9::timestamptz
           ELSE f.current_last_seen_at END
       FROM ins i
       WHERE f.fact_key = i.fact_key
@@ -142,10 +135,8 @@ export async function acceptObservation(input: AcceptObservationInput): Promise<
     input.sourceUrl,
     input.observationId,
     input.receivedAtIso,
-    input.valueJson,
     input.valueHash,
     input.observedAtIso,
-    input.receivedAtIso,
     input.observerKey,
     input.leaseId,
     input.evidenceFingerprint,

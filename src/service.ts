@@ -192,7 +192,6 @@ export async function observeFact(request: Request | undefined, body: ObserveReq
     predicate: fact.predicate,
     qualifiersJson: fact.qualifiersJson,
     sourceUrl: fact.sourceUrl,
-    valueJson: value.valueJson,
     valueHash: value.valueHash,
     observedAtIso,
     receivedAtIso,
