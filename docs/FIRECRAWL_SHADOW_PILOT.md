@@ -29,8 +29,10 @@ Fixed subscription economics, included credits, auto-reload thresholds and the c
 
 ## Usage
 
+The source tree stages this helper for the JavaScript / TypeScript client 0.2.4 candidate. Use the package subpath only after the corresponding registry release has been verified.
+
 ```js
-import { createFirecrawlShadowPilot } from './scripts/firecrawl-shadow-pilot.mjs';
+import { createFirecrawlShadowPilot } from 'seenrelay/firecrawl-shadow';
 
 const measured = createFirecrawlShadowPilot(existingFirecrawlMcpClient, {
   // Optional. Defaults to the public SeenRelay service.
@@ -66,6 +68,8 @@ const evaluation = measured.seenRelayFirecrawlShadowPilot.evaluate({
 });
 ```
 
+The evaluation method uses the same hostile benchmark implementation exported through `seenrelay/economics` and used by repository CI. It reports evidence only; it never enables reuse.
+
 Do not declare a control unavailable merely because the pilot does not implement it. `baseline_definition` remains `best_existing_non_shared_path`.
 
 If one or more provider responses do not expose `creditsUsed`, a cost evaluation requires an explicit fallback in the same Firecrawl provider-credit unit:
@@ -79,7 +83,7 @@ const evaluation = measured.seenRelayFirecrawlShadowPilot.evaluate({
 });
 ```
 
-Only use such a fallback when the consuming workload's actual Firecrawl billing/credit contract justifies it. Do not use it for self-hosted or otherwise non-credit deployments merely because the public cloud documentation describes a standard credit cost.
+Only use such a fallback when the consuming workload's actual Firecrawl billing/credit contract justifies it. Do not use it for self-hosted or otherwise non-credit deployments merely because public cloud documentation describes a standard credit cost.
 
 The provider-native Firecrawl cache is always declared available and measured because the actual Firecrawl call, including its own cache behavior, is the authoritative baseline for every retained pilot record.
 
