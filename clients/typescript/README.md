@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-The source tree stages client 0.2.2. It extends Shadow Proof with local safety-agreement counters while keeping authoritative validation enabled. Public registry availability is tracked separately by SeenRelay's verified install metadata.
+The source tree stages client 0.2.3. JavaScript / TypeScript Shadow Proof can retain sanitized per-call evidence for a natural workload and export it into the hostile benchmark evaluator while keeping authoritative validation enabled. Public registry availability is tracked separately by SeenRelay's verified install metadata.
 
 ## Install
 
@@ -170,6 +170,51 @@ console.log(proof.report({
 Shadow Proof always keeps the original validation authoritative. For `SAME_OBSERVED`, it can compare the caller's known deterministic JSON value with the validation result and retain only aggregate agreement counters. Any observed mismatch fails safety evidence; an unavailable deterministic comparison leaves evidence incomplete. Compared raw values are not included in the snapshot or report. Safety-adjusted savings remain unavailable until the observed `SAME_OBSERVED` set passes strict agreement.
 
 Potential economics still use caller-supplied costs and do not constitute a universal savings claim.
+
+## Collect natural-workload evidence for the hostile benchmark
+
+JavaScript / TypeScript Shadow Proof can additionally retain a bounded local record for each naturally occurring protected validation. The record contains only CHECK outcome, simulated policy decision, agreement result, measured call timings and caller-supplied cost units. It does not retain the fact descriptor, source URL, known value, validated value or a per-call timestamp.
+
+The simulated reuse policy runs only **after** the authoritative validation. It cannot suppress the validation or turn measurement into active reuse.
+
+```js
+import {
+  SeenRelayClient,
+  reuseKnownOnSameObserved
+} from 'seenrelay';
+import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
+
+const proof = new SeenRelayShadowProof(
+  new SeenRelayClient(),
+  { benchmarkRecordLimit: 10_000 }
+);
+
+await proof.guard({
+  fact,
+  knownValue,
+  validate: ({ conditionalHeaders }) => expensiveValidation(conditionalHeaders),
+  benchmark: {
+    reuse: reuseKnownOnSameObserved,
+    baselineCost: 5,
+    checkCost: 0,
+    observeCost: 0,
+    observeAfterBaseline: true
+  }
+});
+
+const benchmarkInput = proof.hostileBenchmarkInput({
+  workloadId: 'opaque-run-id',
+  controls: {
+    local_cache: { available: true, measured: true },
+    source_native_conditional: { available: true, measured: true },
+    provider_native_cache: { available: true, measured: true }
+  }
+});
+```
+
+Use only a non-sensitive opaque `workloadId`. Every control marked `available: true` must actually have been measured against the same workload before the hostile evaluator accepts the evidence. CHECK failures remain in the sample as unavailable rather than disappearing. If a hypothetical reuse cannot be compared deterministically with the authoritative validation, safety evidence is `incomplete`; any observed mismatch fails it. Record overflow or an invalid simulated reuse policy invalidates export instead of silently truncating the sample.
+
+The collector does not upload benchmark telemetry. Export is explicit and local.
 
 ## Protocol boundary
 
