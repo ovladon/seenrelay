@@ -1,0 +1,79 @@
+name: CHECK Semantic Probe
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/service.ts'
+      - 'src/check-evidence.ts'
+      - 'scripts/check-semantic-probe.mjs'
+      - 'tests/check-semantic-snapshot.test.mjs'
+      - '.github/workflows/check-semantic-probe.yml'
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: seenrelay-check-semantic-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+      GITHUB_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Checkout exact head commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+
+      - name: Resolve this PR's Vercel Preview URL
+        id: preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="$(node scripts/resolve-pr-preview-url.mjs)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Resolved Preview: $url"
+
+      - name: Compare Production and Preview observed CHECK path
+        env:
+          SEENRELAY_BASELINE_URL: https://seenrelay.com
+          SEENRELAY_CANDIDATE_URL: ${{ steps.preview.outputs.url }}
+          SEENRELAY_CHECK_SEMANTIC_PROBE_SAMPLES: '21'
+        run: node scripts/check-semantic-probe.mjs
+
+      - name: Verify probe classification contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const x = JSON.parse(fs.readFileSync('check-semantic-probe.json', 'utf8'));
+          if (x.first_party !== true || x.external_adoption_evidence !== false) process.exit(1);
+          if (x.baseline?.measured_observe_requests !== 0 || x.candidate?.measured_observe_requests !== 0) process.exit(1);
+          if (x.baseline?.setup_observe_requests !== 1 || x.candidate?.setup_observe_requests !== 1) process.exit(1);
+          if (x.baseline?.statuses?.SAME_OBSERVED !== x.samples_per_target) process.exit(1);
+          if (x.candidate?.statuses?.SAME_OBSERVED !== x.samples_per_target) process.exit(1);
+          NODE
+
+      - name: Upload directional latency evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: check-semantic-probe-${{ github.run_id }}
+          path: check-semantic-probe.json
+          if-no-files-found: error
+          retention-days: 30
