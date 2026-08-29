@@ -1,5 +1,6 @@
 -- Remove legacy submitted values and make hash-only persistence a database invariant.
 -- The application already stores only server-keyed, fact-scoped fingerprints.
+-- Constraints are installed NOT VALID before cleanup, then validated after cleanup.
 -- This migration is idempotent and preserves rows, fingerprints, provenance and freshness metadata.
 
 DO $$
