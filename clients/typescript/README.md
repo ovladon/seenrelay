@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-The source tree stages client 0.2.3. JavaScript / TypeScript Shadow Proof can retain sanitized per-call evidence for a natural workload and export it into the hostile benchmark evaluator while keeping authoritative validation enabled. Public registry availability is tracked separately by SeenRelay's verified install metadata.
+The source tree stages client 0.2.4. JavaScript / TypeScript adds packaged Firecrawl shadow-economics measurement and the same hostile benchmark evaluator used by repository CI. Neither helper enables automatic reuse. Public registry availability is tracked separately by SeenRelay's verified install metadata.
 
 ## Install
 
@@ -183,6 +183,7 @@ import {
   reuseKnownOnSameObserved
 } from 'seenrelay';
 import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
+import { evaluateHostileBenchmark } from 'seenrelay/economics';
 
 const proof = new SeenRelayShadowProof(
   new SeenRelayClient(),
@@ -210,11 +211,46 @@ const benchmarkInput = proof.hostileBenchmarkInput({
     provider_native_cache: { available: true, measured: true }
   }
 });
+
+const evaluation = evaluateHostileBenchmark(benchmarkInput);
 ```
 
 Use only a non-sensitive opaque `workloadId`. Every control marked `available: true` must actually have been measured against the same workload before the hostile evaluator accepts the evidence. CHECK failures remain in the sample as unavailable rather than disappearing. If a hypothetical reuse cannot be compared deterministically with the authoritative validation, safety evidence is `incomplete`; any observed mismatch fails it. Record overflow or an invalid simulated reuse policy invalidates export instead of silently truncating the sample.
 
-The collector does not upload benchmark telemetry. Export is explicit and local.
+The collector does not upload benchmark telemetry. Export is explicit and local. The evaluator reports evidence; `automatic_reuse_enabled_by_evaluator` is always false.
+
+## Firecrawl shadow economics
+
+For an existing Firecrawl MCP client, `seenrelay/firecrawl-shadow` measures whether repeated public scrape work would benefit from shared CHECK without suppressing any Firecrawl call:
+
+```js
+import { createFirecrawlShadowPilot } from 'seenrelay/firecrawl-shadow';
+
+const measured = createFirecrawlShadowPilot(existingFirecrawlMcpClient);
+
+await measured.callTool({
+  name: 'firecrawl_scrape',
+  arguments: {
+    url: 'https://example.com/public-page',
+    formats: ['markdown'],
+    maxAge: 60_000
+  }
+});
+
+await measured.seenRelayFirecrawlShadowPilot.flush();
+
+const evaluation = measured.seenRelayFirecrawlShadowPilot.evaluate({
+  workload_id: 'opaque-workload-id',
+  local_cache: { available: false, measured: false },
+  source_native_conditional: { available: false, measured: false }
+});
+```
+
+The authoritative Firecrawl request always runs and returns before the counterfactual measurement needs to finish. A prior retained exact-result fingerprint is CHECKed only after the current provider result has completed and before the current result can contribute an OBSERVE. This keeps the experiment shadow-only and prevents a call from manufacturing its own hit.
+
+Firecrawl provider-cache hits are retained as provider baseline evidence but are not re-labeled as independent OBSERVEs. If Firecrawl does not expose a usable `creditsUsed` value, cost evaluation remains incomplete unless the caller explicitly supplies a justified `provider_credit_fallback_units` in the same provider-credit unit. Local cache and source-native controls must be declared truthfully; an available but unmeasured control makes the hostile evaluator reject the evidence.
+
+A favorable pilot result is evidence only for the measured workload. It does not enable reuse or establish a universal Firecrawl savings rate.
 
 ## Protocol boundary
 
