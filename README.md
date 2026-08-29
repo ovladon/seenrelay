@@ -6,19 +6,19 @@
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
-**Local-first freshness optimization with optional shared evidence for AI-agent fleets.**
+**Avoid redundant expensive validation.**
 
-SeenRelay reduces redundant source-backed validation without requiring a populated public network. JavaScript/TypeScript 0.2.0 can reuse safe read-only work locally or privately, use source-native validators such as ETag / Last-Modified, and consult shared SeenRelay evidence only when it can add value. When a caller independently validates a source anyway, OBSERVE can contribute freshness evidence for later callers.
+Reuse eligible read-only validation locally or privately, use source-native checks when available, and consult shared SeenRelay evidence only when useful. The application's original validation remains the fallback.
 
-> Reuse locally first. CHECK shared evidence when useful. OBSERVE only what you independently validated.
+> Reuse first. CHECK when useful. OBSERVE only fresh independent validation.
 
-SeenRelay still has exactly two domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
+SeenRelay has exactly two domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
 
-The hosted service, REST contract and MCP surface are unchanged by client 0.2.0. The new local-first path is provider-independent; provider-specific adapters are optional integrations, not dependencies of SeenRelay Core.
+JavaScript/TypeScript 0.2.0 is local-first. Python 0.2.0 and the classic JavaScript/TypeScript client remain shadow-first. Provider-specific adapters are optional.
 
-## Why connect now
+## What it can avoid
 
-SeenRelay can provide value even when the shared network has no observation for your fact:
+Even with no shared observation:
 
 - simultaneous identical eligible calls can be coalesced in-process;
 - completed read-only results can be reused only inside an explicit caller-defined freshness window;
@@ -26,8 +26,6 @@ SeenRelay can provide value even when the shared network has no observation for 
 - ETag / Last-Modified can support source-native conditional confirmation without a shared CHECK;
 - shared CHECK is optional in Zero-State and is not placed on the hot path merely because SeenRelay is installed;
 - after a genuinely fresh independent validation, OBSERVE can add evidence that may help later callers.
-
-Python 0.2.0 remains shadow-first. The classic JavaScript/TypeScript `SeenRelayClient` and `SeenRelayShadowProof` APIs also remain available for conservative CHECK-first measurement.
 
 Access is **currently free** and requires no account or API key.
 
