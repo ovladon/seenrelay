@@ -4,12 +4,12 @@
 
 Deterministic, standard-library-only client that places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default.
 
-Version 0.2.1 is behavior-equivalent to 0.2.0; it refreshes package discovery metadata and documentation. Python remains conservative and shadow-first by default. The local-first Zero-State, generic dispatcher and MCP interception modules are JavaScript / TypeScript features; Python parity is not claimed.
+The source tree stages client 0.2.2 to keep the synchronized client release manifests aligned. Python behavior remains conservative and shadow-first; the new shadow safety-agreement counters in this release candidate are a JavaScript / TypeScript capability. Python parity is not claimed.
 
 ## Install
 
 ```bash
-pip install seenrelay==0.2.1
+pip install seenrelay
 ```
 
 ## Smallest integration: bind once, one line per revalidation
