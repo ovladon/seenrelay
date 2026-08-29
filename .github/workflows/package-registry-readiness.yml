@@ -76,7 +76,9 @@ jobs:
           if (typeof client.protectValidation !== 'function' || typeof client.guardDetailed !== 'function' || !proof) {
             throw new Error('public npm client API smoke failed');
           }
-          if (process.env.CLIENT_VERSION === process.env.RELEASE_VERSION && process.env.RELEASE_VERSION === '0.2.0') {
+          const [major, minor] = process.env.RELEASE_VERSION.split('.').map(Number);
+          const releaseHasZeroState = major > 0 || minor >= 2;
+          if (process.env.CLIENT_VERSION === process.env.RELEASE_VERSION && releaseHasZeroState) {
             const zeroState = await import('seenrelay/zero-state');
             const auto = await import('seenrelay/auto');
             const mcpAuto = await import('seenrelay/mcp-auto');
@@ -85,7 +87,7 @@ jobs:
               typeof auto.SeenRelayAuto !== 'function' ||
               typeof mcpAuto.protectMcpClient !== 'function'
             ) {
-              throw new Error('public npm 0.2.0 subpath smoke failed');
+              throw new Error(`public npm ${process.env.RELEASE_VERSION} subpath smoke failed`);
             }
           }
           console.log(`npm public install OK: seenrelay@${process.env.CLIENT_VERSION}`);

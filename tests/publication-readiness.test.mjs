@@ -53,6 +53,9 @@ test('client and quickstart adoption guides are concrete and conservative', () =
   const clients = read('docs', 'CLIENTS.md');
   const adoption = read('src', 'adoption.ts');
   const quickstart = read('docs', 'QUICKSTART.md');
+  const publicFacts = JSON.parse(read('public', 'product-facts.json'));
+  const clientVersion = publicFacts.install?.client_version;
+  assert.match(clientVersion, /^\d+\.\d+\.\d+$/);
   assert.match(clients, /claude mcp add --transport http seenrelay https:\/\/seenrelay\.com\/mcp/);
   assert.match(clients, /\.cursor\/mcp\.json/);
   assert.match(clients, /cursor\.com\/install-mcp\?name=seenrelay/);
@@ -64,7 +67,10 @@ test('client and quickstart adoption guides are concrete and conservative', () =
   assert.match(adoption, /Add SeenRelay to Cursor/);
   assert.match(adoption, /seenrelay\/mcp-auto/);
   assert.match(quickstart, /currently free/i);
-  assert.match(quickstart, /recommended JavaScript\/TypeScript 0\.2\.0 path is local-first/i);
+  assert.ok(
+    quickstart.toLowerCase().includes(`recommended javascript/typescript ${clientVersion} path is local-first`),
+    `quickstart must identify verified client ${clientVersion} as the recommended JavaScript/TypeScript local-first path`
+  );
   assert.match(quickstart, /UNKNOWN/);
   assert.match(quickstart, /observer-supplied, unverified ETag \/ Last-Modified/i);
   assert.match(quickstart, /conditional-request hint/i);

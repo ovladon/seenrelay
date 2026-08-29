@@ -16,9 +16,9 @@ export function quickstartPage(origin: string): string {
 <section class="hero">
 <div class="eyebrow">INTEGRATION QUICKSTART</div>
 <h1>Reuse first. Validate when needed.</h1>
-<p class="lead">JavaScript/TypeScript 0.2.0: local/private reuse → source-native checks → optional CHECK → original validation. Python remains shadow-first.</p>
+<p class="lead">JavaScript/TypeScript 0.2.1: local/private reuse → source-native checks → optional CHECK → original validation. Python remains shadow-first.</p>
 <div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Full quickstart</a><a class="secondary" href="/economics">Cost examples</a><a class="secondary" href="/clients">Client options</a><a class="secondary" href="/openapi.json">REST / OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a></div>
-<div class="contract"><span>Client 0.2.0</span><b>CHECK</b><b>OBSERVE</b><span>No account · no API key · currently free</span></div>
+<div class="contract"><span>Client 0.2.1</span><b>CHECK</b><b>OBSERVE</b><span>No account · no API key · currently free</span></div>
 </section>
 
 ${publicInstallHtml()}
@@ -58,7 +58,7 @@ const client = protectMcpClient(rawMcpClient, {
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">CLASSIC CLIENTS</div><h2>Classic clients remain shadow-first.</h2><p>The classic JavaScript/TypeScript and Python clients still put CHECK around a known fact, keep the original validation unless caller policy explicitly permits bounded reuse, and OBSERVE the independently obtained result best-effort.</p><p>Python remains shadow-first in 0.2.0.</p></div>
+<div><div class="eyebrow">CLASSIC CLIENTS</div><h2>Classic clients remain shadow-first.</h2><p>The classic JavaScript/TypeScript and Python clients still put CHECK around a known fact, keep the original validation unless caller policy explicitly permits bounded reuse, and OBSERVE the independently obtained result best-effort.</p><p>Python remains shadow-first in 0.2.1.</p></div>
 <div class="proof-grid"><article><b>CHECK</b><span>Compare a known value with recent shared observations.</span></article><article><b>Validate</b><span>UNKNOWN, STALE, CONTESTED or policy requirements continue to the existing source check.</span></article><article><b>OBSERVE</b><span>Contribute only an independently obtained result.</span></article><article><b>Fail open</b><span>Relay/store failures return to the validation the application already planned.</span></article></div>
 </section>
 
