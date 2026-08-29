@@ -68,7 +68,8 @@ const x = JSON.parse(fs.readFileSync('/tmp/product-facts.json', 'utf8'));
 const b = x.verified_benchmarks?.find((item) => item.id === 'firecrawl-json-extraction-2026-08-26');
 if (x.install?.npm_command !== 'npm install seenrelay') process.exit(1);
 if (x.install?.pypi_command !== 'pip install seenrelay') process.exit(1);
-if (x.install?.client_version !== '0.2.0') process.exit(1);
+const expectedClientVersion = JSON.parse(fs.readFileSync('public/product-facts.json', 'utf8')).install?.client_version;
+if (x.install?.client_version !== expectedClientVersion) process.exit(1);
 if (!b || b.provider_credits_avoided !== 15 || b.reuse_provider_calls !== 0) process.exit(1);
 NODE
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
