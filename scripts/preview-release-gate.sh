@@ -58,7 +58,7 @@ grep -q 'npm install seenrelay' /tmp/site.html
 grep -q 'pip install seenrelay' /tmp/site.html
 grep -q '3/3 provider calls avoided' /tmp/site.html
 grep -q '15 credits avoided' /tmp/site.html
-grep -q 'Counterexample matters' /tmp/site.html
+grep -q 'Path ordering matters' /tmp/site.html
 # The branch alias can retain public max-age content across Preview deployments;
 # cache-bust deployment-specific machine facts before asserting exact release data.
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json?release=${RELEASE_SHA}" -o /tmp/product-facts.json
@@ -79,7 +79,7 @@ grep -q 'Avoid redundant expensive validation' /tmp/llms.txt
 grep -q 'Shared CHECK is off by default' /tmp/llms.txt
 grep -q '## Verified measured results' /tmp/llms.txt
 grep -q 'Structured JSON extraction /' /tmp/llms.txt
-grep -q 'fit=good; cost=better; latency=better' /tmp/llms.txt
+grep -q 'fit=poor; provider_path_cost=better; provider_path_latency=better' /tmp/llms.txt
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/service.json" -o /tmp/service.json
 grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json

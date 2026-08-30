@@ -26,14 +26,14 @@ export function verifiedBenchmarkHtml(): string {
   const negative = f.verified_benchmarks.find((item) => item.id === 'firecrawl-basic-scrape-2026-08-26');
   if (!b || !negative || !('provider_calls_avoided' in b)) return '';
   return `<section class="section decision" id="verified-results">
-<div class="section-head"><div><div class="eyebrow">MEASURED · FIRST-PARTY SMOKE BENCHMARK</div><h2>In one expensive extraction path, SeenRelay was cheaper and faster.</h2></div><p>Small controlled benchmark, not a universal hit-rate claim. Caller policy accepted evidence up to ${esc(b.freshness_window_seconds)} seconds old.</p></div>
+<div class="section-head"><div><div class="eyebrow">MEASURED · FIRST-PARTY SMOKE BENCHMARK</div><h2>Provider-path smoke: SeenRelay skipped Firecrawl work, but the tested fact belonged on a source-native path.</h2></div><p>Small controlled benchmark, not a universal hit-rate or workload-fit claim. Caller policy accepted evidence up to ${esc(b.freshness_window_seconds)} seconds old.</p></div>
 <div class="proof-grid">
 <article><b>${esc(b.provider_calls_avoided)}/${esc(b.samples)} provider calls avoided</b><span>Eligible Firecrawl JSON extraction revalidations made zero provider calls after the first independent observation.</span></article>
 <article><b>${esc(b.provider_credits_avoided)} credits avoided</b><span>Firecrawl reported ${esc(b.credits_per_full_validation)} credits for each full JSON extraction in this run.</span></article>
 <article><b>${esc(b.reuse_median_ms)} ms median</b><span>SeenRelay bounded reuse versus ${esc(b.fresh_baseline_median_ms)} ms fresh extraction — ${esc(b.latency_improvement_vs_fresh_percent)}% lower median latency in this run.</span></article>
 <article><b>Also faster than provider cache</b><span>${esc(b.provider_cached_baseline_median_ms)} ms provider-cached versus ${esc(b.reuse_median_ms)} ms SeenRelay — ${esc(b.latency_improvement_vs_provider_cached_percent)}% lower median latency in this run.</span></article>
 </div>
-<div class="trust-note"><b>Counterexample matters:</b> the basic-scrape benchmark avoided ${esc(negative.provider_credits_avoided)} provider credits but was slower than Firecrawl's own cache hit (${esc(negative.baseline_median_ms)} ms baseline vs ${esc(negative.reuse_median_ms)} ms SeenRelay). SeenRelay is not a universal latency win; use it where repeated validation is expensive enough for the math to win. <a href="https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md#interpretation" rel="noreferrer">Full interpretation →</a></div>
+<div class="trust-note"><b>Path ordering matters:</b> these synthetic example.com rows remain useful provider-path mechanics evidence, but their tested facts were source-resolvable and therefore have poor workload fit. The basic-scrape benchmark also showed SeenRelay slower than Firecrawl's own cache hit (${esc(negative.baseline_median_ms)} ms baseline vs ${esc(negative.reuse_median_ms)} ms SeenRelay). Better local, source-native and provider-native controls stay ahead of shared CHECK. <a href="https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md#interpretation" rel="noreferrer">Full interpretation →</a></div>
 </section>`;
 }
 
@@ -72,7 +72,7 @@ export function verifiedWorkloadMapHtml(): string {
   if (!rows) return '';
   return `<section class="section decision" id="workload-map">
 <div class="section-head"><div><div class="eyebrow">VERIFIED WORKLOAD MATRIX</div><h2>Where SeenRelay has helped — and where it has not.</h2></div><p>Latest verified result per tested configuration. Small controlled tests do not predict how often your fleet will produce reusable matches.</p></div>
-<div class="benchmark-table-wrap"><table class="benchmark-table"><thead><tr><th>Fit</th><th>Surface / configuration</th><th>Evidence</th><th>Cost</th><th>Latency</th><th>Baseline median</th><th>Reuse median</th><th>Provider work avoided</th><th>Window</th><th>Verified</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="benchmark-table-wrap"><table class="benchmark-table"><thead><tr><th>Fit</th><th>Surface / configuration</th><th>Evidence</th><th>Provider-path cost</th><th>Provider-path latency</th><th>Provider-path baseline</th><th>Reuse median</th><th>Provider work avoided</th><th>Window</th><th>Verified</th></tr></thead><tbody>${rows}</tbody></table></div>
 <div class="trust-note"><a href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md" rel="noreferrer">Measurement rules, evidence and break-even logic →</a></div>
 </section>`;
 }
@@ -89,7 +89,7 @@ export function machinePublicFactsText(origin: string): string {
     .map((item) => {
       if (!('matrix' in item)) return '';
       const m = item.matrix;
-      return `- ${m.surface} / ${m.configuration}: fit=${m.fit}; cost=${m.cost_outcome}; latency=${m.latency_outcome}; n=${item.samples}; ${m.provider_calls_avoided}/${item.samples} equivalent provider calls avoided; ${m.provider_units_avoided} ${m.provider_unit_label} avoided; median ${m.baseline_median_ms} ms baseline -> ${item.reuse_median_ms} ms bounded reuse; verified ${item.verified_at.slice(0, 10)}. Evidence: ${item.evidence_url}.`;
+      return `- ${m.surface} / ${m.configuration}: fit=${m.fit}; provider_path_cost=${m.cost_outcome}; provider_path_latency=${m.latency_outcome}; n=${item.samples}; ${m.provider_calls_avoided}/${item.samples} equivalent provider calls avoided; ${m.provider_units_avoided} ${m.provider_unit_label} avoided; provider-path median ${m.baseline_median_ms} ms -> ${item.reuse_median_ms} ms bounded reuse; verified ${item.verified_at.slice(0, 10)}. Evidence: ${item.evidence_url}.`;
     })
     .filter(Boolean)
     .join('\n');
