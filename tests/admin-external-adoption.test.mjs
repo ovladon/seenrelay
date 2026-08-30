@@ -73,6 +73,17 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(db, /top_external_leases/);
   assert.doesNotMatch(ui, /radar_id/);
   assert.doesNotMatch(db, /active_external_leases/);
+  const discoveryUi = read('public', 'admin-discovery.js');
+  assert.match(discoveryUi, /\/admin\/api\/snapshot/);
+  assert.doesNotMatch(discoveryUi, /window\.fetch\s*=/);
+  assert.match(discoveryUi, /checks_external_retained/);
+  assert.match(discoveryUi, /reuse_external_total/);
+  assert.doesNotMatch(discoveryUi, /checks_external_month/);
+  assert.doesNotMatch(discoveryUi, /reuse_external_month/);
+  assert.match(discoveryUi, /Maintenance autopilot/);
+  assert.match(discoveryUi, /maintenance_autopilot/);
+  assert.match(discoveryUi, /retention housekeeping only/);
+  assert.match(discoveryUi, /inactive until CRON_SECRET is configured/);
   assert.doesNotMatch(ui, /External CHECK · month/);
   assert.doesNotMatch(ui, /No external agents active/);
   assert.doesNotMatch(ui, /s\.derived\?\.qualified_reuse_rate/);
