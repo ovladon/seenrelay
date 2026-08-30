@@ -29,16 +29,15 @@ Tracking a standard does not mean implementing it before it is useful. It means 
 
 ## Automated mechanisms
 
-
 ### Operational autopilot
 
-The Control Room and the automated maintenance cycle use the same deterministic evaluator. The evaluator consumes Production operational totals, hosted-adoption classification, runtime controls and security/credential posture. It produces a health state and bounded recommendations without using an LLM.
+The Control Room data surface and the automated maintenance cycle use the same deterministic evaluator. The evaluator consumes Production operational totals, hosted-adoption classification, runtime controls and security/credential posture. It produces a health state and bounded recommendations without using an LLM.
 
 A Vercel Cron invokes `/internal/maintenance` once per day when `CRON_SECRET` is configured. The route accepts only `Authorization: Bearer <CRON_SECRET>` and fails closed when the secret is missing or incorrect.
 
 The automated cycle may mutate Production only by running the existing retention housekeeping with the configured lease, reuse-event and observation retention windows. It records the cycle in the admin audit trail. It does **not** automatically change runtime incident mode, enable reuse, alter fact identity, change privacy semantics, enable billing, add a domain operation, merge code or release a candidate.
 
-The Control Room renders the same evaluator result used by the scheduled cycle. Manual and automatic operations therefore do not maintain separate definitions of health.
+The Control Room snapshot API and Operations Export expose the same evaluator result used by the scheduled cycle. Manual and automatic operations therefore do not maintain separate definitions of health.
 
 ### Dependency autopilot
 
