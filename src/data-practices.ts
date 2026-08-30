@@ -13,7 +13,7 @@ export function dataPracticesDescriptor(origin: string) {
       fact_descriptor: ['subject', 'predicate', 'qualifiers', 'canonicalized source URL', 'optional source-native locator'],
       observation_request_processing: ['value in request memory for deterministic fingerprinting', 'timestamps', 'optional evidence fingerprint', 'optional source validator'],
       provenance: ['privacy-salted observer identifier', 'assurance class', 'optional proof fingerprint'],
-      hive: ['privacy-salted operational client fingerprint', 'privacy-salted conservative reuse-independence bucket', 'lease state', 'aggregate contribution/reuse counters'],
+      hive: ['privacy-salted operational client fingerprint', 'optional server-verified first-party classification derived from a short-lived signed marker', 'privacy-salted conservative reuse-independence bucket', 'lease state', 'aggregate contribution/reuse counters'],
       aggregate_metrics: ['CHECK/OBSERVE outcomes', 'useful reuse', 'lease counts', 'MCP initialize/tools/list aggregate request counters']
     },
     application_persists: {
@@ -34,7 +34,7 @@ export function dataPracticesDescriptor(origin: string) {
       interpretation: 'Protocol-interest telemetry is not a unique-client count and is never classified as adoption; automated directory probes and operator diagnostics may be included.'
     },
     identity_processing: {
-      client_fingerprint: 'Transport IP hint + user-agent + optional x-seenrelay-client are privacy-salted and hashed for frictionless lease continuity.',
+      client_fingerprint: 'Transport IP hint + user-agent + optional x-seenrelay-client are privacy-salted and hashed for frictionless lease continuity. When configured, a short-lived server-verified marker can classify first-party operational probes without storing the marker or signing secret.',
       reuse_independence: 'Useful-reuse rewards require a different conservative privacy-salted network bucket; x-seenrelay-client and user-agent do not establish reward independence.',
       observer_key: 'Self-asserted IDs and Ed25519 public keys are privacy-salted before application persistence.',
       caveat: 'Pseudonymization reduces exposure; it does not make data anonymous in every legal or contextual sense. Network separation is an anti-farming signal, not proof of unique real-world actors.'

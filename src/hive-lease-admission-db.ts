@@ -60,7 +60,8 @@ export async function consumeVerifiedHiveCheckLease(
   maxCapacityBonus: number,
   baseRefillPerMinute: number,
   refillBonusPerScorePerMinute: number,
-  maxRefillBonusPerMinute: number
+  maxRefillBonusPerMinute: number,
+  expectedInternalTelemetry: boolean
 ): Promise<HiveAdmissionConsumeResult | null> {
   const rows = await sql().query(`WITH calc AS (
     SELECT lease_id,
@@ -70,6 +71,7 @@ export async function consumeVerifiedHiveCheckLease(
       ) AS replenished
     FROM hive_leases
     WHERE lease_id = $1 AND expires_at > $2::timestamptz
+      AND (($10::boolean AND client_key LIKE 'internal:%') OR (NOT $10::boolean AND client_key NOT LIKE 'internal:%'))
   )
   UPDATE hive_leases h SET
     independence_key = COALESCE(h.independence_key, $3::text),
@@ -88,7 +90,8 @@ export async function consumeVerifiedHiveCheckLease(
     maxCapacityBonus,
     baseRefillPerMinute,
     refillBonusPerScorePerMinute,
-    maxRefillBonusPerMinute
+    maxRefillBonusPerMinute,
+    expectedInternalTelemetry
   ]) as HiveAdmissionConsumeResult[];
   return rows[0] || null;
 }

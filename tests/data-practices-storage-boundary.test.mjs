@@ -10,3 +10,8 @@ test('data practices distinguish active hash-only storage from historical snapsh
   assert.match(source, /Historical database branches or provider recovery snapshots may retain earlier state/);
   assert.doesNotMatch(source, /Rows written before hash-only persistence may retain previously submitted values/);
 });
+
+test('data practices disclose privacy-safe first-party classification without hidden client telemetry', () => {
+  assert.match(source, /server-verified first-party classification/);
+  assert.match(source, /without storing the marker or signing secret/);
+});

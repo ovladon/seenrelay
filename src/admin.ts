@@ -6,6 +6,7 @@ import { getPublicStats } from './public-db.js';
 import { standardsPosture } from './standards.js';
 import { custodyTransferReadiness, operationalReadiness } from './strategic.js';
 import { hiveSigningRotationState } from './hive.js';
+import { internalTelemetryClassifierState } from './traffic-classification.js';
 
 const COOKIE = 'sr_admin';
 
@@ -112,11 +113,10 @@ function adoptionUnavailable(error: unknown) {
   console.error(JSON.stringify({event:'admin_adoption_snapshot_error',error:error instanceof Error?error.message:'unknown'}));
   return {
     status:'unavailable' as const,
-    classification:'reference-observer-excluded',
+    classification:'external-classification-unavailable',
     summary:{},
-    active_external_leases:[],
     recent_external_reuse:[],
-    top_external_contributors:[]
+    top_external_leases:[]
   };
 }
 
@@ -127,15 +127,27 @@ export async function adminSnapshot(request: Request): Promise<Response> {
   try { adoption=await getAdminAdoptionData(); } catch (error) { adoption=adoptionUnavailable(error); }
   const summary=data.summary as Record<string,unknown>;
   const adoptionSummary=adoption.summary as Record<string,unknown>;
-  const checks=Number(adoptionSummary.checks_external_month ?? summary.checks_month ?? 0);
-  const reuse=Number(adoptionSummary.reuse_external_month ?? summary.reuse_month ?? 0);
-  const unknown=Number(summary.unknown_month||0);
-  const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState();
+  const checks=Number(adoptionSummary.checks_external_retained ?? 0);
+  const reuse=Number(adoptionSummary.reuse_external_total ?? 0);
+  const globalChecks=Number(summary.checks_month||0);
+  const globalUnknown=Number(summary.unknown_month||0);
+  const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState(), internalTelemetry=internalTelemetryClassifierState();
   return json({
     now:new Date().toISOString(),csrf:auth.csrf,controls,data,adoption,
-    derived:{qualified_reuse_rate:checks?reuse/checks:0,unknown_rate:checks?unknown/checks:0},
-    safety:{billing_enabled:false,admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_dedicated:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),declared_vercel_hard_spend_cap_usd:config().declaredVercelHardSpendCapUsd,provider_spend_cap_verified_by_app:false},
-    semantics:{fact_identity:'seenrelay-fact-v3',operations:['CHECK','OBSERVE'],truth_oracle:false,reward:'qualified cross-bucket reuse only; never truth confidence',adoption:'external activity excludes the bounded first-party Reference Observer'},
+    derived:{
+      external_retained_qualified_reuse_rate:checks?reuse/checks:0,
+      global_unknown_rate:globalChecks?globalUnknown/globalChecks:0
+    },
+    visibility:{
+      site_visits:'not classified as adoption by the application',
+      mcp_discovery:'aggregate initialize/tools-list interest only; not adoption',
+      hosted_check_observe:'successful hosted protocol operations are recorded in Production operational telemetry',
+      external_actor_count:'pseudonymous lease/activity classification only; not a unique human or agent count',
+      client_only_local_first:'not observable by the hosted service when shared relay is not used',
+      hidden_client_telemetry:false
+    },
+    safety:{billing_enabled:false,admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_dedicated:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),internal_telemetry_classifier_configured:internalTelemetry.configured,declared_vercel_hard_spend_cap_usd:config().declaredVercelHardSpendCapUsd,provider_spend_cap_verified_by_app:false},
+    semantics:{fact_identity:'seenrelay-fact-v3',operations:['CHECK','OBSERVE'],truth_oracle:false,reward:'qualified cross-bucket reuse only; never truth confidence',adoption:'external protocol activity excludes server-verified first-party traffic, the bounded Reference Observer and controlled benchmark facts; it is not a unique-actor claim'},
     readiness:readinessPayload(),credential_rotation:rotationPosture()
   });
 }
@@ -146,14 +158,14 @@ export async function adminOperationsExport(request: Request): Promise<Response>
   let adoption: unknown;
   try { adoption=await getAdminAdoptionData(); } catch { adoption={status:'unavailable'}; }
   await recordAdminAudit('OPERATIONS_EXPORT',{});
-  const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState();
+  const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState(), internalTelemetry=internalTelemetryClassifierState();
   return json({
     generated_at:new Date().toISOString(),
     service:{name:'SeenRelay',version:config().version,domain:'seenrelay.com',operations:['CHECK','OBSERVE'],fact_identity:'seenrelay-fact-v3'},
     operational_summary:stats,
     external_adoption:adoption,
     runtime:{mode:controls.mode,checks_enabled:controls.checks_enabled,observes_enabled:controls.observes_enabled,rewards_enabled:controls.rewards_enabled},
-    security_posture:{admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_configured:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),billing_enabled:false},
+    security_posture:{admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_configured:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),internal_telemetry_classifier_configured:internalTelemetry.configured,billing_enabled:false},
     credential_rotation:rotationPosture(),...readinessPayload(),
     exclusions:['No secrets','No Hive lease tokens','No IP addresses','No raw public keys','No admin CSRF/session material']
   });

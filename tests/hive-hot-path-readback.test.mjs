@@ -57,13 +57,15 @@ test('verified CHECK lease consumption preserves immutable independence in one a
   assert.match(admissionDb, /independence_key\s*=\s*COALESCE\(h\.independence_key, \$3::text\)/);
   assert.match(admissionDb, /check_tokens\s*=\s*CASE WHEN calc\.replenished >= 1/);
   assert.match(admissionDb, /WHERE lease_id = \$1 AND expires_at > \$2::timestamptz/);
+  assert.match(admissionDb, /client_key LIKE 'internal:%'/);
+  assert.match(admissionDb, /client_key NOT LIKE 'internal:%'/);
 });
 
 test('aggregate network admission still precedes verified-lease CHECK fast path', () => {
   const block = between(hive, 'export async function admitHive', 'export async function finishHiveCheck');
   const networkBudget = block.indexOf('consumeHiveNetworkBudget(');
   const fastConsume = block.indexOf('consumeVerifiedHiveCheckLease(');
-  const fallback = block.indexOf('const ensured = await ensureLease(request, nowMs);');
+  const fallback = block.indexOf('const ensured = await ensureLease(request, nowMs, internalTelemetry);');
   assert.ok(networkBudget >= 0);
   assert.ok(fastConsume > networkBudget);
   assert.ok(fallback > fastConsume);
