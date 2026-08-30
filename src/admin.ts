@@ -7,6 +7,8 @@ import { standardsPosture } from './standards.js';
 import { custodyTransferReadiness, operationalReadiness } from './strategic.js';
 import { hiveSigningRotationState } from './hive.js';
 import { internalTelemetryClassifierState } from './traffic-classification.js';
+import { evaluateMaintenanceAutopilot } from './maintenance-autopilot.js';
+import { collectMaintenanceAutopilot } from './maintenance.js';
 
 const COOKIE = 'sr_admin';
 
@@ -132,12 +134,22 @@ export async function adminSnapshot(request: Request): Promise<Response> {
   const globalChecks=Number(summary.checks_month||0);
   const globalUnknown=Number(summary.unknown_month||0);
   const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState(), internalTelemetry=internalTelemetryClassifierState();
+  const safety={billing_enabled:false,admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_dedicated:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),internal_telemetry_classifier_configured:internalTelemetry.configured,maintenance_cron_configured:Boolean((process.env.CRON_SECRET?.trim()||'').length>=32),declared_vercel_hard_spend_cap_usd:config().declaredVercelHardSpendCapUsd,provider_spend_cap_verified_by_app:false};
+  const credentialRotation=rotationPosture();
+  const maintenanceAutopilot=evaluateMaintenanceAutopilot({
+    controls,
+    operational_summary:summary,
+    adoption,
+    safety,
+    credential_rotation:credentialRotation
+  });
   return json({
     now:new Date().toISOString(),csrf:auth.csrf,controls,data,adoption,
     derived:{
       external_retained_qualified_reuse_rate:checks?reuse/checks:0,
       global_unknown_rate:globalChecks?globalUnknown/globalChecks:0
     },
+    maintenance_autopilot:maintenanceAutopilot,
     visibility:{
       site_visits:'not classified as adoption by the application',
       mcp_discovery:'aggregate initialize/tools-list interest only; not adoption',
@@ -146,9 +158,9 @@ export async function adminSnapshot(request: Request): Promise<Response> {
       client_only_local_first:'not observable by the hosted service when shared relay is not used',
       hidden_client_telemetry:false
     },
-    safety:{billing_enabled:false,admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_dedicated:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),internal_telemetry_classifier_configured:internalTelemetry.configured,declared_vercel_hard_spend_cap_usd:config().declaredVercelHardSpendCapUsd,provider_spend_cap_verified_by_app:false},
+    safety,
     semantics:{fact_identity:'seenrelay-fact-v3',operations:['CHECK','OBSERVE'],truth_oracle:false,reward:'qualified cross-bucket reuse only; never truth confidence',adoption:'external protocol activity excludes server-verified first-party traffic, the bounded Reference Observer and controlled benchmark facts; it is not a unique-actor claim'},
-    readiness:readinessPayload(),credential_rotation:rotationPosture()
+    readiness:readinessPayload(),credential_rotation:credentialRotation
   });
 }
 
@@ -157,6 +169,7 @@ export async function adminOperationsExport(request: Request): Promise<Response>
   const [controls,stats]=await Promise.all([getRuntimeControls(),getPublicStats()]);
   let adoption: unknown;
   try { adoption=await getAdminAdoptionData(); } catch { adoption={status:'unavailable'}; }
+  const maintenanceAutopilot=await collectMaintenanceAutopilot();
   await recordAdminAudit('OPERATIONS_EXPORT',{});
   const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState(), internalTelemetry=internalTelemetryClassifierState();
   return json({
@@ -164,6 +177,7 @@ export async function adminOperationsExport(request: Request): Promise<Response>
     service:{name:'SeenRelay',version:config().version,domain:'seenrelay.com',operations:['CHECK','OBSERVE'],fact_identity:'seenrelay-fact-v3'},
     operational_summary:stats,
     external_adoption:adoption,
+    maintenance_autopilot:maintenanceAutopilot,
     runtime:{mode:controls.mode,checks_enabled:controls.checks_enabled,observes_enabled:controls.observes_enabled,rewards_enabled:controls.rewards_enabled},
     security_posture:{admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_configured:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),internal_telemetry_classifier_configured:internalTelemetry.configured,billing_enabled:false},
     credential_rotation:rotationPosture(),...readinessPayload(),
