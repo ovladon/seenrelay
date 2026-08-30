@@ -19,6 +19,7 @@ import { assertRuntimeFactAllowed } from './runtime-guard.js';
 import { dataPracticesDescriptor, dataPracticesPage } from './data-practices.js';
 import { productFactsForOrigin } from './public-facts-view.js';
 import type { CheckRequest, ObserveRequest } from './types.js';
+import { maintenanceCron } from './maintenance.js';
 
 const app = new Hono();
 
@@ -129,6 +130,8 @@ app.get('/healthz', (c) => {
 });
 app.get('/openapi.json', (c) => { c.header('cache-control', 'public, max-age=3600'); return c.json(openApi(new URL(c.req.url).origin)); });
 app.all('/mcp', (c) => handleMcp(c.req.raw));
+
+app.get('/internal/maintenance', (c) => maintenanceCron(c.req.raw));
 
 app.get('/admin', (c) => adminPage(c.req.raw));
 app.post('/admin/login', async (c) => {
