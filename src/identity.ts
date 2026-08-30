@@ -1,5 +1,6 @@
 import { sha256Hex, stableJson, ValidationError } from './canonical.js';
 import type { ObserveRequest, ObserverProof } from './types.js';
+import { isVerifiedInternalTelemetry } from './traffic-classification.js';
 
 export type ObserverIdentityKind = 'cryptographic_key' | 'self_asserted' | 'anonymous_network_hint';
 export type ObserverAssurance = 'proof_of_possession' | 'unverified';
@@ -94,11 +95,13 @@ function forwardedNetworkHint(request: Request): string {
  * behind the same egress can keep separate frictionless Hive slots. It is NOT used by itself to prove
  * independence for contributor rewards.
  */
-export async function deriveClientKey(request: Request): Promise<string> {
+export async function deriveClientKey(request: Request, verifiedInternalTelemetry?: boolean): Promise<string> {
   const networkHint = forwardedNetworkHint(request);
   const ua = request.headers.get('user-agent') || 'unknown';
   const clientHint = request.headers.get('x-seenrelay-client')?.trim() || '';
-  return `client:${await privacyScopedHash('client', `${networkHint}|${ua}|${clientHint}`)}`;
+  const internal = verifiedInternalTelemetry ?? await isVerifiedInternalTelemetry(request);
+  const prefix = internal ? 'internal' : 'client';
+  return `${prefix}:${await privacyScopedHash('client', `${networkHint}|${ua}|${clientHint}`)}`;
 }
 
 /**
@@ -144,5 +147,5 @@ export async function deriveObserverIdentity(
     return { key: `self:${await privacyScopedHash('observer-self', clean)}`, kind: 'self_asserted', assurance: 'unverified' };
   }
   if (!request) throw new ValidationError('observer_proof or observer_id is required when transport metadata is unavailable');
-  return { key: (await deriveClientKey(request)).replace(/^client:/, 'anon:'), kind: 'anonymous_network_hint', assurance: 'unverified' };
+  return { key: (await deriveClientKey(request)).replace(/^(?:client|internal):/, 'anon:'), kind: 'anonymous_network_hint', assurance: 'unverified' };
 }

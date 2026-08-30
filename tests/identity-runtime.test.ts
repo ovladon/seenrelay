@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { canonicalFactKey, normalizeLocator, normalizeSource, stableJson, ValidationError } from '../src/canonical';
-import { deriveClientKey, deriveObserverIdentity, observerProofSigningPayload } from '../src/identity';
+import { deriveClientKey, deriveObserverIdentity, deriveReuseIndependenceKey, observerProofSigningPayload } from '../src/identity';
 import type { ObserveRequest, ObserverProof } from '../src/types';
 
 function b64url(bytes: ArrayBuffer | Uint8Array): string {
@@ -54,6 +54,47 @@ test('platform forwarded hint contributes to client continuity', async () => {
   const c=new Request('https://seenrelay.test',{headers:{'x-forwarded-for':'8.8.8.8','user-agent':'agent','x-seenrelay-client':'install-1'}});
   assert.equal(await deriveClientKey(a),await deriveClientKey(b));
   assert.notEqual(await deriveClientKey(a),await deriveClientKey(c));
+});
+
+
+
+test('server-verified first-party telemetry marker changes only operational classification', async () => {
+  const oldSecret=process.env.INTERNAL_TELEMETRY_SECRET;
+  const oldSalt=process.env.PRIVACY_SALT;
+  try {
+    process.env.PRIVACY_SALT='test-privacy-salt-that-is-longer-than-thirty-two-characters';
+    process.env.INTERNAL_TELEMETRY_SECRET='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    const nowMs=1788080400000;
+    const marker='v1.1788080400.5Sd_eSTFRVwUAJXLENmdOaEa0zoXsNTF5D2SyNjtR1o';
+    const common={
+      'x-forwarded-for':'203.0.113.4',
+      'user-agent':'SeenRelay-Operator-Probe/1',
+      'x-seenrelay-client':'operator-probe'
+    };
+    const ordinary=new Request('https://seenrelay.test/v1/check',{method:'POST',headers:common});
+    const marked=new Request('https://seenrelay.test/v1/check',{method:'POST',headers:{...common,'x-seenrelay-internal-telemetry':marker}});
+    const wrongPath=new Request('https://seenrelay.test/v1/observe',{method:'POST',headers:{...common,'x-seenrelay-internal-telemetry':marker}});
+    const stale=new Request('https://seenrelay.test/v1/check',{method:'POST',headers:{...common,'x-seenrelay-internal-telemetry':'v1.1788070000.5Sd_eSTFRVwUAJXLENmdOaEa0zoXsNTF5D2SyNjtR1o'}});
+
+    // Patch Date.now only for the classifier's default clock while preserving caller behavior.
+    const realNow=Date.now;
+    Date.now=()=>nowMs;
+    try {
+      assert.match(await deriveClientKey(ordinary),/^client:/);
+      assert.match(await deriveClientKey(marked),/^internal:/);
+      assert.match(await deriveClientKey(wrongPath),/^client:/);
+      assert.match(await deriveClientKey(stale),/^client:/);
+      assert.equal(await deriveReuseIndependenceKey(ordinary),await deriveReuseIndependenceKey(marked));
+      const observer=await deriveObserverIdentity(marked,{fact:{subject:'X',predicate:'status.current',source:'https://example.com/status'},value:'ok'},nowMs,300);
+      assert.equal(observer.kind,'anonymous_network_hint');
+      assert.match(observer.key,/^anon:/);
+    } finally {
+      Date.now=realNow;
+    }
+  } finally {
+    if (oldSecret === undefined) delete process.env.INTERNAL_TELEMETRY_SECRET; else process.env.INTERNAL_TELEMETRY_SECRET=oldSecret;
+    if (oldSalt === undefined) delete process.env.PRIVACY_SALT; else process.env.PRIVACY_SALT=oldSalt;
+  }
 });
 
 test('valid Ed25519 proof establishes proof-of-possession identity and tampering fails', async () => {

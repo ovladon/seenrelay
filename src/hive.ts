@@ -12,6 +12,7 @@ import {
   getHiveAdmissionLeaseById
 } from './hive-lease-admission-db.js';
 import { deriveAdmissionNetworkKey, deriveClientKey, deriveOperationNetworkKey, deriveReuseIndependenceKey, privacyScopedHash } from './identity.js';
+import { isVerifiedInternalTelemetry } from './traffic-classification.js';
 import { creditUsefulReuseGuarded } from './reuse.js';
 import type { CheckStatus, HiveClass, HiveLeaseRow, HivePublicState } from './types.js';
 
@@ -122,8 +123,8 @@ function emptyState(retryAfterSeconds: number): HivePublicState {
   };
 }
 function disabledState(): HivePublicState { return emptyState(60); }
-async function operationalClientKey(request: Request | undefined): Promise<string> {
-  if (request) return deriveClientKey(request);
+async function operationalClientKey(request: Request | undefined, internalTelemetry = false): Promise<string> {
+  if (request) return deriveClientKey(request, internalTelemetry);
   return `transportless:${await privacyScopedHash('transportless-hive', crypto.randomUUID())}`;
 }
 async function bindIndependence(request: Request | undefined, leaseId: string): Promise<void> {
@@ -144,20 +145,24 @@ type EnsureLeaseResult =
   | { allowed: true; row: HiveLeaseRow; token: string }
   | { allowed: false; retryAfterSeconds: number };
 
-async function ensureLease(request: Request | undefined, nowMs: number): Promise<EnsureLeaseResult> {
+function leaseClassMatches(row: Pick<HiveLeaseRow, 'client_key'>, internalTelemetry: boolean): boolean {
+  return row.client_key.startsWith('internal:') === internalTelemetry;
+}
+
+async function ensureLease(request: Request | undefined, nowMs: number, internalTelemetry: boolean): Promise<EnsureLeaseResult> {
   const cfg = config(); const nowIso = new Date(nowMs).toISOString();
   const supplied = request?.headers.get('x-seenrelay-lease') || null;
   const verified = await verifyLease(supplied, nowMs);
   if (verified) {
     const row = await getHiveAdmissionLeaseById(verified.payload.lease_id, nowIso);
-    if (row) {
+    if (row && leaseClassMatches(row, internalTelemetry)) {
       if (row.independence_key === null) await bindIndependence(request, row.lease_id);
       // A token accepted with the previous key is immediately re-issued under the current key.
       const token = verified.key === 'current' ? supplied! : await signLease({ v: 1, lease_id: row.lease_id, issued_at: row.issued_at, expires_at: row.expires_at });
       return { allowed: true, row, token };
     }
   }
-  const clientKey = await operationalClientKey(request);
+  const clientKey = await operationalClientKey(request, internalTelemetry);
   const existing = await getActiveHiveAdmissionLeaseByClientKey(clientKey, nowIso);
   if (existing) {
     if (existing.independence_key === null) await bindIndependence(request, existing.lease_id);
@@ -207,6 +212,11 @@ export async function admitHive(request: Request | undefined, operation: 'check'
     };
   }
 
+  // Classification is operational telemetry only. It never grants access or reward independence.
+  // Keeping it stable for the lifetime of a lease prevents internal and unclassified traffic from
+  // silently sharing one lease and corrupting adoption telemetry.
+  const internalTelemetry = request ? await isVerifiedInternalTelemetry(request) : false;
+
   // Common CHECK path: after the aggregate network ceiling has been consumed, a valid signed lease
   // can bind (only when still unbound) and consume its token bucket in one atomic database update.
   if (operation === 'check') {
@@ -226,7 +236,8 @@ export async function admitHive(request: Request | undefined, operation: 'check'
         cfg.hiveMaxCapacityBonus * mCap,
         baseRefill,
         cfg.hiveRefillBonusPerScorePerMinute * mRefill,
-        cfg.hiveMaxRefillBonusPerMinute * mRefill
+        cfg.hiveMaxRefillBonusPerMinute * mRefill,
+        internalTelemetry
       );
       if (consumed) {
         const token = verified.key === 'current' ? supplied! : await signLease(verified.payload);
@@ -257,7 +268,7 @@ export async function admitHive(request: Request | undefined, operation: 'check'
 
   // Fallback covers OBSERVE, missing/invalid tokens, expired/missing lease rows, and continuity lookup.
   // The aggregate network ceiling above remains mandatory for every path.
-  const ensured = await ensureLease(request, nowMs);
+  const ensured = await ensureLease(request, nowMs, internalTelemetry);
   if (!ensured.allowed) {
     return { allowed: false, reason: 'admission_limited', leaseId: '', token: '', state: emptyState(ensured.retryAfterSeconds), rewardsEnabled: policy.rewardsEnabled };
   }
