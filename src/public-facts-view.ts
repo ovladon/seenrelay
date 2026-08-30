@@ -33,7 +33,7 @@ export function verifiedBenchmarkHtml(): string {
 <article><b>${esc(b.reuse_median_ms)} ms median</b><span>SeenRelay bounded reuse versus ${esc(b.fresh_baseline_median_ms)} ms fresh extraction — ${esc(b.latency_improvement_vs_fresh_percent)}% lower median latency in this run.</span></article>
 <article><b>Also faster than provider cache</b><span>${esc(b.provider_cached_baseline_median_ms)} ms provider-cached versus ${esc(b.reuse_median_ms)} ms SeenRelay — ${esc(b.latency_improvement_vs_provider_cached_percent)}% lower median latency in this run.</span></article>
 </div>
-<div class="trust-note"><b>Counterexample matters:</b> the basic-scrape benchmark avoided ${esc(negative.provider_credits_avoided)} provider credits but was slower than Firecrawl's own cache hit (${esc(negative.baseline_median_ms)} ms baseline vs ${esc(negative.reuse_median_ms)} ms SeenRelay). SeenRelay is not a universal latency win; use it where repeated validation is expensive enough for the math to win. <a href="/economics">Full interpretation →</a></div>
+<div class="trust-note"><b>Counterexample matters:</b> the basic-scrape benchmark avoided ${esc(negative.provider_credits_avoided)} provider credits but was slower than Firecrawl's own cache hit (${esc(negative.baseline_median_ms)} ms baseline vs ${esc(negative.reuse_median_ms)} ms SeenRelay). SeenRelay is not a universal latency win; use it where repeated validation is expensive enough for the math to win. <a href="https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md#interpretation" rel="noreferrer">Full interpretation →</a></div>
 </section>`;
 }
 
@@ -42,7 +42,7 @@ export function latestVerifiedHtml(): string {
     .map((item) => `<article><b>${esc(item.title)}</b><span>${esc(item.summary)}</span></article>`)
     .join('');
   return `<section class="section decision" id="latest">
-<div class="section-head"><div><div class="eyebrow">LATEST VERIFIED</div><h2>What changed in Production and why it matters.</h2></div><p>Only shipped or independently release-gated facts belong here; planned work is excluded.</p></div>
+<div class="section-head"><div><div class="eyebrow">LATEST VERIFIED</div><h2>What changed in Production and why it matters.</h2></div><p>Shipped or independently release-gated facts.</p></div>
 <div class="proof-grid">${items}</div>
 </section>`;
 }
@@ -71,9 +71,9 @@ export function verifiedWorkloadMapHtml(): string {
     .join('');
   if (!rows) return '';
   return `<section class="section decision" id="workload-map">
-<div class="section-head"><div><div class="eyebrow">VERIFIED WORKLOAD MATRIX</div><h2>Where SeenRelay has helped — and where it has not.</h2></div><p>Latest verified result per tested configuration. The table is generated from canonical benchmark evidence, so new verified configurations can appear without hand-editing this page. Small controlled tests do not predict how often your fleet will produce reusable matches.</p></div>
+<div class="section-head"><div><div class="eyebrow">VERIFIED WORKLOAD MATRIX</div><h2>Where SeenRelay has helped — and where it has not.</h2></div><p>Latest verified result per tested configuration. Small controlled tests do not predict how often your fleet will produce reusable matches.</p></div>
 <div class="benchmark-table-wrap"><table class="benchmark-table"><thead><tr><th>Fit</th><th>Surface / configuration</th><th>Evidence</th><th>Cost</th><th>Latency</th><th>Baseline median</th><th>Reuse median</th><th>Provider work avoided</th><th>Window</th><th>Verified</th></tr></thead><tbody>${rows}</tbody></table></div>
-<div class="trust-note"><a href="/economics">Measurement rules, evidence and break-even logic →</a></div>
+<div class="trust-note"><a href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md" rel="noreferrer">Measurement rules, evidence and break-even logic →</a></div>
 </section>`;
 }
 export function siteFooterHtml(): string {
