@@ -1,0 +1,51 @@
+name: Phase B1 Wire Landing
+
+on:
+  push:
+    branches: [site/phase-b1-adoption-surface]
+    paths: ['.github/workflows/phase-b1-wire.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: site/phase-b1-adoption-surface
+      - name: Wire landing and remove stale release literals
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          index = Path('src/index.ts')
+          text = index.read_text()
+          old = "import { publicLandingPage, serviceDescriptor } from './public.js';"
+          new = "import { serviceDescriptor } from './public.js';\nimport { publicLandingPage } from './landing.js';"
+          assert old in text
+          index.write_text(text.replace(old, new, 1))
+
+          public = Path('src/public.ts')
+          text = public.read_text()
+          replacements = {
+              "status: 'implemented_public_client_0.2.1',": "status: `implemented_public_client_${publicProductFacts.install.client_version}` ,",
+              "python_mode: 'shadow_first_in_0.2.1',": "python_mode: 'shadow_first',",
+              "JavaScript/TypeScript 0.2.1 starts": "JavaScript/TypeScript ${publicProductFacts.install.client_version} starts",
+              "JavaScript / TypeScript 0.2.1": "JavaScript / TypeScript ${publicProductFacts.install.client_version}",
+          }
+          for old, new in replacements.items():
+              assert old in text, old
+              text = text.replace(old, new, 1)
+          public.write_text(text)
+          PY
+          git diff --check
+          git diff -- src/index.ts src/public.ts
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/index.ts src/public.ts
+          git commit -m 'Wire Phase B.1 landing to public route'
+          git push origin HEAD:site/phase-b1-adoption-surface
