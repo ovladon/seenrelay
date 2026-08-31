@@ -1,0 +1,43 @@
+name: Phase B1 Type Fix
+
+on:
+  push:
+    branches: [site/phase-b1-adoption-surface]
+    paths: ['.github/workflows/phase-b1-ts-fix.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: site/phase-b1-adoption-surface
+      - name: Apply narrow type fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/landing.ts')
+          text = p.read_text()
+          old = "      const latency = matrix.latency_outcome === 'better' ? 'faster' : matrix.latency_outcome === 'worse' ? 'slower' : String(matrix.latency_outcome);"
+          new = "      const latencyOutcome = String(matrix.latency_outcome);\n      const latency = latencyOutcome === 'better' ? 'faster' : 'slower';"
+          assert old in text
+          p.write_text(text.replace(old, new, 1))
+
+          p = Path('src/public.ts')
+          text = p.read_text()
+          old = "status: `implemented_public_client_${publicProductFacts.install.client_version}` ,"
+          new = "status: `implemented_public_client_${publicProductFacts.install.client_version}` ,".replace('` ,', '`,')
+          assert old in text
+          p.write_text(text.replace(old, new, 1))
+          PY
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/landing.ts src/public.ts
+          git commit -m 'Fix Phase B.1 landing type narrowing'
+          git push origin HEAD:site/phase-b1-adoption-surface
