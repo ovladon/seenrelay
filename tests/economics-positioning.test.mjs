@@ -40,14 +40,15 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.equal(browserBenchmark.reuse_provider_calls, 0);
   assert.equal(browserBenchmark.samples, 3);
   assert.equal(browserBenchmark.matrix.series_key, 'firecrawl-browser-interaction-code-v1');
-  assert.equal(browserBenchmark.matrix.fit, 'good');
+  assert.equal(jsonBenchmark.matrix.fit, 'poor');
+  assert.equal(browserBenchmark.matrix.fit, 'poor');
   assert.equal(browserBenchmark.matrix.cost_outcome, 'better');
   assert.equal(browserBenchmark.matrix.latency_outcome, 'better');
 
   assert.match(economics, /publicProductFacts\.pricing_snapshots/);
   assert.match(economics, /verifiedBenchmarkHtml\(\)/);
-  assert.match(publicView, /In one expensive extraction path, SeenRelay was cheaper and faster/);
-  assert.match(publicView, /Counterexample matters/);
+  assert.match(publicView, /Provider-path smoke: SeenRelay skipped Firecrawl work/);
+  assert.match(publicView, /Path ordering matters/);
   assert.match(publicView, /VERIFIED WORKLOAD MATRIX/);
   assert.match(publicView, /benchmark-table/);
   assert.match(publicView, /Shipped or independently release-gated facts\./);
