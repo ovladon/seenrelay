@@ -33,7 +33,7 @@ export function serviceDescriptor(origin: string) {
     },
     integration_paths: {
       javascript_typescript_zero_state: {
-        status: 'implemented_public_client_0.2.1',
+        status: `implemented_public_client_${publicProductFacts.install.client_version}`,
         recommendation: 'Use for explicitly eligible read-only validation when the application controls the call path.',
         execution_order: ['l0_local', 'l1_private_optional', 'source_native', 'shared_check_optional', 'original_validation'],
         shared_check_default: 'off',
@@ -46,7 +46,7 @@ export function serviceDescriptor(origin: string) {
         recommendation: 'Use for conservative CHECK-first measurement or explicit bounded shared-evidence reuse.',
         javascript_typescript: 'https://github.com/ovladon/seenrelay/tree/main/clients/typescript',
         python: 'https://github.com/ovladon/seenrelay/tree/main/clients/python',
-        python_mode: 'shadow_first_in_0.2.1',
+        python_mode: 'shadow_first',
         failure_semantics: "Relay-side failure fails open into the application's existing validation path.",
         client_version: publicProductFacts.install.client_version,
         npm_install: publicProductFacts.install.npm_command,
@@ -139,7 +139,7 @@ ${latestVerifiedHtml()}
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">ZERO-STATE</div><h2>Works without shared network data.</h2><p>JavaScript/TypeScript 0.2.1 starts with in-process reuse, explicit-TTL L0, optional encrypted caller-owned L1 and source-native checks. Shared CHECK is off by default.</p><p>Completed-result TTL defaults to zero. SeenRelay does not invent freshness or infer that a tool is safe to suppress.</p></div>
+<div><div class="eyebrow">ZERO-STATE</div><h2>Works without shared network data.</h2><p>JavaScript/TypeScript ${publicProductFacts.install.client_version} starts with in-process reuse, explicit-TTL L0, optional encrypted caller-owned L1 and source-native checks. Shared CHECK is off by default.</p><p>Completed-result TTL defaults to zero. SeenRelay does not invent freshness or infer that a tool is safe to suppress.</p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>zero-state</b></div><pre>L0 local
   ↓
 L1 private (optional)
@@ -183,7 +183,7 @@ OBSERVE fresh independent result</pre></div>
 
 <section id="integrate" class="section split">
 <div><div class="eyebrow">INTEGRATION</div><h2>JavaScript/TypeScript: local-first. Python: shadow-first.</h2><p>Use Zero-State for eligible read-only calls you control. Use classic clients to measure shared CHECK evidence. Use MCP or REST for the hosted CHECK/OBSERVE protocol.</p><div class="flow"><span>local/private</span><i>→</i><span>source native</span><i>→</i><span>optional CHECK</span><i>→</i><span>validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Choose an integration path →</a></p></div>
-<div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>integration</b></div><pre>JavaScript / TypeScript 0.2.1
+<div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>integration</b></div><pre>JavaScript / TypeScript ${publicProductFacts.install.client_version}
 seenrelay/zero-state
 seenrelay/auto
 seenrelay/mcp-auto

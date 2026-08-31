@@ -1,6 +1,8 @@
 import { machinePublicFactsText, publicInstallHtml, siteFooterHtml } from './public-facts-view.js';
+import { publicProductFacts } from './public-facts.generated.js';
 
 export function clientsPage(origin: string): string {
+  const clientVersion = publicProductFacts.install.client_version;
   const cursorInstall = 'https://cursor.com/install-mcp?name=seenrelay&config=eyJ1cmwiOiJodHRwczovL3NlZW5yZWxheS5jb20vbWNwIn0%3D';
   return `<!doctype html>
 <html lang="en">
@@ -21,7 +23,7 @@ export function clientsPage(origin: string): string {
 <header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/">Home</a><a href="/quickstart">Quickstart</a><a href="/openapi.json">OpenAPI</a><a href="/service.json">Machine JSON</a></nav></header>
 <main>
 <section class="hero">
-<div class="eyebrow">CLIENT 0.2.1</div>
+<div class="eyebrow">CLIENT ${clientVersion}</div>
 <h1>Choose how to integrate SeenRelay.</h1>
 <p class="lead">JavaScript/TypeScript: local-first Zero-State. Python: shadow-first. MCP/REST: hosted CHECK/OBSERVE.</p>
 <div class="cta"><a class="primary" href="#install">Install SeenRelay</a><a class="secondary" href="/quickstart">Quickstart</a><a class="secondary" href="${cursorInstall}">Add MCP to Cursor</a><a class="secondary" href="/economics">Measured savings</a></div>
@@ -47,7 +49,7 @@ const client = protectMcpClient(rawMcpClient, {
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">CLASSIC CLIENTS</div><h2>Classic clients remain shadow-first.</h2><p>The classic JavaScript/TypeScript and Python APIs continue to CHECK a known fact, perform the original validation unless explicit caller policy permits reuse, and OBSERVE the independently obtained result best-effort.</p><p>Python behavior remains shadow-first in 0.2.1.</p></div>
+<div><div class="eyebrow">CLASSIC CLIENTS</div><h2>Classic clients remain shadow-first.</h2><p>The classic JavaScript/TypeScript and Python APIs continue to CHECK a known fact, perform the original validation unless explicit caller policy permits reuse, and OBSERVE the independently obtained result best-effort.</p><p>Python behavior remains shadow-first in client ${clientVersion}.</p></div>
 <div class="proof-grid"><article><b>JavaScript / TypeScript</b><span><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">Zero-State plus classic APIs</a></span></article><article><b>Python</b><span><a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Classic shadow-first API</a></span></article><article><b>Shadow Proof</b><span>Measure public CHECK evidence without suppressing validation.</span></article><article><b>Fail open</b><span>Relay/store failures return to the existing validation path.</span></article></div>
 </section>
 
@@ -109,9 +111,10 @@ export function sitemapXml(origin: string): string {
 }
 
 export function llmsText(origin: string): string {
+  const clientVersion = publicProductFacts.install.client_version;
   return `# SeenRelay
 
-> Avoid redundant expensive validation. JavaScript/TypeScript 0.2.1 uses local/private reuse, source-native checks, then optional shared CHECK. OBSERVE only fresh independent source-backed results.
+> Avoid redundant expensive validation. JavaScript/TypeScript ${clientVersion} uses local/private reuse, source-native checks, then optional shared CHECK. OBSERVE only fresh independent source-backed results.
 
 SeenRelay reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
 
@@ -130,7 +133,7 @@ Shared CHECK is off by default in Zero-State. Completed-result TTL defaults to z
 
 ## Python / classic client
 
-Python 0.2.1 remains shadow-first. The classic JavaScript / TypeScript API also remains available for CHECK-first measurement and explicit bounded shared-evidence reuse.
+Python ${clientVersion} remains shadow-first. The classic JavaScript / TypeScript API also remains available for CHECK-first measurement and explicit bounded shared-evidence reuse.
 
 ## Use SeenRelay when
 

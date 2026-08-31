@@ -45,9 +45,16 @@ grep -q '"operations":\["CHECK","OBSERVE"\]' /tmp/root.json
 grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
-grep -q 'VALIDATION COST AVOIDANCE' /tmp/site.html
-grep -q 'Avoid redundant expensive validation' /tmp/site.html
-grep -q 'Works without shared network data' /tmp/site.html
+client_version=$(node -p "require('./public/product-facts.json').install.client_version")
+grep -q 'VALIDATION INFRASTRUCTURE' /tmp/site.html
+grep -q 'Avoid paying twice for the same validation' /tmp/site.html
+grep -q 'Two commands. Start without an account.' /tmp/site.html
+grep -q "CLIENT v${client_version} VERIFIED" /tmp/site.html
+grep -q 'GOOD CANDIDATE' /tmp/site.html
+grep -q 'NEGATIVE CONTROL' /tmp/site.html
+grep -q 'No truth oracle' /tmp/site.html
+grep -q 'No fake provenance' /tmp/site.html
+grep -q 'Agent Skill' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'FLEET-LEVEL COST AVOIDANCE' /tmp/economics.html
 grep -q 'MEASURED · FIRST-PARTY SMOKE BENCHMARK' /tmp/economics.html
@@ -56,9 +63,10 @@ grep -q 'Fixed-tier counterexample' /tmp/economics.html
 ! grep -q 'Firecrawl Pay As You Go' /tmp/economics.html
 grep -q 'npm install seenrelay' /tmp/site.html
 grep -q 'pip install seenrelay' /tmp/site.html
-grep -q '3/3 provider calls avoided' /tmp/site.html
-grep -q '15 credits avoided' /tmp/site.html
-grep -q 'Path ordering matters' /tmp/site.html
+grep -q 'MEASURED EVIDENCE' /tmp/site.html
+grep -q 'provider-path calls avoided' /tmp/site.html
+grep -q 'Every row keeps its caveat and source.' /tmp/site.html
+grep -q 'data-stat="facts"' /tmp/site.html
 # The branch alias can retain public max-age content across Preview deployments;
 # cache-bust deployment-specific machine facts before asserting exact release data.
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json?release=${RELEASE_SHA}" -o /tmp/product-facts.json
@@ -72,10 +80,18 @@ const expectedClientVersion = JSON.parse(fs.readFileSync('public/product-facts.j
 if (x.install?.client_version !== expectedClientVersion) process.exit(1);
 if (!b || b.provider_credits_avoided !== 15 || b.reuse_provider_calls !== 0) process.exit(1);
 NODE
+curl -fsS "${bypass[@]}" -H 'accept: text/html' "$PREVIEW_URL/quickstart" -o /tmp/quickstart.html
+curl -fsS "${bypass[@]}" -H 'accept: text/html' "$PREVIEW_URL/clients" -o /tmp/clients.html
+grep -q "JavaScript/TypeScript ${client_version}" /tmp/quickstart.html
+grep -q "CLIENT ${client_version}" /tmp/clients.html
+! grep -q '0.2.1' /tmp/quickstart.html
+! grep -q '0.2.1' /tmp/clients.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
-grep -q 'Avoid redundant expensive validation' /tmp/llms.txt
+grep -q "JavaScript/TypeScript ${client_version} uses" /tmp/llms.txt
+grep -q "Python ${client_version} remains shadow-first" /tmp/llms.txt
+! grep -q '0.2.1' /tmp/llms.txt
 grep -q 'Shared CHECK is off by default' /tmp/llms.txt
 grep -q '## Verified measured results' /tmp/llms.txt
 grep -q 'Structured JSON extraction /' /tmp/llms.txt
