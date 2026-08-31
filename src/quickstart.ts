@@ -48,7 +48,7 @@ export function quickstartPage(origin: string): string {
   <div class="rv-section-head"><div class="rv-eyebrow">MANUAL PATH</div><h2>Install, wrap, observe.</h2><p>The original operation still runs. These smallest examples measure exact repetition without suppressing it, so the original validation remains the fallback while you decide whether reuse belongs here.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice">
-      <header><b>JavaScript / TypeScript ${esc(clientVersion)}</b><span>MCP BIND-ONCE</span></header>
+      <header><b>JavaScript/TypeScript ${esc(clientVersion)}</b><span>MCP BIND-ONCE</span></header>
       <p>Works well when your application already has an MCP client. Start with Ambient measurement; if the workload proves eligible, the integration chooser shows the reviewed local-first protection path.</p>
       <div class="rv-code"><pre>npm install seenrelay</pre></div>
       <div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
