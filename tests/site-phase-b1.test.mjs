@@ -38,7 +38,7 @@ test('landing gives humans and agents direct integration paths', () => {
 test('landing preserves conservative product boundaries', () => {
   assert.match(landing, /original validation still runs/i);
   assert.match(landing, /does not decide truth/i);
-  assert.match(landing, /No hidden research/i);
+  assert.match(landing, /No hidden browsing/i);
   assert.match(landing, /No fake provenance/i);
   assert.match(landing, /No mutation suppression/i);
   assert.match(landing, /Fail open/i);
@@ -71,6 +71,8 @@ test('visual system has responsive and accessible motion handling', () => {
   assert.match(css, /@media\(max-width:700px\)/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
   assert.match(css, /focus-visible/);
+  assert.match(css, /proof-strip div:last-child\{grid-column:1\/-1\}/);
+  assert.match(css, /final-cta\{grid-template-columns:1fr/);
 });
 
 

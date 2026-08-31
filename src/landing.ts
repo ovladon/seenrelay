@@ -58,7 +58,7 @@ export function publicLandingPage(origin: string): string {
 <link rel="alternate" type="application/json" href="${origin}/product-facts.json" title="SeenRelay verified product facts">
 <link rel="alternate" type="application/json" href="${origin}/.well-known/agent-skills/index.json" title="SeenRelay Agent Skill discovery">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — Don't pay twice for the same validation">
+<meta property="og:title" content="SeenRelay — Avoid paying twice for the same validation">
 <meta property="og:description" content="Put cheaper controls ahead of repeated expensive validation. Keep the original authoritative path as fallback.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
@@ -84,7 +84,7 @@ export function publicLandingPage(origin: string): string {
 <section class="hero-shell">
   <div class="hero-copy">
     <div class="kicker"><span>VALIDATION INFRASTRUCTURE</span><span class="status-dot"></span><span>CLIENT v${version} VERIFIED</span></div>
-    <h1>Don't pay twice for the same validation.</h1>
+    <h1>Avoid paying twice for the same validation.</h1>
     <p class="hero-lead">SeenRelay puts cheaper, safer controls ahead of repeated expensive read-only validation: local/private reuse, source-native checks, then optional shared <b>CHECK</b> evidence. If reuse is not justified, your original validation still runs.</p>
     <div class="hero-actions">
       <a class="button button-primary" href="#install">Install SeenRelay</a>
@@ -154,7 +154,7 @@ export function publicLandingPage(origin: string): string {
     <article class="surface-card">
       <span>02</span><div class="surface-icon">MCP</div><h3>Remote MCP</h3>
       <p>Expose exactly CHECK and OBSERVE through the implemented MCP surface.</p>
-      <code>${origin}/mcp</code>
+      <code>/mcp</code>
     </article>
     <article class="surface-card">
       <span>03</span><div class="surface-icon">SK</div><h3>Agent Skill</h3>
@@ -221,7 +221,7 @@ export function publicLandingPage(origin: string): string {
   </div>
   <div class="trust-grid">
     <article><span>01</span><h3>No truth oracle</h3><p>Recent compatible observations can support a decision. They do not certify reality.</p></article>
-    <article><span>02</span><h3>No hidden research</h3><p>The hosted service does not browse, search or independently verify arbitrary facts on demand.</p></article>
+    <article><span>02</span><h3>No hidden browsing</h3><p>The hosted service does not browse, search or independently verify arbitrary facts on demand.</p></article>
     <article><span>03</span><h3>No fake provenance</h3><p>Cache hits and reused values are never re-labelled as fresh independent OBSERVE evidence.</p></article>
     <article><span>04</span><h3>No mutation suppression</h3><p>Mutating or destructive operations are outside the intended reuse path.</p></article>
     <article><span>05</span><h3>Fail open</h3><p>If SeenRelay cannot justify reuse, the application's original validation remains the fallback.</p></article>

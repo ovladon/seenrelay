@@ -47,7 +47,7 @@ curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_U
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
 grep -q 'VALIDATION INFRASTRUCTURE' /tmp/site.html
-grep -q "Don't pay twice for the same validation" /tmp/site.html
+grep -q 'Avoid paying twice for the same validation' /tmp/site.html
 grep -q 'Two commands. Start without an account.' /tmp/site.html
 grep -q "CLIENT v${client_version} VERIFIED" /tmp/site.html
 grep -q 'GOOD CANDIDATE' /tmp/site.html
