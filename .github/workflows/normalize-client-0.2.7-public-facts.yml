@@ -1,0 +1,45 @@
+name: Normalize verified 0.2.7 public facts JSON
+
+on:
+  push:
+    branches:
+      - release/promote-client-0.2.7-public-facts
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    if: github.event.head_commit.message != 'Normalize 0.2.7 public facts UTF-8'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Preserve canonical UTF-8 JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('public/product-facts.json')
+          facts = json.loads(p.read_text())
+          assert facts['install']['client_version'] == '0.2.7'
+          p.write_text(json.dumps(facts, indent=2, ensure_ascii=False) + '\n')
+          PY
+          npm run public:sync
+          npm run public:sync:check
+          git diff --check -- public/product-facts.json src/public-facts.generated.ts README.md clients/README.md docs/QUICKSTART.md docs/VERIFIED_RESULTS.md
+
+      - name: Commit normalization
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/product-facts.json src/public-facts.generated.ts README.md clients/README.md docs/QUICKSTART.md docs/VERIFIED_RESULTS.md
+          git diff --cached --quiet && exit 1
+          git commit -m 'Normalize 0.2.7 public facts UTF-8'
+          git push origin HEAD:release/promote-client-0.2.7-public-facts
