@@ -22,18 +22,34 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - name: Correct verifier-only CLI install locator
+      - name: Correct verifier-only gates and pin release packing
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+
           p=Path('scripts/materialize-release-0.2.7.sh')
           s=p.read_text()
           old='find "$TMP" "$GITHUB_WORKSPACE/.agents" -type f -path \'*/seenrelay/SKILL.md\' -print 2>/dev/null | head -n 1'
           new='find "$TMP" -type f -path \'*/seenrelay/SKILL.md\' -print | head -n 1'
           assert old in s
+          s=s.replace(old,new,1)
+          old='TARBALL="$(cd clients/typescript && npm pack --silent)"'
+          new='TARBALL="$(cd clients/typescript && npx -y npm@10.9.2 pack --silent)"'
+          assert old in s
           p.write_text(s.replace(old,new,1))
+
+          p=Path('.github/workflows/publish-clients.yml')
+          s=p.read_text()
+          anchor="""      - name: Verify requested version matches npm package
+"""
+          pin="""      - name: Pin reproducible npm pack CLI
+        run: npm install --global npm@10.9.2
+
+"""
+          assert anchor in s and 'Pin reproducible npm pack CLI' not in s
+          p.write_text(s.replace(anchor,pin+anchor,1))
           PY
       - name: Materialize, verify and push final candidate
         run: bash scripts/materialize-release-0.2.7.sh
