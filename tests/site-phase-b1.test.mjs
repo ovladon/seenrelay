@@ -20,7 +20,7 @@ test('public route keeps HTML and machine surfaces separate', () => {
 });
 
 test('homepage answers the four adoption questions in order', () => {
-  const what = landing.indexOf('A reuse layer for repeated read-only validation.');
+  const what = landing.indexOf('SeenRelay is a reuse layer for repeated read-only validation.');
   const does = landing.indexOf('WHAT IT DOES');
   const install = landing.indexOf('INSTALL AND USE');
   const tests = landing.indexOf('TESTS WE HAVE RUN');
@@ -36,6 +36,7 @@ test('homepage derives verified package and benchmark facts', () => {
   assert.match(landing, /f\.install\.pypi_command/);
   assert.match(landing, /publicProductFacts\.verified_benchmarks/);
   assert.match(landing, /matrix\.provider_calls_avoided/);
+  assert.match(landing, /matrix\.provider_units_avoided/);
   assert.match(landing, /item\.reuse_median_ms/);
   assert.doesNotMatch(landing, /client\s+0\.2\.\d+/i);
 });
@@ -60,7 +61,11 @@ test('first integration is behavior-preserving and produces a local report', () 
   assert.match(landing, /Reuse remains a caller decision/);
 });
 
-test('homepage presents evidence and its limits together', () => {
+test('homepage presents readable evidence and its limits together', () => {
+  assert.match(landing, /rv-evidence-card/);
+  assert.match(landing, /provider calls avoided/);
+  assert.match(landing, /provider_unit_label/);
+  assert.match(landing, /baseline → reuse median path latency/);
   assert.match(landing, /What these tests establish/);
   assert.match(landing, /What they do not establish/);
   assert.match(landing, /How to test your own workload/);
@@ -92,12 +97,20 @@ test('revamp visual system is responsive, accessible and dependency free', () =>
   assert.match(revampCss, /@media\(max-width:680px\)/);
   assert.match(revampCss, /@media\(prefers-reduced-motion:reduce\)/);
   assert.match(revampCss, /focus-visible/);
-  assert.match(factualCss, /\.rv-evidence-table/);
+  assert.match(factualCss, /\.rv-evidence-cards/);
+  assert.match(factualCss, /\.rv-evidence-metrics/);
   assert.match(factualCss, /\.rv-flow-list/);
   assert.match(factualCss, /@media\(max-width:680px\)/);
+  assert.match(landing, /href="\/revamp-factual\.css"/);
   assert.match(revampJs, /data-mode-button/);
   assert.match(revampJs, /navigator\.clipboard/);
-  assert.doesNotMatch(revampJs, /fetch\(|XMLHttpRequest|WebSocket/);
+  assert.doesNotMatch(revampJs, /fetch\(|XMLHttpRequest|WebSocket|createElement\('link'\)/);
+});
+
+test('factual adoption pages do not rely on CSP-blocked inline styles', () => {
+  for (const source of [landing, quickstartSource, integrationsSource]) {
+    assert.doesNotMatch(source, /\sstyle=/i);
+  }
 });
 
 test('service descriptor continues to derive the public client release', () => {
