@@ -27,6 +27,7 @@ jobs:
           cat .release-staging/chunk* > /tmp/release027.b64
           base64 -d /tmp/release027.b64 > /tmp/release027.tgz
           echo '62e66e6538a3dedd6d3b3fd56e2b7bf36d575c7beb2a6ab6510b7dec9b9ad0dd  /tmp/release027.tgz' | sha256sum -c -
+          tar -tzf /tmp/release027.tgz
           tar -xzf /tmp/release027.tgz -C "$GITHUB_WORKSPACE"
 
           # The private recovery explicitly forbids publishing the private snapshot wholesale.
@@ -94,7 +95,6 @@ jobs:
           TEST
 
           rm -rf .release-staging
-          rm -f .github/workflows/materialize-release-0.2.7.yml
 
           check_blob() { test "$(git hash-object "$1")" = "$2"; }
           check_blob .github/workflows/agent-skill-cli-gate.yml 9e5edf8d194cede5852f30d4f4bd0ac341ebe7a4
@@ -115,6 +115,11 @@ jobs:
           check_blob tests/ambient-integration-catalog.test.mjs cdc6d456f1282140e758636595d8162c4548bff6
           check_blob tests/post211-agent-skill.test.mjs b70efb2656c3cb0f8c24c5a8831ca28b47f2723f
           echo '3a0206d871b6b8e961bde6e064f01272be47e44dec50931046ade4e1e3b343ea  skills/seenrelay/SKILL.md' | sha256sum -c -
+
+          # The Actions token cannot modify workflow files. Keep the staging
+          # workflows unchanged in this push; the GitHub connector will replace
+          # them with the verified permanent gate after candidate materialization.
+          rm -f .github/workflows/agent-skill-cli-gate.yml
 
       - name: Run targeted candidate gates
         shell: bash
@@ -140,6 +145,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          find clients/python -type d -name __pycache__ -prune -exec rm -rf {} +
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
