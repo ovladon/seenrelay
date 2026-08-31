@@ -202,10 +202,6 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
   <div><div class="rv-eyebrow">NEXT STEP</div><h2>Run SeenRelay in shadow mode on one real repeated validation.</h2><p>If the report shows material repetition, choose the bounded integration that matches the workload. If it does not, leave the original path alone.</p></div>
   <div class="rv-actions"><a class="rv-button primary" href="/quickstart">Quickstart</a><a class="rv-button" href="/clients">Integration chooser</a></div>
 </section>
-
-<!-- Release-gate compatibility markers kept non-visual while the preview gate is migrated:
-VALIDATION INFRASTRUCTURE · CLIENT v${version} VERIFIED · Avoid paying twice for the same validation · Two commands. Start without an account. · GOOD CANDIDATE · NEGATIVE CONTROL · No truth oracle · No fake provenance · Agent Skill · MEASURED EVIDENCE · provider-path calls avoided · Every row keeps its caveat and source. · data-stat="facts"
--->
 </main>
 ${siteFooterHtml()}
 </body>
