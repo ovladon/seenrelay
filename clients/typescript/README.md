@@ -4,7 +4,53 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Client 0.2.5 is published and clean-install verified on npm. JavaScript / TypeScript includes both the Firecrawl MCP shadow helper and a direct Firecrawl SDK shadow adapter. Neither helper enables automatic reuse.
+The registry-verified public version is published in `https://seenrelay.com/product-facts.json`. This package includes local-first Zero-State, shadow-proof helpers, provider adapters, and Ambient MCP integration. Ambient starts local-shadow by default; only exact tools configured explicitly may use the existing active local-first guard.
+
+
+## Ambient MCP
+
+Start in zero-behavior-change local shadow mode. The original tool call still runs; SeenRelay keeps only local fingerprints and aggregate counters. No shadow CHECK or OBSERVE is sent.
+
+```js
+import { ambientMcpClient } from 'seenrelay/ambient';
+
+const client = ambientMcpClient(rawMcpClient, { serverKey: 'docs' });
+// use client.callTool(...) normally
+console.log(client.seenRelayAmbient.getReport());
+```
+
+The report identifies exact repeated calls that are worth reviewing. It is an upper-bound diagnostic, not a savings claim. Native/source/provider validators and SeenRelay CHECK overhead have not yet been subtracted.
+
+For OpenAI Agents JS:
+
+```js
+import { ambientOpenAIAgentsMcpServer } from 'seenrelay/ambient';
+
+const server = ambientOpenAIAgentsMcpServer(rawMcpServer);
+// pass `server` to the Agent exactly as before
+```
+
+For AI SDK MCP tools:
+
+```js
+import { ambientAiSdkMcpTools } from 'seenrelay/ambient';
+
+const { tools, seenRelayAmbient } = ambientAiSdkMcpTools(await mcpClient.tools());
+```
+
+Active local-first protection is opt-in per exact MCP tool name. Unconfigured tools stay shadow-only:
+
+```js
+const client = ambientMcpClient(rawMcpClient, {
+  serverKey: 'docs',
+  tools: {
+    'document.read': { maxAgeMs: 30_000 }
+  }
+});
+```
+
+Do not enable active protection for mutating/destructive operations or for calls whose context/result equivalence has not been reviewed. Unknown call options fail closed from shadow equivalence measurement and preserve the authoritative call.
+
 
 ## Install
 
@@ -148,7 +194,7 @@ const value = await relay.guard({
 
 Without an explicit `reuse` policy, the classic client never skips the original validation. It remains the conservative path for directly measuring public CHECK evidence.
 
-## Prove public-relay value before enabling classic reuse
+## Prove public-relay value before enabling classsic reuse
 
 ```js
 import { SeenRelayClient } from 'seenrelay';
@@ -207,7 +253,7 @@ const benchmarkInput = proof.hostileBenchmarkInput({
   workloadId: 'opaque-run-id',
   controls: {
     local_cache: { available: true, measured: true },
-    source_native_conditional: { available: true, measured: true },
+    source_native_conditional: {available: true, measured: true },
     provider_native_cache: { available: true, measured: true }
   }
 });
