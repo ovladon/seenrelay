@@ -20,7 +20,8 @@ function evidenceCards(): string {
     .map((item) => {
       if (!('matrix' in item)) return '';
       const matrix = item.matrix;
-      const latency = matrix.latency_outcome === 'better' ? 'faster' : matrix.latency_outcome === 'worse' ? 'slower' : String(matrix.latency_outcome);
+      const latencyOutcome = String(matrix.latency_outcome);
+      const latency = latencyOutcome === 'better' ? 'faster' : 'slower';
       return `<article class="evidence-card">
 <div class="evidence-top"><span class="fit fit-${esc(matrix.fit)}">${esc(String(matrix.fit).toUpperCase())} FIT</span><span>${esc(item.provider)}</span></div>
 <h3>${esc(matrix.surface)}</h3>

@@ -33,7 +33,7 @@ export function serviceDescriptor(origin: string) {
     },
     integration_paths: {
       javascript_typescript_zero_state: {
-        status: `implemented_public_client_${publicProductFacts.install.client_version}` ,
+        status: `implemented_public_client_${publicProductFacts.install.client_version}`,
         recommendation: 'Use for explicitly eligible read-only validation when the application controls the call path.',
         execution_order: ['l0_local', 'l1_private_optional', 'source_native', 'shared_check_optional', 'original_validation'],
         shared_check_default: 'off',
