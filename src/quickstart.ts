@@ -77,7 +77,7 @@ print(client.get_report())</pre></div>
       <a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Python guide →</a>
     </article>
   </div>
-  <div class="rv-note" style="margin-top:12px"><b>Protocol boundary:</b> MCP remains the standard discovery and model/tool-routing interface for MCP applications. SeenRelay's local-first client integrations sit around the application's validation path. The hosted SeenRelay protocol exposes exactly CHECK and OBSERVE, and the original validation remains the fallback.</div>
+  <div class="rv-note"><b>Protocol boundary:</b> MCP remains the standard discovery and model/tool-routing interface for MCP applications. SeenRelay's local-first client integrations sit around the application's validation path. The hosted SeenRelay protocol exposes exactly CHECK and OBSERVE, and the original validation remains the fallback.</div>
 </section>
 
 <section class="rv-shell rv-section">
@@ -88,7 +88,6 @@ print(client.get_report())</pre></div>
     <article><h3>Remote MCP</h3><p>Endpoint: <code>${origin}/mcp</code>. Official Registry identifier: <code>io.github.ovladon/seenrelay</code>.</p></article>
     <article><h3>REST / OpenAPI</h3><p>Direct integrations can use <code>POST /v1/check</code> and <code>POST /v1/observe</code>; the full schema is published at <code>/openapi.json</code>.</p></article>
   </div>
-  <div class="rv-actions" style="margin-top:24px"><a class="rv-button" href="/clients">Integration chooser</a><a class="rv-button" href="${origin}/mcp">MCP endpoint</a><a class="rv-button quiet" href="/openapi.json">OpenAPI →</a></div>
 </section>
 
 <section class="rv-shell rv-final"><div><div class="rv-eyebrow">AFTER THE FIRST RUN</div><h2>Read the local report before enabling reuse.</h2><p>If exact repetition is rare, or the original validation is already cheaper than an alternative path, leave it alone. If repetition is material, select the bounded local-first or optional shared-evidence policy appropriate to that operation.</p></div><div class="rv-actions"><a class="rv-button" href="/clients">Integration options</a><a class="rv-button" href="/economics">Measured tests</a></div></section>
