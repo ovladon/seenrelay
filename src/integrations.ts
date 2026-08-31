@@ -40,13 +40,13 @@ export function clientsPage(origin: string): string {
   <div class="rv-choice-grid">
     <article class="rv-choice"><header><b>Coding agent</b><span>Agent Skill</span></header><p>Install the published SeenRelay skill. Ask the coding agent to start in shadow mode, preserve the authoritative call, run the existing tests and report repeated eligible workloads.</p><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><a href="/.well-known/agent-skills/seenrelay/SKILL.md">Inspect the skill →</a></article>
 
-    <article class="rv-choice"><header><b>Existing MCP client</b><span>JavaScript / TypeScript</span></header><p>Use Ambient for measurement without suppressing calls.</p><div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
+    <article class="rv-choice"><header><b>Existing MCP client</b><span>JavaScript / TypeScript</span></header><p>Use Ambient for measurement without suppressing calls. After a specific read-only tool is reviewed as eligible, <code>protectMcpClient</code> from <code>seenrelay/mcp-auto</code> provides the local-first bind-once path. Shared CHECK is not enabled by default.</p><div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
 
 const client = ambientMcpClient(rawMcpClient, {
   serverKey: 'docs'
 });
 
-console.log(client.seenRelayAmbient.getReport());</pre></div><p style="margin-top:14px">After a specific read-only tool is reviewed as eligible, <code>protectMcpClient</code> from <code>seenrelay/mcp-auto</code> provides the local-first bind-once path. Shared CHECK is not enabled by default.</p><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a></article>
+console.log(client.seenRelayAmbient.getReport());</pre></div><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a></article>
 
     <article class="rv-choice"><header><b>Plain read-only function</b><span>JavaScript / TypeScript</span></header><p>Use Zero-State when the application directly controls the validation function and can define exact identity and a defensible freshness policy.</p><div class="rv-code"><pre>import { SeenRelayZeroState } from 'seenrelay/zero-state';
 
