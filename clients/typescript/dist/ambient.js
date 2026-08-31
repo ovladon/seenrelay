@@ -1,4 +1,4 @@
-import { canonicalEvidenceFingerprintV1 } from './canonical-evidence.js';
+import { sha256JsonFingerprint } from './zero-state.js';
 import { protectMcpClient } from './mcp-auto.js';
 
 let ambientBindingSequence = 0;
@@ -128,8 +128,8 @@ export function ambientMcpClient(client, options = {}) {
         name,
         arguments: params?.arguments ?? {}
       };
-      const coordinateFingerprint = canonicalEvidenceFingerprintV1(coordinate);
-      const resultFingerprint = canonicalEvidenceFingerprintV1(result);
+      const coordinateFingerprint = sha256JsonFingerprint(coordinate);
+      const resultFingerprint = sha256JsonFingerprint(result);
       metric.measured += 1;
       const previous = fingerprints.get(coordinateFingerprint);
       if (previous === undefined) {
