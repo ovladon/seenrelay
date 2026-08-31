@@ -1,0 +1,43 @@
+name: Agent Skill CLI Gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'shared/agent-skill.mjs'
+      - 'src/index.ts'
+      - 'clients/**'
+      - '.github/workflows/agent-skill-cli-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  skills-cli:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact pull request head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+
+      - name: Reinstall canonical SeenRelay skill with current Skills CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED='3a0206d871b6b8e961bde6e064f01272be47e44dec50931046ade4e1e3b343ea'
+          TMP="$(mktemp -d)"
+          cd "$TMP"
+          npm init -y >/dev/null
+          npx -y skills@latest add "$GITHUB_WORKSPACE" --skill seenrelay --agent codex --copy --yes
+          INSTALLED="$(find "$TMP" -type f -path '*/seenrelay/SKILL.md' -print -quit)"
+          test -n "$INSTALLED"
+          cmp "$INSTALLED" "$GITHUB_WORKSPACE/skills/seenrelay/SKILL.md"
+          ACTUAL="$(sha256sum "$INSTALLED" | awk '{print $1}')"
+          test "$ACTUAL" = "$EXPECTED"
+          echo "skills@latest installed canonical SeenRelay digest: $ACTUAL"
