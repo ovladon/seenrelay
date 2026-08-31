@@ -62,7 +62,8 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.match(economics, /Fixed-tier counterexample/);
   assert.match(economics, /Poor fit:/);
 
-  assert.match(quickstart, /MCP BIND-ONCE/);
+  assert.match(quickstart, /seenrelay\/mcp-auto/);
+  assert.match(quickstart, /local-first bind-once path/i);
   assert.match(quickstart, /original validation remains the fallback/i);
   assert.match(adoption, /## Preferred JavaScript \/ TypeScript order/);
   assert.match(adoption, /Shared CHECK is off by default/i);
