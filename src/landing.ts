@@ -9,7 +9,7 @@ function esc(value: unknown): string {
     .replaceAll('"', '&quot;');
 }
 
-function evidenceRows(): string {
+function evidenceCards(): string {
   return publicProductFacts.verified_benchmarks
     .filter((item) => 'matrix' in item)
     .map((item) => {
@@ -17,15 +17,18 @@ function evidenceRows(): string {
       const matrix = item.matrix;
       const fit = String(matrix.fit);
       const latency = String(matrix.latency_outcome);
-      return `<tr>
-        <td><b>${esc(matrix.surface)}</b><span>${esc(matrix.configuration)}</span></td>
-        <td>${esc(item.samples)}</td>
-        <td>${esc(matrix.provider_calls_avoided)}/${esc(item.samples)}</td>
-        <td>${esc(matrix.provider_units_avoided)} ${esc(matrix.provider_unit_label)}</td>
-        <td>${esc(matrix.baseline_median_ms)} ms → ${esc(item.reuse_median_ms)} ms</td>
-        <td><span class="rv-result rv-result-${esc(latency)}">${esc(latency)}</span></td>
-        <td><span class="rv-fit rv-fit-${esc(fit)}">${esc(fit)}</span></td>
-      </tr>`;
+      return `<article class="rv-evidence-card">
+        <header>
+          <div><small>${esc(matrix.surface)}</small><b>${esc(matrix.configuration)}</b></div>
+          <span class="rv-fit rv-fit-${esc(fit)}">fit: ${esc(fit)}</span>
+        </header>
+        <div class="rv-evidence-metrics">
+          <div><strong>${esc(matrix.provider_calls_avoided)}/${esc(item.samples)}</strong><span>provider calls avoided</span></div>
+          <div><strong>${esc(matrix.provider_units_avoided)}</strong><span>${esc(matrix.provider_unit_label)} avoided</span></div>
+          <div><strong>${esc(matrix.baseline_median_ms)} → ${esc(item.reuse_median_ms)} ms</strong><span>baseline → reuse median path latency</span></div>
+        </div>
+        <footer><span class="rv-result rv-result-${esc(latency)}">latency: ${esc(latency)}</span><span>n=${esc(item.samples)}</span></footer>
+      </article>`;
     })
     .join('');
 }
@@ -55,6 +58,7 @@ export function publicLandingPage(origin: string): string {
 <meta name="twitter:card" content="summary">
 <title>SeenRelay — Repeated read-only validation reuse</title>
 <link rel="stylesheet" href="/revamp.css">
+<link rel="stylesheet" href="/revamp-factual.css">
 <script src="/revamp.js" defer></script>
 </head>
 <body class="revamp">
@@ -77,8 +81,8 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-hero rv-hero-factual" id="what">
   <div>
     <div class="rv-kicker"><i></i><span>SEENRELAY · CLIENT ${version}</span></div>
-    <h1>A reuse layer for repeated read-only validation.</h1>
-    <p class="rv-lead">SeenRelay sits in front of validation work that an AI agent or application already performs. For an exact eligible repeat, it can use caller-owned local/private reuse, source-native freshness confirmation, or optional recent shared observations. If none of those paths is sufficient, the original validation runs normally.</p>
+    <h1>SeenRelay is a reuse layer for repeated read-only validation.</h1>
+    <p class="rv-lead">It sits in front of validation work that an AI agent or application already performs. For an exact eligible repeat, it can use caller-owned local/private reuse, source-native freshness confirmation, or optional recent shared observations. If none of those paths is sufficient, the original validation runs normally.</p>
     <div class="rv-proofline" aria-label="Current product facts">
       <span>npm + PyPI verified</span>
       <span>no account</span>
@@ -145,7 +149,7 @@ const client = ambientMcpClient(rawMcpClient, {
 
 // use client.callTool(...) normally
 console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
-        <div class="rv-step"><span>3</span><div><h4>No MCP client?</h4><p><a href="/clients" style="color:#a9c5ff">Choose the equivalent JS/TS, Python, LangChain, PydanticAI, OpenAI Agents, AI SDK, MCP or REST integration →</a></p></div></div>
+        <div class="rv-step"><span>3</span><div><h4>No MCP client?</h4><p><a class="rv-inline-link" href="/clients">Choose the equivalent JS/TS, Python, LangChain, PydanticAI, OpenAI Agents, AI SDK, MCP or REST integration →</a></p></div></div>
       </div>
       <div class="rv-install-view" data-install-view="agent">
         <div class="rv-step"><span>1</span><div><h4>Install the SeenRelay Agent Skill</h4><div class="rv-code"><pre id="skill-install">${esc(skillCommand)}</pre><button class="rv-copy" type="button" data-copy-target="skill-install">Copy</button></div></div></div>
@@ -159,23 +163,18 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
 <section class="rv-shell rv-section" id="tests">
   <div class="rv-section-head">
     <div class="rv-eyebrow">TESTS WE HAVE RUN</div>
-    <h2>Current evidence shows that bounded reuse can skip measured provider paths. It does not show that every workload is a good fit.</h2>
-    <p>The public benchmark set is first-party smoke evidence. The tested Firecrawl facts were deliberately retained even after analysis showed that stronger source-native paths were available, because the results distinguish mechanism from workload fit rather than hiding an unfavorable comparison.</p>
+    <h2>What the current measured tests show.</h2>
+    <p>These are first-party smoke tests, not a universal ROI claim. Each result below keeps the measured provider work, latency outcome, and workload-fit verdict visible.</p>
   </div>
 
-  <div class="rv-table-wrap" role="region" aria-label="SeenRelay benchmark results" tabindex="0">
-    <table class="rv-evidence-table">
-      <thead><tr><th>Measured path</th><th>n</th><th>Provider calls avoided</th><th>Provider units avoided</th><th>Median path latency</th><th>Latency</th><th>Fit</th></tr></thead>
-      <tbody>${evidenceRows()}</tbody>
-    </table>
-  </div>
+  <div class="rv-evidence-cards" aria-label="SeenRelay benchmark results">${evidenceCards()}</div>
 
   <div class="rv-evidence-interpretation">
     <article><b>What these tests establish</b><p>SeenRelay's bounded reuse path can bypass equivalent provider work and can reduce provider-unit consumption. In the structured extraction and browser-interaction tests it also reduced measured path latency.</p></article>
     <article><b>What they do not establish</b><p>They do not establish a universal hit rate, guaranteed savings, or that SeenRelay should sit ahead of a cheaper authoritative/source-native mechanism. The current tested facts were poor-fit examples for exactly that reason.</p></article>
     <article><b>How to test your own workload</b><p>Start with Ambient/Shadow Proof while every authoritative validation still runs. Measure exact repetition and agreement locally before deciding whether bounded reuse is appropriate.</p><a href="/quickstart">Open the measurement-first quickstart →</a></article>
   </div>
-  <div class="rv-actions" style="margin-top:24px"><a class="rv-button" href="/economics">Full benchmark details and caveats</a><a class="rv-button quiet" href="/product-facts.json">Machine-readable evidence →</a></div>
+  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/economics">Full benchmark details and caveats</a><a class="rv-button quiet" href="/product-facts.json">Machine-readable evidence →</a></div>
 </section>
 
 <section class="rv-shell rv-section">
@@ -196,7 +195,7 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
       <article><b>Machine-readable integration</b><span>OpenAPI, MCP, service JSON, Agent Skill discovery and the local integration catalog expose supported surfaces to tooling.</span></article>
     </div>
   </div>
-  <div class="rv-actions" style="margin-top:24px"><a class="rv-button" href="/trust">Trust model</a><a class="rv-button" href="/data-practices">Data practices</a><a class="rv-button quiet" href="https://github.com/ovladon/seenrelay">GitHub →</a></div>
+  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/trust">Trust model</a><a class="rv-button" href="/data-practices">Data practices</a><a class="rv-button quiet" href="https://github.com/ovladon/seenrelay">GitHub →</a></div>
 </section>
 
 <section class="rv-shell rv-final">
