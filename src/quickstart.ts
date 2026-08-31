@@ -45,11 +45,11 @@ export function quickstartPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section" id="manual">
-  <div class="rv-section-head"><div class="rv-eyebrow">MANUAL PATH</div><h2>Install, wrap, observe.</h2><p>These smallest examples do not suppress the original operation. They show whether exact repetition exists before you make any reuse decision.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">MANUAL PATH</div><h2>Install, wrap, observe.</h2><p>The original operation still runs. These smallest examples measure exact repetition without suppressing it, so the original validation remains the fallback while you decide whether reuse belongs here.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice">
-      <header><b>JavaScript / TypeScript ${esc(clientVersion)}</b><span>Ambient MCP</span></header>
-      <p>Works well when your application already has an MCP client.</p>
+      <header><b>JavaScript / TypeScript ${esc(clientVersion)}</b><span>MCP BIND-ONCE</span></header>
+      <p>Works well when your application already has an MCP client. Start with Ambient measurement; if the workload proves eligible, the integration chooser shows the reviewed local-first protection path.</p>
       <div class="rv-code"><pre>npm install seenrelay</pre></div>
       <div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
 
@@ -77,6 +77,7 @@ print(client.get_report())</pre></div>
       <a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Full Python guide →</a>
     </article>
   </div>
+  <div class="rv-note" style="margin-top:12px"><b>Protocol boundary:</b> MCP remains the standard discovery and model/tool-routing interface for existing MCP stacks. SeenRelay's hosted protocol still has exactly two operations: CHECK and OBSERVE. Shared SeenRelay CHECK is off by default in Zero-State.</div>
 </section>
 
 <section class="rv-shell rv-section">
@@ -87,6 +88,7 @@ print(client.get_report())</pre></div>
     <article><h3>PydanticAI</h3><p>Python includes an Ambient toolset adapter for measurement-first integration.</p></article>
     <article><h3>OpenAI Agents / AI SDK</h3><p>Optional Ambient adapters let existing agent stacks keep their current tool behavior while SeenRelay measures exact repetition.</p></article>
   </div>
+  <div class="rv-note" style="margin-top:18px"><b>MCP Registry:</b> <code>io.github.ovladon/seenrelay</code>. You can also use the hosted MCP endpoint directly when a client adapter is unnecessary.</div>
   <div class="rv-actions" style="margin-top:24px"><a class="rv-button primary" href="/clients">Open integration chooser</a><a class="rv-button" href="${origin}/mcp">MCP endpoint</a><a class="rv-button quiet" href="/openapi.json">REST / OpenAPI →</a></div>
 </section>
 
