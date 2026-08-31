@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+BASE=9602e830a1c943f4b22ebfffb65d5215e44133dd
+EXPECTED_BUNDLE=62e66e6538a3dedd6d3b3fd56e2b7bf36d575c7beb2a6ab6510b7dec9b9ad0dd
+EXPECTED_SKILL=3a0206d871b6b8e961bde6e064f01272be47e44dec50931046ade4e1e3b343ea
+EXPECTED_NPM=367325d8ee429af2669d1d214efe3711d6319e1c16cc2569131c1e30fcb6e8ea
+
+cat .release-staging/chunk* > /tmp/release027.b64
+base64 -d /tmp/release027.b64 > /tmp/release027.tgz
+echo "$EXPECTED_BUNDLE  /tmp/release027.tgz" | sha256sum -c -
+tar -xzf /tmp/release027.tgz -C "$GITHUB_WORKSPACE"
+
+# Recovery rule: public PR starts from exact public main. Do not publish the private snapshot wholesale.
+git checkout "$BASE" -- src/index.ts src/adoption.ts src/public.ts
+rm -f tests/post211-machine-discovery.test.mjs
+
+python - <<'PY'
+from pathlib import Path
+
+index = Path('src/index.ts')
+s = index.read_text()
+anchor = "import { maintenanceCron } from './maintenance.js';\n"
+assert anchor in s and 'agentSkillMarkdown' not in s
+s = s.replace(anchor, anchor + "import { agentSkillMarkdown, agentSkillIndex } from '../shared/agent-skill.mjs';\n", 1)
+anchor = "app.get('/llms.txt', (c) => {\n  c.header('content-type', 'text/plain; charset=utf-8');\n  c.header('cache-control', 'public, max-age=3600');\n  return c.body(llmsText(new URL(c.req.url).origin));\n});\n"
+routes = "app.get('/.well-known/agent-skills/index.json', async (c) => { c.header('cache-control','public, max-age=300'); c.header('access-control-allow-origin','*'); return c.json(await agentSkillIndex(new URL(c.req.url).origin)); });\napp.get('/.well-known/skills/index.json', async (c) => { c.header('cache-control','public, max-age=300'); c.header('access-control-allow-origin','*'); return c.json(await agentSkillIndex(new URL(c.req.url).origin)); });\napp.get('/.well-known/agent-skills/seenrelay/SKILL.md', (c) => { c.header('content-type','text/markdown; charset=utf-8'); c.header('cache-control','public, max-age=300'); c.header('access-control-allow-origin','*'); return c.body(agentSkillMarkdown()); });\napp.get('/.well-known/skills/seenrelay/SKILL.md', (c) => { c.header('content-type','text/markdown; charset=utf-8'); c.header('cache-control','public, max-age=300'); c.header('access-control-allow-origin','*'); return c.body(agentSkillMarkdown()); });\n"
+assert anchor in s
+index.write_text(s.replace(anchor, anchor + routes, 1))
+
+adoption = Path('src/adoption.ts')
+s = adoption.read_text()
+anchor = "- MCP endpoint: ${origin}/mcp\n- MCP Registry: io.github.ovladon/seenrelay\n"
+addition = "- MCP endpoint: ${origin}/mcp\n- Agent Skill index: ${origin}/.well-known/agent-skills/index.json\n- Agent Skill: ${origin}/.well-known/agent-skills/seenrelay/SKILL.md\n- Legacy Agent Skill discovery fallback: ${origin}/.well-known/skills/index.json\n- MCP Registry: io.github.ovladon/seenrelay\n"
+assert anchor in s and '/.well-known/agent-skills/' not in s
+adoption.write_text(s.replace(anchor, addition, 1))
+
+public = Path('src/public.ts')
+s = public.read_text()
+anchor = "      service_descriptor: `${origin}/service.json`,\n      product_facts: `${origin}/product-facts.json`\n"
+addition = "      service_descriptor: `${origin}/service.json`,\n      product_facts: `${origin}/product-facts.json`,\n      agent_skills_index: `${origin}/.well-known/agent-skills/index.json`,\n      agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`\n"
+assert anchor in s and 'agent_skills_index' not in s
+public.write_text(s.replace(anchor, addition, 1))
+PY
+
+cat > tests/agent-skill-public-release.test.mjs <<'TEST'
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const index=fs.readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+const adoption=fs.readFileSync(new URL('../src/adoption.ts',import.meta.url),'utf8');
+const pub=fs.readFileSync(new URL('../src/public.ts',import.meta.url),'utf8');
+const skill=fs.readFileSync(new URL('../skills/seenrelay/SKILL.md',import.meta.url),'utf8');
+test('preferred and legacy Agent Skill discovery routes are additive and CORS-readable',()=>{
+  for(const route of ['/.well-known/agent-skills/index.json','/.well-known/skills/index.json','/.well-known/agent-skills/seenrelay/SKILL.md','/.well-known/skills/seenrelay/SKILL.md']) assert.ok(index.includes(route),route);
+  assert.equal((index.match(/access-control-allow-origin','\*'/g)??[]).length,4);
+  assert.doesNotMatch(index,/app\.(?:get|post|all)\('\/v1\/(?:skill|capability|profile)/i);
+});
+test('llms surface advertises preferred skill discovery and legacy fallback',()=>{
+  assert.match(adoption,/\.well-known\/agent-skills\/index\.json/);
+  assert.match(adoption,/\.well-known\/agent-skills\/seenrelay\/SKILL\.md/);
+  assert.match(adoption,/Legacy Agent Skill discovery fallback/);
+});
+test('service descriptor exposes only discovery links',()=>{
+  assert.match(pub,/agent_skills_index/); assert.match(pub,/agent_skill/);
+  assert.doesNotMatch(pub,/\/v1\/(?:skill|capability|profile)/i);
+});
+test('skill remains version-agnostic and conservative',()=>{
+  assert.doesNotMatch(skill,/client v?0\.2\.7|version: 0\.2\.7/);
+  assert.match(skill,/Ambient starts as measurement, not authorization/i);
+  assert.match(skill,/Do not invent an integration for Google ADK, Microsoft Agent Framework, CrewAI/i);
+});
+TEST
+
+rm -rf .release-staging
+rm -f .github/workflows/materialize-release-0.2.7.yml .github/workflows/materialize-release-0.2.7-pr.yml scripts/materialize-release-0.2.7.sh
+
+check_blob() { test "$(git hash-object "$1")" = "$2"; }
+check_blob .github/workflows/agent-skill-cli-gate.yml 9e5edf8d194cede5852f30d4f4bd0ac341ebe7a4
+check_blob clients/RELEASE_VERSION b0032849c80b52bdb371f57ec8af94eabb9d65ad
+check_blob clients/RELEASE_REQUEST 72c45e06dbb42882608fb394a6438c3ab8bff938
+check_blob clients/typescript/package.json c89f0cf93322d4f23582b57c429371a862ef6025
+check_blob clients/typescript/README.md 16cc261e33769d7a64e436496e053d1bea352767
+check_blob clients/python/pyproject.toml 8950de43e364cf5c082bfd29cfc17fe5e76bffc7
+check_blob clients/python/README.md 6a025ac60c663ed2d0f154e309d733622dd49a28
+check_blob clients/python/seenrelay_ambient.py 0b746116e22a310e7a2487add8ca82952aa4b658
+check_blob clients/python/test_ambient_langchain.py acb574105a186bb13be7010cb850396a2b73ccfc
+check_blob clients/python/test_ambient_pydantic_ai.py fd5905a0a31ee359871df2a3716b40b53acfc6a7
+check_blob clients/typescript/dist/ambient.d.ts 6fe0c514b68644a3d6efd671bc2f14e80b98edeb
+check_blob clients/typescript/dist/ambient.js 05bfc4d4b46b39907acdd712cad6447d61195033
+check_blob shared/agent-skill.mjs 936473d9b89045c1a29589c3e357a8261b5a3a71
+check_blob skills/seenrelay/SKILL.md 2c0556fdb85d85615f8a87b8fa7ca4d95cf03637
+check_blob tests/ambient-langchain-adapters.test.mjs eb7c27748949cc3dbc438e64f6253435119d9a56
+check_blob tests/ambient-integration-catalog.test.mjs cdc6d456f1282140e758636595d8162c4548bff6
+check_blob tests/post211-agent-skill.test.mjs b70efb2656c3cb0f8c24c5a8831ca28b47f2723f
+echo "$EXPECTED_SKILL  skills/seenrelay/SKILL.md" | sha256sum -c -
+
+node --test tests/ambient-langchain-adapters.test.mjs tests/ambient-integration-catalog.test.mjs tests/post211-agent-skill.test.mjs tests/agent-skill-public-release.test.mjs
+(cd clients/python && PYTHONPATH=. python -m unittest test_ambient.py test_ambient_langchain.py test_ambient_pydantic_ai.py)
+npx tsc -p tsconfig.core.json --noEmit
+
+# Real current CLI gate: fresh local install, telemetry disabled, exact canonical digest.
+TMP="$(mktemp -d)"
+(
+  cd "$TMP"
+  npm init -y >/dev/null
+  DISABLE_TELEMETRY=1 npx -y skills@latest add "$GITHUB_WORKSPACE" --skill seenrelay --agent codex --copy --yes
+  INSTALLED="$(find "$TMP" -type f -path '*/seenrelay/SKILL.md' -print -quit)"
+  test -n "$INSTALLED"
+  cmp "$INSTALLED" "$GITHUB_WORKSPACE/skills/seenrelay/SKILL.md"
+  test "$(sha256sum "$INSTALLED" | awk '{print $1}')" = "$EXPECTED_SKILL"
+)
+
+# Rebuild npm artifact and require the previously approved byte digest.
+TARBALL="$(cd clients/typescript && npm pack --silent)"
+test "$(sha256sum "clients/typescript/$TARBALL" | awk '{print $1}')" = "$EXPECTED_NPM"
+rm -f "clients/typescript/$TARBALL"
+
+# Narrow Phase A delta and immutable facts/site gate.
+git diff --check "$BASE" --
+if git diff --name-only "$BASE" -- | grep -E '^(public/|migrations/|src/(billing|service|hive|canonical|runtime-guard)\.ts$)'; then
+  echo 'Unexpected runtime/public-facts mutation in Phase A' >&2
+  exit 1
+fi
+test "$(git show "$BASE":public/product-facts.json | sha256sum | awk '{print $1}')" = "$(sha256sum public/product-facts.json | awk '{print $1}')"
+
+git config user.name 'github-actions[bot]'
+git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+git add -A
+git diff --cached --quiet && exit 0
+git commit -m 'Release client 0.2.7 ambient framework integrations'
+git push origin HEAD:release/client-0.2.7-ambient-frameworks
