@@ -9,6 +9,7 @@ const quickstartSource = fs.readFileSync(new URL('../src/quickstart.ts', import.
 const adoptionSource = fs.readFileSync(new URL('../src/adoption.ts', import.meta.url), 'utf8');
 const integrationsSource = fs.readFileSync(new URL('../src/integrations.ts', import.meta.url), 'utf8');
 const revampCss = fs.readFileSync(new URL('../public/revamp.css', import.meta.url), 'utf8');
+const factualCss = fs.readFileSync(new URL('../public/revamp-factual.css', import.meta.url), 'utf8');
 const revampJs = fs.readFileSync(new URL('../public/revamp.js', import.meta.url), 'utf8');
 const previewGate = fs.readFileSync(new URL('../scripts/preview-release-gate.sh', import.meta.url), 'utf8');
 
@@ -18,46 +19,55 @@ test('public route keeps HTML and machine surfaces separate', () => {
   assert.match(index, /accept\.includes\('text\/html'\)/);
 });
 
-test('homepage is built around a direct adoption proposition', () => {
-  assert.match(landing, /Stop repeating/);
-  assert.match(landing, /Add SeenRelay/);
-  assert.match(landing, /ADOPT IN UNDER A MINUTE/);
-  assert.match(landing, /I’m a developer/);
-  assert.match(landing, /I’m an agent/);
-  assert.match(landing, /Start without changing behavior/);
-  assert.match(landing, /Keep the source as fallback/);
+test('homepage answers the four adoption questions in order', () => {
+  const what = landing.indexOf('A reuse layer for repeated read-only validation.');
+  const does = landing.indexOf('WHAT IT DOES');
+  const install = landing.indexOf('INSTALL AND USE');
+  const tests = landing.indexOf('TESTS WE HAVE RUN');
+  assert.ok(what >= 0 && does > what && install > does && tests > install);
+  assert.match(landing, /original validation runs normally/i);
+  assert.match(landing, /First run: measure repetition without changing application behavior/);
 });
 
-test('homepage derives verified package facts and does not pin a client release', () => {
+test('homepage derives verified package and benchmark facts', () => {
   assert.match(landing, /publicProductFacts/);
   assert.match(landing, /f\.install\.client_version/);
   assert.match(landing, /f\.install\.npm_command/);
   assert.match(landing, /f\.install\.pypi_command/);
+  assert.match(landing, /publicProductFacts\.verified_benchmarks/);
+  assert.match(landing, /matrix\.provider_calls_avoided/);
+  assert.match(landing, /item\.reuse_median_ms/);
   assert.doesNotMatch(landing, /client\s+0\.2\.\d+/i);
+});
+
+test('homepage explains the actual validation placement rather than a slogan', () => {
+  for (const expected of ['Existing request', 'Exact identity + freshness policy', 'Cheaper eligible path', 'Original validation when needed', 'OBSERVE after fresh validation']) {
+    assert.match(landing, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(landing, /Local\/private reuse → source-native confirmation → optional shared CHECK/);
 });
 
 test('agent onboarding uses well-known Agent Skill discovery from the SeenRelay origin', () => {
   assert.match(landing, /npx skills add \$\{origin\} --skill seenrelay --yes/);
-  assert.match(landing, /\.well-known\/agent-skills\/seenrelay\/SKILL\.md/);
   assert.match(quickstartSource, /npx skills add \$\{origin\} --skill seenrelay --yes/);
   assert.match(integrationsSource, /npx skills add \$\{origin\} --skill seenrelay --yes/);
 });
 
-test('homepage makes the before/after validation path concrete', () => {
-  assert.match(landing, /Without/);
-  assert.match(landing, /With SeenRelay/);
-  assert.match(landing, /paid call/);
-  assert.match(landing, /eligible reuse path/);
-  assert.match(landing, /original validation still available/);
+test('first integration is behavior-preserving and produces a local report', () => {
+  assert.match(landing, /ambientMcpClient/);
+  assert.match(landing, /seenRelayAmbient\.getReport\(\)/);
+  assert.match(landing, /measurement first/i);
+  assert.match(landing, /Reuse remains a caller decision/);
 });
 
-test('technical caveats are progressively disclosed instead of dominating the homepage', () => {
-  assert.match(landing, /\/trust/);
-  assert.match(landing, /\/data-practices/);
+test('homepage presents evidence and its limits together', () => {
+  assert.match(landing, /What these tests establish/);
+  assert.match(landing, /What they do not establish/);
+  assert.match(landing, /How to test your own workload/);
+  assert.match(landing, /do not establish a universal hit rate, guaranteed savings/i);
+  assert.match(landing, /poor-fit examples/i);
+  assert.match(landing, /\/product-facts\.json/);
   assert.match(landing, /\/economics/);
-  assert.doesNotMatch(landing, /verified_benchmarks\s*\.filter/);
-  assert.doesNotMatch(landing, /latest_verified_updates\s*\.slice/);
-  assert.doesNotMatch(landing, /getPublicStats|public-stats\.json/);
 });
 
 test('quickstart leads with agent automation and behavior-preserving manual examples', () => {
@@ -79,8 +89,9 @@ test('revamp visual system is responsive, accessible and dependency free', () =>
   assert.match(revampCss, /@media\(max-width:680px\)/);
   assert.match(revampCss, /@media\(prefers-reduced-motion:reduce\)/);
   assert.match(revampCss, /focus-visible/);
-  assert.match(revampCss, /\.rv-adopt\{/);
-  assert.match(revampCss, /\.rv-demo\{/);
+  assert.match(factualCss, /\.rv-evidence-table/);
+  assert.match(factualCss, /\.rv-flow-list/);
+  assert.match(factualCss, /@media\(max-width:680px\)/);
   assert.match(revampJs, /data-mode-button/);
   assert.match(revampJs, /navigator\.clipboard/);
   assert.doesNotMatch(revampJs, /fetch\(|XMLHttpRequest|WebSocket/);
