@@ -119,10 +119,10 @@ test('service descriptor continues to derive the public client release', () => {
   assert.doesNotMatch(publicSource, /implemented_public_client_0\.2\.1|shadow_first_in_0\.2\.1/);
 });
 
-test('legacy preview gate markers remain temporarily available without forcing them into visible UX', () => {
-  assert.match(landing, /Release-gate compatibility markers kept non-visual/);
-  for (const marker of ['VALIDATION INFRASTRUCTURE', 'GOOD CANDIDATE', 'NEGATIVE CONTROL', 'No truth oracle', 'No fake provenance', 'MEASURED EVIDENCE', 'data-stat="facts"']) {
-    assert.match(landing, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+test('preview gate enforces the factual homepage contract without legacy marketing markers', () => {
+  for (const marker of ['SeenRelay is a reuse layer for repeated read-only validation.', 'WHAT IT DOES', 'INSTALL AND USE', 'TESTS WE HAVE RUN', 'provider calls avoided', 'What these tests establish', 'What they do not establish', 'How to test your own workload']) {
+    assert.match(previewGate, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  assert.match(previewGate, /VALIDATION INFRASTRUCTURE/);
+  assert.doesNotMatch(previewGate, /VALIDATION INFRASTRUCTURE|GOOD CANDIDATE|NEGATIVE CONTROL|MEASURED EVIDENCE|data-stat="facts"/);
+  assert.doesNotMatch(landing, /Release-gate compatibility markers kept non-visual/);
 });
