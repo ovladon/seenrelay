@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-08-31T15:42:08Z",
+  "updated_at": "2026-08-31T21:36:15Z",
   "positioning": {
     "category": "validation cost avoidance and shared freshness evidence for AI agents",
     "headline": "Avoid redundant expensive validation",
-    "subheadline": "Client 0.2.6 adds Ambient MCP integration: JavaScript/TypeScript and Python can start in local-only shadow mode while authoritative tool calls continue unchanged; active reuse remains explicit and conservative.",
+    "subheadline": "Client 0.2.7 adds Ambient framework integrations and a local machine-readable integration catalog: JavaScript/TypeScript adds LangChain routing; Python adds LangChain and PydanticAI integrations. Ambient measurement remains local-only by default and does not authorize automatic reuse.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.6",
+    "client_version": "0.2.7",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-08-31T15:42:08Z",
-    "verification": "Client 0.2.6 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. JavaScript/TypeScript adds Ambient MCP integration with local-shadow-by-default measurement and optional exact-tool use of the existing local-first guard; Python adds local-only Ambient MCP measurement and an OpenAI Agents adapter while active Ambient reuse remains intentionally unavailable."
+    "registry_install_verified_at": "2026-08-31T21:36:15Z",
+    "verification": "Client 0.2.7 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. JavaScript/TypeScript adds Ambient framework routing for LangChain plus a local machine-readable integration catalog; Python adds Ambient integrations for LangChain and PydanticAI plus a local integration catalog. Ambient integrations preserve authoritative calls by default and do not authorize automatic reuse."
   },
   "fit": {
     "use_when": [
@@ -167,6 +167,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-08-31",
+      "title": "Public client 0.2.7",
+      "summary": "SeenRelay 0.2.7 is published and independently clean-install verified on npm and PyPI. JavaScript/TypeScript adds Ambient framework routing for LangChain plus a local integration catalog; Python adds Ambient integrations for LangChain and PydanticAI plus a local integration catalog. Ambient measurement remains local-only by default and automatic reuse is not authorized."
+    },
     {
       "date": "2026-08-31",
       "title": "Public client 0.2.6",
