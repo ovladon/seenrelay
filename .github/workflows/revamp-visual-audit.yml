@@ -6,6 +6,12 @@ on:
       - site/adoption-revamp
     paths:
       - .github/workflows/revamp-visual-audit.yml
+      - src/landing.ts
+      - src/quickstart.ts
+      - src/integrations.ts
+      - public/revamp.css
+      - public/revamp-factual.css
+      - public/revamp.js
 
 permissions:
   contents: read
