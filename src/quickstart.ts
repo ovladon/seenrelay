@@ -58,7 +58,7 @@ const client = ambientMcpClient(rawMcpClient, {
 
 // use client.callTool(...) normally
 console.log(client.seenRelayAmbient.getReport());</pre></div>
-      <p>When a tool is explicitly reviewed as eligible, <code>seenrelay/mcp-auto</code> provides the local-first bind-once path. Shared CHECK remains optional.</p>
+      <p>When a tool is explicitly reviewed as eligible, <code>seenrelay/mcp-auto</code> provides the local-first bind-once path. Shared SeenRelay CHECK is off by default.</p>
       <a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a>
     </article>
     <article class="rv-choice">
@@ -77,7 +77,7 @@ print(client.get_report())</pre></div>
       <a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Python guide →</a>
     </article>
   </div>
-  <div class="rv-note" style="margin-top:12px"><b>Protocol boundary:</b> SeenRelay's hosted domain protocol still exposes exactly CHECK and OBSERVE. The Ambient examples above are client-side measurement integrations; the original validation remains the fallback.</div>
+  <div class="rv-note" style="margin-top:12px"><b>Protocol boundary:</b> MCP remains the standard discovery and model/tool-routing interface for MCP applications. SeenRelay's local-first client integrations sit around the application's validation path. The hosted SeenRelay protocol exposes exactly CHECK and OBSERVE, and the original validation remains the fallback.</div>
 </section>
 
 <section class="rv-shell rv-section">
