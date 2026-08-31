@@ -7,6 +7,7 @@ const index = fs.readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8
 const publicSource = fs.readFileSync(new URL('../src/public.ts', import.meta.url), 'utf8');
 const quickstartSource = fs.readFileSync(new URL('../src/quickstart.ts', import.meta.url), 'utf8');
 const adoptionSource = fs.readFileSync(new URL('../src/adoption.ts', import.meta.url), 'utf8');
+const previewGate = fs.readFileSync(new URL('../scripts/preview-release-gate.sh', import.meta.url), 'utf8');
 const css = fs.readFileSync(new URL('../public/site.css', import.meta.url), 'utf8');
 
 test('Phase B.1 public route uses the adoption landing', () => {
@@ -85,4 +86,16 @@ test('shared stylesheet preserves non-home human pages and benchmark matrix', ()
   assert.match(css, /\.nav \+ main \.terminal/);
   assert.match(css, /\.nav \+ main \.proof-grid/);
   assert.match(css, /\.nav \+ main \.benchmark-table/);
+});
+
+
+test('preview release gate validates Phase B.1 semantics instead of obsolete homepage copy', () => {
+  assert.match(previewGate, /VALIDATION INFRASTRUCTURE/);
+  assert.match(previewGate, /CLIENT v\$\{client_version\} VERIFIED/);
+  assert.match(previewGate, /GOOD CANDIDATE/);
+  assert.match(previewGate, /NEGATIVE CONTROL/);
+  assert.match(previewGate, /No truth oracle/);
+  assert.match(previewGate, /quickstart\.html/);
+  assert.match(previewGate, /clients\.html/);
+  assert.doesNotMatch(previewGate, /VALIDATION COST AVOIDANCE/);
 });
