@@ -1,4 +1,4 @@
-import { machinePublicFactsText, siteFooterHtml } from './public-facts-view.js';
+import { machinePublicFactsText } from './public-facts-view.js';
 import { publicProductFacts } from './public-facts.generated.js';
 export { clientsPage } from './integrations.js';
 
@@ -21,6 +21,14 @@ SeenRelay reports recent observations, not universal truth. It does not browse, 
 
 ${machinePublicFactsText(origin)}
 
+## Add SeenRelay to Cursor or another Agent Skills client
+
+Install the published SeenRelay skill directly from the canonical domain:
+
+\`npx skills add ${origin} --skill seenrelay --yes\`
+
+Then integrate conservatively: start in shadow mode, preserve the authoritative call, and only enable bounded reuse after the workload and freshness policy justify it.
+
 ## Preferred JavaScript / TypeScript order
 
 - exact in-flight / explicit-TTL local reuse;
@@ -29,6 +37,8 @@ ${machinePublicFactsText(origin)}
 - optional shared SeenRelay CHECK;
 - original validation fallback;
 - OBSERVE only after fresh independent validation.
+
+For an existing MCP client, start with \`seenrelay/ambient\` for behavior-preserving measurement. After an eligible read-only tool is reviewed, \`seenrelay/mcp-auto\` provides the local-first bind-once protection path.
 
 Shared CHECK is off by default in Zero-State. Completed-result TTL defaults to zero. Provider-specific adapters are optional integrations and are not dependencies of SeenRelay Core.
 
