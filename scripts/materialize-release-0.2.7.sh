@@ -105,10 +105,13 @@ TMP="$(mktemp -d)"
   cd "$TMP"
   npm init -y >/dev/null
   DISABLE_TELEMETRY=1 npx -y skills@latest add "$GITHUB_WORKSPACE" --skill seenrelay --agent codex --copy --yes
-  INSTALLED="$(find "$TMP" -type f -path '*/seenrelay/SKILL.md' -print -quit)"
+  INSTALLED="$(find "$TMP" "$GITHUB_WORKSPACE/.agents" -type f -path '*/seenrelay/SKILL.md' -print 2>/dev/null | head -n 1)"
   test -n "$INSTALLED"
+  echo "Installed skill path: $INSTALLED"
   cmp "$INSTALLED" "$GITHUB_WORKSPACE/skills/seenrelay/SKILL.md"
-  test "$(sha256sum "$INSTALLED" | awk '{print $1}')" = "$EXPECTED_SKILL"
+  ACTUAL_SKILL="$(sha256sum "$INSTALLED" | awk '{print $1}')"
+  echo "Installed skill SHA-256: $ACTUAL_SKILL"
+  test "$ACTUAL_SKILL" = "$EXPECTED_SKILL"
 )
 
 # Rebuild npm artifact and require the previously approved byte digest.
