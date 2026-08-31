@@ -1,0 +1,72 @@
+name: Materialize SeenRelay 0.2.7 candidate
+
+on:
+  push:
+    branches:
+      - release/client-0.2.7-ambient-frameworks
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.event.head_commit.message != 'Release client 0.2.7 ambient framework integrations'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Materialize exact approved candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .release-staging/chunk* > /tmp/release027.b64
+          base64 -d /tmp/release027.b64 > /tmp/release027.tgz
+          echo '62e66e6538a3dedd6d3b3fd56e2b7bf36d575c7beb2a6ab6510b7dec9b9ad0dd  /tmp/release027.tgz' | sha256sum -c -
+          tar -xzf /tmp/release027.tgz -C "$GITHUB_WORKSPACE"
+          rm -rf .release-staging
+          rm -f .github/workflows/materialize-release-0.2.7.yml
+
+          check_blob() {
+            test "$(git hash-object "$1")" = "$2"
+          }
+          check_blob .github/workflows/agent-skill-cli-gate.yml 9e5edf8d194cede5852f30d4f4bd0ac341ebe7a4
+          check_blob clients/RELEASE_VERSION b0032849c80b52bdb371f57ec8af94eabb9d65ad
+          check_blob clients/RELEASE_REQUEST 72c45e06dbb42882608fb394a6438c3ab8bff938
+          check_blob clients/typescript/package.json c89f0cf93322d4f23582b57c429371a862ef6025
+          check_blob clients/typescript/README.md 16cc261e33769d7a64e436496e053d1bea352767
+          check_blob clients/python/pyproject.toml 8950de43e364cf5c082bfd29cfc17fe5e76bffc7
+          check_blob clients/python/README.md 6a025ac60c663ed2d0f154e309d733622dd49a28
+          check_blob clients/python/seenrelay_ambient.py 0b746116e22a310e7a2487add8ca82952aa4b658
+          check_blob clients/python/test_ambient_langchain.py acb574105a186bb13be7010cb850396a2b73ccfc
+          check_blob clients/python/test_ambient_pydantic_ai.py fd5905a0a31ee359871df2a3716b40b53acfc6a7
+          check_blob clients/typescript/dist/ambient.d.ts 6fe0c514b68644a3d6efd671bc2f14e80b98edeb
+          check_blob clients/typescript/dist/ambient.js 05bfc4d4b46b39907acdd712cad6447d61195033
+          check_blob shared/agent-skill.mjs 936473d9b89045c1a29589c3e357a8261b5a3a71
+          check_blob skills/seenrelay/SKILL.md 2c0556fdb85d85615f8a87b8fa7ca4d95cf03637
+          check_blob tests/ambient-langchain-adapters.test.mjs eb7c27748949cc3dbc438e64f6253435119d9a56
+          check_blob tests/ambient-integration-catalog.test.mjs cdc6d456f1282140e758636595d8162c4548bff6
+          check_blob tests/post211-agent-skill.test.mjs b70efb2656c3cb0f8c24c5a8831ca28b47f2723f
+          check_blob tests/post211-machine-discovery.test.mjs 8fc586fa01c1f6b65eef4453d373245f83899c86
+          check_blob src/index.ts b69a039e9e235720405590b39b4bb73998044345
+
+      - name: Run targeted candidate gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/ambient-langchain-adapters.test.mjs tests/ambient-integration-catalog.test.mjs tests/post211-agent-skill.test.mjs tests/post211-machine-discovery.test.mjs
+          (cd clients/python && PYTHONPATH=. python -m unittest test_ambient.py test_ambient_langchain.py test_ambient_pydantic_ai.py)
+
+      - name: Commit materialized candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'Release client 0.2.7 ambient framework integrations'
+          git push origin HEAD:release/client-0.2.7-ambient-frameworks
