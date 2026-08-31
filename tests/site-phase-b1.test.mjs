@@ -5,6 +5,8 @@ import fs from 'node:fs';
 const landing = fs.readFileSync(new URL('../src/landing.ts', import.meta.url), 'utf8');
 const index = fs.readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8');
 const publicSource = fs.readFileSync(new URL('../src/public.ts', import.meta.url), 'utf8');
+const quickstartSource = fs.readFileSync(new URL('../src/quickstart.ts', import.meta.url), 'utf8');
+const adoptionSource = fs.readFileSync(new URL('../src/adoption.ts', import.meta.url), 'utf8');
 const css = fs.readFileSync(new URL('../public/site.css', import.meta.url), 'utf8');
 
 test('Phase B.1 public route uses the adoption landing', () => {
@@ -68,4 +70,19 @@ test('visual system has responsive and accessible motion handling', () => {
   assert.match(css, /@media\(max-width:700px\)/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
   assert.match(css, /focus-visible/);
+});
+
+
+test('secondary public adoption surfaces derive the verified client version', () => {
+  assert.match(quickstartSource, /publicProductFacts\.install\.client_version/);
+  assert.match(adoptionSource, /publicProductFacts\.install\.client_version/);
+  assert.doesNotMatch(quickstartSource, /0\.2\.1/);
+  assert.doesNotMatch(adoptionSource, /0\.2\.1/);
+});
+
+test('shared stylesheet preserves non-home human pages and benchmark matrix', () => {
+  assert.match(css, /legacy-human-pages-compat/);
+  assert.match(css, /\.nav \+ main \.terminal/);
+  assert.match(css, /\.nav \+ main \.proof-grid/);
+  assert.match(css, /\.nav \+ main \.benchmark-table/);
 });
