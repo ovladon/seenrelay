@@ -4,7 +4,32 @@
 
 Deterministic, standard-library-only client that places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default.
 
-Client 0.2.5 is published and clean-install verified on PyPI. Python behavior remains conservative and shadow-first. The direct Firecrawl SDK shadow adapter is JavaScript / TypeScript-only; Python parity is not claimed.
+The registry-verified public version is published in `https://seenrelay.com/product-facts.json`. Python remains conservative and shadow-first. This package includes local-only Ambient MCP measurement and an OpenAI Agents Python adapter; active Ambient reuse remains intentionally unavailable until Python local-first semantics match the JavaScript / TypeScript implementation.
+
+
+## Ambient MCP
+
+Python can start in local-only shadow mode with no SeenRelay network call and no result suppression:
+
+```python
+from seenrelay_ambient import ambient_mcp_client
+
+client = ambient_mcp_client(raw_mcp_client, server_key="docs")
+# await client.call_tool(...) normally
+print(client.get_report())
+```
+
+For OpenAI Agents Python:
+
+```python
+from seenrelay_ambient import ambient_openai_agents_mcp_server
+
+server = ambient_openai_agents_mcp_server(raw_mcp_server)
+# pass `server` to the Agent exactly as before
+```
+
+The report stores aggregate metrics plus SHA-256 fingerprints only. It identifies exact repetition worth reviewing; it does not claim savings. Active Ambient reuse is intentionally unavailable in the Python client until its local-first semantics match the TypeScript implementation.
+
 
 ## Install
 

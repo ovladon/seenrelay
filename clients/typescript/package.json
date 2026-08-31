@@ -1,6 +1,6 @@
 {
   "name": "seenrelay",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Avoid redundant expensive validation with local-first SeenRelay clients.",
   "type": "module",
   "main": "./dist/seenrelay.js",
@@ -41,6 +41,34 @@
     "./economics": {
       "types": "./dist/economics.d.ts",
       "import": "./dist/economics.js"
+    },
+    "./capabilities": {
+      "types": "./dist/capabilities.d.ts",
+      "import": "./dist/capabilities.js"
+    },
+    "./profiles": {
+      "types": "./dist/profiles.d.ts",
+      "import": "./dist/profiles.js"
+    },
+    "./catalog": {
+      "types": "./dist/catalog.d.ts",
+      "import": "./dist/catalog.js"
+    },
+    "./readiness": {
+      "types": "./dist/readiness.d.ts",
+      "import": "./dist/readiness.js"
+    },
+    "./vantage-assurance": {
+      "types": "./dist/vantage-assurance.d.ts",
+      "import": "./dist/vantage-assurance.js"
+    },
+    "./declarative-profile": {
+      "types": "./dist/declarative-profile.d.ts",
+      "import": "./dist/declarative-profile.js"
+    },
+    "./ambient": {
+      "types": "./dist/ambient.d.ts",
+      "import": "./dist/ambient.js"
     }
   },
   "files": [
