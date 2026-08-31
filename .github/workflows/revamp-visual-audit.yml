@@ -117,11 +117,11 @@ jobs:
 
             await visit('/', `${name}-home.png`);
             await visit('/', `${name}-agent.png`, async p => {
-              const tab = p.getByRole('tab', { name: /I.m an agent/i });
+              const tab = p.getByRole('tab', { name: /Coding agent/i });
               await tab.click();
               await p.waitForTimeout(150);
               const selected = await tab.getAttribute('aria-selected');
-              if (selected !== 'true') errors.push(`${name}: agent tab did not become selected`);
+              if (selected !== 'true') errors.push(`${name}: coding-agent tab did not become selected`);
               const text = await p.locator('[data-install-view="agent"].active').innerText();
               if (!text.includes('npx skills add')) errors.push(`${name}: agent install command not visible after tab switch`);
             });
