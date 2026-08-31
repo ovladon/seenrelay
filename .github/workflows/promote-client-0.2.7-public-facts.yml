@@ -114,3 +114,5 @@ jobs:
           git diff --cached --quiet && exit 1
           git commit -m 'Promote verified public client facts to 0.2.7 candidate'
           git push origin HEAD:release/promote-client-0.2.7-public-facts
+
+# Trigger registration after workflow creation on the branch.
