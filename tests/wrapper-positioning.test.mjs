@@ -11,7 +11,7 @@ const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
 test('public guidance distinguishes local-first application placement from remote MCP routing', () => {
   const publicSource = read('src', 'public.ts');
   const readme = read('README.md');
-  const clients = read('src', 'adoption.ts');
+  const clients = read('src', 'integrations.ts');
   const quickstart = read('src', 'quickstart.ts');
 
   assert.match(publicSource, /javascript_typescript_zero_state/);
@@ -23,7 +23,8 @@ test('public guidance distinguishes local-first application placement from remot
   assert.match(readme, /provider-independent/i);
   assert.match(readme, /Classic shadow-first path/i);
   assert.match(clients, /seenrelay\/mcp-auto/);
-  assert.match(clients, /MCP\/REST: hosted CHECK\/OBSERVE/);
+  assert.match(clients, /Remote protocol/);
+  assert.match(clients, /CHECK and OBSERVE/);
   assert.match(quickstart, /MCP remains the standard discovery and model\/tool-routing interface/);
   assert.match(quickstart, /MCP BIND-ONCE/);
   assert.match(quickstart, /Shared SeenRelay CHECK is off by default/);
