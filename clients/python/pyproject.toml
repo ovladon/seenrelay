@@ -4,19 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "seenrelay"
-version = "0.2.6"
+version = "0.2.7"
 description = "Measure and avoid redundant expensive validation with SeenRelay CHECK/OBSERVE."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-authors = [
-  { name = "Vlad Belciug" }
-]
-keywords = ["ai-agents", "validation", "freshness", "cache", "mcp"]
-classifiers = [
-  "Programming Language :: Python :: 3",
-  "Operating System :: OS Independent"
-]
+authors = [{ name = "Vlad Belciug" }]
+keywords = ["ai-agents", "validation", "freshness", "cache", "mcp", "langchain", "pydantic-ai", "openai-agents"]
+classifiers = ["Programming Language :: Python :: 3", "Operating System :: OS Independent"]
 dependencies = []
 
 [project.urls]

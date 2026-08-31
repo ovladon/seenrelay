@@ -1,6 +1,6 @@
 {
   "name": "seenrelay",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Avoid redundant expensive validation with local-first SeenRelay clients.",
   "type": "module",
   "main": "./dist/seenrelay.js",
@@ -92,7 +92,10 @@
     "validation",
     "freshness",
     "cache",
-    "mcp"
+    "mcp",
+    "langchain",
+    "openai-agents",
+    "vercel-ai-sdk"
   ],
   "engines": {
     "node": ">=20"

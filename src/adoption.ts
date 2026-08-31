@@ -157,6 +157,9 @@ Python 0.2.1 remains shadow-first. The classic JavaScript / TypeScript API also 
 - Machine descriptor: ${origin}/service.json
 - OpenAPI: ${origin}/openapi.json
 - MCP endpoint: ${origin}/mcp
+- Agent Skill index: ${origin}/.well-known/agent-skills/index.json
+- Agent Skill: ${origin}/.well-known/agent-skills/seenrelay/SKILL.md
+- Legacy Agent Skill discovery fallback: ${origin}/.well-known/skills/index.json
 - MCP Registry: io.github.ovladon/seenrelay
 - Trust: ${origin}/trust
 - Data practices: ${origin}/data-practices.json

@@ -34,6 +34,25 @@ function frozenToolMetric(name, metric) {
   });
 }
 
+const AMBIENT_INTEGRATION_CATALOG = Object.freeze({
+  schema: 'seenrelay-ambient-integration-catalog-v0',
+  language: 'javascript-typescript',
+  hosted_operations_added: 0,
+  telemetry_added: false,
+  automatic_reuse_authorized: false,
+  integrations: Object.freeze([
+    Object.freeze({ id: 'mcp.generic-js.v0', framework: 'mcp', export_name: 'ambientMcpClient', boundary: 'client.callTool', default_mode: 'local-shadow', active_reuse_available: true, optional_dependency: null }),
+    Object.freeze({ id: 'openai-agents.mcp-js.v0', framework: '@openai/agents', export_name: 'ambientOpenAIAgentsMcpServer', boundary: 'mcp-server.completed-call', default_mode: 'local-shadow', active_reuse_available: true, optional_dependency: '@openai/agents' }),
+    Object.freeze({ id: 'ai-sdk.mcp-tools-js.v0', framework: 'ai-sdk', export_name: 'ambientAiSdkMcpTools', boundary: 'tool.execute', default_mode: 'local-shadow', active_reuse_available: false, optional_dependency: 'ai' }),
+    Object.freeze({ id: 'langchain.mcp-hooks-js.v0', framework: '@langchain/mcp-adapters', export_name: 'ambientLangChainMcpHooks', boundary: 'afterToolCall', default_mode: 'local-shadow', active_reuse_available: false, optional_dependency: '@langchain/mcp-adapters' })
+  ])
+});
+
+/** Return only local package capability metadata; no discovery network call is made. */
+export function getAmbientIntegrationCatalog() {
+  return AMBIENT_INTEGRATION_CATALOG;
+}
+
 /**
  * Ambient MCP wrapper.
  *
@@ -331,4 +350,173 @@ export function ambientAiSdkMcpTools(toolSet, options = {}) {
       }
     })
   });
+}
+
+
+function langChainMetricKey(serverName, name) {
+  return `${serverName}\u0000${name}`;
+}
+
+/**
+ * Local-shadow hooks for @langchain/mcp-adapters (JavaScript/TypeScript).
+ *
+ * The official afterToolCall hook already receives the effective serverName,
+ * tool name, arguments, and mapped tool result. SeenRelay therefore does not
+ * need transport interception or call correlation. Existing hooks are
+ * preserved. No CHECK/OBSERVE or active reuse is performed.
+ */
+export function ambientLangChainMcpHooks(options = {}) {
+  const maxCoordinates = positiveInteger(options.maxCoordinates ?? 1000, 'maxCoordinates');
+  const existingHooks = options.hooks ?? {};
+  if (!existingHooks || typeof existingHooks !== 'object' || Array.isArray(existingHooks)) {
+    throw new TypeError('hooks must be an object');
+  }
+  const existingBefore = typeof existingHooks.beforeToolCall === 'function' ? existingHooks.beforeToolCall : undefined;
+  const existingAfter = typeof existingHooks.afterToolCall === 'function' ? existingHooks.afterToolCall : undefined;
+  let dynamicHeadersSeen = false;
+  let unknownRequestShapeSeen = false;
+  const fingerprints = new Map();
+  const perTool = new Map();
+  const totals = { calls: 0, measured: 0, first: 0, repeats: 0, unchanged: 0, changed: 0, refused: 0 };
+
+  function metric(serverName, name) {
+    const key = langChainMetricKey(serverName, name);
+    let value = perTool.get(key);
+    if (!value) {
+      value = { serverName, name, calls: 0, measured: 0, first: 0, repeats: 0, unchanged: 0, changed: 0, refused: 0 };
+      perTool.set(key, value);
+    }
+    return value;
+  }
+  function touch(key, value) {
+    if (fingerprints.has(key)) fingerprints.delete(key);
+    fingerprints.set(key, value);
+    while (fingerprints.size > maxCoordinates) fingerprints.delete(fingerprints.keys().next().value);
+  }
+  function refuse(m) {
+    totals.refused += 1;
+    m.refused += 1;
+  }
+
+  async function beforeToolCall(event, state, config) {
+    if (!event || typeof event !== 'object' || Array.isArray(event) || Object.keys(event).some(key => !['serverName', 'name', 'args'].includes(key))) {
+      unknownRequestShapeSeen = true;
+    }
+    if (!existingBefore) return undefined;
+    const modification = await existingBefore(event, state, config);
+    if (modification && typeof modification === 'object' && Object.prototype.hasOwnProperty.call(modification, 'headers') && modification.headers !== undefined) {
+      dynamicHeadersSeen = true;
+    }
+    return modification;
+  }
+
+  async function afterToolCall(event, state, config) {
+    totals.calls += 1;
+    const serverName = typeof event?.serverName === 'string' && event.serverName.trim() ? event.serverName.trim() : '<invalid-server-name>';
+    const name = typeof event?.name === 'string' && event.name.trim() ? event.name.trim() : '<invalid-tool-name>';
+    const m = metric(serverName, name);
+    m.calls += 1;
+    try {
+      if (dynamicHeadersSeen) throw new TypeError('dynamic per-call headers are not exposed by LangChain afterToolCall');
+      if (unknownRequestShapeSeen) throw new TypeError('unknown LangChain beforeToolCall request fields require review');
+      if (!event || typeof event !== 'object' || Array.isArray(event) || Object.keys(event).some(key => !['serverName', 'name', 'args', 'result'].includes(key))) {
+        throw new TypeError('unknown LangChain afterToolCall fields require review');
+      }
+      if (serverName.startsWith('<invalid-') || name.startsWith('<invalid-')) throw new TypeError('invalid LangChain hook identity');
+      if (!Array.isArray(event.result) || event.result.length !== 2 || !(typeof event.result[0] === 'string' || Array.isArray(event.result[0])) || !Array.isArray(event.result[1])) {
+        throw new TypeError('unexpected LangChain afterToolCall result shape');
+      }
+      const coordinate = sha256JsonFingerprint({
+        protocol: 'langchain-mcp-after-tool-call-exact-v1',
+        server: serverName,
+        name,
+        arguments: event?.args ?? {}
+      });
+      const resultFingerprint = sha256JsonFingerprint(event?.result);
+      totals.measured += 1;
+      m.measured += 1;
+      const previous = fingerprints.get(coordinate);
+      if (previous === undefined) {
+        totals.first += 1;
+        m.first += 1;
+        touch(coordinate, resultFingerprint);
+      } else {
+        totals.repeats += 1;
+        m.repeats += 1;
+        if (previous === resultFingerprint) {
+          totals.unchanged += 1;
+          m.unchanged += 1;
+        } else {
+          totals.changed += 1;
+          m.changed += 1;
+        }
+        touch(coordinate, resultFingerprint);
+      }
+    } catch {
+      refuse(m);
+    }
+    if (existingAfter) return existingAfter(event, state, config);
+    return undefined;
+  }
+
+  const hooks = Object.freeze({ beforeToolCall, afterToolCall });
+  const controller = {
+    hooks,
+    seenRelayAmbient: Object.freeze({
+      schema: 'seenrelay-ambient-langchain-js-mcp-v0',
+      framework: '@langchain/mcp-adapters',
+      boundary: 'afterToolCall',
+      mode: 'local-shadow-only',
+      active_reuse_enabled: false,
+      network_calls_from_shadow: 0,
+      shared_check_from_shadow: false,
+      observe_from_shadow: false,
+      raw_arguments_retained: false,
+      raw_results_retained: false,
+      measures_pre_user_after_hook_result: true,
+      dynamic_per_call_headers_fail_closed: true,
+      getReport() {
+        const tools = [...perTool.values()].map(m => Object.freeze({
+          server_name: m.serverName,
+          tool: m.name,
+          calls: m.calls,
+          measured_calls: m.measured,
+          first_observations: m.first,
+          exact_repeat_validations: m.repeats,
+          exact_unchanged_repeats: m.unchanged,
+          exact_changed_repeats: m.changed,
+          refused_measurements: m.refused,
+          exact_repeat_rate: m.measured ? m.repeats / m.measured : 0,
+          exact_unchanged_repeat_rate: m.measured ? m.unchanged / m.measured : 0
+        })).sort((a, b) => b.exact_unchanged_repeats - a.exact_unchanged_repeats || a.server_name.localeCompare(b.server_name) || a.tool.localeCompare(b.tool));
+        return Object.freeze({
+          schema: 'seenrelay-ambient-langchain-js-mcp-report-v0',
+          calls: totals.calls,
+          measured_calls: totals.measured,
+          first_observations: totals.first,
+          exact_repeat_validations: totals.repeats,
+          exact_unchanged_repeats: totals.unchanged,
+          exact_changed_repeats: totals.changed,
+          refused_measurements: totals.refused,
+          candidate_tools: Object.freeze(tools.filter(x => x.exact_unchanged_repeats > 0)),
+          tools: Object.freeze(tools),
+          interpretation: Object.freeze({
+            savings_proven: false,
+            latency_measured: false,
+            native_controls_measured: false,
+            relay_check_overhead_measured: false,
+            automatic_reuse_authorized: false,
+            public_claim_authorized: false,
+            exact_repetition_only: true,
+            dynamic_per_call_headers_seen: dynamicHeadersSeen,
+            unknown_request_shape_seen: unknownRequestShapeSeen,
+            unknown_fields_fail_closed: true,
+            documented_result_shape_required: true,
+            next_step: totals.unchanged > 0 ? 'REVIEW_CANDIDATE_TOOLS_AGAINST_NATIVE_CONTROLS' : 'KEEP_RUNNING_NATURALLY'
+          })
+        });
+      }
+    })
+  };
+  return Object.freeze(controller);
 }

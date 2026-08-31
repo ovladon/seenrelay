@@ -1,5 +1,24 @@
 import type { McpToolPolicy, ProtectedMcpClient } from './mcp-auto.js';
 
+export interface AmbientIntegrationDescriptor {
+  readonly id: string;
+  readonly framework: string;
+  readonly export_name: string;
+  readonly boundary: string;
+  readonly default_mode: 'local-shadow';
+  readonly active_reuse_available: boolean;
+  readonly optional_dependency: string | null;
+}
+export interface AmbientIntegrationCatalog {
+  readonly schema: 'seenrelay-ambient-integration-catalog-v0';
+  readonly language: 'javascript-typescript';
+  readonly hosted_operations_added: 0;
+  readonly telemetry_added: false;
+  readonly automatic_reuse_authorized: false;
+  readonly integrations: readonly AmbientIntegrationDescriptor[];
+}
+export declare function getAmbientIntegrationCatalog(): AmbientIntegrationCatalog;
+
 export interface AmbientMcpOptions {
   serverKey?: string;
   maxCoordinates?: number;
@@ -93,6 +112,39 @@ export declare function ambientAiSdkMcpTools<T extends Record<string, any>>(tool
     readonly boundary: 'tool.execute';
     readonly serverKey: string;
     readonly active_reuse_enabled: false;
+    getReport(): unknown;
+  };
+};
+
+
+export interface AmbientLangChainMcpHooksOptions {
+  maxCoordinates?: number;
+  /** Existing @langchain/mcp-adapters hooks to preserve. */
+  hooks?: {
+    beforeToolCall?: (...args: any[]) => any;
+    afterToolCall?: (...args: any[]) => any;
+  };
+}
+export declare function ambientLangChainMcpHooks(options?: AmbientLangChainMcpHooksOptions): {
+  readonly hooks: {
+    readonly beforeToolCall: (...args: any[]) => Promise<any>;
+    readonly afterToolCall: (...args: any[]) => Promise<any>;
+  };
+  readonly seenRelayAmbient: {
+    readonly schema: 'seenrelay-ambient-langchain-js-mcp-v0';
+    readonly framework: '@langchain/mcp-adapters';
+    readonly boundary: 'afterToolCall';
+    readonly mode: 'local-shadow-only';
+    readonly active_reuse_enabled: false;
+    readonly network_calls_from_shadow: 0;
+    readonly shared_check_from_shadow: false;
+    readonly observe_from_shadow: false;
+    readonly raw_arguments_retained: false;
+    readonly raw_results_retained: false;
+    readonly measures_pre_user_after_hook_result: true;
+    readonly dynamic_per_call_headers_fail_closed: true;
+    readonly unknown_fields_fail_closed: true;
+    readonly documented_result_shape_required: true;
     getReport(): unknown;
   };
 };
