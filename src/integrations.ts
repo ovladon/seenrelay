@@ -45,7 +45,7 @@ export function clientsPage(origin: string): string {
 
 const client = ambientMcpClient(rawMcpClient, {
   serverKey: 'docs'
-});</pre></div><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JS / TS guide →</a></article>
+});</pre></div><p style="margin-top:14px">When the measured tool is reviewed as eligible, move the same client to local-first protection with <code>protectMcpClient</code> from <code>seenrelay/mcp-auto</code>. Shared CHECK stays off by default unless you explicitly enable it.</p><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JS / TS guide →</a></article>
 
     <article class="rv-choice"><header><b>Plain read-only function</b><span>JS / TS</span></header><p>Use Zero-State when your application directly controls the validation function and can define a defensible freshness window.</p><div class="rv-code"><pre>import { SeenRelayZeroState } from 'seenrelay/zero-state';
 
@@ -67,9 +67,10 @@ ambientLangChainMcpHooks()
 ambient_langchain_mcp_client(client)
 ambient_pydantic_ai_toolset(toolset)</pre></div><a href="/quickstart">See adapter examples →</a></article>
 
-    <article class="rv-choice"><header><b>Remote protocol</b><span>MCP / REST</span></header><p>When you do not need a client adapter, use the hosted protocol directly. The service exposes CHECK and OBSERVE.</p><div class="rv-code"><pre>MCP  ${origin}/mcp
-REST ${origin}/v1/check
-REST ${origin}/v1/observe</pre></div><a href="/openapi.json">OpenAPI →</a></article>
+    <article class="rv-choice"><header><b>Remote protocol</b><span>MCP / REST</span></header><p>When you do not need a client adapter, use the hosted protocol directly. The service exposes CHECK and OBSERVE.</p><div class="rv-code"><pre>MCP Registry  io.github.ovladon/seenrelay
+MCP           ${origin}/mcp
+REST          ${origin}/v1/check
+REST          ${origin}/v1/observe</pre></div><a href="/openapi.json">OpenAPI →</a></article>
   </div>
 </section>
 
@@ -78,7 +79,7 @@ REST ${origin}/v1/observe</pre></div><a href="/openapi.json">OpenAPI →</a></ar
   <div class="rv-stack">
     <article><h3>Ambient / shadow</h3><p>Best first step. The original operation still runs. SeenRelay measures exact repetition and produces local evidence without authorizing automatic reuse.</p></article>
     <article><h3>Local-first protection</h3><p>For reviewed read-only work, JavaScript/TypeScript can coalesce in-flight duplicates and apply explicit local/private freshness policy before the original validation.</p></article>
-    <article><h3>Shared CHECK</h3><p>Use shared freshness evidence only when it can add value beyond local/private and source-native controls. It remains an optional accelerator, not a prerequisite.</p></article>
+    <article><h3>Shared CHECK</h3><p>Shared CHECK is off by default. Enable shared freshness evidence only when it can add value beyond local/private and source-native controls; it remains an optional accelerator, not a prerequisite.</p></article>
   </div>
 </section>
 
