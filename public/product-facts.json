@@ -56,7 +56,7 @@
       "matrix": {
         "series_key": "firecrawl-basic-scrape-provider-cache-v1",
         "surface": "Basic cached scrape",
-        "configuration": "Fixed URL \u00b7 provider cache enabled",
+        "configuration": "Fixed URL · provider cache enabled",
         "evidence_level": "first-party smoke",
         "fit": "poor",
         "cost_outcome": "better",
@@ -95,7 +95,7 @@
       "matrix": {
         "series_key": "firecrawl-json-structured-extraction-v1",
         "surface": "Structured JSON extraction",
-        "configuration": "Fixed URL \u00b7 JSON structured extraction",
+        "configuration": "Fixed URL · JSON structured extraction",
         "evidence_level": "first-party smoke",
         "fit": "poor",
         "cost_outcome": "better",
@@ -131,7 +131,7 @@
       "matrix": {
         "series_key": "firecrawl-browser-interaction-code-v1",
         "surface": "Browser interaction",
-        "configuration": "Fixed URL \u00b7 scrape + interact(code) + stop",
+        "configuration": "Fixed URL · scrape + interact(code) + stop",
         "evidence_level": "first-party smoke",
         "fit": "poor",
         "cost_outcome": "better",
