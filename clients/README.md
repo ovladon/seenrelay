@@ -1,14 +1,14 @@
 # SeenRelay deterministic client wrappers
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.5 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.6 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-Client 0.2.5 is published and clean-install verified on npm and PyPI. JavaScript / TypeScript adds a direct Firecrawl SDK shadow adapter; Python behavior remains conservative and shadow-first, with no parity claim for this JS/TS-specific helper.
+Client 0.2.6 is published and clean-install verified on npm and PyPI. JavaScript / TypeScript adds Ambient MCP integration that starts in local shadow and can opt exact reviewed tools into the existing local-first guard; Python adds local-only Ambient MCP measurement and an OpenAI Agents adapter while active Ambient reuse remains unavailable.
 
 The clients have two deliberately different execution modes:
 
@@ -28,7 +28,7 @@ The clients have two deliberately different execution modes:
 - Firecrawl JavaScript SDK measurement-only shadow pilot: `seenrelay/firecrawl-sdk-shadow`
 - Hostile benchmark evaluator: `seenrelay/economics`
 
-The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.5` on npm and PyPI.
+The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.6` on npm and PyPI.
 
 ## Install
 
@@ -153,7 +153,7 @@ value = relay.guard(
 )
 ```
 
-Python behavior remains shadow-first in 0.2.5. JavaScript / TypeScript Zero-State, natural-workload collector, Firecrawl shadow pilots and packaged economics evaluator parity are not claimed for Python.
+Python behavior remains shadow-first in 0.2.6. Ambient MCP measurement and the OpenAI Agents adapter are available in Python, but JavaScript / TypeScript Zero-State, active Ambient reuse, natural-workload collector, Firecrawl shadow pilots and packaged economics evaluator parity are not claimed for Python.
 
 ## Shadow Proof
 
@@ -176,7 +176,7 @@ console.log(proof.report({ avoidedValidationCost: 0.01 }));
 
 JavaScript / TypeScript keeps authoritative validation enabled and can export bounded, sanitized natural-workload records directly into the hostile benchmark input format. The export excludes fact identity, source, raw values and per-call timestamps. CHECK-unavailable calls remain in the sample; an observed mismatch fails safety evidence, and an unavailable deterministic comparison leaves the evidence incomplete rather than safe.
 
-JavaScript / TypeScript 0.2.5 can evaluate that format directly through `seenrelay/economics`. The evaluator reports evidence only and never enables reuse.
+The current JavaScript / TypeScript client can evaluate that format directly through `seenrelay/economics`. The evaluator reports evidence only and never enables reuse.
 
 Potential direct savings count only measured `SAME_OBSERVED` cases. Conditional ETag / Last-Modified savings remain excluded until the consuming application measures them separately.
 

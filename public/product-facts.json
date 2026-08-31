@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-08-30T18:38:31Z",
+  "updated_at": "2026-08-31T15:42:08Z",
   "positioning": {
     "category": "validation cost avoidance and shared freshness evidence for AI agents",
     "headline": "Avoid redundant expensive validation",
-    "subheadline": "JavaScript/TypeScript 0.2.5 adds measurement-only shadow support for direct Firecrawl SDK scrape calls alongside the existing MCP helper while authoritative provider validation remains enabled. Python remains shadow-first.",
+    "subheadline": "Client 0.2.6 adds Ambient MCP integration: JavaScript/TypeScript and Python can start in local-only shadow mode while authoritative tool calls continue unchanged; active reuse remains explicit and conservative.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.5",
+    "client_version": "0.2.6",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-08-29T23:40:48Z",
-    "verification": "Client 0.2.5 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. JavaScript/TypeScript adds a direct Firecrawl SDK shadow adapter that preserves the original provider call and raw result while measuring counterfactual shared reuse; it does not enable automatic reuse. Python remains shadow-first and does not claim parity for this JS/TS-specific helper."
+    "registry_install_verified_at": "2026-08-31T15:42:08Z",
+    "verification": "Client 0.2.6 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. JavaScript/TypeScript adds Ambient MCP integration with local-shadow-by-default measurement and optional exact-tool use of the existing local-first guard; Python adds local-only Ambient MCP measurement and an OpenAI Agents adapter while active Ambient reuse remains intentionally unavailable."
   },
   "fit": {
     "use_when": [
@@ -167,6 +167,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-08-31",
+      "title": "Public client 0.2.6",
+      "summary": "SeenRelay 0.2.6 is published and clean-install verified on npm and PyPI. JavaScript/TypeScript adds Ambient MCP integration that starts local-shadow by default and can opt exact reviewed tools into the existing local-first guard; Python adds local-only Ambient MCP measurement and an OpenAI Agents adapter while active Ambient reuse remains disabled."
+    },
     {
       "date": "2026-08-30",
       "title": "Benchmark fit tightened",
