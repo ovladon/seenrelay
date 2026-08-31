@@ -15,11 +15,16 @@ test('canonical public facts drive install and measured-result surfaces',()=>{
     const t=read(...file.split('/')); assert.match(t,/BEGIN GENERATED:/); assert.match(t,/npm install seenrelay/); assert.match(t,/pip install seenrelay/);
   }
 });
-test('runtime consumes shared renderers and exposes machine facts',()=>{
-  const pub=read('src','public.ts'), ad=read('src','adoption.ts'), q=read('src','quickstart.ts'), e=read('src','economics.ts'), i=read('src','index.ts');
+test('runtime consumes canonical facts and exposes machine facts',()=>{
+  const pub=read('src','public.ts'), ad=read('src','adoption.ts'), q=read('src','quickstart.ts'), landing=read('src','landing.ts'), integrations=read('src','integrations.ts'), e=read('src','economics.ts'), i=read('src','index.ts');
   assert.match(pub,/publicInstallHtml\(\)/); assert.match(pub,/verifiedBenchmarkHtml\(\)/); assert.match(pub,/verifiedWorkloadMapHtml\(\)/); assert.match(pub,/latestVerifiedHtml\(\)/);
-  assert.match(ad,/machinePublicFactsText\(origin\)/); assert.match(q,/publicInstallHtml\(\)/); assert.match(e,/verifiedBenchmarkHtml\(\)/); assert.match(i,/\/product-facts\.json/);
-  assert.doesNotMatch(pub+ad+e,/Firecrawl Pay As You Go/);
+  assert.match(ad,/machinePublicFactsText\(origin\)/);
+  assert.match(q,/publicProductFacts\.install\.client_version/);
+  assert.match(landing,/f\.install\.npm_command/); assert.match(landing,/f\.install\.pypi_command/);
+  assert.match(integrations,/publicProductFacts\.install\.client_version/);
+  assert.match(q,/siteFooterHtml\(\)/); assert.match(integrations,/siteFooterHtml\(\)/);
+  assert.match(e,/verifiedBenchmarkHtml\(\)/); assert.match(i,/\/product-facts\.json/);
+  assert.doesNotMatch(pub+ad+q+landing+integrations+e,/Firecrawl Pay As You Go/);
 });
 test('CI and daily monitor fail on drift or stale pricing',()=>{
   const pkg=JSON.parse(read('package.json')); assert.match(pkg.scripts.check,/public:sync:check/);
