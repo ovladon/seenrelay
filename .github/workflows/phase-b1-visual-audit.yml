@@ -16,6 +16,7 @@ jobs:
       BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       GITHUB_TOKEN: ${{ github.token }}
       PR_NUMBER: '118'
+      AUDIT_REVISION: '2'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -47,7 +48,7 @@ jobs:
       - name: Upload visual audit
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: phase-b1-visual-audit
+          name: phase-b1-visual-audit-r2
           path: |
             phase-b1-desktop.png
             phase-b1-mobile.png
