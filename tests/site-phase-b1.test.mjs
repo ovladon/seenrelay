@@ -70,12 +70,15 @@ test('homepage presents evidence and its limits together', () => {
   assert.match(landing, /\/economics/);
 });
 
-test('quickstart leads with agent automation and behavior-preserving manual examples', () => {
-  assert.match(quickstartSource, /FASTEST PATH/);
-  assert.match(quickstartSource, /Let your coding agent do the integration/);
+test('quickstart is factual, agent-compatible and behavior-preserving', () => {
+  assert.match(quickstartSource, /INTEGRATION QUICKSTART/);
+  assert.match(quickstartSource, /Start with shadow measurement/);
+  assert.match(quickstartSource, /CODING-AGENT INTEGRATION/);
+  assert.match(quickstartSource, /MANUAL INTEGRATION/);
   assert.match(quickstartSource, /ambientMcpClient/);
   assert.match(quickstartSource, /ambient_mcp_client/);
   assert.match(quickstartSource, /original operation still runs/i);
+  assert.match(quickstartSource, /Read the local report before enabling reuse/);
 });
 
 test('integration chooser starts from the stack the adopter already uses', () => {
