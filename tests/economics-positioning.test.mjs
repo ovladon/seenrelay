@@ -68,7 +68,7 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.match(adoption, /## Preferred JavaScript \/ TypeScript order/);
   assert.match(adoption, /Shared CHECK is off by default/i);
   assert.match(integrations, /seenrelay\/mcp-auto/);
-  assert.match(integrations, /Shared CHECK is off by default/i);
+  assert.match(integrations, /Shared CHECK (?:is off|is not enabled) by default/i);
   assert.match(mcp, /paid web search, metered scraping, browser\/extraction/);
 
   for (const text of [economics, publicSource, publicView, quickstart, adoption, integrations, mcp]) {
