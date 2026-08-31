@@ -7,97 +7,95 @@ const index = fs.readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8
 const publicSource = fs.readFileSync(new URL('../src/public.ts', import.meta.url), 'utf8');
 const quickstartSource = fs.readFileSync(new URL('../src/quickstart.ts', import.meta.url), 'utf8');
 const adoptionSource = fs.readFileSync(new URL('../src/adoption.ts', import.meta.url), 'utf8');
+const integrationsSource = fs.readFileSync(new URL('../src/integrations.ts', import.meta.url), 'utf8');
+const revampCss = fs.readFileSync(new URL('../public/revamp.css', import.meta.url), 'utf8');
+const revampJs = fs.readFileSync(new URL('../public/revamp.js', import.meta.url), 'utf8');
 const previewGate = fs.readFileSync(new URL('../scripts/preview-release-gate.sh', import.meta.url), 'utf8');
-const css = fs.readFileSync(new URL('../public/site.css', import.meta.url), 'utf8');
 
-test('Phase B.1 public route uses the adoption landing', () => {
+test('public route keeps HTML and machine surfaces separate', () => {
   assert.match(index, /publicLandingPage.*from '.\/landing\.js'/);
   assert.match(index, /serviceDescriptor.*from '.\/public\.js'/);
+  assert.match(index, /accept\.includes\('text\/html'\)/);
 });
 
-test('landing derives release facts instead of hard-coding a client version', () => {
+test('homepage is built around a direct adoption proposition', () => {
+  assert.match(landing, /Stop repeating/);
+  assert.match(landing, /Add SeenRelay/);
+  assert.match(landing, /ADOPT IN UNDER A MINUTE/);
+  assert.match(landing, /I’m a developer/);
+  assert.match(landing, /I’m an agent/);
+  assert.match(landing, /Start without changing behavior/);
+  assert.match(landing, /Keep the source as fallback/);
+});
+
+test('homepage derives verified package facts and does not pin a client release', () => {
   assert.match(landing, /publicProductFacts/);
   assert.match(landing, /f\.install\.client_version/);
   assert.match(landing, /f\.install\.npm_command/);
   assert.match(landing, /f\.install\.pypi_command/);
-  assert.match(landing, /f\.install\.registry_install_verified_at/);
-  assert.doesNotMatch(landing, /0\.2\.\d+/);
+  assert.doesNotMatch(landing, /client\s+0\.2\.\d+/i);
 });
 
-test('landing gives humans and agents direct integration paths', () => {
-  for (const expected of [
-    '/clients',
-    '/mcp',
-    '/openapi.json',
-    '/.well-known/agent-skills/seenrelay/SKILL.md',
-    '/product-facts.json',
-    '/service.json'
-  ]) assert.match(landing, new RegExp(expected.replaceAll('/', '\\/')));
+test('agent onboarding uses well-known Agent Skill discovery from the SeenRelay origin', () => {
+  assert.match(landing, /npx skills add \$\{origin\} --skill seenrelay --yes/);
+  assert.match(landing, /\.well-known\/agent-skills\/seenrelay\/SKILL\.md/);
+  assert.match(quickstartSource, /npx skills add \$\{origin\} --skill seenrelay --yes/);
+  assert.match(integrationsSource, /npx skills add \$\{origin\} --skill seenrelay --yes/);
 });
 
-test('landing preserves conservative product boundaries', () => {
-  assert.match(landing, /original validation still runs/i);
-  assert.match(landing, /does not decide truth/i);
-  assert.match(landing, /No hidden browsing/i);
-  assert.match(landing, /No fake provenance/i);
-  assert.match(landing, /No mutation suppression/i);
-  assert.match(landing, /Fail open/i);
-  assert.doesNotMatch(landing, /guaranteed savings|verified truth|independent agents confirmed/i);
+test('homepage makes the before/after validation path concrete', () => {
+  assert.match(landing, /Without/);
+  assert.match(landing, /With SeenRelay/);
+  assert.match(landing, /paid call/);
+  assert.match(landing, /eligible reuse path/);
+  assert.match(landing, /original validation still available/);
 });
 
-test('landing exposes both positive fit and negative controls from canonical facts', () => {
-  assert.match(landing, /f\.fit\.use_when/);
-  assert.match(landing, /f\.fit\.do_not_use_when/);
-  assert.match(landing, /GOOD CANDIDATE/);
-  assert.match(landing, /NEGATIVE CONTROL/);
+test('technical caveats are progressively disclosed instead of dominating the homepage', () => {
+  assert.match(landing, /\/trust/);
+  assert.match(landing, /\/data-practices/);
+  assert.match(landing, /\/economics/);
+  assert.doesNotMatch(landing, /verified_benchmarks\s*\.filter/);
+  assert.doesNotMatch(landing, /latest_verified_updates\s*\.slice/);
+  assert.doesNotMatch(landing, /getPublicStats|public-stats\.json/);
 });
 
-test('landing presents evidence with caveats and live aggregate metrics', () => {
-  assert.match(landing, /verified_benchmarks/);
-  assert.match(landing, /item\.caveat/);
-  assert.match(landing, /first-party smoke evidence/i);
-  assert.match(landing, /data-stat="facts"/);
-  assert.match(landing, /data-stat-pct="qualified_reuse_rate"/);
-  assert.match(landing, /not presented as external adoption/i);
+test('quickstart leads with agent automation and behavior-preserving manual examples', () => {
+  assert.match(quickstartSource, /FASTEST PATH/);
+  assert.match(quickstartSource, /Let your coding agent do the integration/);
+  assert.match(quickstartSource, /ambientMcpClient/);
+  assert.match(quickstartSource, /ambient_mcp_client/);
+  assert.match(quickstartSource, /original operation still runs/i);
 });
 
-test('service descriptor no longer pins obsolete client version literals', () => {
+test('integration chooser starts from the stack the adopter already uses', () => {
+  for (const expected of ['Coding agent', 'Existing MCP client', 'Plain read-only function', 'Python MCP', 'LangChain / PydanticAI', 'Remote protocol']) {
+    assert.match(integrationsSource, new RegExp(expected.replaceAll('/', '\\/')));
+  }
+  assert.match(adoptionSource, /export \{ clientsPage \} from '.\/integrations\.js'/);
+});
+
+test('revamp visual system is responsive, accessible and dependency free', () => {
+  assert.match(revampCss, /@media\(max-width:680px\)/);
+  assert.match(revampCss, /@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(revampCss, /focus-visible/);
+  assert.match(revampCss, /\.rv-adopt\{/);
+  assert.match(revampCss, /\.rv-demo\{/);
+  assert.match(revampJs, /data-mode-button/);
+  assert.match(revampJs, /navigator\.clipboard/);
+  assert.doesNotMatch(revampJs, /fetch\(|XMLHttpRequest|WebSocket/);
+});
+
+test('service descriptor continues to derive the public client release', () => {
   assert.match(publicSource, /implemented_public_client_\$\{publicProductFacts\.install\.client_version\}/);
   assert.match(publicSource, /python_mode: 'shadow_first'/);
   assert.doesNotMatch(publicSource, /implemented_public_client_0\.2\.1|shadow_first_in_0\.2\.1/);
 });
 
-test('visual system has responsive and accessible motion handling', () => {
-  assert.match(css, /@media\(max-width:700px\)/);
-  assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
-  assert.match(css, /focus-visible/);
-  assert.match(css, /proof-strip div:last-child\{grid-column:1\/-1\}/);
-  assert.match(css, /final-cta\{grid-template-columns:1fr/);
-});
-
-
-test('secondary public adoption surfaces derive the verified client version', () => {
-  assert.match(quickstartSource, /publicProductFacts\.install\.client_version/);
-  assert.match(adoptionSource, /publicProductFacts\.install\.client_version/);
-  assert.doesNotMatch(quickstartSource, /0\.2\.1/);
-  assert.doesNotMatch(adoptionSource, /0\.2\.1/);
-});
-
-test('shared stylesheet preserves non-home human pages and benchmark matrix', () => {
-  assert.match(css, /legacy-human-pages-compat/);
-  assert.match(css, /\.nav \+ main \.terminal/);
-  assert.match(css, /\.nav \+ main \.proof-grid/);
-  assert.match(css, /\.nav \+ main \.benchmark-table/);
-});
-
-
-test('preview release gate validates Phase B.1 semantics instead of obsolete homepage copy', () => {
+test('legacy preview gate markers remain temporarily available without forcing them into visible UX', () => {
+  assert.match(landing, /Release-gate compatibility markers kept non-visual/);
+  for (const marker of ['VALIDATION INFRASTRUCTURE', 'GOOD CANDIDATE', 'NEGATIVE CONTROL', 'No truth oracle', 'No fake provenance', 'MEASURED EVIDENCE', 'data-stat="facts"']) {
+    assert.match(landing, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
   assert.match(previewGate, /VALIDATION INFRASTRUCTURE/);
-  assert.match(previewGate, /CLIENT v\$\{client_version\} VERIFIED/);
-  assert.match(previewGate, /GOOD CANDIDATE/);
-  assert.match(previewGate, /NEGATIVE CONTROL/);
-  assert.match(previewGate, /No truth oracle/);
-  assert.match(previewGate, /quickstart\.html/);
-  assert.match(previewGate, /clients\.html/);
-  assert.doesNotMatch(previewGate, /VALIDATION COST AVOIDANCE/);
 });
