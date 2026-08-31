@@ -46,27 +46,27 @@ grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
-grep -q 'VALIDATION INFRASTRUCTURE' /tmp/site.html
-grep -q 'Avoid paying twice for the same validation' /tmp/site.html
-grep -q 'Two commands. Start without an account.' /tmp/site.html
-grep -q "CLIENT v${client_version} VERIFIED" /tmp/site.html
-grep -q 'GOOD CANDIDATE' /tmp/site.html
-grep -q 'NEGATIVE CONTROL' /tmp/site.html
-grep -q 'No truth oracle' /tmp/site.html
-grep -q 'No fake provenance' /tmp/site.html
-grep -q 'Agent Skill' /tmp/site.html
+# The homepage contract is factual and ordered: what it is, what it does, install/use, measured evidence.
+grep -q 'SeenRelay is a reuse layer for repeated read-only validation.' /tmp/site.html
+grep -q "CLIENT ${client_version}" /tmp/site.html
+grep -q 'WHAT IT DOES' /tmp/site.html
+grep -q 'INSTALL AND USE' /tmp/site.html
+grep -q 'First run: measure repetition without changing application behavior.' /tmp/site.html
+grep -q 'TESTS WE HAVE RUN' /tmp/site.html
+grep -q 'What the current measured tests show.' /tmp/site.html
+grep -q 'provider calls avoided' /tmp/site.html
+grep -q 'What these tests establish' /tmp/site.html
+grep -q 'What they do not establish' /tmp/site.html
+grep -q 'How to test your own workload' /tmp/site.html
+grep -q 'Coding agent' /tmp/site.html
+grep -q 'npm install seenrelay' /tmp/site.html
+grep -q 'pip install seenrelay' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'FLEET-LEVEL COST AVOIDANCE' /tmp/economics.html
 grep -q 'MEASURED · FIRST-PARTY SMOKE BENCHMARK' /tmp/economics.html
 grep -q 'Firecrawl JSON extraction' /tmp/economics.html
 grep -q 'Fixed-tier counterexample' /tmp/economics.html
 ! grep -q 'Firecrawl Pay As You Go' /tmp/economics.html
-grep -q 'npm install seenrelay' /tmp/site.html
-grep -q 'pip install seenrelay' /tmp/site.html
-grep -q 'MEASURED EVIDENCE' /tmp/site.html
-grep -q 'provider-path calls avoided' /tmp/site.html
-grep -q 'Every row keeps its caveat and source.' /tmp/site.html
-grep -q 'data-stat="facts"' /tmp/site.html
 # The branch alias can retain public max-age content across Preview deployments;
 # cache-bust deployment-specific machine facts before asserting exact release data.
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json?release=${RELEASE_SHA}" -o /tmp/product-facts.json
