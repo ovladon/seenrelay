@@ -1,81 +1,96 @@
-import { publicInstallHtml, siteFooterHtml } from './public-facts-view.js';
 import { publicProductFacts } from './public-facts.generated.js';
+import { siteFooterHtml } from './public-facts-view.js';
+
+function esc(value: unknown): string {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
 
 export function quickstartPage(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
+  const skillCommand = `npx skills add ${origin} --skill seenrelay --yes`;
+
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Avoid redundant validation with local/private reuse, source-native checks and optional shared CHECK evidence.">
-<title>SeenRelay Quickstart</title>
-<link rel="stylesheet" href="/site.css">
+<meta name="description" content="Get SeenRelay into an agent or application in minutes, starting with behavior-preserving shadow measurement.">
+<title>SeenRelay — 3-minute quickstart</title>
+<link rel="stylesheet" href="/revamp.css">
 </head>
-<body>
-<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/">Home</a><a href="/clients">Clients</a><a href="/openapi.json">OpenAPI</a><a href="/service.json">Machine JSON</a><a href="/data-practices">Data</a></nav></header>
+<body class="revamp">
+<header class="rv-nav">
+  <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
+  <nav class="rv-nav-links"><a href="/">Home</a><a href="/clients">Integrations</a><a href="/economics">Evidence</a><a href="/trust">Trust</a><a href="/openapi.json">OpenAPI</a></nav>
+  <div class="rv-nav-actions"><a class="rv-chip" href="/service.json">Machine JSON</a><a class="rv-button" href="/clients">Choose integration</a></div>
+</header>
 <main>
-<section class="hero">
-<div class="eyebrow">INTEGRATION QUICKSTART</div>
-<h1>Reuse first. Validate when needed.</h1>
-<p class="lead">JavaScript/TypeScript ${clientVersion}: local/private reuse → source-native checks → optional CHECK → original validation. Python remains shadow-first.</p>
-<div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Full quickstart</a><a class="secondary" href="/economics">Cost examples</a><a class="secondary" href="/clients">Client options</a><a class="secondary" href="/openapi.json">REST / OpenAPI</a><a class="secondary" href="/mcp">MCP endpoint</a></div>
-<div class="contract"><span>Client ${clientVersion}</span><b>CHECK</b><b>OBSERVE</b><span>No account · no API key · currently free</span></div>
+<section class="rv-shell rv-page-hero">
+  <div class="rv-eyebrow">3-MINUTE QUICKSTART · CLIENT ${esc(clientVersion)}</div>
+  <h1>Start by measuring repeats, not changing behavior.</h1>
+  <p>The safest first integration keeps the authoritative validation exactly where it is and lets SeenRelay identify exact repeated read-only work. Once repetition is real, you can decide whether bounded reuse belongs there.</p>
+  <div class="rv-actions"><a class="rv-button primary" href="#agent">Give it to an agent</a><a class="rv-button" href="#manual">Wire it yourself</a><a class="rv-button quiet" href="/clients">All integrations →</a></div>
 </section>
 
-${publicInstallHtml()}
+<section class="rv-shell rv-section" id="agent">
+  <div class="rv-section-head"><div class="rv-eyebrow">FASTEST PATH</div><h2>Let your coding agent do the integration.</h2><p>SeenRelay publishes an Agent Skill through standard well-known discovery. Install it once in the project, then ask the agent to protect repeated expensive read-only validations conservatively.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice"><header><b>1. Install the skill</b><span>Agent Skills</span></header><p>Use the open skills CLI. Compatible agents can discover the SeenRelay skill directly from this domain.</p><div class="rv-code"><pre>${esc(skillCommand)}</pre></div></article>
+    <article class="rv-choice"><header><b>2. Give one clear instruction</b><span>Prompt</span></header><p>Keep the first pass behavior-preserving.</p><div class="rv-code"><pre>Integrate SeenRelay into repeated expensive read-only validations in this project. Start in shadow mode, preserve the authoritative call, and report which exact workloads repeat enough to justify further optimization.</pre></div></article>
+  </div>
+</section>
 
-<section class="section split decision">
-<div><div class="eyebrow">JAVASCRIPT / TYPESCRIPT</div><h2>Zero-State works without shared network data.</h2><p>For explicitly eligible read-only operations, Zero-State starts with exact in-flight reuse, explicit-TTL local reuse, optional encrypted caller-owned L1 and source-native validators. Shared SeenRelay CHECK is off by default.</p><p>The original validation remains the fallback whenever reuse cannot be justified. OBSERVE is eligible only after a genuinely fresh independent validation.</p></div>
-<div class="terminal"><pre>import { SeenRelayZeroState } from 'seenrelay/zero-state';
+<section class="rv-shell rv-section" id="manual">
+  <div class="rv-section-head"><div class="rv-eyebrow">MANUAL PATH</div><h2>Install, wrap, observe.</h2><p>These smallest examples do not suppress the original operation. They show whether exact repetition exists before you make any reuse decision.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice">
+      <header><b>JavaScript / TypeScript ${esc(clientVersion)}</b><span>Ambient MCP</span></header>
+      <p>Works well when your application already has an MCP client.</p>
+      <div class="rv-code"><pre>npm install seenrelay</pre></div>
+      <div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
 
-const edge = new SeenRelayZeroState({
-  localMaxAgeMs: 30_000
+const client = ambientMcpClient(rawMcpClient, {
+  serverKey: 'docs'
 });
 
-const result = await edge.guard({
-  coordinate: {
-    tool: 'catalog.read',
-    arguments: { id: 42 }
-  },
-  validate: async () =&gt; expensiveRead()
-});</pre></div>
+// use client.callTool(...) normally
+console.log(client.seenRelayAmbient.getReport());</pre></div>
+      <a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">Full JS / TS guide →</a>
+    </article>
+    <article class="rv-choice">
+      <header><b>Python ${esc(clientVersion)}</b><span>Ambient MCP</span></header>
+      <p>Python starts in local-only shadow mode and keeps the original tool call authoritative.</p>
+      <div class="rv-code"><pre>pip install seenrelay</pre></div>
+      <div class="rv-code"><pre>from seenrelay_ambient import ambient_mcp_client
+
+client = ambient_mcp_client(
+    raw_mcp_client,
+    server_key="docs",
+)
+
+# await client.call_tool(...) normally
+print(client.get_report())</pre></div>
+      <a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Full Python guide →</a>
+    </article>
+  </div>
 </section>
 
-<section class="section split">
-<div><div class="eyebrow">ORDER</div><h2>Local first. Shared CHECK only when useful.</h2><div class="flow"><span>L0 local</span><i>→</i><span>L1 private</span><i>→</i><span>source native</span><i>→</i><span>optional CHECK</span><i>→</i><span>validate</span></div><p>A completed-result TTL defaults to zero. Use a non-zero freshness window only when the caller/source contract can defend it.</p></div>
-<div class="proof-grid"><article><b>Local first</b><span>Exact eligible work can be reused without any public network coverage.</span></article><article><b>Private L1</b><span>Caller-owned encrypted storage can span workers or restarts.</span></article><article><b>Source native</b><span>ETag / Last-Modified can confirm unchanged content at the source.</span></article><article><b>Shared optional</b><span>CHECK is an accelerator, not a prerequisite.</span></article></div>
+<section class="rv-shell rv-section">
+  <div class="rv-section-head"><div class="rv-eyebrow">NO MCP?</div><h2>There is still a direct path.</h2><p>Use Zero-State around an eligible JavaScript/TypeScript read-only function, or the classic Python helper around a known validation. The integration chooser shows the shortest correct form for each stack.</p></div>
+  <div class="rv-stack">
+    <article><h3>Plain JS / TS function</h3><p><code>SeenRelayZeroState</code> can coalesce identical in-flight work and apply explicit local/private freshness policy before the original validation.</p></article>
+    <article><h3>LangChain</h3><p>Ambient framework routing is available in JavaScript/TypeScript and Python, preserving the authoritative call by default.</p></article>
+    <article><h3>PydanticAI</h3><p>Python includes an Ambient toolset adapter for measurement-first integration.</p></article>
+    <article><h3>OpenAI Agents / AI SDK</h3><p>Optional Ambient adapters let existing agent stacks keep their current tool behavior while SeenRelay measures exact repetition.</p></article>
+  </div>
+  <div class="rv-actions" style="margin-top:24px"><a class="rv-button primary" href="/clients">Open integration chooser</a><a class="rv-button" href="${origin}/mcp">MCP endpoint</a><a class="rv-button quiet" href="/openapi.json">REST / OpenAPI →</a></div>
 </section>
 
-<section class="section split decision">
-<div><div class="eyebrow">MCP BIND-ONCE</div><h2>Protect only explicitly allowlisted tools.</h2><p><code>seenrelay/mcp-auto</code> can intercept <code>callTool()</code> for exact tool names selected by the application. Unlisted tools pass through unchanged. SeenRelay does not infer read-only safety from names, descriptions or untrusted annotations.</p></div>
-<div class="terminal"><pre>import { protectMcpClient } from 'seenrelay/mcp-auto';
-
-const client = protectMcpClient(rawMcpClient, {
-  serverKey: 'catalog-server',
-  tools: {
-    'catalog.read': { maxAgeMs: 30_000 }
-  }
-});</pre></div>
-</section>
-
-<section class="section split decision">
-<div><div class="eyebrow">CLASSIC CLIENTS</div><h2>Classic clients remain shadow-first.</h2><p>The classic JavaScript/TypeScript and Python clients still put CHECK around a known fact, keep the original validation unless caller policy explicitly permits bounded reuse, and OBSERVE the independently obtained result best-effort.</p><p>Python remains shadow-first in client ${clientVersion}.</p></div>
-<div class="proof-grid"><article><b>CHECK</b><span>Compare a known value with recent shared observations.</span></article><article><b>Validate</b><span>UNKNOWN, STALE, CONTESTED or policy requirements continue to the existing source check.</span></article><article><b>OBSERVE</b><span>Contribute only an independently obtained result.</span></article><article><b>Fail open</b><span>Relay/store failures return to the validation the application already planned.</span></article></div>
-</section>
-
-<section class="section split">
-<div><div class="eyebrow">REMOTE MCP / REST</div><h2>The hosted protocol is unchanged.</h2><p>MCP remains the standard discovery and model/tool-routing interface. REST remains available for direct integrations.</p></div>
-<div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>endpoints</b></div><pre>MCP
-${origin}/mcp
-io.github.ovladon/seenrelay
-
-REST
-POST ${origin}/v1/check
-POST ${origin}/v1/observe</pre></div>
-</section>
-
-<section class="section final"><div><div class="eyebrow">IMPLEMENT</div><h2>Start with one safe read-only workload. Measure what you avoid.</h2></div><div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay/blob/main/docs/QUICKSTART.md">Open Quickstart</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/PROTOCOL.md">Protocol</a><a class="secondary" href="/clients">Clients</a></div></section>
+<section class="rv-shell rv-final"><div><div class="rv-eyebrow">NEXT</div><h2>Measure one real workload.</h2><p>If exact repetition is rare or the original validation is already cheap, stop there. If repetition is material, the client guide shows the bounded local-first and shared-evidence paths available for that integration.</p></div><div class="rv-actions"><a class="rv-button primary" href="/clients">Choose integration</a><a class="rv-button" href="/economics">See economics</a></div></section>
 </main>
 ${siteFooterHtml()}
 </body>
