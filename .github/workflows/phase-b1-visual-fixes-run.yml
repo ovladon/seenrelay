@@ -1,0 +1,30 @@
+name: Phase B1 Visual Fixes
+
+on:
+  push:
+    branches: [site/phase-b1-adoption-surface]
+    paths: ['.github/workflows/phase-b1-visual-fixes-run.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: site/phase-b1-adoption-surface
+      - name: Apply visual review fixes
+        run: python scripts/phase-b1-visual-fixes.py
+      - name: Verify and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n scripts/preview-release-gate.sh
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/landing.ts public/site.css scripts/preview-release-gate.sh tests/site-phase-b1.test.mjs
+          git commit -m 'Refine Phase B.1 visual and copy review'
+          git push origin HEAD:site/phase-b1-adoption-surface
