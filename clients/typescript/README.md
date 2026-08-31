@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-The registry-verified public version is published in `https://seenrelay.com/product-facts.json`. This package includes local-first Zero-State, shadow-proof helpers, provider adapters, and Ambient MCP integration. Ambient starts local-shadow by default; only exact tools configured explicitly may use the existing active local-first guard.
+Client 0.2.7 adds Ambient framework routing for LangChain plus a local machine-readable integration catalog. JavaScript / TypeScript also includes the Firecrawl MCP shadow helper and direct Firecrawl SDK shadow adapter. None of these surfaces authorizes automatic reuse.
 
 
 ## Ambient MCP
@@ -194,7 +194,7 @@ const value = await relay.guard({
 
 Without an explicit `reuse` policy, the classic client never skips the original validation. It remains the conservative path for directly measuring public CHECK evidence.
 
-## Prove public-relay value before enabling classsic reuse
+## Prove public-relay value before enabling classic reuse
 
 ```js
 import { SeenRelayClient } from 'seenrelay';
@@ -253,7 +253,7 @@ const benchmarkInput = proof.hostileBenchmarkInput({
   workloadId: 'opaque-run-id',
   controls: {
     local_cache: { available: true, measured: true },
-    source_native_conditional: {available: true, measured: true },
+    source_native_conditional: { available: true, measured: true },
     provider_native_cache: { available: true, measured: true }
   }
 });
@@ -327,3 +327,25 @@ The client does not add a third SeenRelay operation. The hosted service still ex
 ## License
 
 The client package is MIT licensed. The hosted SeenRelay service implementation remains governed by the repository root license.
+
+## Ambient framework integrations
+
+Ambient integrations preserve the authoritative tool call and start in local-only shadow mode. They do not send CHECK or OBSERVE from shadow measurement and do not authorize reuse automatically.
+
+```js
+import { ambientLangChainMcpHooks } from "seenrelay/ambient";
+const hooks = ambientLangChainMcpHooks();
+// pass hooks.beforeToolCall / hooks.afterToolCall to LangChain MCP adapters
+console.log(hooks.seenRelayAmbient.getReport());
+```
+
+OpenAI Agents and AI SDK adapters remain available from the same `seenrelay/ambient` entry point.
+
+Coding agents and integration tooling can inspect the installed package without network discovery:
+
+```js
+import { getAmbientIntegrationCatalog } from "seenrelay/ambient";
+console.log(getAmbientIntegrationCatalog());
+```
+
+The catalog is local metadata only. It adds no telemetry, hosted operation, or reuse authorization.

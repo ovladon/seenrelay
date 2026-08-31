@@ -4,7 +4,7 @@
 
 Deterministic, standard-library-only client that places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default.
 
-The registry-verified public version is published in `https://seenrelay.com/product-facts.json`. Python remains conservative and shadow-first. This package includes local-only Ambient MCP measurement and an OpenAI Agents Python adapter; active Ambient reuse remains intentionally unavailable until Python local-first semantics match the JavaScript / TypeScript implementation.
+Client 0.2.7 adds Ambient integrations for LangChain and PydanticAI plus a local machine-readable integration catalog. Python behavior remains conservative and shadow-first. The direct Firecrawl SDK shadow adapter is JavaScript / TypeScript-only; Python parity is not claimed.
 
 
 ## Ambient MCP
@@ -111,3 +111,28 @@ The Python client does not add a SeenRelay operation. The hosted service still e
 ## License
 
 The client package is MIT licensed. The hosted SeenRelay service implementation remains governed by the repository root license.
+
+## Ambient framework integrations
+
+All integrations below are optional. SeenRelay imports the framework only when the corresponding adapter is requested. Ambient measurement is local-only, preserves the authoritative call, and never enables reuse automatically.
+
+```python
+from seenrelay_ambient import ambient_langchain_mcp_client
+client = ambient_langchain_mcp_client(client)
+tools = await client.get_tools()
+print(client.seenrelay_ambient["get_report"]())
+```
+
+```python
+from seenrelay_ambient import ambient_pydantic_ai_toolset
+toolset = ambient_pydantic_ai_toolset(toolset)
+```
+
+Coding agents and integration tooling can inspect the installed package without network discovery:
+
+```python
+from seenrelay_ambient import ambient_integration_catalog
+print(ambient_integration_catalog())
+```
+
+The catalog is local metadata only. It adds no telemetry, hosted operation, or reuse authorization.

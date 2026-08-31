@@ -92,7 +92,9 @@ export function serviceDescriptor(origin: string) {
       public_stats: `${origin}/public-stats.json`,
       data_practices: `${origin}/data-practices.json`,
       service_descriptor: `${origin}/service.json`,
-      product_facts: `${origin}/product-facts.json`
+      product_facts: `${origin}/product-facts.json`,
+      agent_skills_index: `${origin}/.well-known/agent-skills/index.json`,
+      agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`
     },
     public_product_facts: productFactsForOrigin(origin),
     latest_verified_updates: publicProductFacts.latest_verified_updates

@@ -184,7 +184,7 @@ test('A2A is tracked but not falsely exposed as a v1 protocol surface', () => {
   const index = read('src','index.ts');
   const standards = read('src','standards.ts');
   const publicSource = read('src','public.ts');
-  assert.doesNotMatch(index, /agent-card|\.well-known\/agent|\/a2a/i);
+  assert.doesNotMatch(index, /agent-card|\.well-known\/agent(?!-skills)|\/a2a/i);
   assert.doesNotMatch(index, /\/signup|\/oauth|\/account/i);
   assert.match(standards, /monitored_not_exposed/);
   assert.match(publicSource, /standardsPosture\.a2a\.status/);
