@@ -48,7 +48,7 @@ jobs:
           import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
           import { SeenRelayZeroState, freshResult } from 'seenrelay/zero-state';
           import { assessSharedCheckEvidence, createMultiSignalRetainedReusePolicy } from 'seenrelay/assurance';
-          import { sharedFactCoordinate, mcpToolCoordinate, openApiOperationCoordinate } from 'seenrelay/coordinates';
+          import { jsonPointerFact, elementIdFact, sourceKeyFact, mcpToolCoordinate, openApiOperationCoordinate } from 'seenrelay/coordinates';
           import { SeenRelayAuto, exactToolAdapter } from 'seenrelay/auto';
           import { protectMcpClient } from 'seenrelay/mcp-auto';
           import { firecrawlScrapePolicy } from 'seenrelay/firecrawl';
@@ -68,7 +68,9 @@ jobs:
             typeof freshResult !== 'function' ||
             typeof assessSharedCheckEvidence !== 'function' ||
             typeof createMultiSignalRetainedReusePolicy !== 'function' ||
-            typeof sharedFactCoordinate !== 'function' ||
+            typeof jsonPointerFact !== 'function' ||
+            typeof elementIdFact !== 'function' ||
+            typeof sourceKeyFact !== 'function' ||
             typeof mcpToolCoordinate !== 'function' ||
             typeof openApiOperationCoordinate !== 'function' ||
             typeof auto.wrap !== 'function' ||
@@ -109,12 +111,13 @@ jobs:
           from seenrelay_shadow import SeenRelayShadowProof
           from seenrelay_easy import protect_validation
           from seenrelay_assurance import assess_shared_check_evidence, multi_signal_retained_reuse_policy
-          from seenrelay_coordinates import shared_fact_coordinate, mcp_tool_coordinate, openapi_operation_coordinate
+          from seenrelay_coordinates import json_pointer_fact, element_id_fact, source_key_fact, mcp_tool_coordinate, openapi_operation_coordinate
           client = SeenRelayClient(transport=lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('not called during import test')))
           proof = SeenRelayShadowProof(client)
           assert client is not None and proof is not None and callable(protect_validation)
           assert callable(assess_shared_check_evidence) and callable(multi_signal_retained_reuse_policy)
-          assert callable(shared_fact_coordinate) and callable(mcp_tool_coordinate) and callable(openapi_operation_coordinate)
+          assert callable(json_pointer_fact) and callable(element_id_fact) and callable(source_key_fact)
+          assert callable(mcp_tool_coordinate) and callable(openapi_operation_coordinate)
           PY
       - name: Upload PyPI validation artifacts
         uses: actions/upload-artifact@v4
