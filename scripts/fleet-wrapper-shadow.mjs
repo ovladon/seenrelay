@@ -198,6 +198,7 @@ function buildLedger({ role, previousLedger, provider, record }) {
   const previousDropped = priorCount(previousLedger, 'records_dropped');
   const overflow = Math.max(0, nextRecords.length - MAX_LEDGER_RECORDS);
   const records = overflow > 0 ? nextRecords.slice(overflow) : nextRecords;
+  const protectedCalls = priorCount(previousLedger, 'protected_calls') + (record ? 1 : 0);
   return Object.freeze({
     schema_version: 1,
     workload_id: WORKLOAD_ID,
@@ -205,9 +206,9 @@ function buildLedger({ role, previousLedger, provider, record }) {
     role,
     cost_unit: COST_UNIT,
     natural_events: priorCount(previousLedger, 'natural_events') + 1,
-    protected_calls: records.length,
+    protected_calls: protectedCalls,
     records_dropped: previousDropped + overflow,
-    preliminary_sample_floor_met: records.length >= 100,
+    preliminary_sample_floor_met: protectedCalls >= 100,
     control_evidence: Object.freeze({
       provider_native_queries: priorCount(previousLedger, 'provider_native_queries') + 1,
       provider_native_hits: priorCount(previousLedger, 'provider_native_hits') + (provider.hit ? 1 : 0),
@@ -367,7 +368,7 @@ export async function runFleetWrapperShadow({
     current_run_natural_events: 1,
     current_run_protected_calls: protectedCall ? 1 : 0,
     cumulative_natural_events: ledger.natural_events,
-    cumulative_protected_calls: ledger.records.length,
+    cumulative_protected_calls: ledger.protected_calls,
     preliminary_sample_floor_met: ledger.preliminary_sample_floor_met,
     provider_native_queries: ledger.control_evidence.provider_native_queries,
     provider_native_hits: ledger.control_evidence.provider_native_hits,
@@ -397,7 +398,7 @@ export async function runFleetWrapperShadow({
     protected_call: protectedCall,
     check_status: check?.status ?? null,
     policy_reusable: policyReusable,
-    cumulative_protected_calls: ledger.records.length,
+    cumulative_protected_calls: ledger.protected_calls,
     validation_ms: Number(validationMs.toFixed(3)),
     check_ms: Number(checkMs.toFixed(3)),
     observe_ms: Number(observeMs.toFixed(3))
