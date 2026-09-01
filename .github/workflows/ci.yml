@@ -77,7 +77,8 @@ jobs:
           const summary = JSON.parse(fs.readFileSync('fleet-wrapper-shadow-ci-summary.json', 'utf8'));
           if (measurement.workload_class !== 'fleet_tool_validations' || measurement.first_party !== true || measurement.external_adoption_evidence !== false) process.exit(1);
           if (ledger.role !== 'ci' || ledger.workload_class !== 'fleet_tool_validations' || ledger.cost_unit !== 'github_actions_runner_ms') process.exit(1);
-          if (summary.cumulative_protected_calls !== ledger.records.length) process.exit(1);
+          if (summary.cumulative_protected_calls !== ledger.protected_calls) process.exit(1);
+          if (ledger.protected_calls !== ledger.records.length + ledger.records_dropped) process.exit(1);
           for (const value of [measurement, ledger, summary]) {
             if (value.raw_values_retained !== false || value.fact_identity_retained !== false || value.sources_retained !== false || value.timestamps_retained !== false) process.exit(1);
           }
