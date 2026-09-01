@@ -51,7 +51,7 @@ export function clientsPage(origin: string): string {
 const client = ambientMcpClient(rawMcpClient);
 
 // use client.callTool(...) normally
-console.log(client.seenRelayAmbient.getReport());</pre></div><p>Only after a specific read-only tool is reviewed should <code>seenrelay/mcp-auto</code> be considered for the local-first bind-once path. Shared CHECK remains off by default.</p><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a></article>
+console.log(client.seenRelayAmbient.getReport());</pre></div><p>Only after a specific read-only tool is reviewed should <code>seenrelay/mcp-auto</code> be considered for the local-first bind-once path. Shared CHECK is off by default.</p><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a></article>
 
     <article class="rv-choice"><header><b>Python MCP</b><span>Ambient / shadow</span></header><p>Python has the same one-wrapper measurement entry point and remains measurement-only.</p><div class="rv-code"><pre>from seenrelay_ambient import ambient_mcp_client
 
