@@ -140,5 +140,9 @@ test('service descriptor continues to derive the public client release', () => {
 });
 
 test('preview gate enforces the factual homepage contract without legacy marketing markers', () => {
-  assert.match(previewGate, /seenrelay/);
+  for (const marker of ['SeenRelay is a reuse layer for repeated read-only validation.', 'WHAT IT DOES', 'INSTALL AND USE', 'TESTS WE HAVE RUN', 'provider calls avoided', 'What these tests establish', 'What they do not establish', 'How to test your own workload']) {
+    assert.match(previewGate, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.doesNotMatch(previewGate, /VALIDATION INFRASTRUCTURE|GOOD CANDIDATE|NEGATIVE CONTROL|MEASURED EVIDENCE|data-stat="facts"/);
+  assert.doesNotMatch(landing, /Release-gate compatibility markers kept non-visual/);
 });
