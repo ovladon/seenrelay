@@ -1,14 +1,14 @@
 # SeenRelay deterministic client wrappers
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.7 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.9 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-Client 0.2.7 is published and independently clean-install verified on npm and PyPI. JavaScript / TypeScript adds Ambient framework routing for LangChain plus a local machine-readable integration catalog; Python adds Ambient integrations for LangChain and PydanticAI plus a local integration catalog. Ambient integrations preserve authoritative calls by default and do not authorize automatic reuse.
+Client 0.2.9 is published and independently clean-install verified on npm and PyPI. JavaScript / TypeScript and Python add multi-signal shared-evidence assurance helpers plus deterministic Fact Coordinate Kit v1. Shared evidence remains explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates remain local repetition keys unless a stable source-native locator supports a shared fact descriptor.
 
 The clients have two deliberately different execution modes:
 
@@ -20,6 +20,8 @@ The clients have two deliberately different execution modes:
 - JavaScript / TypeScript package: [`typescript/README.md`](typescript/README.md)
 - Python package: [`python/README.md`](python/README.md)
 - JavaScript / TypeScript Zero-State: `seenrelay/zero-state`
+- Shared CHECK assurance policy helpers: `seenrelay/assurance` / `seenrelay_assurance`
+- Deterministic coordinate/fact builders: `seenrelay/coordinates` / `seenrelay_coordinates`
 - Generic JavaScript / TypeScript dispatcher: `seenrelay/auto`
 - MCP bind-once interception: `seenrelay/mcp-auto`
 - Classic Shadow Proof: `seenrelay/shadow-proof`
@@ -28,7 +30,7 @@ The clients have two deliberately different execution modes:
 - Firecrawl JavaScript SDK measurement-only shadow pilot: `seenrelay/firecrawl-sdk-shadow`
 - Hostile benchmark evaluator: `seenrelay/economics`
 
-The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.7` on npm and PyPI.
+The clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.9` on npm and PyPI.
 
 ## Install
 
@@ -153,7 +155,7 @@ value = relay.guard(
 )
 ```
 
-Python behavior remains shadow-first in 0.2.7. Ambient MCP measurement plus OpenAI Agents, LangChain and PydanticAI integrations are available in Python, but JavaScript / TypeScript Zero-State, active Ambient reuse, natural-workload collector, Firecrawl shadow pilots and packaged economics evaluator parity are not claimed for Python.
+Python behavior remains shadow-first in 0.2.9. Ambient MCP measurement plus OpenAI Agents, LangChain and PydanticAI integrations are available in Python; multi-signal assurance and coordinate helpers are also available. JavaScript / TypeScript Zero-State, active Ambient reuse, natural-workload collector, Firecrawl shadow pilots and packaged economics evaluator parity are not claimed for Python.
 
 ## Shadow Proof
 
