@@ -1,18 +1,52 @@
 # SeenRelay
 
+SeenRelay is a reuse layer for repeated read-only validation.
+
+It sits in front of validation work an AI agent or application already performs. For an exact eligible repeat, it can use caller-owned local/private reuse, source-native freshness confirmation, or optional shared CHECK evidence. If none of those paths is sufficient, the original validation runs normally.
+
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
 **Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.7 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
-**Avoid redundant expensive validation.**
+## First proof: measure without changing application behavior
 
-Reuse eligible read-only validation locally or privately, use source-native checks when available, and consult shared SeenRelay evidence only when useful. The application's original validation remains the fallback.
+Ambient wraps an existing MCP-style client in local shadow mode. The authoritative call still runs; SeenRelay measures exact repetition and produces a local report.
 
-> Reuse first. CHECK when useful. OBSERVE only fresh independent validation.
+JavaScript / TypeScript:
 
-SeenRelay has exactly two domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
+```js
+npm install seenrelay
+
+import { ambientMcpClient } from 'seenrelay/ambient';
+
+const client = ambientMcpClient(rawMcpClient);
+// use client.callTool(...) normally
+console.log(client.seenRelayAmbient.getReport());
+```
+
+Python:
+
+```python
+pip install seenrelay
+
+from seenrelay_ambient import ambient_mcp_client
+
+client = ambient_mcp_client(raw_mcp_client)
+# await client.call_tool(...) normally
+print(client.get_report())
+```
+
+For a compatible coding agent, install the Agent Skill directly from the canonical domain:
+
+```bash
+npx skills add https://seenrelay.com --skill seenrelay --yes
+```
+
+Run the existing workload and inspect the report before enabling any bounded reuse. Shared CHECK remains optional and off by default in Zero-State.
+
+SeenRelay has exactly two hosted domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
 
 JavaScript/TypeScript 0.2.7 keeps Zero-State local-first and adds Ambient framework routing for LangChain plus a local integration catalog. Python 0.2.7 adds Ambient integrations for LangChain and PydanticAI plus a local integration catalog; the classic JavaScript/TypeScript and Python APIs remain shadow-first unless an explicit reviewed reuse policy applies. Provider-specific adapters are optional.
 
