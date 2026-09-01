@@ -26,23 +26,23 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
 
-      - name: Restore prior CI fleet ledger
+      - name: Restore prior CI fleet v2 ledger
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          mkdir -p previous-fleet-ci
+          mkdir -p previous-fleet-v2-ci
           previous_run="$(gh run list --workflow "$GITHUB_WORKFLOW" --status success --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
           if [ -n "$previous_run" ] && [ "$previous_run" != "$GITHUB_RUN_ID" ]; then
             gh run download "$previous_run" \
-              --name "fleet-wrapper-shadow-ci-$previous_run" \
-              --dir previous-fleet-ci >/dev/null 2>&1 || true
+              --name "fleet-wrapper-v2-shadow-ci-$previous_run" \
+              --dir previous-fleet-v2-ci >/dev/null 2>&1 || true
           fi
-          if [ -f previous-fleet-ci/fleet-wrapper-shadow-ci-ledger.json ]; then
-            echo "Restored CI fleet ledger from run $previous_run"
+          if [ -f previous-fleet-v2-ci/fleet-wrapper-v2-shadow-ci-ledger.json ]; then
+            echo "Restored CI fleet v2 ledger from run $previous_run"
           else
-            echo 'No compatible prior CI fleet ledger found; this run starts or restarts that role ledger.'
+            echo 'No compatible prior CI fleet v2 ledger found; this run starts or restarts the frozen evidence series.'
           fi
 
       - name: Run project checks with fleet target suite measured once
@@ -52,8 +52,8 @@ jobs:
           SEENRELAY_FLEET_ROLE: ci
           SEENRELAY_FLEET_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           SEENRELAY_FLEET_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
-          FLEET_SHADOW_PREVIOUS_LEDGER: previous-fleet-ci/fleet-wrapper-shadow-ci-ledger.json
-          FLEET_SHADOW_PREFIX: fleet-wrapper-shadow-ci
+          FLEET_SHADOW_PREVIOUS_LEDGER: previous-fleet-v2-ci/fleet-wrapper-v2-shadow-ci-ledger.json
+          FLEET_SHADOW_PREFIX: fleet-wrapper-v2-shadow-ci
         shell: bash
         run: |
           set -euo pipefail
@@ -66,19 +66,29 @@ jobs:
           node scripts/run-structural-remainder.mjs
           npm run test:runtime
 
-      - name: Verify sanitized CI fleet evidence
+      - name: Verify sanitized CI fleet v2 evidence
         shell: bash
         run: |
           set -euo pipefail
           node - <<'NODE'
           const fs = require('node:fs');
-          const measurement = JSON.parse(fs.readFileSync('fleet-wrapper-shadow-ci-measurement.json', 'utf8'));
-          const ledger = JSON.parse(fs.readFileSync('fleet-wrapper-shadow-ci-ledger.json', 'utf8'));
-          const summary = JSON.parse(fs.readFileSync('fleet-wrapper-shadow-ci-summary.json', 'utf8'));
-          if (measurement.workload_class !== 'fleet_tool_validations' || measurement.first_party !== true || measurement.external_adoption_evidence !== false) process.exit(1);
-          if (ledger.role !== 'ci' || ledger.workload_class !== 'fleet_tool_validations' || ledger.cost_unit !== 'github_actions_runner_ms') process.exit(1);
+          const measurement = JSON.parse(fs.readFileSync('fleet-wrapper-v2-shadow-ci-measurement.json', 'utf8'));
+          const ledger = JSON.parse(fs.readFileSync('fleet-wrapper-v2-shadow-ci-ledger.json', 'utf8'));
+          const summary = JSON.parse(fs.readFileSync('fleet-wrapper-v2-shadow-ci-summary.json', 'utf8'));
+          if (measurement.workload_id !== 'wrapper-deterministic-suite-fleet-v2' || measurement.workload_class !== 'fleet_tool_validations') process.exit(1);
+          if (measurement.first_party !== true || measurement.external_adoption_evidence !== false) process.exit(1);
+          if (ledger.role !== 'ci' || ledger.workload_id !== 'wrapper-deterministic-suite-fleet-v2' || ledger.cost_unit !== 'github_actions_runner_ms') process.exit(1);
           if (summary.cumulative_protected_calls !== ledger.protected_calls) process.exit(1);
           if (ledger.protected_calls !== ledger.records.length + ledger.records_dropped) process.exit(1);
+          if (summary.current_run_evidence_eligible !== measurement.evidence_eligible) process.exit(1);
+          if (measurement.evidence_eligible === false) {
+            if (measurement.record !== null || measurement.provider_native_control?.measured !== false) process.exit(1);
+            if (summary.current_run_natural_events !== 0 || summary.current_run_protected_calls !== 0) process.exit(1);
+          } else {
+            if (measurement.provider_native_control?.measured !== true || summary.current_run_natural_events !== 1) process.exit(1);
+            if (measurement.provider_native_control?.query_ok === false && (measurement.record !== null || summary.current_run_protected_calls !== 0)) process.exit(1);
+          }
+          if (summary.previous_v1_evidence_carried_forward !== false) process.exit(1);
           for (const value of [measurement, ledger, summary]) {
             if (value.raw_values_retained !== false || value.fact_identity_retained !== false || value.sources_retained !== false || value.timestamps_retained !== false) process.exit(1);
           }
@@ -92,16 +102,16 @@ jobs:
           if (measurement.provider_native_control?.hit === true && measurement.record !== null) process.exit(1);
           NODE
 
-      - name: Upload CI fleet natural-workload evidence
+      - name: Upload CI fleet v2 natural-workload evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: fleet-wrapper-shadow-ci-${{ github.run_id }}
+          name: fleet-wrapper-v2-shadow-ci-${{ github.run_id }}
           path: |
-            fleet-wrapper-shadow-ci-measurement.json
-            fleet-wrapper-shadow-ci-ledger.json
-            fleet-wrapper-shadow-ci-summary.json
-            fleet-wrapper-shadow-ci-benchmark.json
-            fleet-wrapper-shadow-ci-evaluation.json
+            fleet-wrapper-v2-shadow-ci-measurement.json
+            fleet-wrapper-v2-shadow-ci-ledger.json
+            fleet-wrapper-v2-shadow-ci-summary.json
+            fleet-wrapper-v2-shadow-ci-benchmark.json
+            fleet-wrapper-v2-shadow-ci-evaluation.json
           if-no-files-found: warn
           retention-days: 30
 

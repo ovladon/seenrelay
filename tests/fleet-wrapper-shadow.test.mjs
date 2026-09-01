@@ -11,11 +11,13 @@ import {
   validationInputDigest,
   buildFleetCoordinate,
   buildFleetFact,
+  fleetEvidenceEligibility,
   measureProviderNativeControl,
   runFleetWrapperShadow
 } from '../scripts/fleet-wrapper-shadow.mjs';
 import { structuralRemainder } from '../scripts/run-structural-remainder.mjs';
 
+const ELIGIBLE = Object.freeze({ eligible: true, reason: null });
 const allowedRecordKeys = new Set([
   'check_status', 'policy_reusable', 'reuse_would_match_validation', 'observe_after_baseline',
   'baseline_ms', 'baseline_cost', 'check_ms', 'observe_ms', 'check_cost', 'observe_cost'
@@ -51,7 +53,8 @@ function mockFetch({ providerHit = false, checkStatus = 'UNKNOWN', onObserve = (
   };
 }
 
-test('fleet coordinate covers the effective validation inputs and runtime but not unrelated PR identity', () => {
+test('fleet v2 coordinate covers effective validation inputs and resets v1 identity', () => {
+  assert.equal(WORKLOAD_ID, 'wrapper-deterministic-suite-fleet-v2');
   assert.deepEqual(TARGET_TESTS, [
     'tests/client-wrappers.test.mjs',
     'tests/shadow-proof.test.mjs',
@@ -77,12 +80,84 @@ test('fleet coordinate covers the effective validation inputs and runtime but no
   assert.equal(a.length, 64);
 
   const fact = buildFleetFact({ coordinate: a });
-  assert.match(fact.source, /seenrelay_internal_benchmark=fleet_wrapper_js_v1/);
+  assert.match(fact.source, /seenrelay_internal_benchmark=fleet_wrapper_js_v2/);
   assert.equal(fact.locator.value, a);
   assert.doesNotMatch(fact.source, /head|base/);
 });
 
-test('provider-native success on the exact PR head/base is measured as an upstream hit', async () => {
+test('only non-commissioning pull requests are evidence eligible', () => {
+  assert.deepEqual(fleetEvidenceEligibility({ eventName: 'push', branchName: 'main' }), {
+    eligible: false,
+    reason: 'non_pull_request_event'
+  });
+  assert.deepEqual(fleetEvidenceEligibility({ eventName: 'pull_request', branchName: 'research/fleet-v2-frozen-evidence' }), {
+    eligible: false,
+    reason: 'commissioning_branch'
+  });
+  assert.deepEqual(fleetEvidenceEligibility({ eventName: 'pull_request', branchName: 'verify/fleet-probe' }), {
+    eligible: false,
+    reason: 'commissioning_branch'
+  });
+  assert.deepEqual(fleetEvidenceEligibility({ eventName: 'pull_request', branchName: 'feature/ordinary-product-change' }), {
+    eligible: true,
+    reason: null
+  });
+});
+
+test('commissioning run executes authoritative suite with zero network and zero evidence', async () => {
+  let validations = 0;
+  const result = await runFleetWrapperShadow({
+    role: 'ci',
+    headSha: 'head',
+    baseSha: 'base',
+    eligibility: { eligible: false, reason: 'commissioning_branch' },
+    fetchImpl: async () => assert.fail('ineligible commissioning run must not make network requests'),
+    validate: async () => { validations += 1; return 'pass'; }
+  });
+
+  assert.equal(validations, 1);
+  assert.equal(result.measurement.evidence_eligible, false);
+  assert.equal(result.measurement.exclusion_reason, 'commissioning_branch');
+  assert.equal(result.measurement.natural_event, false);
+  assert.equal(result.measurement.protected_call, false);
+  assert.equal(result.measurement.record, null);
+  assert.equal(result.measurement.provider_native_control.measured, false);
+  assert.equal(result.ledger.natural_events, 0);
+  assert.equal(result.ledger.protected_calls, 0);
+  assert.equal(result.ledger.control_evidence.provider_native_queries, 0);
+  assert.equal(result.summary.current_run_natural_events, 0);
+  assert.equal(result.summary.previous_v1_evidence_carried_forward, false);
+});
+
+test('v1 commissioning ledger is discarded rather than carried into v2', async () => {
+  const v1 = {
+    schema_version: 1,
+    workload_id: 'wrapper-deterministic-suite-fleet-v1',
+    workload_class: WORKLOAD_CLASS,
+    role: 'ci',
+    cost_unit: COST_UNIT,
+    natural_events: 99,
+    protected_calls: 98,
+    records_dropped: 0,
+    control_evidence: { provider_native_queries: 99, provider_native_hits: 1, provider_native_query_failures: 0 },
+    records: []
+  };
+  const result = await runFleetWrapperShadow({
+    role: 'ci',
+    headSha: 'head',
+    baseSha: 'base',
+    previousLedger: v1,
+    eligibility: { eligible: false, reason: 'commissioning_branch' },
+    fetchImpl: async () => assert.fail('v1 reset commissioning run must not use network'),
+    validate: async () => 'pass'
+  });
+  assert.equal(result.ledger.natural_events, 0);
+  assert.equal(result.ledger.protected_calls, 0);
+  assert.equal(result.ledger.records.length, 0);
+  assert.equal(result.summary.previous_v1_evidence_carried_forward, false);
+});
+
+test('provider-native success on exact PR head/base is measured as an upstream hit', async () => {
   const result = await measureProviderNativeControl({
     role: 'ci',
     headSha: 'head',
@@ -96,17 +171,49 @@ test('provider-native success on the exact PR head/base is measured as an upstre
   assert.ok(result.latency_ms >= 0);
 });
 
-test('provider-native hit bypasses CHECK and OBSERVE but authoritative shadow validation still runs', async () => {
+test('provider-control failure cannot create CHECK, OBSERVE, or protected evidence', async () => {
+  let validations = 0;
+  let relayRequests = 0;
+  const result = await runFleetWrapperShadow({
+    role: 'ci',
+    headSha: 'head',
+    baseSha: 'base',
+    eligibility: ELIGIBLE,
+    fetchImpl: async (input) => {
+      const url = String(input);
+      if (url.startsWith('https://api.github.com/')) return response({ error: 'temporary' }, 503);
+      relayRequests += 1;
+      return response({ status: 'SAME_OBSERVED' });
+    },
+    validate: async () => { validations += 1; return 'pass'; }
+  });
+
+  assert.equal(validations, 1);
+  assert.equal(relayRequests, 0);
+  assert.equal(result.measurement.evidence_eligible, true);
+  assert.equal(result.measurement.provider_native_control.measured, true);
+  assert.equal(result.measurement.provider_native_control.query_ok, false);
+  assert.equal(result.measurement.protected_call, false);
+  assert.equal(result.measurement.record, null);
+  assert.equal(result.ledger.natural_events, 1);
+  assert.equal(result.ledger.protected_calls, 0);
+  assert.equal(result.ledger.control_evidence.provider_native_queries, 1);
+  assert.equal(result.ledger.control_evidence.provider_native_query_failures, 1);
+});
+
+test('eligible provider-native hit bypasses CHECK and OBSERVE but authoritative shadow validation still runs', async () => {
   let validations = 0;
   const result = await runFleetWrapperShadow({
     role: 'ci',
     headSha: 'head',
     baseSha: 'base',
+    eligibility: ELIGIBLE,
     fetchImpl: mockFetch({ providerHit: true, onObserve: () => assert.fail('provider hit must not OBSERVE') }),
     validate: async () => { validations += 1; return 'pass'; }
   });
 
   assert.equal(validations, 1);
+  assert.equal(result.measurement.evidence_eligible, true);
   assert.equal(result.measurement.protected_call, false);
   assert.equal(result.measurement.record, null);
   assert.equal(result.ledger.natural_events, 1);
@@ -117,13 +224,14 @@ test('provider-native hit bypasses CHECK and OBSERVE but authoritative shadow va
   assert.equal(result.summary.evaluation_reason, 'no_protected_calls');
 });
 
-test('SAME_OBSERVED remains shadow-only and is compared against the authoritative suite result', async () => {
+test('eligible SAME_OBSERVED remains shadow-only and is compared against authoritative suite result', async () => {
   let validations = 0;
   let observes = 0;
   const result = await runFleetWrapperShadow({
     role: 'ci',
     headSha: 'head',
     baseSha: 'base',
+    eligibility: ELIGIBLE,
     fetchImpl: mockFetch({ providerHit: false, checkStatus: 'SAME_OBSERVED', onObserve: () => { observes += 1; } }),
     validate: async () => { validations += 1; return 'pass'; }
   });
@@ -138,12 +246,13 @@ test('SAME_OBSERVED remains shadow-only and is compared against the authoritativ
   assert.equal(result.evaluation.report?.safety?.pass, true);
 });
 
-test('UNKNOWN validates authoritatively and only then contributes first-party benchmark evidence', async () => {
+test('eligible UNKNOWN validates authoritatively and only then contributes first-party evidence', async () => {
   let observes = 0;
   const result = await runFleetWrapperShadow({
     role: 'client-wrappers',
     headSha: 'head',
     baseSha: 'base',
+    eligibility: ELIGIBLE,
     fetchImpl: mockFetch({ providerHit: false, checkStatus: 'UNKNOWN', onObserve: () => { observes += 1; } }),
     validate: async () => 'pass'
   });
@@ -164,9 +273,9 @@ test('UNKNOWN validates authoritatively and only then contributes first-party be
   }
 });
 
-test('prior ledger cannot smuggle source, fact identity, value, or timestamp fields into evidence', async () => {
+test('same-generation prior ledger cannot smuggle source, fact identity, value, or timestamp fields', async () => {
   const badLedger = {
-    schema_version: 1,
+    schema_version: 2,
     workload_id: WORKLOAD_ID,
     workload_class: WORKLOAD_CLASS,
     role: 'ci',
@@ -186,20 +295,21 @@ test('prior ledger cannot smuggle source, fact identity, value, or timestamp fie
     role: 'ci',
     headSha: 'head',
     baseSha: 'base',
+    eligibility: ELIGIBLE,
     previousLedger: badLedger,
     fetchImpl: mockFetch({ providerHit: true }),
     validate: async () => 'pass'
   }), /non-sanitized fields/);
 });
 
-test('protected-call totals remain cumulative when the retained ledger reaches its cap', async () => {
+test('protected-call totals remain cumulative when retained v2 ledger reaches its cap', async () => {
   const record = {
     check_status: 'UNKNOWN', policy_reusable: false, reuse_would_match_validation: null,
     observe_after_baseline: true, baseline_ms: 1, baseline_cost: 1, check_ms: 1,
     observe_ms: 1, check_cost: 1, observe_cost: 1
   };
   const previousLedger = {
-    schema_version: 1,
+    schema_version: 2,
     workload_id: WORKLOAD_ID,
     workload_class: WORKLOAD_CLASS,
     role: 'ci',
@@ -215,6 +325,7 @@ test('protected-call totals remain cumulative when the retained ledger reaches i
     role: 'ci',
     headSha: 'head',
     baseSha: 'base',
+    eligibility: ELIGIBLE,
     previousLedger,
     fetchImpl: mockFetch({ providerHit: false, checkStatus: 'UNKNOWN' }),
     validate: async () => 'pass'
@@ -229,7 +340,7 @@ test('protected-call totals remain cumulative when the retained ledger reaches i
   assert.equal(result.summary.evaluation_reason, 'ledger_overflow');
 });
 
-test('CI structural remainder excludes exactly the fleet target files instead of rerunning them', () => {
+test('CI structural remainder excludes exactly fleet target files instead of rerunning them', () => {
   const all = fs.readdirSync('tests', { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.test.mjs'))
     .map((entry) => `tests/${entry.name}`)

@@ -22,13 +22,13 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Restore latest successful role ledgers
+      - name: Restore latest successful fleet v2 role ledgers
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          mkdir -p fleet-role-ledgers/ci fleet-role-ledgers/client-wrappers
+          mkdir -p fleet-v2-role-ledgers/ci fleet-v2-role-ledgers/client-wrappers
 
           restore_role() {
             workflow="$1"
@@ -38,32 +38,32 @@ jobs:
             while read -r run_id; do
               [ -n "$run_id" ] || continue
               if gh run download "$run_id" \
-                --name "fleet-wrapper-shadow-${role}-${run_id}" \
+                --name "fleet-wrapper-v2-shadow-${role}-${run_id}" \
                 --dir "$destination" >/dev/null 2>&1; then
                 found="$run_id"
                 break
               fi
             done < <(gh run list --workflow "$workflow" --status success --limit 20 --json databaseId --jq '.[].databaseId' 2>/dev/null || true)
             if [ -z "$found" ]; then
-              echo "No compatible successful $role fleet artifact found" >&2
+              echo "No compatible successful $role fleet v2 artifact found" >&2
               return 1
             fi
-            echo "Restored $role fleet ledger from run $found"
+            echo "Restored $role fleet v2 ledger from run $found"
           }
 
-          restore_role 'CI' 'ci' 'fleet-role-ledgers/ci'
-          restore_role 'Client Wrappers' 'client-wrappers' 'fleet-role-ledgers/client-wrappers'
+          restore_role 'CI' 'ci' 'fleet-v2-role-ledgers/ci'
+          restore_role 'Client Wrappers' 'client-wrappers' 'fleet-v2-role-ledgers/client-wrappers'
 
-          test -f fleet-role-ledgers/ci/fleet-wrapper-shadow-ci-ledger.json
-          test -f fleet-role-ledgers/client-wrappers/fleet-wrapper-shadow-client-wrappers-ledger.json
+          test -f fleet-v2-role-ledgers/ci/fleet-wrapper-v2-shadow-ci-ledger.json
+          test -f fleet-v2-role-ledgers/client-wrappers/fleet-wrapper-v2-shadow-client-wrappers-ledger.json
 
-      - name: Combine role ledgers offline
+      - name: Combine fleet v2 role ledgers offline
         run: |
           node scripts/evaluate-fleet-wrapper-ledgers.mjs \
-            fleet-role-ledgers/ci/fleet-wrapper-shadow-ci-ledger.json \
-            fleet-role-ledgers/client-wrappers/fleet-wrapper-shadow-client-wrappers-ledger.json
+            fleet-v2-role-ledgers/ci/fleet-wrapper-v2-shadow-ci-ledger.json \
+            fleet-v2-role-ledgers/client-wrappers/fleet-wrapper-v2-shadow-client-wrappers-ledger.json
 
-      - name: Verify combined privacy and admission contract
+      - name: Verify combined fleet v2 privacy and admission contract
         shell: bash
         run: |
           set -euo pipefail
@@ -71,7 +71,8 @@ jobs:
           const fs = require('node:fs');
           const ledger = JSON.parse(fs.readFileSync('fleet-wrapper-natural-ledger.json', 'utf8'));
           const summary = JSON.parse(fs.readFileSync('fleet-wrapper-natural-summary.json', 'utf8'));
-          if (ledger.workload_class !== 'fleet_tool_validations' || ledger.cost_unit !== 'github_actions_runner_ms') process.exit(1);
+          if (ledger.workload_id !== 'wrapper-deterministic-suite-fleet-v2' || ledger.workload_class !== 'fleet_tool_validations') process.exit(1);
+          if (ledger.cost_unit !== 'github_actions_runner_ms') process.exit(1);
           if (summary.external_adoption_evidence !== false || summary.cumulative_protected_calls !== ledger.protected_calls) process.exit(1);
           if (ledger.protected_calls !== ledger.records.length + ledger.records_dropped) process.exit(1);
           for (const value of [ledger, summary]) {
@@ -86,10 +87,10 @@ jobs:
           }
           NODE
 
-      - name: Upload combined fleet natural-workload evidence
+      - name: Upload combined fleet v2 natural-workload evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: fleet-wrapper-natural-evaluation-${{ github.run_id }}
+          name: fleet-wrapper-v2-natural-evaluation-${{ github.run_id }}
           path: |
             fleet-wrapper-natural-ledger.json
             fleet-wrapper-natural-summary.json
