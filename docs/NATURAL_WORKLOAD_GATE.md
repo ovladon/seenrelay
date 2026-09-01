@@ -2,6 +2,8 @@
 
 This gate tests whether shared CHECK adds incremental value after the best qualifying non-shared optimization has already been measured. It is designed to return negative results honestly.
 
+Candidate admission and pre-screen rejection decisions are recorded in `docs/NATURAL_WORKLOAD_CANDIDATES.md`. A rejected candidate is not a substitute for a missing workload class unless new workload or control evidence changes the pre-screen result.
+
 ## Required evidence
 
 Evaluate three independently defined natural workloads. Repetition must arise from the workload distribution; do not manufacture repeated facts merely to create CHECK hits.
@@ -34,6 +36,8 @@ Use exactly one independently defined workload from each class rather than three
 A workload may be rejected before collection if it has an equivalent authoritative shared cache or mandatory live validation on every request.
 
 The class label is a methodological constraint, not evidence by itself. The workload distribution must still come from captured or faithfully replayed natural work rather than a sequence constructed to guarantee repeated facts.
+
+If one required class has no admitted natural workload, the three-class admission set remains incomplete. Do not substitute another instance of an already represented class merely to complete the set.
 
 ## Decision
 
