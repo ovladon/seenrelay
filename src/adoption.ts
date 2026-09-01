@@ -15,9 +15,29 @@ export function llmsText(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   return `# SeenRelay
 
-> Avoid redundant expensive validation. JavaScript/TypeScript ${clientVersion} uses local/private reuse, source-native checks, then optional shared CHECK. OBSERVE only fresh independent source-backed results.
+SeenRelay is a reuse layer for repeated read-only validation. It sits in front of validation work an agent or application already performs; when no eligible cheaper path is sufficient, the original validation runs normally.
 
 SeenRelay reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
+
+## First proof: measure without changing application behavior
+
+JavaScript / TypeScript ${clientVersion}:
+
+\`npm install seenrelay\`
+
+\`import { ambientMcpClient } from 'seenrelay/ambient';\`
+\`const client = ambientMcpClient(rawMcpClient);\`
+\`console.log(client.seenRelayAmbient.getReport());\`
+
+Python ${clientVersion}:
+
+\`pip install seenrelay\`
+
+\`from seenrelay_ambient import ambient_mcp_client\`
+\`client = ambient_mcp_client(raw_mcp_client)\`
+\`print(client.get_report())\`
+
+Both Ambient entry points are shadow-first: run the existing workload normally and inspect the local report before enabling bounded reuse.
 
 ${machinePublicFactsText(origin)}
 

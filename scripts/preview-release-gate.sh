@@ -89,7 +89,14 @@ grep -q "CLIENT ${client_version}" /tmp/clients.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
-grep -q "JavaScript/TypeScript ${client_version} uses" /tmp/llms.txt
+grep -q 'SeenRelay is a reuse layer for repeated read-only validation' /tmp/llms.txt
+grep -q '## First proof: measure without changing application behavior' /tmp/llms.txt
+grep -q "JavaScript / TypeScript ${client_version}:" /tmp/llms.txt
+grep -q "Python ${client_version}:" /tmp/llms.txt
+grep -q 'ambientMcpClient(rawMcpClient)' /tmp/llms.txt
+grep -q 'client.seenRelayAmbient.getReport()' /tmp/llms.txt
+grep -q 'ambient_mcp_client(raw_mcp_client)' /tmp/llms.txt
+grep -q 'client.get_report()' /tmp/llms.txt
 grep -q "Python ${client_version} remains shadow-first" /tmp/llms.txt
 ! grep -q '0.2.1' /tmp/llms.txt
 grep -q 'Shared CHECK is off by default' /tmp/llms.txt
