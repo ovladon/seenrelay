@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { SeenRelayClient } from '../clients/typescript/dist/seenrelay.js';
 import { evaluateHostileBenchmark } from './evaluate-hostile-benchmark.mjs';
 
-export const WORKLOAD_ID = 'wrapper-deterministic-suite-fleet-v1';
+export const WORKLOAD_ID = 'wrapper-deterministic-suite-fleet-v2';
 export const WORKLOAD_CLASS = 'fleet_tool_validations';
 export const COST_UNIT = 'github_actions_runner_ms';
 export const TARGET_TESTS = Object.freeze([
@@ -81,9 +81,22 @@ export function buildFleetFact({ coordinate }) {
   return Object.freeze({
     subject: 'SeenRelay deterministic JavaScript wrapper suite input',
     predicate: 'validation.pass.current',
-    source: 'https://github.com/ovladon/seenrelay?seenrelay_internal_benchmark=fleet_wrapper_js_v1',
+    source: 'https://github.com/ovladon/seenrelay?seenrelay_internal_benchmark=fleet_wrapper_js_v2',
     locator: { scheme: 'source_key', value: coordinate }
   });
+}
+
+export function fleetEvidenceEligibility({
+  eventName = process.env.GITHUB_EVENT_NAME || '',
+  branchName = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || ''
+} = {}) {
+  if (eventName !== 'pull_request') {
+    return Object.freeze({ eligible: false, reason: 'non_pull_request_event' });
+  }
+  if (/^(?:research|verify)\/fleet(?:[-/]|$)/.test(branchName)) {
+    return Object.freeze({ eligible: false, reason: 'commissioning_branch' });
+  }
+  return Object.freeze({ eligible: true, reason: null });
 }
 
 function roleCounterpartWorkflow(role) {
@@ -160,15 +173,20 @@ function sanitizedRecord(record) {
   return Object.fromEntries(RECORD_KEYS.map((key) => [key, record[key]]));
 }
 
-function priorLedgerRecords(previousLedger, role) {
-  if (!previousLedger) return [];
+function compatiblePreviousLedger(previousLedger, role) {
+  if (!previousLedger) return null;
+  if (previousLedger.workload_id !== WORKLOAD_ID) return null;
   if (
-    previousLedger.workload_id !== WORKLOAD_ID ||
     previousLedger.workload_class !== WORKLOAD_CLASS ||
     previousLedger.role !== role ||
     previousLedger.cost_unit !== COST_UNIT
   ) throw new TypeError('previous fleet ledger is incompatible');
   if (!Array.isArray(previousLedger.records)) throw new TypeError('previous fleet ledger records must be an array');
+  return previousLedger;
+}
+
+function priorLedgerRecords(previousLedger) {
+  if (!previousLedger) return [];
   return previousLedger.records.map(sanitizedRecord);
 }
 
@@ -192,27 +210,27 @@ function buildRecord({ checkStatus, policyReusable, reuseWouldMatchValidation, v
   });
 }
 
-function buildLedger({ role, previousLedger, provider, record }) {
-  const priorRecords = priorLedgerRecords(previousLedger, role);
+function buildLedger({ role, previousLedger, provider, record, eligible }) {
+  const priorRecords = priorLedgerRecords(previousLedger);
   const nextRecords = record ? [...priorRecords, sanitizedRecord(record)] : priorRecords;
   const previousDropped = priorCount(previousLedger, 'records_dropped');
   const overflow = Math.max(0, nextRecords.length - MAX_LEDGER_RECORDS);
   const records = overflow > 0 ? nextRecords.slice(overflow) : nextRecords;
   const protectedCalls = priorCount(previousLedger, 'protected_calls') + (record ? 1 : 0);
   return Object.freeze({
-    schema_version: 1,
+    schema_version: 2,
     workload_id: WORKLOAD_ID,
     workload_class: WORKLOAD_CLASS,
     role,
     cost_unit: COST_UNIT,
-    natural_events: priorCount(previousLedger, 'natural_events') + 1,
+    natural_events: priorCount(previousLedger, 'natural_events') + (eligible ? 1 : 0),
     protected_calls: protectedCalls,
     records_dropped: previousDropped + overflow,
     preliminary_sample_floor_met: protectedCalls >= 100,
     control_evidence: Object.freeze({
-      provider_native_queries: priorCount(previousLedger, 'provider_native_queries') + 1,
-      provider_native_hits: priorCount(previousLedger, 'provider_native_hits') + (provider.hit ? 1 : 0),
-      provider_native_query_failures: priorCount(previousLedger, 'provider_native_query_failures') + (provider.ok ? 0 : 1)
+      provider_native_queries: priorCount(previousLedger, 'provider_native_queries') + (eligible ? 1 : 0),
+      provider_native_hits: priorCount(previousLedger, 'provider_native_hits') + (eligible && provider.hit ? 1 : 0),
+      provider_native_query_failures: priorCount(previousLedger, 'provider_native_query_failures') + (eligible && !provider.ok ? 1 : 0)
     }),
     records: Object.freeze(records),
     raw_values_retained: false,
@@ -257,28 +275,34 @@ export async function runFleetWrapperShadow({
   fetchImpl = fetch,
   validate = runTargetSuite,
   previousLedger = null,
+  eligibility = fleetEvidenceEligibility(),
   writeFiles = false,
-  outputPrefix = process.env.FLEET_SHADOW_PREFIX || `fleet-wrapper-shadow-${role}`
+  outputPrefix = process.env.FLEET_SHADOW_PREFIX || `fleet-wrapper-v2-shadow-${role}`
 } = {}) {
   if (!ALLOWED_ROLES.has(role)) throw new TypeError(`unsupported fleet role: ${role}`);
+  if (!eligibility || typeof eligibility.eligible !== 'boolean') throw new TypeError('eligibility must declare an eligible boolean');
+  const eligible = eligibility.eligible;
+  const prior = compatiblePreviousLedger(previousLedger, role);
   const coordinate = buildFleetCoordinate();
   const fact = buildFleetFact({ coordinate });
 
-  // A successful counterpart GitHub workflow on the same head/base is a
-  // stronger provider-native result cache. Shared CHECK is not consulted on hits.
-  const provider = await measureProviderNativeControl({ role, headSha, baseSha, fetchImpl });
+  // Commissioning and non-PR runs still execute the authoritative tests, but
+  // they cannot query or seed either GitHub control evidence or SeenRelay.
+  const provider = eligible
+    ? await measureProviderNativeControl({ role, headSha, baseSha, fetchImpl })
+    : Object.freeze({ available: true, measured: false, hit: false, ok: true, latency_ms: 0 });
 
-  const client = new SeenRelayClient({
+  const client = eligible ? new SeenRelayClient({
     baseUrl: origin,
-    clientHint: `seenrelay-internal-fleet-wrapper-${role}`,
+    clientHint: `seenrelay-internal-fleet-wrapper-v2-${role}`,
     fetchImpl,
     checkTimeoutMs: 1500,
     observeTimeoutMs: 1000
-  });
+  }) : null;
 
   let check = null;
   let checkMs = 0;
-  if (!provider.hit) {
+  if (eligible && !provider.hit) {
     const started = performance.now();
     try {
       check = await client.check(fact, 'pass', MAX_AGE_SECONDS);
@@ -289,16 +313,16 @@ export async function runFleetWrapperShadow({
     }
   }
 
-  // This always runs, even on provider-cache or hypothetical SeenRelay reuse.
-  // The existing validation remains authoritative throughout evidence collection.
+  // The original validation remains authoritative on every run, including
+  // commissioning runs and hypothetical reuse opportunities.
   const validationStarted = performance.now();
   const value = await validate();
   const validationMs = Math.max(0, performance.now() - validationStarted);
   if (value !== 'pass') throw new Error('fleet wrapper authoritative validation did not return pass');
 
-  const policyReusable = !provider.hit && check?.status === 'SAME_OBSERVED';
+  const policyReusable = eligible && !provider.hit && check?.status === 'SAME_OBSERVED';
   const reuseWouldMatchValidation = policyReusable ? value === 'pass' : null;
-  const protectedCall = !provider.hit;
+  const protectedCall = eligible && !provider.hit;
   const observeAfterBaseline = protectedCall && !policyReusable;
 
   let observeMs = 0;
@@ -306,8 +330,6 @@ export async function runFleetWrapperShadow({
     const started = performance.now();
     try {
       await client.observe(fact, value, {
-        // Constant role identity avoids manufacturing new observer independence
-        // on every workflow run; CI and Client Wrappers remain two first-party roles.
         observerId: `gha-${role}`,
         idempotencyKey: `${process.env.GITHUB_RUN_ID || 'local'}-${process.env.GITHUB_RUN_ATTEMPT || '1'}-${role}`,
         evidenceFingerprint: sha256(`${coordinate}:pass`)
@@ -319,8 +341,6 @@ export async function runFleetWrapperShadow({
     }
   }
 
-  // Provider-native hits are upstream of SeenRelay and therefore do not enter
-  // the protected-call ledger. Their frequency is retained as control evidence.
   const record = protectedCall ? buildRecord({
     checkStatus: check?.status ?? null,
     policyReusable,
@@ -331,23 +351,25 @@ export async function runFleetWrapperShadow({
     observeAfterBaseline
   }) : null;
 
-  const ledger = buildLedger({ role, previousLedger, provider, record });
+  const ledger = buildLedger({ role, previousLedger: prior, provider, record, eligible });
   const evaluation = safeEvaluate(ledger);
   const benchmark = ledger.records.length > 0 ? buildHostileInput(ledger) : null;
   const measurement = Object.freeze({
-    schema_version: 2,
+    schema_version: 3,
     workload_id: WORKLOAD_ID,
     workload_class: WORKLOAD_CLASS,
     first_party: true,
     external_adoption_evidence: false,
     cost_unit: COST_UNIT,
     role,
-    natural_event: true,
+    evidence_eligible: eligible,
+    exclusion_reason: eligible ? null : eligibility.reason || 'ineligible',
+    natural_event: eligible,
     protected_call: protectedCall,
     provider_native_control: Object.freeze({
       available: true,
-      measured: true,
-      query_ok: provider.ok === true,
+      measured: provider.measured === true,
+      query_ok: provider.measured === true ? provider.ok === true : null,
       hit: provider.hit === true,
       latency_ms: safeMs(provider.latency_ms)
     }),
@@ -358,14 +380,16 @@ export async function runFleetWrapperShadow({
     timestamps_retained: false
   });
   const summary = Object.freeze({
-    schema_version: 2,
+    schema_version: 3,
     workload_id: WORKLOAD_ID,
     workload_class: WORKLOAD_CLASS,
     first_party: true,
     external_adoption_evidence: false,
     cost_unit: COST_UNIT,
     role,
-    current_run_natural_events: 1,
+    current_run_evidence_eligible: eligible,
+    current_run_exclusion_reason: eligible ? null : eligibility.reason || 'ineligible',
+    current_run_natural_events: eligible ? 1 : 0,
     current_run_protected_calls: protectedCall ? 1 : 0,
     cumulative_natural_events: ledger.natural_events,
     cumulative_protected_calls: ledger.protected_calls,
@@ -375,6 +399,7 @@ export async function runFleetWrapperShadow({
     provider_native_query_failures: ledger.control_evidence.provider_native_query_failures,
     evaluation_state: evaluation.state,
     evaluation_reason: evaluation.reason,
+    previous_v1_evidence_carried_forward: false,
     raw_values_retained: false,
     fact_identity_retained: false,
     sources_retained: false,
@@ -394,6 +419,8 @@ export async function runFleetWrapperShadow({
     workload_id: WORKLOAD_ID,
     workload_class: WORKLOAD_CLASS,
     role,
+    evidence_eligible: eligible,
+    exclusion_reason: eligible ? null : eligibility.reason || 'ineligible',
     provider_native_hit: provider.hit,
     protected_call: protectedCall,
     check_status: check?.status ?? null,
