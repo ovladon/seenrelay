@@ -11,6 +11,7 @@ test('public and machine-facing guidance targets repeated expensive validation w
   const economics = read('src', 'economics.ts');
   const publicSource = read('src', 'public.ts');
   const publicView = read('src', 'public-facts-view.ts');
+  const landing = read('src', 'landing.ts');
   const indexSource = read('src', 'index.ts');
   const quickstart = read('src', 'quickstart.ts');
   const adoption = read('src', 'adoption.ts');
@@ -60,7 +61,9 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.doesNotMatch(publicView, /firecrawl-browser-interaction-2026-08-26/);
   assert.doesNotMatch(economics + publicSource + adoption + integrations, /Firecrawl Pay As You Go/);
   assert.match(economics, /Fixed-tier counterexample/);
-  assert.match(economics, /Poor fit:/);
+  assert.match(economics, /Outside the target:/);
+  assert.doesNotMatch(landing, /fit:\s*\$\{esc\(fit\)\}/);
+  assert.doesNotMatch(publicView, /fit-badge|<th>Fit<\/th>|poor workload fit/);
 
   assert.match(quickstart, /seenrelay\/mcp-auto/);
   assert.match(quickstart, /local-first bind-once path/i);
