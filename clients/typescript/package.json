@@ -1,6 +1,6 @@
 {
   "name": "seenrelay",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Avoid redundant expensive validation with local-first SeenRelay clients.",
   "type": "module",
   "main": "./dist/seenrelay.js",
@@ -17,6 +17,14 @@
     "./zero-state": {
       "types": "./dist/zero-state.d.ts",
       "import": "./dist/zero-state.js"
+    },
+    "./assurance": {
+      "types": "./dist/assurance.d.ts",
+      "import": "./dist/assurance.js"
+    },
+    "./coordinates": {
+      "types": "./dist/coordinates.d.ts",
+      "import": "./dist/coordinates.js"
     },
     "./auto": {
       "types": "./dist/auto.d.ts",

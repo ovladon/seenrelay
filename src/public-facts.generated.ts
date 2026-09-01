@@ -235,5 +235,5 @@ export const publicProductFacts = {
       "summary": "In a first-party n=3 Firecrawl browser-interaction smoke benchmark, bounded reuse avoided 3/3 equivalent provider calls, 9 reported provider credits, and reduced median validation latency from 4.385 s to 0.661 s."
     }
   ],
-  "service_release": "0.3.9"
+  "service_release": "0.3.10"
 } as const;
