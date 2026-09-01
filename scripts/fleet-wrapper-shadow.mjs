@@ -291,8 +291,9 @@ export async function runFleetWrapperShadow({
   const provider = eligible
     ? await measureProviderNativeControl({ role, headSha, baseSha, fetchImpl })
     : Object.freeze({ available: true, measured: false, hit: false, ok: true, latency_ms: 0 });
+  const controlReady = eligible && provider.ok === true;
 
-  const client = eligible ? new SeenRelayClient({
+  const client = controlReady ? new SeenRelayClient({
     baseUrl: origin,
     clientHint: `seenrelay-internal-fleet-wrapper-v2-${role}`,
     fetchImpl,
@@ -302,7 +303,7 @@ export async function runFleetWrapperShadow({
 
   let check = null;
   let checkMs = 0;
-  if (eligible && !provider.hit) {
+  if (controlReady && !provider.hit) {
     const started = performance.now();
     try {
       check = await client.check(fact, 'pass', MAX_AGE_SECONDS);
@@ -320,9 +321,9 @@ export async function runFleetWrapperShadow({
   const validationMs = Math.max(0, performance.now() - validationStarted);
   if (value !== 'pass') throw new Error('fleet wrapper authoritative validation did not return pass');
 
-  const policyReusable = eligible && !provider.hit && check?.status === 'SAME_OBSERVED';
+  const policyReusable = controlReady && !provider.hit && check?.status === 'SAME_OBSERVED';
   const reuseWouldMatchValidation = policyReusable ? value === 'pass' : null;
-  const protectedCall = eligible && !provider.hit;
+  const protectedCall = controlReady && !provider.hit;
   const observeAfterBaseline = protectedCall && !policyReusable;
 
   let observeMs = 0;
@@ -330,6 +331,8 @@ export async function runFleetWrapperShadow({
     const started = performance.now();
     try {
       await client.observe(fact, value, {
+        // Constant role identity avoids manufacturing new observer independence
+        // on every workflow run; CI and Client Wrappers remain two first-party roles.
         observerId: `gha-${role}`,
         idempotencyKey: `${process.env.GITHUB_RUN_ID || 'local'}-${process.env.GITHUB_RUN_ATTEMPT || '1'}-${role}`,
         evidenceFingerprint: sha256(`${coordinate}:pass`)
@@ -341,6 +344,8 @@ export async function runFleetWrapperShadow({
     }
   }
 
+  // Provider-native hits and failed provider controls are upstream of SeenRelay
+  // and therefore do not enter the protected-call ledger.
   const record = protectedCall ? buildRecord({
     checkStatus: check?.status ?? null,
     policyReusable,
@@ -422,6 +427,7 @@ export async function runFleetWrapperShadow({
     evidence_eligible: eligible,
     exclusion_reason: eligible ? null : eligibility.reason || 'ineligible',
     provider_native_hit: provider.hit,
+    provider_native_query_ok: provider.measured === true ? provider.ok === true : null,
     protected_call: protectedCall,
     check_status: check?.status ?? null,
     policy_reusable: policyReusable,
