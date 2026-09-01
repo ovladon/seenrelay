@@ -171,6 +171,36 @@ test('provider-native success on exact PR head/base is measured as an upstream h
   assert.ok(result.latency_ms >= 0);
 });
 
+test('provider-control failure cannot create CHECK, OBSERVE, or protected evidence', async () => {
+  let validations = 0;
+  let relayRequests = 0;
+  const result = await runFleetWrapperShadow({
+    role: 'ci',
+    headSha: 'head',
+    baseSha: 'base',
+    eligibility: ELIGIBLE,
+    fetchImpl: async (input) => {
+      const url = String(input);
+      if (url.startsWith('https://api.github.com/')) return response({ error: 'temporary' }, 503);
+      relayRequests += 1;
+      return response({ status: 'SAME_OBSERVED' });
+    },
+    validate: async () => { validations += 1; return 'pass'; }
+  });
+
+  assert.equal(validations, 1);
+  assert.equal(relayRequests, 0);
+  assert.equal(result.measurement.evidence_eligible, true);
+  assert.equal(result.measurement.provider_native_control.measured, true);
+  assert.equal(result.measurement.provider_native_control.query_ok, false);
+  assert.equal(result.measurement.protected_call, false);
+  assert.equal(result.measurement.record, null);
+  assert.equal(result.ledger.natural_events, 1);
+  assert.equal(result.ledger.protected_calls, 0);
+  assert.equal(result.ledger.control_evidence.provider_native_queries, 1);
+  assert.equal(result.ledger.control_evidence.provider_native_query_failures, 1);
+});
+
 test('eligible provider-native hit bypasses CHECK and OBSERVE but authoritative shadow validation still runs', async () => {
   let validations = 0;
   const result = await runFleetWrapperShadow({
