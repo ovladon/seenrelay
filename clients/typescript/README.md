@@ -4,8 +4,54 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Client 0.2.7 adds Ambient framework routing for LangChain plus a local machine-readable integration catalog. JavaScript / TypeScript also includes the Firecrawl MCP shadow helper and direct Firecrawl SDK shadow adapter. None of these surfaces authorizes automatic reuse.
+Client 0.2.9 includes the multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit alongside the Ambient framework integrations, local integration catalog, Firecrawl shadow helpers, and existing local-first surfaces. Shared evidence never authorizes reuse by itself.
 
+## Shared CHECK assurance
+
+`seenrelay/assurance` turns additive CHECK evidence into an explicit caller-side policy decision. The multi-signal preset requires at least two observer keys, two cryptographic continuity keys, and two reuse-independence buckets, plus matching value fingerprints and acceptable freshness.
+
+```js
+import { createMultiSignalRetainedReusePolicy } from 'seenrelay/assurance';
+
+const reuseRetained = createMultiSignalRetainedReusePolicy({
+  maxAgeSeconds: 300
+});
+```
+
+These signals reduce trivial poisoning risk; they do not establish truth or prove independent real-world actors. High-consequence validation should still require authoritative source confirmation under the application's own policy.
+
+## Deterministic coordinates
+
+`seenrelay/coordinates` separates local call coordinates from shared source-backed fact descriptors. Do not guess semantic equivalence.
+
+```js
+import {
+  mcpToolCoordinate,
+  openApiOperationCoordinate,
+  jsonPointerFact
+} from 'seenrelay/coordinates';
+
+const localCall = mcpToolCoordinate({
+  server: 'catalog-prod',
+  name: 'catalog.read',
+  arguments: { id: 42 }
+});
+
+const apiCall = openApiOperationCoordinate({
+  service: 'catalog-api',
+  operationId: 'getProduct',
+  parameters: { id: 42 }
+});
+
+const fact = jsonPointerFact({
+  subject: 'Product 42 stock',
+  predicate: 'availability.current',
+  source: 'https://api.example.com/products/42',
+  jsonPointer: '/stock'
+});
+```
+
+MCP/OpenAPI coordinates are local repetition keys only. Shared fact builders require a stable source-native locator and remain subject to SeenRelay's server-side fact identity contract.
 
 ## Ambient MCP
 
@@ -50,7 +96,6 @@ const client = ambientMcpClient(rawMcpClient, {
 ```
 
 Do not enable active protection for mutating/destructive operations or for calls whose context/result equivalence has not been reviewed. Unknown call options fail closed from shadow equivalence measurement and preserve the authoritative call.
-
 
 ## Install
 
@@ -297,7 +342,6 @@ The authoritative Firecrawl request always runs and returns before the counterfa
 Firecrawl provider-cache hits are retained as provider baseline evidence but are not re-labeled as independent OBSERVEs. If Firecrawl does not expose a usable `creditsUsed` value, cost evaluation remains incomplete unless the caller explicitly supplies a justified `provider_credit_fallback_units` in the same provider-credit unit. Local cache and source-native controls must be declared truthfully; an available but unmeasured control makes the hostile evaluator reject the evidence.
 
 A favorable pilot result is evidence only for the measured workload. It does not enable reuse or establish a universal Firecrawl savings rate.
-
 
 ### Direct Firecrawl JavaScript SDK shadow adapter
 
