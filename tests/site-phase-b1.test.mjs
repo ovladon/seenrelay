@@ -88,7 +88,7 @@ test('quickstart is factual, agent-compatible and behavior-preserving', () => {
 });
 
 test('integration chooser makes measurement the primary path and hosted protocol connection separate', () => {
-  for (const expected of ['INSTRUMENT AN APPLICATION', 'Coding agent', 'Existing MCP client', 'Python MCP', 'OpenAI Agents / AI SDK', 'LangChain / PydanticAI', 'Plain read-only function', 'CONNECT THE HOSTED PROTOCOL', 'Cursor', 'VS Code / GitHub Copilot', 'Claude Code', 'Other MCP / REST clients']) {
+  for (const expected of ['INSTRUMENT AN APPLICATION', 'Coding agent', 'Existing MCP client', 'Python MCP', 'OpenAI Agents / AI SDK', 'LangChain / PydanticAI', 'Plain read-only function', 'REMOTE PROTOCOL', 'Cursor', 'VS Code / GitHub Copilot', 'Claude Code', 'Other MCP / REST clients']) {
     assert.match(integrationsSource, new RegExp(expected.replaceAll('/', '\\/')));
   }
   assert.match(integrationsSource, /does not by itself enable reuse/i);
