@@ -36,14 +36,21 @@ function validateLedger(ledger) {
   }
   const control = ledger.control_evidence;
   if (!control || typeof control !== 'object' || Array.isArray(control)) throw new TypeError('fleet ledger control_evidence is required');
+  const records = Object.freeze(ledger.records.map(sanitizedRecord));
+  const recordsDropped = nonNegativeInteger(ledger.records_dropped, 'records_dropped');
+  const protectedCalls = nonNegativeInteger(ledger.protected_calls, 'protected_calls');
+  if (protectedCalls !== records.length + recordsDropped) {
+    throw new TypeError('fleet ledger protected_calls must equal retained plus dropped protected records');
+  }
   return Object.freeze({
     role: ledger.role,
     natural_events: nonNegativeInteger(ledger.natural_events, 'natural_events'),
-    records_dropped: nonNegativeInteger(ledger.records_dropped, 'records_dropped'),
+    protected_calls: protectedCalls,
+    records_dropped: recordsDropped,
     provider_native_queries: nonNegativeInteger(control.provider_native_queries, 'provider_native_queries'),
     provider_native_hits: nonNegativeInteger(control.provider_native_hits, 'provider_native_hits'),
     provider_native_query_failures: nonNegativeInteger(control.provider_native_query_failures, 'provider_native_query_failures'),
-    records: Object.freeze(ledger.records.map(sanitizedRecord))
+    records
   });
 }
 
@@ -76,6 +83,7 @@ export function combineFleetLedgers(inputLedgers) {
 
   const records = ledgers.flatMap((ledger) => ledger.records);
   const recordsDropped = ledgers.reduce((sum, ledger) => sum + ledger.records_dropped, 0);
+  const protectedCalls = ledgers.reduce((sum, ledger) => sum + ledger.protected_calls, 0);
   const naturalEvents = ledgers.reduce((sum, ledger) => sum + ledger.natural_events, 0);
   const providerQueries = ledgers.reduce((sum, ledger) => sum + ledger.provider_native_queries, 0);
   const providerHits = ledgers.reduce((sum, ledger) => sum + ledger.provider_native_hits, 0);
@@ -88,9 +96,9 @@ export function combineFleetLedgers(inputLedgers) {
     roles: Object.freeze([...REQUIRED_ROLES]),
     cost_unit: COST_UNIT,
     natural_events: naturalEvents,
-    protected_calls: records.length,
+    protected_calls: protectedCalls,
     records_dropped: recordsDropped,
-    preliminary_sample_floor_met: records.length >= 100,
+    preliminary_sample_floor_met: protectedCalls >= 100,
     control_evidence: Object.freeze({
       provider_native_queries: providerQueries,
       provider_native_hits: providerHits,
@@ -106,7 +114,7 @@ export function combineFleetLedgers(inputLedgers) {
   let benchmark = null;
   let evaluation = null;
   let evaluationState = 'incomplete';
-  let evaluationReason = records.length === 0 ? 'no_protected_calls' : null;
+  let evaluationReason = protectedCalls === 0 ? 'no_protected_calls' : null;
   if (records.length > 0 && recordsDropped === 0) {
     benchmark = hostileInput(records);
     evaluation = evaluateHostileBenchmark(benchmark);
@@ -124,8 +132,8 @@ export function combineFleetLedgers(inputLedgers) {
     cost_unit: COST_UNIT,
     role_count: REQUIRED_ROLES.length,
     cumulative_natural_events: naturalEvents,
-    cumulative_protected_calls: records.length,
-    preliminary_sample_floor_met: records.length >= 100,
+    cumulative_protected_calls: protectedCalls,
+    preliminary_sample_floor_met: protectedCalls >= 100,
     provider_native_queries: providerQueries,
     provider_native_hits: providerHits,
     provider_native_hit_rate: providerQueries > 0 ? providerHits / providerQueries : null,
