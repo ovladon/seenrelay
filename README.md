@@ -16,9 +16,11 @@ Ambient wraps an existing MCP-style client in local shadow mode. The authoritati
 
 JavaScript / TypeScript:
 
-```js
+```bash
 npm install seenrelay
+```
 
+```js
 import { ambientMcpClient } from 'seenrelay/ambient';
 
 const client = ambientMcpClient(rawMcpClient);
@@ -28,9 +30,11 @@ console.log(client.seenRelayAmbient.getReport());
 
 Python:
 
-```python
+```bash
 pip install seenrelay
+```
 
+```python
 from seenrelay_ambient import ambient_mcp_client
 
 client = ambient_mcp_client(raw_mcp_client)

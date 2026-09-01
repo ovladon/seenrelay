@@ -8,6 +8,8 @@ test('README starts with factual definition and behavior-preserving first proof'
   const t = read('README.md');
   assert.match(t, /SeenRelay is a reuse layer for repeated read-only validation\./);
   assert.match(t, /## First proof: measure without changing application behavior/);
+  assert.match(t, /```bash\nnpm install seenrelay\n```/);
+  assert.match(t, /```bash\npip install seenrelay\n```/);
   assert.match(t, /ambientMcpClient\(rawMcpClient\)/);
   assert.match(t, /client\.seenRelayAmbient\.getReport\(\)/);
   assert.match(t, /ambient_mcp_client\(raw_mcp_client\)/);
