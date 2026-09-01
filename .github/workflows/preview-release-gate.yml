@@ -32,14 +32,32 @@ jobs:
       BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.release_sha }}
     steps:
+      - name: Classify Preview applicability
+        id: applicability
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+          elif [[ "$HEAD_REF" == research/* || "$HEAD_REF" == verify/* ]]; then
+            echo 'required=false' >> "$GITHUB_OUTPUT"
+            echo "Vercel Preview is not applicable: vercel.json disables deployment for $HEAD_REF."
+          else
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout exact head commit
+        if: steps.applicability.outputs.required == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.RELEASE_SHA }}
 
       - name: Resolve this PR's Vercel Preview URL
         id: preview
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.applicability.outputs.required == 'true'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -51,7 +69,12 @@ jobs:
           echo "Resolved Preview: $url"
 
       - name: Run isolated Preview release gate
+        if: steps.applicability.outputs.required == 'true'
         shell: bash
         env:
           PREVIEW_URL: ${{ github.event_name == 'pull_request' && steps.preview.outputs.url || inputs.preview_url }}
         run: bash scripts/run-preview-release-gate.sh
+
+      - name: Record non-deployed branch gate
+        if: steps.applicability.outputs.required != 'true'
+        run: echo 'Preview release gate passed as not applicable for a Vercel-disabled branch class.'

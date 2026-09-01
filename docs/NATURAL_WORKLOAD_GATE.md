@@ -11,25 +11,29 @@ Each preliminary workload screen should contain at least 100 protected calls. Th
 For every workload:
 
 1. `sample_type` is `natural_workload`;
-2. baseline is `best_existing_non_shared_path`;
-3. every available local cache is measured;
-4. every available source-native conditional path is measured;
-5. every available provider-native cache/cache-only path is measured;
-6. shadow validation remains authoritative;
-7. every policy-accepted hypothetical reuse is compared with that authoritative result;
-8. raw fact identities, sources and values are excluded from exported benchmark records.
+2. `workload_id` is non-empty and unique within the three-workload set;
+3. `workload_class` is one of the three exact classes below and appears exactly once in the set;
+4. baseline is `best_existing_non_shared_path`;
+5. every available local cache is measured;
+6. every available source-native conditional path is measured;
+7. every available provider-native cache/cache-only path is measured;
+8. shadow validation remains authoritative;
+9. every policy-accepted hypothetical reuse is compared with that authoritative result;
+10. raw fact identities, sources and values are excluded from exported benchmark records.
 
-The existing `SeenRelayShadowProof.hostileBenchmarkInput(...)` collector and hostile evaluator implement these boundaries.
+The existing `SeenRelayShadowProof.hostileBenchmarkInput(...)` collector and hostile evaluator implement the evidence boundaries. `evaluateNaturalWorkloadSet(...)` additionally rejects duplicate workload IDs, duplicate classes, unknown classes, and sets that do not contain exactly three inputs.
 
 ## Three workload classes
 
-Select natural workloads from three distinct classes rather than three variants of one fixed fact:
+Use exactly one independently defined workload from each class rather than three variants of one fixed fact:
 
-- structured API/source-backed reads with stable machine locators;
-- browser/extraction-backed public reads where provider-native cache is measured when available;
-- fleet/tool validations where independent workers naturally re-check the same read-only state and do not share a better authoritative cache.
+- `structured_source_reads` — structured API/source-backed reads with stable machine locators;
+- `browser_extraction_reads` — browser/extraction-backed public reads where provider-native cache is measured when available;
+- `fleet_tool_validations` — fleet/tool validations where independent workers naturally re-check the same read-only state and do not share a better authoritative cache.
 
 A workload may be rejected before collection if it has an equivalent authoritative shared cache or mandatory live validation on every request.
+
+The class label is a methodological constraint, not evidence by itself. The workload distribution must still come from captured or faithfully replayed natural work rather than a sequence constructed to guarantee repeated facts.
 
 ## Decision
 
