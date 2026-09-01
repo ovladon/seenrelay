@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: seenrelay-standards-shadow-benchmark
@@ -31,10 +32,31 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Restore previous natural-workload state and ledger
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p previous-standards-shadow
+          previous_run="$(gh run list --workflow "$GITHUB_WORKFLOW" --status success --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
+          if [ -n "$previous_run" ] && [ "$previous_run" != "$GITHUB_RUN_ID" ]; then
+            gh run download "$previous_run" \
+              --name "standards-shadow-benchmark-$previous_run" \
+              --dir previous-standards-shadow >/dev/null 2>&1 || true
+          fi
+          if [ -f previous-standards-shadow/standards-shadow-ledger.json ]; then
+            echo "Restored cumulative ledger from run $previous_run"
+          else
+            echo 'No compatible prior cumulative ledger found; this run starts or restarts the natural ledger.'
+          fi
+
       - name: Run read-only natural workload measurement
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SEENRELAY_ORIGIN: https://seenrelay.com
+          STANDARDS_SHADOW_PREVIOUS_STATE: previous-standards-shadow/standards-shadow-state.json
+          STANDARDS_SHADOW_PREVIOUS_LEDGER: previous-standards-shadow/standards-shadow-ledger.json
         run: node scripts/standards-shadow-benchmark.mjs
 
       - name: Verify sanitized measurement contract
@@ -45,14 +67,26 @@ jobs:
           const fs = require('node:fs');
           const input = JSON.parse(fs.readFileSync('standards-shadow-benchmark.json', 'utf8'));
           const summary = JSON.parse(fs.readFileSync('standards-shadow-summary.json', 'utf8'));
+          const ledger = JSON.parse(fs.readFileSync('standards-shadow-ledger.json', 'utf8'));
+          const state = JSON.parse(fs.readFileSync('standards-shadow-state.json', 'utf8'));
           if (summary.first_party !== true || summary.external_adoption_evidence !== false) process.exit(1);
           if (summary.observe_requests_sent !== 0) process.exit(1);
+          if (input.sample_type !== 'natural_workload' || input.workload_class !== 'structured_source_reads') process.exit(1);
+          if (ledger.workload_class !== 'structured_source_reads') process.exit(1);
+          if (ledger.raw_values_retained !== false || ledger.fact_identity_retained !== false || ledger.sources_retained !== false || ledger.timestamps_retained !== false) process.exit(1);
+          if (state.raw_values_retained !== false || state.sources_retained !== false) process.exit(1);
           const allowed = new Set([
             'check_status','policy_reusable','reuse_would_match_validation','observe_after_baseline',
             'baseline_ms','baseline_cost','check_ms','observe_ms','check_cost','observe_cost'
           ]);
-          for (const record of input.records || []) {
-            for (const key of Object.keys(record)) if (!allowed.has(key)) process.exit(1);
+          for (const records of [input.records || [], ledger.records || []]) {
+            for (const record of records) {
+              for (const key of Object.keys(record)) if (!allowed.has(key)) process.exit(1);
+            }
+          }
+          for (const entry of Object.values(state.entries || {})) {
+            if (typeof entry?.value_fingerprint !== 'string' || entry.value_fingerprint.length !== 64) process.exit(1);
+            if (entry?.validator && !['etag', 'last_modified'].includes(entry.validator.kind)) process.exit(1);
           }
           NODE
 
@@ -64,5 +98,7 @@ jobs:
             standards-shadow-benchmark.json
             standards-shadow-summary.json
             standards-shadow-evaluation.json
+            standards-shadow-state.json
+            standards-shadow-ledger.json
           if-no-files-found: error
           retention-days: 30
