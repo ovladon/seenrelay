@@ -310,22 +310,22 @@ export class ShadowTrajectoryProfiler {
         let minimum = actualCostUnits;
         let selected = [];
         if (scalarAvailable) {
-          minimum = 0;
+          let bestSaving = 0;
+          let best = null;
           for (const operation of operations) {
             const candidates = alternativesByOperation.get(operation.operationId) ?? [];
-            let bestCost = operation.work.costUnits;
-            let best = null;
             for (const candidate of candidates) {
               if (!tierEligible(candidate.tier, reportTier) || candidate.replacementWork.costUnits === undefined) continue;
               const candidateCost = replacementCost(candidate);
-              if (candidateCost < bestCost) {
-                bestCost = candidateCost;
-                best = candidate;
+              const saving = operation.work.costUnits - candidateCost;
+              if (saving > bestSaving) {
+                bestSaving = saving;
+                best = { operation, candidate, candidateCost };
               }
             }
-            minimum += bestCost;
-            if (best) selected.push(Object.freeze({ operation_id: operation.operationId, alternative_id: best.alternativeId, replacement_cost_units: bestCost }));
           }
+          minimum = actualCostUnits - bestSaving;
+          if (best) selected = [Object.freeze({ operation_id: best.operation.operationId, alternative_id: best.candidate.alternativeId, replacement_cost_units: best.candidateCost })];
         }
         const headroomPercent = scalarAvailable && admissibleOutcome ? percentHeadroom(actualCostUnits, minimum) : null;
         tiers[reportTier] = Object.freeze({
@@ -381,7 +381,8 @@ export class ShadowTrajectoryProfiler {
           result_extractor_overhead_ms: this._extractorOverheadMs,
           measurement_failures: this._measurementFailures,
           headroom: Object.freeze(tiers),
-          counterfactual_scope: 'single-operation-proven-substitutions-only',
+          counterfactual_scope: 'one-proven-substitution-per-trajectory',
+          compositional_counterfactuals_supported: false,
           'overlapping_multi-operation_skips_supported': false
         }),
         operations: Object.freeze(operations.map(operation => Object.freeze({
