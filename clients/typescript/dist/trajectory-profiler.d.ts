@@ -24,7 +24,9 @@ export interface TrajectoryWork {
 }
 
 export interface StartTrajectoryInput {
+  /** Opaque metadata identifier; raw/private content must not be encoded here. */
   trajectoryId: string;
+  /** Opaque metadata identifier; raw/private content must not be encoded here. */
   workloadId?: string;
   sampleType: TrajectorySampleType;
   baselineDefinition?: 'best_native_stack';
@@ -35,6 +37,7 @@ export interface StartTrajectoryInput {
 
 export interface RecordOperationInput {
   trajectoryId: string;
+  /** Opaque metadata identifier; raw/private content must not be encoded here. */
   operationId: string;
   parentOperationId?: string;
   kind: TrajectoryOperationKind;
@@ -54,10 +57,12 @@ export interface MeasureOperationInput extends Omit<RecordOperationInput, 'statu
 export interface ProvenAlternativeInput {
   trajectoryId: string;
   operationId: string;
+  /** Opaque metadata identifier; raw/private content must not be encoded here. */
   alternativeId: string;
   tier: ProvenAlternativeTier;
   /** Must be explicitly true; the profiler never infers semantic or causal equivalence. */
   sameAcceptedOutcome: true;
+  /** Short opaque proof-class identifier, not proof text or customer content. */
   proofKind: string;
   proofFingerprint: string;
   /** Required when tier is safely_predictable or capturable_now. Identifies the prospective decision rule tested against the trajectory. */
