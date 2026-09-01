@@ -54,8 +54,9 @@ test('agent onboarding uses well-known Agent Skill discovery from the SeenRelay 
   assert.match(integrationsSource, /npx skills add \$\{origin\} --skill seenrelay --yes/);
 });
 
-test('first integration is behavior-preserving and produces a local report', () => {
-  assert.match(landing, /ambientMcpClient/);
+test('first integration is behavior-preserving, zero-config and produces a local report', () => {
+  assert.match(landing, /ambientMcpClient\(rawMcpClient\)/);
+  assert.doesNotMatch(landing, /ambientMcpClient\(rawMcpClient,\s*\{/);
   assert.match(landing, /seenRelayAmbient\.getReport\(\)/);
   assert.match(landing, /measurement first/i);
   assert.match(landing, /Reuse remains a caller decision/);
@@ -77,11 +78,11 @@ test('homepage presents readable evidence and its limits together', () => {
 
 test('quickstart is factual, agent-compatible and behavior-preserving', () => {
   assert.match(quickstartSource, /INTEGRATION QUICKSTART/);
-  assert.match(quickstartSource, /Start with shadow measurement/);
+  assert.match(quickstartSource, /Install\. Wrap once\. Run normally\. Read the report\./);
   assert.match(quickstartSource, /CODING-AGENT INTEGRATION/);
   assert.match(quickstartSource, /MANUAL INTEGRATION/);
-  assert.match(quickstartSource, /ambientMcpClient/);
-  assert.match(quickstartSource, /ambient_mcp_client/);
+  assert.match(quickstartSource, /ambientMcpClient\(rawMcpClient\)/);
+  assert.match(quickstartSource, /ambient_mcp_client\(raw_mcp_client\)/);
   assert.match(quickstartSource, /original operation still runs/i);
   assert.match(quickstartSource, /Read the local report before enabling reuse/);
 });
