@@ -26,23 +26,50 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
 
-      - name: Restore prior CI fleet v2 ledger
+      - name: Restore latest evidence-eligible CI fleet v2 ledger
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          mkdir -p previous-fleet-v2-ci
-          previous_run="$(gh run list --workflow "$GITHUB_WORKFLOW" --status success --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
-          if [ -n "$previous_run" ] && [ "$previous_run" != "$GITHUB_RUN_ID" ]; then
-            gh run download "$previous_run" \
-              --name "fleet-wrapper-v2-shadow-ci-$previous_run" \
-              --dir previous-fleet-v2-ci >/dev/null 2>&1 || true
-          fi
-          if [ -f previous-fleet-v2-ci/fleet-wrapper-v2-shadow-ci-ledger.json ]; then
-            echo "Restored CI fleet v2 ledger from run $previous_run"
+          destination='previous-fleet-v2-ci'
+          rm -rf "$destination"
+          mkdir -p "$destination"
+          found=''
+          while read -r run_id; do
+            [ -n "$run_id" ] || continue
+            [ "$run_id" != "$GITHUB_RUN_ID" ] || continue
+            candidate="$(mktemp -d)"
+            if gh run download "$run_id" \
+              --name "fleet-wrapper-v2-shadow-ci-$run_id" \
+              --dir "$candidate" >/dev/null 2>&1; then
+              if node - "$candidate" <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const dir = process.argv[2];
+          const measurementPath = path.join(dir, 'fleet-wrapper-v2-shadow-ci-measurement.json');
+          const ledgerPath = path.join(dir, 'fleet-wrapper-v2-shadow-ci-ledger.json');
+          if (!fs.existsSync(measurementPath) || !fs.existsSync(ledgerPath)) process.exit(1);
+          const measurement = JSON.parse(fs.readFileSync(measurementPath, 'utf8'));
+          const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+          if (measurement.evidence_eligible !== true) process.exit(1);
+          if (measurement.workload_id !== 'wrapper-deterministic-suite-fleet-v2') process.exit(1);
+          if (ledger.workload_id !== 'wrapper-deterministic-suite-fleet-v2' || ledger.role !== 'ci') process.exit(1);
+          NODE
+              then
+                cp "$candidate/fleet-wrapper-v2-shadow-ci-ledger.json" \
+                  "$destination/fleet-wrapper-v2-shadow-ci-ledger.json"
+                found="$run_id"
+                rm -rf "$candidate"
+                break
+              fi
+            fi
+            rm -rf "$candidate"
+          done < <(gh run list --workflow "$GITHUB_WORKFLOW" --status success --limit 50 --json databaseId --jq '.[].databaseId' 2>/dev/null || true)
+          if [ -n "$found" ]; then
+            echo "Restored evidence-eligible CI fleet v2 ledger from run $found"
           else
-            echo 'No compatible prior CI fleet v2 ledger found; this run starts or restarts the frozen evidence series.'
+            echo 'No prior evidence-eligible CI fleet v2 ledger found; eligible evidence will start from zero.'
           fi
 
       - name: Run project checks with fleet target suite measured once

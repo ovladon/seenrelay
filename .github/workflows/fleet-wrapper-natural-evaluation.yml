@@ -22,12 +22,14 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Restore latest successful fleet v2 role ledgers
+      - name: Restore latest evidence-eligible fleet v2 role ledgers
+        id: restore
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          rm -rf fleet-v2-role-ledgers
           mkdir -p fleet-v2-role-ledgers/ci fleet-v2-role-ledgers/client-wrappers
 
           restore_role() {
@@ -37,33 +39,60 @@ jobs:
             found=''
             while read -r run_id; do
               [ -n "$run_id" ] || continue
+              candidate="$(mktemp -d)"
               if gh run download "$run_id" \
                 --name "fleet-wrapper-v2-shadow-${role}-${run_id}" \
-                --dir "$destination" >/dev/null 2>&1; then
-                found="$run_id"
-                break
+                --dir "$candidate" >/dev/null 2>&1; then
+                if node - "$candidate" "$role" <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const dir = process.argv[2];
+          const role = process.argv[3];
+          const prefix = `fleet-wrapper-v2-shadow-${role}`;
+          const measurementPath = path.join(dir, `${prefix}-measurement.json`);
+          const ledgerPath = path.join(dir, `${prefix}-ledger.json`);
+          if (!fs.existsSync(measurementPath) || !fs.existsSync(ledgerPath)) process.exit(1);
+          const measurement = JSON.parse(fs.readFileSync(measurementPath, 'utf8'));
+          const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+          if (measurement.evidence_eligible !== true) process.exit(1);
+          if (measurement.workload_id !== 'wrapper-deterministic-suite-fleet-v2') process.exit(1);
+          if (ledger.workload_id !== 'wrapper-deterministic-suite-fleet-v2' || ledger.role !== role) process.exit(1);
+          NODE
+                then
+                  cp "$candidate/fleet-wrapper-v2-shadow-${role}-ledger.json" \
+                    "$destination/fleet-wrapper-v2-shadow-${role}-ledger.json"
+                  found="$run_id"
+                  rm -rf "$candidate"
+                  break
+                fi
               fi
-            done < <(gh run list --workflow "$workflow" --status success --limit 20 --json databaseId --jq '.[].databaseId' 2>/dev/null || true)
-            if [ -z "$found" ]; then
-              echo "No compatible successful $role fleet v2 artifact found" >&2
-              return 1
+              rm -rf "$candidate"
+            done < <(gh run list --workflow "$workflow" --status success --limit 50 --json databaseId --jq '.[].databaseId' 2>/dev/null || true)
+            if [ -n "$found" ]; then
+              echo "Restored evidence-eligible $role fleet v2 ledger from run $found"
+              return 0
             fi
-            echo "Restored $role fleet v2 ledger from run $found"
+            echo "No evidence-eligible $role fleet v2 artifact exists yet"
+            return 1
           }
 
-          restore_role 'CI' 'ci' 'fleet-v2-role-ledgers/ci'
-          restore_role 'Client Wrappers' 'client-wrappers' 'fleet-v2-role-ledgers/client-wrappers'
-
-          test -f fleet-v2-role-ledgers/ci/fleet-wrapper-v2-shadow-ci-ledger.json
-          test -f fleet-v2-role-ledgers/client-wrappers/fleet-wrapper-v2-shadow-client-wrappers-ledger.json
+          ready=true
+          restore_role 'CI' 'ci' 'fleet-v2-role-ledgers/ci' || ready=false
+          restore_role 'Client Wrappers' 'client-wrappers' 'fleet-v2-role-ledgers/client-wrappers' || ready=false
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+          if [ "$ready" != true ]; then
+            echo 'Fleet v2 natural evaluation is not ready; no synthetic empty ledger will be created.'
+          fi
 
       - name: Combine fleet v2 role ledgers offline
+        if: steps.restore.outputs.ready == 'true'
         run: |
           node scripts/evaluate-fleet-wrapper-ledgers.mjs \
             fleet-v2-role-ledgers/ci/fleet-wrapper-v2-shadow-ci-ledger.json \
             fleet-v2-role-ledgers/client-wrappers/fleet-wrapper-v2-shadow-client-wrappers-ledger.json
 
       - name: Verify combined fleet v2 privacy and admission contract
+        if: steps.restore.outputs.ready == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -88,6 +117,7 @@ jobs:
           NODE
 
       - name: Upload combined fleet v2 natural-workload evidence
+        if: steps.restore.outputs.ready == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: fleet-wrapper-v2-natural-evaluation-${{ github.run_id }}
