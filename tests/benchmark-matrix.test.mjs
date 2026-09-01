@@ -27,6 +27,7 @@ test('workload matrix renderer is generic and latest-per-series', () => {
   assert.match(renderer, /latestBySeries/);
   assert.match(renderer, /item\.matrix\.series_key/);
   assert.match(renderer, /benchmark-table/);
+  assert.doesNotMatch(renderer, /fit-badge|<th>Fit<\/th>|m\.fit/);
   assert.doesNotMatch(renderer, /firecrawl-(?:basic|json|browser)/);
   assert.match(css, /\.benchmark-table/);
 });
