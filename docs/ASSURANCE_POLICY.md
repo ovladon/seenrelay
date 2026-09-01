@@ -6,25 +6,25 @@ Shared CHECK is off by default in Zero-State. A `SAME_OBSERVED` response alone d
 
 ## Multi-signal helper
 
-The client `assurance` module provides an explicit opt-in policy helper for retained-value reuse.
+The client `assurance` module provides an explicit opt-in multi-signal helper for retained-value reuse. Its three signal thresholds cannot be reduced below two.
 
 Its default assessment requires all of the following:
 
 - CHECK status is `SAME_OBSERVED`;
-- the returned known/latest value fingerprints are present and equal;
-- the evidence is inside both the server CHECK window and any stricter caller window;
+- returned known/latest value fingerprints are present and equal;
+- evidence is inside both the server CHECK window and any stricter caller window;
 - at least two distinct observer keys support the recent value;
-- at least two of those are cryptographic Ed25519 continuity keys;
+- at least two are cryptographic Ed25519 continuity keys;
 - at least two privacy-salted reuse-independence buckets are represented.
 
-JavaScript / TypeScript:
-
 ```js
-import { createConservativeRetainedReusePolicy } from 'seenrelay/assurance';
-const reuseRetained = createConservativeRetainedReusePolicy({ maxAgeSeconds: 300 });
+import { createMultiSignalRetainedReusePolicy } from 'seenrelay/assurance';
+const reuseRetained = createMultiSignalRetainedReusePolicy({ maxAgeSeconds: 300 });
 ```
 
-Python exposes the equivalent `conservative_retained_reuse_policy(...)` helper.
+Python exposes `multi_signal_retained_reuse_policy(...)`.
+
+The lower-level `assessSharedCheckEvidence(...)` / `assess_shared_check_evidence(...)` functions permit caller-selected thresholds for analysis, but using weaker thresholds is a caller policy and is not the SeenRelay multi-signal preset.
 
 ## What the signals mean
 
