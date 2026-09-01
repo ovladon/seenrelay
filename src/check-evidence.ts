@@ -49,7 +49,12 @@ async function mergeEvidenceRows(
     const validator = parseSourceValidator(row.source_validator);
     const existing = merged.get(valueHash);
     if (!existing) {
-      merged.set(valueHash, { ...row, value_hash: valueHash, source_validator: validator });
+      merged.set(valueHash, {
+        ...row,
+        value_hash: valueHash,
+        reuse_independence_buckets: row.reuse_independence_buckets ?? 0,
+        source_validator: validator
+      });
       continue;
     }
 
@@ -59,11 +64,15 @@ async function mergeEvidenceRows(
       first_seen: earlier(existing.first_seen, row.first_seen),
       last_seen: later(existing.last_seen, row.last_seen),
       observations: existing.observations + row.observations,
-      // Alias groups can contain the same observer on both sides of the transition. Max is a
-      // conservative lower bound that avoids falsely inflating independence evidence.
+      // Alias groups can contain the same observer or independence bucket on both sides of the
+      // transition. Max is a conservative lower bound that avoids falsely inflating evidence.
       observers: Math.max(existing.observers, row.observers),
       cryptographic_observers: Math.max(existing.cryptographic_observers, row.cryptographic_observers),
       unverified_observers: Math.max(existing.unverified_observers, row.unverified_observers),
+      reuse_independence_buckets: Math.max(
+        existing.reuse_independence_buckets ?? 0,
+        row.reuse_independence_buckets ?? 0
+      ),
       source_validator: rowIsNewer ? validator : existing.source_validator
     });
   }
@@ -75,8 +84,9 @@ async function mergeEvidenceRows(
 
 /**
  * CHECK evidence plus the validator attached to the newest observation in each value group.
- * Stored pre-L2 SHA-256 fingerprints are fact-scoped and re-keyed in application memory, then
- * conservatively merged with hmac-sha256-v1 rows. Raw submitted values are not read.
+ * Reuse-independence is exposed only as a distinct aggregate count; the underlying privacy-salted
+ * bucket values are never returned and the count is an anti-farming signal, not identity or truth.
+ * Stored pre-L2 SHA-256 fingerprints are fact-scoped and re-keyed in application memory.
  */
 export async function getRecentValueGroupsWithValidators(factKey: string, cutoffIso: string): Promise<CheckEvidenceRow[]> {
   const rows = await sql().query(`SELECT
@@ -87,6 +97,7 @@ export async function getRecentValueGroupsWithValidators(factKey: string, cutoff
       COUNT(DISTINCT o.observer_key)::int AS observers,
       COUNT(DISTINCT CASE WHEN o.observer_key LIKE 'ed25519:%' THEN o.observer_key END)::int AS cryptographic_observers,
       COUNT(DISTINCT CASE WHEN o.observer_key NOT LIKE 'ed25519:%' THEN o.observer_key END)::int AS unverified_observers,
+      COUNT(DISTINCT CASE WHEN h.independence_key IS NOT NULL THEN h.independence_key END)::int AS reuse_independence_buckets,
       (
         SELECT o2.source_validator_json
         FROM observations_recent o2
@@ -97,6 +108,7 @@ export async function getRecentValueGroupsWithValidators(factKey: string, cutoff
         LIMIT 1
       ) AS source_validator
     FROM observations_recent o
+    LEFT JOIN hive_leases h ON h.lease_id = o.lease_id
     WHERE o.fact_key = $1 AND o.observed_at >= $2::timestamptz
     GROUP BY o.fact_key, o.value_hash
     ORDER BY MAX(o.observed_at) DESC
@@ -134,6 +146,7 @@ export async function getCheckSnapshotWithValidators(factKey: string, cutoffIso:
             'observers', g.observers,
             'cryptographic_observers', g.cryptographic_observers,
             'unverified_observers', g.unverified_observers,
+            'reuse_independence_buckets', g.reuse_independence_buckets,
             'source_validator', g.source_validator
           ) ORDER BY g.last_seen DESC
         )
@@ -146,6 +159,7 @@ export async function getCheckSnapshotWithValidators(factKey: string, cutoffIso:
             COUNT(DISTINCT o.observer_key)::int AS observers,
             COUNT(DISTINCT CASE WHEN o.observer_key LIKE 'ed25519:%' THEN o.observer_key END)::int AS cryptographic_observers,
             COUNT(DISTINCT CASE WHEN o.observer_key NOT LIKE 'ed25519:%' THEN o.observer_key END)::int AS unverified_observers,
+            COUNT(DISTINCT CASE WHEN h.independence_key IS NOT NULL THEN h.independence_key END)::int AS reuse_independence_buckets,
             (
               SELECT o2.source_validator_json
               FROM observations_recent o2
@@ -156,6 +170,7 @@ export async function getCheckSnapshotWithValidators(factKey: string, cutoffIso:
               LIMIT 1
             ) AS source_validator
           FROM observations_recent o
+          LEFT JOIN hive_leases h ON h.lease_id = o.lease_id
           WHERE o.fact_key = $1 AND o.observed_at >= $2::timestamptz
           GROUP BY o.fact_key, o.value_hash
           ORDER BY MAX(o.observed_at) DESC
