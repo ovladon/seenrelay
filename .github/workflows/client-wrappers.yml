@@ -7,6 +7,7 @@ on:
       - 'tests/client-wrappers.test.mjs'
       - 'tests/shadow-proof.test.mjs'
       - 'tests/deferred-observe.test.mjs'
+      - 'scripts/fleet-wrapper-shadow.mjs'
       - '.github/workflows/client-wrappers.yml'
   push:
     branches: [main]
@@ -15,10 +16,12 @@ on:
       - 'tests/client-wrappers.test.mjs'
       - 'tests/shadow-proof.test.mjs'
       - 'tests/deferred-observe.test.mjs'
+      - 'scripts/fleet-wrapper-shadow.mjs'
       - '.github/workflows/client-wrappers.yml'
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   javascript:
@@ -28,7 +31,74 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/client-wrappers.test.mjs tests/shadow-proof.test.mjs tests/deferred-observe.test.mjs
+
+      - name: Restore prior Client Wrappers fleet ledger
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p previous-fleet-client-wrappers
+          previous_run="$(gh run list --workflow "$GITHUB_WORKFLOW" --status success --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
+          if [ -n "$previous_run" ] && [ "$previous_run" != "$GITHUB_RUN_ID" ]; then
+            gh run download "$previous_run" \
+              --name "fleet-wrapper-shadow-client-wrappers-$previous_run" \
+              --dir previous-fleet-client-wrappers >/dev/null 2>&1 || true
+          fi
+          if [ -f previous-fleet-client-wrappers/fleet-wrapper-shadow-client-wrappers-ledger.json ]; then
+            echo "Restored Client Wrappers fleet ledger from run $previous_run"
+          else
+            echo 'No compatible prior Client Wrappers fleet ledger found; this run starts or restarts that role ledger.'
+          fi
+
+      - name: Run existing JavaScript wrapper suite in strict shadow measurement
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SEENRELAY_ORIGIN: https://seenrelay.com
+          SEENRELAY_FLEET_ROLE: client-wrappers
+          SEENRELAY_FLEET_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SEENRELAY_FLEET_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+          FLEET_SHADOW_PREVIOUS_LEDGER: previous-fleet-client-wrappers/fleet-wrapper-shadow-client-wrappers-ledger.json
+          FLEET_SHADOW_PREFIX: fleet-wrapper-shadow-client-wrappers
+        run: node scripts/fleet-wrapper-shadow.mjs
+
+      - name: Verify sanitized Client Wrappers fleet evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const measurement = JSON.parse(fs.readFileSync('fleet-wrapper-shadow-client-wrappers-measurement.json', 'utf8'));
+          const ledger = JSON.parse(fs.readFileSync('fleet-wrapper-shadow-client-wrappers-ledger.json', 'utf8'));
+          const summary = JSON.parse(fs.readFileSync('fleet-wrapper-shadow-client-wrappers-summary.json', 'utf8'));
+          if (measurement.workload_class !== 'fleet_tool_validations' || measurement.first_party !== true || measurement.external_adoption_evidence !== false) process.exit(1);
+          if (ledger.role !== 'client-wrappers' || ledger.workload_class !== 'fleet_tool_validations' || ledger.cost_unit !== 'github_actions_runner_ms') process.exit(1);
+          if (summary.cumulative_protected_calls !== ledger.records.length) process.exit(1);
+          for (const value of [measurement, ledger, summary]) {
+            if (value.raw_values_retained !== false || value.fact_identity_retained !== false || value.sources_retained !== false || value.timestamps_retained !== false) process.exit(1);
+          }
+          const allowed = new Set([
+            'check_status','policy_reusable','reuse_would_match_validation','observe_after_baseline',
+            'baseline_ms','baseline_cost','check_ms','observe_ms','check_cost','observe_cost'
+          ]);
+          for (const record of ledger.records || []) {
+            if (Object.keys(record).some((key) => !allowed.has(key))) process.exit(1);
+          }
+          if (measurement.provider_native_control?.hit === true && measurement.record !== null) process.exit(1);
+          NODE
+
+      - name: Upload Client Wrappers fleet natural-workload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleet-wrapper-shadow-client-wrappers-${{ github.run_id }}
+          path: |
+            fleet-wrapper-shadow-client-wrappers-measurement.json
+            fleet-wrapper-shadow-client-wrappers-ledger.json
+            fleet-wrapper-shadow-client-wrappers-summary.json
+            fleet-wrapper-shadow-client-wrappers-benchmark.json
+            fleet-wrapper-shadow-client-wrappers-evaluation.json
+          if-no-files-found: warn
+          retention-days: 30
 
   python:
     runs-on: ubuntu-latest
