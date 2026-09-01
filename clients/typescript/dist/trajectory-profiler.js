@@ -29,9 +29,6 @@ function text(value, name) {
   if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} must be a non-empty string`);
   return value.trim();
 }
-function optionalText(value, name) {
-  return value === undefined || value === null ? undefined : text(value, name);
-}
 function identifier(value, name) {
   const normalized = text(value, name);
   if (normalized.length > 160 || !/^[A-Za-z0-9][A-Za-z0-9._:@\/-]*$/.test(normalized)) {
@@ -132,7 +129,9 @@ export class ShadowTrajectoryProfiler {
         workloadId: optionalIdentifier(input.workloadId, 'workloadId'),
         sampleType,
         baselineDefinition,
+        baselineEvidenceFingerprint: fingerprint(input.baselineEvidenceFingerprint, 'baselineEvidenceFingerprint'),
         costUnitPolicyId: optionalIdentifier(input.costUnitPolicyId, 'costUnitPolicyId'),
+        costUnitPolicyFingerprint: fingerprint(input.costUnitPolicyFingerprint, 'costUnitPolicyFingerprint'),
         startedAtMs: finiteNonNegative(input.startedAtMs ?? this._now(), 'startedAtMs'),
         endedAtMs: undefined,
         operations: new Map(),
@@ -226,14 +225,17 @@ export class ShadowTrajectoryProfiler {
       if (trajectory.endedAtMs !== undefined) throw new TypeError('trajectory already finished');
       const outcome = input.outcome;
       if (!outcome || typeof outcome !== 'object' || Array.isArray(outcome)) throw new TypeError('outcome must be an object');
-      trajectory.outcome = Object.freeze({
+      const normalizedOutcome = Object.freeze({
         completed: boolean(outcome.completed, 'outcome.completed'),
         correct: boolean(outcome.correct, 'outcome.correct'),
         safetyAcceptable: boolean(outcome.safetyAcceptable, 'outcome.safetyAcceptable')
       });
-      trajectory.outcomeEvidenceFingerprint = fingerprint(input.outcomeEvidenceFingerprint, 'outcomeEvidenceFingerprint');
-      trajectory.endedAtMs = finiteNonNegative(input.endedAtMs ?? this._now(), 'endedAtMs');
-      if (trajectory.endedAtMs < trajectory.startedAtMs) throw new TypeError('endedAtMs must be >= startedAtMs');
+      const outcomeEvidenceFingerprint = fingerprint(input.outcomeEvidenceFingerprint, 'outcomeEvidenceFingerprint');
+      const endedAtMs = finiteNonNegative(input.endedAtMs ?? this._now(), 'endedAtMs');
+      if (endedAtMs < trajectory.startedAtMs) throw new TypeError('endedAtMs must be >= startedAtMs');
+      trajectory.outcome = normalizedOutcome;
+      trajectory.outcomeEvidenceFingerprint = outcomeEvidenceFingerprint;
+      trajectory.endedAtMs = endedAtMs;
       return this.getReport(trajectory.id);
     });
   }
@@ -300,7 +302,7 @@ export class ShadowTrajectoryProfiler {
       for (const operation of operations) addWork(actualWork, operation.work);
       const allOperationsHaveCostUnits = operations.every(operation => operation.work.costUnits !== undefined);
       const admissibleOutcome = outcomeAdmissible(trajectory.outcome, trajectory.outcomeEvidenceFingerprint);
-      const scalarAvailable = Boolean(trajectory.costUnitPolicyId) && operations.length > 0 && allOperationsHaveCostUnits && trajectory.endedAtMs !== undefined;
+      const scalarAvailable = Boolean(trajectory.costUnitPolicyId) && Boolean(trajectory.costUnitPolicyFingerprint) && Boolean(trajectory.baselineEvidenceFingerprint) && operations.length > 0 && allOperationsHaveCostUnits && trajectory.endedAtMs !== undefined;
       const actualCostUnits = scalarAvailable ? operations.reduce((sum, operation) => sum + operation.work.costUnits, 0) : null;
 
       const tiers = {};
@@ -352,7 +354,9 @@ export class ShadowTrajectoryProfiler {
           workload_id: trajectory.workloadId ?? null,
           sample_type: trajectory.sampleType,
           baseline_definition: trajectory.baselineDefinition,
+          baseline_evidence_fingerprint: trajectory.baselineEvidenceFingerprint ?? null,
           cost_unit_policy_id: trajectory.costUnitPolicyId ?? null,
+          cost_unit_policy_fingerprint: trajectory.costUnitPolicyFingerprint ?? null,
           started_at_ms: trajectory.startedAtMs,
           ended_at_ms: trajectory.endedAtMs ?? null,
           complete: trajectory.endedAtMs !== undefined,
@@ -365,6 +369,8 @@ export class ShadowTrajectoryProfiler {
           scalar_headroom_available: scalarAvailable,
           scalar_headroom_unavailable_reason: scalarAvailable ? null : (
             !trajectory.costUnitPolicyId ? 'missing_cost_unit_policy' :
+            !trajectory.costUnitPolicyFingerprint ? 'missing_cost_unit_policy_fingerprint' :
+            !trajectory.baselineEvidenceFingerprint ? 'missing_best_native_baseline_evidence' :
             operations.length === 0 ? 'no_operations' :
             !allOperationsHaveCostUnits ? 'missing_operation_cost_units' :
             trajectory.endedAtMs === undefined ? 'trajectory_not_finished' : 'unavailable'
