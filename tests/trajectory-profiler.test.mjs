@@ -121,3 +121,10 @@ test('single-operation scope prevents double counting across overlapping traject
   assert.equal(report.accounting.counterfactual_scope, 'single-operation-proven-substitutions-only');
   assert.equal(report.accounting['overlapping_multi-operation_skips_supported'], false);
 });
+
+test('retained metadata identifiers reject free-form private content', () => {
+  const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
+  assert.throws(() => profiler.startTrajectory({ trajectoryId: 'this is a raw prompt', sampleType: 'replayed' }), /opaque identifier/);
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', startedAtMs: 0 });
+  assert.throws(() => profiler.recordOperation({ trajectoryId: 't1', operationId: 'contains private prose', kind: 'tool', work: { costUnits: 1 } }), /opaque identifier/);
+});
