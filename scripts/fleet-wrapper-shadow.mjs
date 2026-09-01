@@ -198,6 +198,7 @@ function buildLedger({ role, previousLedger, provider, record }) {
   const previousDropped = priorCount(previousLedger, 'records_dropped');
   const overflow = Math.max(0, nextRecords.length - MAX_LEDGER_RECORDS);
   const records = overflow > 0 ? nextRecords.slice(overflow) : nextRecords;
+  const protectedCalls = priorCount(previousLedger, 'protected_calls') + (record ? 1 : 0);
   return Object.freeze({
     schema_version: 1,
     workload_id: WORKLOAD_ID,
@@ -205,9 +206,9 @@ function buildLedger({ role, previousLedger, provider, record }) {
     role,
     cost_unit: COST_UNIT,
     natural_events: priorCount(previousLedger, 'natural_events') + 1,
-    protected_calls: records.length,
+    protected_calls: protectedCalls,
     records_dropped: previousDropped + overflow,
-    preliminary_sample_floor_met: records.length >= 100,
+    preliminary_sample_floor_met: protectedCalls >= 100,
     control_evidence: Object.freeze({
       provider_native_queries: priorCount(previousLedger, 'provider_native_queries') + 1,
       provider_native_hits: priorCount(previousLedger, 'provider_native_hits') + (provider.hit ? 1 : 0),
@@ -263,8 +264,6 @@ export async function runFleetWrapperShadow({
   const coordinate = buildFleetCoordinate();
   const fact = buildFleetFact({ coordinate });
 
-  // A successful counterpart GitHub workflow on the same head/base is a
-  // stronger provider-native result cache. Shared CHECK is not consulted on hits.
   const provider = await measureProviderNativeControl({ role, headSha, baseSha, fetchImpl });
 
   const client = new SeenRelayClient({
@@ -288,8 +287,6 @@ export async function runFleetWrapperShadow({
     }
   }
 
-  // This always runs, even on provider-cache or hypothetical SeenRelay reuse.
-  // The existing validation remains authoritative throughout evidence collection.
   const validationStarted = performance.now();
   const value = await validate();
   const validationMs = Math.max(0, performance.now() - validationStarted);
@@ -305,21 +302,16 @@ export async function runFleetWrapperShadow({
     const started = performance.now();
     try {
       await client.observe(fact, value, {
-        // Constant role identity avoids manufacturing new observer independence
-        // on every workflow run; CI and Client Wrappers remain two first-party roles.
         observerId: `gha-${role}`,
         idempotencyKey: `${process.env.GITHUB_RUN_ID || 'local'}-${process.env.GITHUB_RUN_ATTEMPT || '1'}-${role}`,
         evidenceFingerprint: sha256(`${coordinate}:pass`)
       });
     } catch {
-      // Measurement must never turn a valid project test into a failure.
     } finally {
       observeMs = Math.max(0, performance.now() - started);
     }
   }
 
-  // Provider-native hits are upstream of SeenRelay and therefore do not enter
-  // the protected-call ledger. Their frequency is retained as control evidence.
   const record = protectedCall ? buildRecord({
     checkStatus: check?.status ?? null,
     policyReusable,
@@ -367,7 +359,7 @@ export async function runFleetWrapperShadow({
     current_run_natural_events: 1,
     current_run_protected_calls: protectedCall ? 1 : 0,
     cumulative_natural_events: ledger.natural_events,
-    cumulative_protected_calls: ledger.records.length,
+    cumulative_protected_calls: ledger.protected_calls,
     preliminary_sample_floor_met: ledger.preliminary_sample_floor_met,
     provider_native_queries: ledger.control_evidence.provider_native_queries,
     provider_native_hits: ledger.control_evidence.provider_native_hits,
@@ -397,7 +389,7 @@ export async function runFleetWrapperShadow({
     protected_call: protectedCall,
     check_status: check?.status ?? null,
     policy_reusable: policyReusable,
-    cumulative_protected_calls: ledger.records.length,
+    cumulative_protected_calls: ledger.protected_calls,
     validation_ms: Number(validationMs.toFixed(3)),
     check_ms: Number(checkMs.toFixed(3)),
     observe_ms: Number(observeMs.toFixed(3))
