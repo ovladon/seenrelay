@@ -6,101 +6,32 @@
   "main": "./dist/seenrelay.js",
   "types": "./dist/seenrelay.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/seenrelay.d.ts",
-      "import": "./dist/seenrelay.js"
-    },
-    "./shadow-proof": {
-      "types": "./dist/shadow-proof.d.ts",
-      "import": "./dist/shadow-proof.js"
-    },
-    "./zero-state": {
-      "types": "./dist/zero-state.d.ts",
-      "import": "./dist/zero-state.js"
-    },
-    "./auto": {
-      "types": "./dist/auto.d.ts",
-      "import": "./dist/auto.js"
-    },
-    "./mcp-auto": {
-      "types": "./dist/mcp-auto.d.ts",
-      "import": "./dist/mcp-auto.js"
-    },
-    "./firecrawl": {
-      "types": "./dist/firecrawl.d.ts",
-      "import": "./dist/firecrawl.js"
-    },
-    "./firecrawl-shadow": {
-      "types": "./dist/firecrawl-shadow.d.ts",
-      "import": "./dist/firecrawl-shadow.js"
-    },
-    "./firecrawl-sdk-shadow": {
-      "types": "./dist/firecrawl-sdk-shadow.d.ts",
-      "import": "./dist/firecrawl-sdk-shadow.js"
-    },
-    "./economics": {
-      "types": "./dist/economics.d.ts",
-      "import": "./dist/economics.js"
-    },
-    "./capabilities": {
-      "types": "./dist/capabilities.d.ts",
-      "import": "./dist/capabilities.js"
-    },
-    "./profiles": {
-      "types": "./dist/profiles.d.ts",
-      "import": "./dist/profiles.js"
-    },
-    "./catalog": {
-      "types": "./dist/catalog.d.ts",
-      "import": "./dist/catalog.js"
-    },
-    "./readiness": {
-      "types": "./dist/readiness.d.ts",
-      "import": "./dist/readiness.js"
-    },
-    "./vantage-assurance": {
-      "types": "./dist/vantage-assurance.d.ts",
-      "import": "./dist/vantage-assurance.js"
-    },
-    "./declarative-profile": {
-      "types": "./dist/declarative-profile.d.ts",
-      "import": "./dist/declarative-profile.js"
-    },
-    "./ambient": {
-      "types": "./dist/ambient.d.ts",
-      "import": "./dist/ambient.js"
-    }
+    ".": { "types": "./dist/seenrelay.d.ts", "import": "./dist/seenrelay.js" },
+    "./shadow-proof": { "types": "./dist/shadow-proof.d.ts", "import": "./dist/shadow-proof.js" },
+    "./zero-state": { "types": "./dist/zero-state.d.ts", "import": "./dist/zero-state.js" },
+    "./assurance": { "types": "./dist/assurance.d.ts", "import": "./dist/assurance.js" },
+    "./coordinates": { "types": "./dist/coordinates.d.ts", "import": "./dist/coordinates.js" },
+    "./auto": { "types": "./dist/auto.d.ts", "import": "./dist/auto.js" },
+    "./mcp-auto": { "types": "./dist/mcp-auto.d.ts", "import": "./dist/mcp-auto.js" },
+    "./firecrawl": { "types": "./dist/firecrawl.d.ts", "import": "./dist/firecrawl.js" },
+    "./firecrawl-shadow": { "types": "./dist/firecrawl-shadow.d.ts", "import": "./dist/firecrawl-shadow.js" },
+    "./firecrawl-sdk-shadow": { "types": "./dist/firecrawl-sdk-shadow.d.ts", "import": "./dist/firecrawl-sdk-shadow.js" },
+    "./economics": { "types": "./dist/economics.d.ts", "import": "./dist/economics.js" },
+    "./capabilities": { "types": "./dist/capabilities.d.ts", "import": "./dist/capabilities.js" },
+    "./profiles": { "types": "./dist/profiles.d.ts", "import": "./dist/profiles.js" },
+    "./catalog": { "types": "./dist/catalog.d.ts", "import": "./dist/catalog.js" },
+    "./readiness": { "types": "./dist/readiness.d.ts", "import": "./dist/readiness.js" },
+    "./vantage-assurance": { "types": "./dist/vantage-assurance.d.ts", "import": "./dist/vantage-assurance.js" },
+    "./declarative-profile": { "types": "./dist/declarative-profile.d.ts", "import": "./dist/declarative-profile.js" },
+    "./ambient": { "types": "./dist/ambient.d.ts", "import": "./dist/ambient.js" }
   },
-  "files": [
-    "dist/",
-    "LICENSE",
-    "README.md"
-  ],
+  "files": ["dist/", "LICENSE", "README.md"],
   "sideEffects": false,
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ovladon/seenrelay.git",
-    "directory": "clients/typescript"
-  },
+  "repository": { "type": "git", "url": "git+https://github.com/ovladon/seenrelay.git", "directory": "clients/typescript" },
   "homepage": "https://seenrelay.com/clients",
-  "bugs": {
-    "url": "https://github.com/ovladon/seenrelay/issues"
-  },
-  "keywords": [
-    "ai-agents",
-    "validation",
-    "freshness",
-    "cache",
-    "mcp",
-    "langchain",
-    "openai-agents",
-    "vercel-ai-sdk"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+  "bugs": { "url": "https://github.com/ovladon/seenrelay/issues" },
+  "keywords": ["ai-agents", "validation", "freshness", "cache", "mcp", "langchain", "openai-agents", "vercel-ai-sdk"],
+  "engines": { "node": ">=20" },
+  "publishConfig": { "access": "public" }
 }
