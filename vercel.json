@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "hono",
   "regions": ["pdx1"],
+  "git": {
+    "deploymentEnabled": {
+      "research/**": false,
+      "verify/**": false
+    }
+  },
   "crons": [
     {
       "path": "/internal/maintenance",
