@@ -102,7 +102,10 @@ grep -q "Python ${client_version} remains shadow-first" /tmp/llms.txt
 grep -q 'Shared CHECK is off by default' /tmp/llms.txt
 grep -q '## Verified measured results' /tmp/llms.txt
 grep -q 'Structured JSON extraction /' /tmp/llms.txt
-grep -q 'fit=poor; provider_path_cost=better; provider_path_latency=better' /tmp/llms.txt
+grep -q '3/3 equivalent provider calls avoided' /tmp/llms.txt
+grep -q '15 credits avoided' /tmp/llms.txt
+grep -q 'Evidence: https://github.com/ovladon/seenrelay/actions/runs/' /tmp/llms.txt
+! grep -q 'fit=poor; provider_path_cost=' /tmp/llms.txt
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/service.json" -o /tmp/service.json
 grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json
