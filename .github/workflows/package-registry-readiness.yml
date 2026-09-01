@@ -47,8 +47,24 @@ jobs:
           if [ -z "$repo" ]; then
             repo="$(printf '%s' "$metadata" | jq -r '.repository // empty' 2>/dev/null || true)"
           fi
-          if [ "$version" != "$PUBLIC_VERSION" ] && [ "$version" != "$RELEASE_VERSION" ]; then
-            echo "Unexpected npm version during staged rollout: $version (allowed: $PUBLIC_VERSION or $RELEASE_VERSION)" >&2
+          if ! node - "$version" "$PUBLIC_VERSION" "$RELEASE_VERSION" <<'NODE'
+          const [current, lower, upper] = process.argv.slice(2);
+          const parse = (value) => {
+            const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(value);
+            if (!match) process.exit(2);
+            return match.slice(1).map(Number);
+          };
+          const compare = (a, b) => {
+            for (let i = 0; i < 3; i += 1) {
+              if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;
+            }
+            return 0;
+          };
+          const v = parse(current), lo = parse(lower), hi = parse(upper);
+          process.exit(compare(v, lo) >= 0 && compare(v, hi) <= 0 ? 0 : 1);
+          NODE
+          then
+            echo "Unexpected npm version during staged rollout: $version (expected between $PUBLIC_VERSION and $RELEASE_VERSION inclusive)" >&2
             exit 1
           fi
           case "$repo" in
@@ -123,8 +139,21 @@ jobs:
           PY
           )"
           test -n "$version"
-          if [ "$version" != "$PUBLIC_VERSION" ] && [ "$version" != "$RELEASE_VERSION" ]; then
-            echo "Unexpected PyPI version during staged rollout: $version (allowed: $PUBLIC_VERSION or $RELEASE_VERSION)" >&2
+          if ! python - "$version" "$PUBLIC_VERSION" "$RELEASE_VERSION" <<'PY'
+          import re
+          import sys
+
+          def parse(value):
+              match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)', value)
+              if not match:
+                  raise SystemExit(2)
+              return tuple(map(int, match.groups()))
+
+          current, lower, upper = map(parse, sys.argv[1:4])
+          raise SystemExit(0 if lower <= current <= upper else 1)
+          PY
+          then
+            echo "Unexpected PyPI version during staged rollout: $version (expected between $PUBLIC_VERSION and $RELEASE_VERSION inclusive)" >&2
             exit 1
           fi
           echo 'PyPI project exists and points to the SeenRelay repository.'
