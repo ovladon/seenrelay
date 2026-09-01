@@ -17,7 +17,7 @@ function completed(profiler, id = 't1') {
 
 test('profiler is local measurement-only and does not infer equivalence', () => {
   const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'usd-v1', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'usd-v1', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'tool-1', kind: 'tool', coordinateFingerprint: FP_A, work: { costUnits: 10, toolCalls: 1, wallMs: 5 } });
   const report = completed(profiler);
   assert.equal(report.hosted_operations_added, 0);
@@ -31,7 +31,7 @@ test('profiler is local measurement-only and does not infer equivalence', () => 
 
 test('counterfactual hierarchy separates retrospective, predictable, and capturable headroom', () => {
   const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'natural_workload', costUnitPolicyId: 'normalized-test-v1', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'natural_workload', costUnitPolicyId: 'normalized-test-v1', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'model', kind: 'model', work: { costUnits: 60, inputTokens: 1000, outputTokens: 100 } });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'tool', kind: 'tool', work: { costUnits: 40, toolCalls: 1 } });
   profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'model', alternativeId: 'retrospective-local-state', tier: 'retrospective_only', sameAcceptedOutcome: true, proofKind: 'replay_same_evaluator_outcome', proofFingerprint: FP_A, replacementWork: { costUnits: 10 } });
@@ -49,7 +49,7 @@ test('counterfactual hierarchy separates retrospective, predictable, and captura
 
 test('headroom is not admissible when task outcome is not accepted', () => {
   const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'usd-v1', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'usd-v1', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'x', kind: 'tool', work: { costUnits: 10 } });
   profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'x', alternativeId: 'cheap', tier: 'capturable_now', sameAcceptedOutcome: true, proofKind: 'replay', proofFingerprint: FP_A, predictionPolicyFingerprint: FP_B, captureMechanismFingerprint: FP_C, replacementWork: { costUnits: 1 } });
   const report = profiler.finishTrajectory({ trajectoryId: 't1', outcome: { completed: true, correct: false, safetyAcceptable: true }, endedAtMs: 2 });
@@ -71,7 +71,7 @@ test('scalar headroom refuses arbitrary unit mixing without an explicit cost pol
 test('measureOperation preserves successful result and original thrown error even if accounting input is invalid', async () => {
   let t = 0;
   const profiler = createShadowTrajectoryProfiler({ now: () => (t += 5) });
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   const value = { secret: 'not-retained' };
   const result = await profiler.measureOperation({ trajectoryId: 't1', operationId: 'ok', kind: 'tool', workFromResult: () => ({ unsupported: 1 }) }, async () => value);
   assert.equal(result, value);
@@ -87,7 +87,7 @@ test('measureOperation preserves successful result and original thrown error eve
 
 test('alternatives require explicit same-outcome proof and SHA-256 evidence fingerprint', () => {
   const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'synthetic', costUnitPolicyId: 'test', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'synthetic', costUnitPolicyId: 'test', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'x', kind: 'tool', work: { costUnits: 5 } });
   assert.throws(() => profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'x', alternativeId: 'bad', tier: 'capturable_now', sameAcceptedOutcome: false, proofKind: 'guess', proofFingerprint: FP_A, predictionPolicyFingerprint: FP_B, captureMechanismFingerprint: FP_C, replacementWork: { costUnits: 0 } }), /sameAcceptedOutcome/);
   assert.throws(() => profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'x', alternativeId: 'bad2', tier: 'capturable_now', sameAcceptedOutcome: true, proofKind: 'guess', proofFingerprint: 'raw-private-proof', predictionPolicyFingerprint: FP_B, captureMechanismFingerprint: FP_C, replacementWork: { costUnits: 0 } }), /sha256/);
@@ -95,7 +95,7 @@ test('alternatives require explicit same-outcome proof and SHA-256 evidence fing
 
 test('predictable and capturable tiers require prospective-policy evidence rather than caller labels alone', () => {
   const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'x', kind: 'tool', work: { costUnits: 5 } });
   assert.throws(() => profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'x', alternativeId: 'predictable-without-policy', tier: 'safely_predictable', sameAcceptedOutcome: true, proofKind: 'replay', proofFingerprint: FP_A, replacementWork: { costUnits: 1 } }), /predictionPolicyFingerprint/);
   assert.throws(() => profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'x', alternativeId: 'capturable-without-mechanism', tier: 'capturable_now', sameAcceptedOutcome: true, proofKind: 'replay', proofFingerprint: FP_A, predictionPolicyFingerprint: FP_B, replacementWork: { costUnits: 1 } }), /captureMechanismFingerprint/);
@@ -103,7 +103,7 @@ test('predictable and capturable tiers require prospective-policy evidence rathe
 
 test('accepted outcome flags without evidence fingerprint do not authorize headroom', () => {
   const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'x', kind: 'tool', work: { costUnits: 5 } });
   const report = profiler.finishTrajectory({ trajectoryId: 't1', outcome: { completed: true, correct: true, safetyAcceptable: true }, endedAtMs: 2 });
   assert.equal(report.interpretation.outcome_admissible, false);
@@ -112,7 +112,7 @@ test('accepted outcome flags without evidence fingerprint do not authorize headr
 
 test('single-operation scope prevents double counting across overlapping trajectory skips', () => {
   const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'a', kind: 'model', work: { costUnits: 10 } });
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'b', parentOperationId: 'a', kind: 'tool', work: { costUnits: 10 } });
   profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'a', alternativeId: 'a-cheap', tier: 'retrospective_only', sameAcceptedOutcome: true, proofKind: 'single-op-replay', proofFingerprint: FP_A, replacementWork: { costUnits: 0 } });
@@ -125,6 +125,31 @@ test('single-operation scope prevents double counting across overlapping traject
 test('retained metadata identifiers reject free-form private content', () => {
   const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
   assert.throws(() => profiler.startTrajectory({ trajectoryId: 'this is a raw prompt', sampleType: 'replayed' }), /opaque identifier/);
-  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', startedAtMs: 0 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
   assert.throws(() => profiler.recordOperation({ trajectoryId: 't1', operationId: 'contains private prose', kind: 'tool', work: { costUnits: 1 } }), /opaque identifier/);
+});
+
+test('scalar headroom requires reproducible cost-policy and best-native baseline evidence', () => {
+  const withoutPolicyProof = createShadowTrajectoryProfiler({ now: () => 1 });
+  withoutPolicyProof.startTrajectory({ trajectoryId: 'p1', sampleType: 'replayed', costUnitPolicyId: 'usd-v1', baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
+  withoutPolicyProof.recordOperation({ trajectoryId: 'p1', operationId: 'x', kind: 'tool', work: { costUnits: 5 } });
+  let report = withoutPolicyProof.finishTrajectory({ trajectoryId: 'p1', outcome: { completed: true, correct: true, safetyAcceptable: true }, outcomeEvidenceFingerprint: FP_C, endedAtMs: 2 });
+  assert.equal(report.accounting.scalar_headroom_available, false);
+  assert.equal(report.accounting.scalar_headroom_unavailable_reason, 'missing_cost_unit_policy_fingerprint');
+
+  const withoutBaselineProof = createShadowTrajectoryProfiler({ now: () => 1 });
+  withoutBaselineProof.startTrajectory({ trajectoryId: 'p2', sampleType: 'replayed', costUnitPolicyId: 'usd-v1', costUnitPolicyFingerprint: FP_A, startedAtMs: 0 });
+  withoutBaselineProof.recordOperation({ trajectoryId: 'p2', operationId: 'x', kind: 'tool', work: { costUnits: 5 } });
+  report = withoutBaselineProof.finishTrajectory({ trajectoryId: 'p2', outcome: { completed: true, correct: true, safetyAcceptable: true }, outcomeEvidenceFingerprint: FP_C, endedAtMs: 2 });
+  assert.equal(report.accounting.scalar_headroom_available, false);
+  assert.equal(report.accounting.scalar_headroom_unavailable_reason, 'missing_best_native_baseline_evidence');
+});
+
+test('invalid finish timestamps do not partially close a trajectory', () => {
+  const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 10 });
+  assert.throws(() => profiler.finishTrajectory({ trajectoryId: 't1', outcome: { completed: true, correct: true, safetyAcceptable: true }, outcomeEvidenceFingerprint: FP_C, endedAtMs: 5 }), /endedAtMs/);
+  profiler.recordOperation({ trajectoryId: 't1', operationId: 'x', kind: 'tool', work: { costUnits: 1 } });
+  const report = profiler.finishTrajectory({ trajectoryId: 't1', outcome: { completed: true, correct: true, safetyAcceptable: true }, outcomeEvidenceFingerprint: FP_C, endedAtMs: 20 });
+  assert.equal(report.trajectory.complete, true);
 });
