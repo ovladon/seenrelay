@@ -192,6 +192,43 @@ test('prior ledger cannot smuggle source, fact identity, value, or timestamp fie
   }), /non-sanitized fields/);
 });
 
+test('protected-call totals remain cumulative when the retained ledger reaches its cap', async () => {
+  const record = {
+    check_status: 'UNKNOWN', policy_reusable: false, reuse_would_match_validation: null,
+    observe_after_baseline: true, baseline_ms: 1, baseline_cost: 1, check_ms: 1,
+    observe_ms: 1, check_cost: 1, observe_cost: 1
+  };
+  const previousLedger = {
+    schema_version: 1,
+    workload_id: WORKLOAD_ID,
+    workload_class: WORKLOAD_CLASS,
+    role: 'ci',
+    cost_unit: COST_UNIT,
+    natural_events: 1000,
+    protected_calls: 1000,
+    records_dropped: 0,
+    control_evidence: { provider_native_queries: 1000, provider_native_hits: 0, provider_native_query_failures: 0 },
+    records: Array.from({ length: 1000 }, () => ({ ...record }))
+  };
+
+  const result = await runFleetWrapperShadow({
+    role: 'ci',
+    headSha: 'head',
+    baseSha: 'base',
+    previousLedger,
+    fetchImpl: mockFetch({ providerHit: false, checkStatus: 'UNKNOWN' }),
+    validate: async () => 'pass'
+  });
+
+  assert.equal(result.ledger.records.length, 1000);
+  assert.equal(result.ledger.records_dropped, 1);
+  assert.equal(result.ledger.protected_calls, 1001);
+  assert.equal(result.summary.cumulative_protected_calls, 1001);
+  assert.equal(result.ledger.preliminary_sample_floor_met, true);
+  assert.equal(result.summary.evaluation_state, 'incomplete');
+  assert.equal(result.summary.evaluation_reason, 'ledger_overflow');
+});
+
 test('CI structural remainder excludes exactly the fleet target files instead of rerunning them', () => {
   const all = fs.readdirSync('tests', { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.test.mjs'))
