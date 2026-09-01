@@ -11,12 +11,12 @@ npm install seenrelay
 pip install seenrelay
 ```
 
-Client v0.2.7 was clean-install verified from both public registries on 2026-08-31. JavaScript/TypeScript 0.2.7 supports provider-independent local-first Zero-State; Python remains shadow-first in this release. Reuse remains caller policy.
+Client v0.2.9 was clean-install verified from both public registries on 2026-09-01. JavaScript/TypeScript 0.2.9 supports provider-independent local-first Zero-State; Python remains shadow-first in this release. Reuse remains caller policy.
 <!-- END GENERATED:PUBLIC-INSTALL -->
 
 SeenRelay reduces redundant source-backed validation while preserving the application's existing validation policy. It still has exactly two domain operations: **CHECK** and **OBSERVE**.
 
-The recommended JavaScript/TypeScript 0.2.7 path is local-first: use caller-side reuse and source-native confirmation before considering shared evidence. Ambient framework integrations start in local shadow by default; Python 0.2.7 Ambient remains measurement-only, and the classic APIs remain shadow-first.
+The recommended JavaScript/TypeScript 0.2.9 path is local-first: use caller-side reuse and source-native confirmation before considering shared evidence. Both JavaScript/TypeScript and Python include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1; Python 0.2.9 remains shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
 
 ## Choose the right target
 
@@ -119,6 +119,30 @@ const edge = new SeenRelayZeroState({
 
 The caller owns the encryption key, storage, namespace and retention policy. Private values are not sent to the public relay merely because private L1 is enabled.
 
+## Shared-evidence assurance
+
+The assurance helpers turn additive CHECK evidence into an explicit caller-side decision. The multi-signal preset requires matching value fingerprints, acceptable freshness, and at least two observer keys, two cryptographic continuity keys, and two reuse-independence buckets.
+
+JavaScript / TypeScript:
+
+```js
+import { createMultiSignalRetainedReusePolicy } from 'seenrelay/assurance';
+const reuse = createMultiSignalRetainedReusePolicy({ maxAgeSeconds: 300 });
+```
+
+Python:
+
+```python
+from seenrelay_assurance import multi_signal_retained_reuse_policy
+reuse = multi_signal_retained_reuse_policy({"maxAgeSeconds": 300})
+```
+
+These signals make trivial single-origin poisoning harder. They do not prove truth, legal identity, or independent real-world actors. High-consequence validation should still require authoritative source confirmation under the application's own policy.
+
+## Deterministic fact coordinates
+
+Use `seenrelay/coordinates` or `seenrelay_coordinates` to keep local call repetition keys separate from shared fact descriptors. MCP/OpenAPI coordinate builders are local-only. A shared fact descriptor should be built only when a stable source-native locator such as `json_pointer`, `element_id`, or `source_key` exists.
+
 ## Classic shadow-first integration
 
 The original API remains available in JavaScript / TypeScript and Python. It is useful when you specifically want to measure or use shared CHECK evidence around an existing fact validation.
@@ -156,7 +180,7 @@ validate_price = protect_validation(
 value = validate_price(known_value)
 ```
 
-With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python classic behavior remains shadow-first in 0.2.7.
+With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python classic behavior remains shadow-first in 0.2.9.
 
 The current JavaScript / TypeScript Shadow Proof can additionally retain bounded, sanitized natural-workload benchmark records while authoritative validation still runs. The export excludes fact identity, source, raw values and per-call timestamps; unavailable CHECKs remain in the sample, mismatches fail safety evidence and uncomparable hypothetical reuse remains incomplete. It does not enable reuse.
 
