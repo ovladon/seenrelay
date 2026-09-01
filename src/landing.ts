@@ -15,19 +15,16 @@ function evidenceCards(): string {
     .map((item) => {
       if (!('matrix' in item)) return '';
       const matrix = item.matrix;
-      const fit = String(matrix.fit);
-      const latency = String(matrix.latency_outcome);
       return `<article class="rv-evidence-card">
         <header>
           <div><small>${esc(matrix.surface)}</small><b>${esc(matrix.configuration)}</b></div>
-          <span class="rv-fit rv-fit-${esc(fit)}">fit: ${esc(fit)}</span>
         </header>
         <div class="rv-evidence-metrics">
           <div><strong>${esc(matrix.provider_calls_avoided)}/${esc(item.samples)}</strong><span>provider calls avoided</span></div>
           <div><strong>${esc(matrix.provider_units_avoided)}</strong><span>${esc(matrix.provider_unit_label)} avoided</span></div>
           <div><strong>${esc(matrix.baseline_median_ms)} → ${esc(item.reuse_median_ms)} ms</strong><span>baseline → reuse median path latency</span></div>
         </div>
-        <footer><span class="rv-result rv-result-${esc(latency)}">latency: ${esc(latency)}</span><span>n=${esc(item.samples)}</span></footer>
+        <footer><span>n=${esc(item.samples)}</span></footer>
       </article>`;
     })
     .join('');
@@ -162,14 +159,14 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
   <div class="rv-section-head">
     <div class="rv-eyebrow">TESTS WE HAVE RUN</div>
     <h2>What the current measured tests show.</h2>
-    <p>These are first-party smoke tests, not a universal ROI claim. Each result below keeps the measured provider work, latency outcome, and workload-fit verdict visible.</p>
+    <p>These are first-party smoke tests, not a universal ROI claim. Each result below shows the measured provider work, path latency, and sample size.</p>
   </div>
 
   <div class="rv-evidence-cards" aria-label="SeenRelay benchmark results">${evidenceCards()}</div>
 
   <div class="rv-evidence-interpretation">
     <article><b>What these tests establish</b><p>SeenRelay's bounded reuse path can bypass equivalent provider work and can reduce provider-unit consumption. In the structured extraction and browser-interaction tests it also reduced measured path latency.</p></article>
-    <article><b>What they do not establish</b><p>They do not establish a universal hit rate, guaranteed savings, or that SeenRelay should sit ahead of a cheaper authoritative/source-native mechanism. The current tested facts were poor-fit examples for exactly that reason.</p></article>
+    <article><b>What they do not establish</b><p>They do not establish a universal hit rate, guaranteed savings, or that SeenRelay should sit ahead of a cheaper authoritative/source-native mechanism. The current tests use controlled synthetic facts to measure provider-path mechanics; natural-workload suitability is evaluated separately.</p></article>
     <article><b>How to test your own workload</b><p>Start with Ambient/Shadow Proof while every authoritative validation still runs. Measure exact repetition and agreement locally before deciding whether bounded reuse is appropriate.</p><a href="/quickstart">Open the measurement-first quickstart →</a></article>
   </div>
   <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/economics">Full benchmark details and caveats</a><a class="rv-button quiet" href="/product-facts.json">Machine-readable evidence →</a></div>
