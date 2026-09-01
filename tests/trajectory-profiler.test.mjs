@@ -39,8 +39,8 @@ test('counterfactual hierarchy separates retrospective, predictable, and captura
   profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'tool', alternativeId: 'capturable-native-cache', tier: 'capturable_now', sameAcceptedOutcome: true, proofKind: 'provider_cache_equivalence', proofFingerprint: FP_C, predictionPolicyFingerprint: FP_A, captureMechanismFingerprint: FP_B, replacementWork: { costUnits: 8 }, decisionOverheadCostUnits: 2 });
   const report = completed(profiler);
   assert.equal(report.accounting.actual_cost_units, 100);
-  assert.equal(report.accounting.headroom.oracle_theoretical.minimum_cost_units, 15);
-  assert.equal(report.accounting.headroom.oracle_theoretical.headroom_percent, 85);
+  assert.equal(report.accounting.headroom.oracle_theoretical.minimum_cost_units, 50);
+  assert.equal(report.accounting.headroom.oracle_theoretical.headroom_percent, 50);
   assert.equal(report.accounting.headroom.safely_predictable.minimum_cost_units, 65);
   assert.equal(report.accounting.headroom.safely_predictable.headroom_percent, 35);
   assert.equal(report.accounting.headroom.currently_capturable.minimum_cost_units, 70);
@@ -118,7 +118,8 @@ test('single-operation scope prevents double counting across overlapping traject
   profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'a', alternativeId: 'a-cheap', tier: 'retrospective_only', sameAcceptedOutcome: true, proofKind: 'single-op-replay', proofFingerprint: FP_A, replacementWork: { costUnits: 0 } });
   const report = completed(profiler);
   assert.equal(report.accounting.headroom.oracle_theoretical.minimum_cost_units, 10);
-  assert.equal(report.accounting.counterfactual_scope, 'single-operation-proven-substitutions-only');
+  assert.equal(report.accounting.counterfactual_scope, 'one-proven-substitution-per-trajectory');
+  assert.equal(report.accounting.compositional_counterfactuals_supported, false);
   assert.equal(report.accounting['overlapping_multi-operation_skips_supported'], false);
 });
 
@@ -152,4 +153,17 @@ test('invalid finish timestamps do not partially close a trajectory', () => {
   profiler.recordOperation({ trajectoryId: 't1', operationId: 'x', kind: 'tool', work: { costUnits: 1 } });
   const report = profiler.finishTrajectory({ trajectoryId: 't1', outcome: { completed: true, correct: true, safetyAcceptable: true }, outcomeEvidenceFingerprint: FP_C, endedAtMs: 20 });
   assert.equal(report.trajectory.complete, true);
+});
+
+test('individually proven substitutions are never composed without joint evidence', () => {
+  const profiler = createShadowTrajectoryProfiler({ now: () => 1 });
+  profiler.startTrajectory({ trajectoryId: 't1', sampleType: 'replayed', costUnitPolicyId: 'test', costUnitPolicyFingerprint: FP_A, baselineEvidenceFingerprint: FP_B, startedAtMs: 0 });
+  profiler.recordOperation({ trajectoryId: 't1', operationId: 'a', kind: 'model', work: { costUnits: 50 } });
+  profiler.recordOperation({ trajectoryId: 't1', operationId: 'b', kind: 'tool', work: { costUnits: 50 } });
+  profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'a', alternativeId: 'a-zero', tier: 'retrospective_only', sameAcceptedOutcome: true, proofKind: 'isolated-replay', proofFingerprint: FP_A, replacementWork: { costUnits: 0 } });
+  profiler.recordProvenAlternative({ trajectoryId: 't1', operationId: 'b', alternativeId: 'b-zero', tier: 'retrospective_only', sameAcceptedOutcome: true, proofKind: 'isolated-replay', proofFingerprint: FP_B, replacementWork: { costUnits: 0 } });
+  const report = completed(profiler);
+  assert.equal(report.accounting.headroom.oracle_theoretical.minimum_cost_units, 50);
+  assert.equal(report.accounting.headroom.oracle_theoretical.headroom_percent, 50);
+  assert.equal(report.accounting.headroom.oracle_theoretical.selected_substitutions.length, 1);
 });
