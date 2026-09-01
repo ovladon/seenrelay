@@ -39,7 +39,7 @@ export function publicLandingPage(origin: string): string {
   const npmCommand = esc(f.install.npm_command);
   const pipCommand = esc(f.install.pypi_command);
   const skillCommand = `npx skills add ${origin} --skill seenrelay --yes`;
-  const agentPrompt = 'Integrate SeenRelay into repeated expensive read-only validations in this project. Start in shadow mode, preserve the authoritative call, run the existing tests, and report which exact workloads repeat enough to justify bounded reuse.';
+  const agentPrompt = 'Integrate SeenRelay into repeated expensive read-only validations in this project. Use the installed SeenRelay integration catalog, choose only a supported adapter, start in shadow mode, preserve the authoritative call, run the existing tests, and report the exact workloads that repeat. Do not enable reuse until the measured report and stronger native controls have been reviewed.';
 
   return `<!doctype html>
 <html lang="en">
@@ -143,9 +143,7 @@ export function publicLandingPage(origin: string): string {
         <div class="rv-step"><span>1</span><div><h4>Install</h4><div class="rv-code"><pre id="npm-install">${npmCommand}</pre><button class="rv-copy" type="button" data-copy-target="npm-install">Copy</button></div><div class="rv-code"><pre id="pip-install">${pipCommand}</pre><button class="rv-copy" type="button" data-copy-target="pip-install">Copy</button></div></div></div>
         <div class="rv-step"><span>2</span><div><h4>Existing JavaScript/TypeScript MCP client: wrap it once in shadow mode</h4><div class="rv-code"><pre id="ambient-example">import { ambientMcpClient } from 'seenrelay/ambient';
 
-const client = ambientMcpClient(rawMcpClient, {
-  serverKey: 'docs'
-});
+const client = ambientMcpClient(rawMcpClient);
 
 // use client.callTool(...) normally
 console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
