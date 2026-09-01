@@ -1,0 +1,59 @@
+name: Bootstrap Discovery Alignment
+
+on:
+  push:
+    branches:
+      - adoption/discovery-surface-alignment
+    paths:
+      - .github/workflows/bootstrap-discovery-alignment.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: adoption/discovery-surface-alignment
+      - name: Align public discovery surfaces
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          readme_path = Path('README.md')
+          readme = readme_path.read_text()
+          title_anchor = '# SeenRelay\n\n<!-- BEGIN GENERATED:PUBLIC-FACTS -->'
+          factual_intro = '''# SeenRelay\n\nSeenRelay is a reuse layer for repeated read-only validation.\n\nIt sits in front of validation work an AI agent or application already performs. For an exact eligible repeat, it can use caller-owned local/private reuse, source-native freshness confirmation, or optional shared CHECK evidence. If none of those paths is sufficient, the original validation runs normally.\n\n<!-- BEGIN GENERATED:PUBLIC-FACTS -->'''
+          if title_anchor not in readme:
+              raise SystemExit('README title/generated-facts anchor not found')
+          readme = readme.replace(title_anchor, factual_intro, 1)
+
+          old_intro = '''**Avoid redundant expensive validation.**\n\nReuse eligible read-only validation locally or privately, use source-native checks when available, and consult shared SeenRelay evidence only when useful. The application's original validation remains the fallback.\n\n> Reuse first. CHECK when useful. OBSERVE only fresh independent validation.\n\nSeenRelay has exactly two domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.\n'''
+          first_proof = '''## First proof: measure without changing application behavior\n\nAmbient wraps an existing MCP-style client in local shadow mode. The authoritative call still runs; SeenRelay measures exact repetition and produces a local report.\n\nJavaScript / TypeScript:\n\n```js\nnpm install seenrelay\n\nimport { ambientMcpClient } from 'seenrelay/ambient';\n\nconst client = ambientMcpClient(rawMcpClient);\n// use client.callTool(...) normally\nconsole.log(client.seenRelayAmbient.getReport());\n```\n\nPython:\n\n```python\npip install seenrelay\n\nfrom seenrelay_ambient import ambient_mcp_client\n\nclient = ambient_mcp_client(raw_mcp_client)\n# await client.call_tool(...) normally\nprint(client.get_report())\n```\n\nFor a compatible coding agent, install the Agent Skill directly from the canonical domain:\n\n```bash\nnpx skills add https://seenrelay.com --skill seenrelay --yes\n```\n\nRun the existing workload and inspect the report before enabling any bounded reuse. Shared CHECK remains optional and off by default in Zero-State.\n\nSeenRelay has exactly two hosted domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.\n'''
+          if old_intro not in readme:
+              raise SystemExit('README old intro anchor not found')
+          readme = readme.replace(old_intro, first_proof, 1)
+          readme_path.write_text(readme)
+
+          adoption_path = Path('src/adoption.ts')
+          adoption = adoption_path.read_text()
+          old_llms = '''  return `# SeenRelay\n\n> Avoid redundant expensive validation. JavaScript/TypeScript ${clientVersion} uses local/private reuse, source-native checks, then optional shared CHECK. OBSERVE only fresh independent source-backed results.\n\nSeenRelay reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.\n\n${machinePublicFactsText(origin)}\n\n## Add SeenRelay to Cursor or another Agent Skills client\n'''
+          new_llms = '''  return `# SeenRelay\n\nSeenRelay is a reuse layer for repeated read-only validation. It sits in front of validation work an agent or application already performs; when no eligible cheaper path is sufficient, the original validation runs normally.\n\nSeenRelay reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.\n\n## First proof: measure without changing application behavior\n\nJavaScript / TypeScript ${clientVersion}:\n\n\\`npm install seenrelay\\`\n\n\\`import { ambientMcpClient } from 'seenrelay/ambient';\\`\n\\`const client = ambientMcpClient(rawMcpClient);\\`\n\\`console.log(client.seenRelayAmbient.getReport());\\`\n\nPython ${clientVersion}:\n\n\\`pip install seenrelay\\`\n\n\\`from seenrelay_ambient import ambient_mcp_client\\`\n\\`client = ambient_mcp_client(raw_mcp_client)\\`\n\\`print(client.get_report())\\`\n\nBoth Ambient entry points are shadow-first: run the existing workload normally and inspect the local report before enabling bounded reuse.\n\n${machinePublicFactsText(origin)}\n\n## Add SeenRelay to Cursor or another Agent Skills client\n'''
+          if old_llms not in adoption:
+              raise SystemExit('llms opening anchor not found')
+          adoption = adoption.replace(old_llms, new_llms, 1)
+          adoption_path.write_text(adoption)
+
+          test_path = Path('tests/discovery-surface-alignment.test.mjs')
+          test_path.write_text('''import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fs from 'node:fs';\n\nconst read = (p) => fs.readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');\n\ntest('README starts with factual definition and behavior-preserving first proof', () => {\n  const t = read('README.md');\n  assert.match(t, /SeenRelay is a reuse layer for repeated read-only validation\./);\n  assert.match(t, /## First proof: measure without changing application behavior/);\n  assert.match(t, /ambientMcpClient\(rawMcpClient\)/);\n  assert.match(t, /client\.seenRelayAmbient\.getReport\(\)/);\n  assert.match(t, /ambient_mcp_client\(raw_mcp_client\)/);\n  assert.match(t, /client\.get_report\(\)/);\n  assert.match(t, /npx skills add https:\/\/seenrelay\.com --skill seenrelay --yes/);\n  assert.doesNotMatch(t, /\*\*Avoid redundant expensive validation\.\*\*/);\n  assert.match(t, /BEGIN GENERATED:PUBLIC-FACTS/);\n});\n\ntest('llms surface leads with definition and first proof while preserving machine facts', () => {\n  const t = read('src/adoption.ts');\n  assert.match(t, /SeenRelay is a reuse layer for repeated read-only validation/);\n  assert.match(t, /## First proof: measure without changing application behavior/);\n  assert.match(t, /ambientMcpClient\(rawMcpClient\)/);\n  assert.match(t, /seenRelayAmbient\.getReport\(\)/);\n  assert.match(t, /ambient_mcp_client\(raw_mcp_client\)/);\n  assert.match(t, /get_report\(\)/);\n  assert.match(t, /machinePublicFactsText\(origin\)/);\n  assert.doesNotMatch(t, /> Avoid redundant expensive validation/);\n  assert.match(t, /Shared CHECK is off by default/);\n});\n''')
+          PY
+
+          git config user.name 'SeenRelay CI'
+          git config user.email 'actions@users.noreply.github.com'
+          git add README.md src/adoption.ts tests/discovery-surface-alignment.test.mjs
+          git diff --cached --check
+          git commit -m 'Align public discovery surfaces with factual onboarding'
+          git push origin HEAD:adoption/discovery-surface-alignment
