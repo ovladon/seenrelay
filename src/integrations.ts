@@ -12,6 +12,11 @@ function esc(value: unknown): string {
 export function clientsPage(origin: string): string {
   const version = esc(publicProductFacts.install.client_version);
   const skillCommand = `npx skills add ${origin} --skill seenrelay --yes`;
+  const productionMcp = 'https://seenrelay.com/mcp';
+  const cursorInstall = 'https://cursor.com/link/mcp/install?name=seenrelay&config=eyJ1cmwiOiJodHRwczovL3NlZW5yZWxheS5jb20vbWNwIn0%3D';
+  const vscodeInstall = 'vscode:mcp/install?%7B%22name%22%3A%22seenrelay%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fseenrelay.com%2Fmcp%22%7D';
+  const vscodeCommand = `code --add-mcp '{"name":"seenrelay","type":"http","url":"${productionMcp}"}'`;
+  const claudeCommand = `claude mcp add --transport http --scope user seenrelay ${productionMcp}`;
 
   return `<!doctype html>
 <html lang="en">
@@ -31,49 +36,65 @@ export function clientsPage(origin: string): string {
 <main>
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">SUPPORTED INTEGRATIONS · CLIENT ${version}</div>
-  <h1>Choose the surface that matches your existing application.</h1>
-  <p>SeenRelay is designed to sit around validation work you already have. For a first integration, prefer an Ambient/shadow path when available; it measures repetition while preserving the authoritative call.</p>
+  <h1>Put SeenRelay around the validation path you already have.</h1>
+  <p>The lowest-friction first step is behavior-preserving measurement: install the package, wrap the existing client once, run the workload normally, then read the local report. Connecting the hosted MCP protocol is separate and does not by itself enable reuse.</p>
+  <div class="rv-actions"><a class="rv-button primary" href="#instrument">Instrument an application</a><a class="rv-button" href="#connect">Connect CHECK + OBSERVE</a></div>
 </section>
 
-<section class="rv-shell rv-section" id="choices">
-  <div class="rv-section-head"><div class="rv-eyebrow">INTEGRATION SURFACES</div><h2>Current supported entry points.</h2><p>If a framework-specific adapter is unnecessary, use the provider-independent JavaScript/TypeScript client, Python client, MCP or REST surface directly.</p></div>
+<section class="rv-shell rv-section" id="instrument">
+  <div class="rv-section-head"><div class="rv-eyebrow">INSTRUMENT AN APPLICATION</div><h2>Start with one behavior-preserving wrapper.</h2><p>No tool is automatically treated as safe to suppress. Ambient integrations keep the authoritative call and measure exact repetition locally first.</p></div>
   <div class="rv-choice-grid">
-    <article class="rv-choice"><header><b>Coding agent</b><span>Agent Skill</span></header><p>Install the published SeenRelay skill. Ask the coding agent to start in shadow mode, preserve the authoritative call, run the existing tests and report repeated eligible workloads.</p><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><a href="/.well-known/agent-skills/seenrelay/SKILL.md">Inspect the skill →</a></article>
+    <article class="rv-choice"><header><b>Coding agent</b><span>Agent Skill</span></header><p>Install the published SeenRelay skill, then ask the coding agent to inspect the project, select a supported adapter, preserve the authoritative call, run existing tests and report repeated eligible workloads.</p><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><a href="/.well-known/agent-skills/seenrelay/SKILL.md">Inspect the skill →</a></article>
 
-    <article class="rv-choice"><header><b>Existing MCP client</b><span>JavaScript / TypeScript</span></header><p>Use Ambient for measurement without suppressing calls. After a specific read-only tool is reviewed as eligible, <code>protectMcpClient</code> from <code>seenrelay/mcp-auto</code> provides the local-first bind-once path. Shared CHECK is not enabled by default.</p><div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
+    <article class="rv-choice"><header><b>Existing MCP client</b><span>JavaScript / TypeScript</span></header><p>One wrapper line adds local shadow measurement. Existing <code>callTool(...)</code> usage stays unchanged.</p><div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
 
-const client = ambientMcpClient(rawMcpClient, {
-  serverKey: 'docs'
-});
+const client = ambientMcpClient(rawMcpClient);
 
-console.log(client.seenRelayAmbient.getReport());</pre></div><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a></article>
+// use client.callTool(...) normally
+console.log(client.seenRelayAmbient.getReport());</pre></div><p>Only after a specific read-only tool is reviewed should <code>seenrelay/mcp-auto</code> be considered for local-first protection. Shared CHECK remains off by default.</p><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a></article>
+
+    <article class="rv-choice"><header><b>Python MCP</b><span>Ambient / shadow</span></header><p>Python has the same one-wrapper measurement entry point and remains measurement-only.</p><div class="rv-code"><pre>from seenrelay_ambient import ambient_mcp_client
+
+client = ambient_mcp_client(raw_mcp_client)
+
+# await client.call_tool(...) normally
+print(client.get_report())</pre></div><a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Python guide →</a></article>
+
+    <article class="rv-choice"><header><b>OpenAI Agents / AI SDK</b><span>Ambient adapters</span></header><p>Wrap the framework-owned MCP surface rather than rewriting the agent.</p><div class="rv-code"><pre>// OpenAI Agents JS
+const server = ambientOpenAIAgentsMcpServer(rawMcpServer);
+
+// Vercel AI SDK
+const { tools, seenRelayAmbient } =
+  ambientAiSdkMcpTools(await mcpClient.tools());</pre></div><a href="/quickstart">Integration quickstart →</a></article>
+
+    <article class="rv-choice"><header><b>LangChain / PydanticAI</b><span>Framework adapters</span></header><p>Client ${version} ships local-shadow integration helpers without adding a hosted operation or authorizing reuse.</p><div class="rv-code"><pre>// LangChain JS
+ambientLangChainMcpHooks()
+
+# LangChain / PydanticAI Python
+ambient_langchain_mcp_client(client)
+ambient_pydantic_ai_toolset(toolset)</pre></div><a href="/quickstart">Integration quickstart →</a></article>
 
     <article class="rv-choice"><header><b>Plain read-only function</b><span>JavaScript / TypeScript</span></header><p>Use Zero-State when the application directly controls the validation function and can define exact identity and a defensible freshness policy.</p><div class="rv-code"><pre>import { SeenRelayZeroState } from 'seenrelay/zero-state';
 
 const edge = new SeenRelayZeroState({
   localMaxAgeMs: 30_000
 });</pre></div><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">Zero-State guide →</a></article>
+  </div>
+</section>
 
-    <article class="rv-choice"><header><b>Python MCP</b><span>Ambient / shadow</span></header><p>Wrap the existing MCP client. Python keeps the authoritative call and reports exact repetition locally.</p><div class="rv-code"><pre>from seenrelay_ambient import ambient_mcp_client
+<section class="rv-shell rv-section" id="connect">
+  <div class="rv-section-head"><div class="rv-eyebrow">CONNECT THE HOSTED PROTOCOL</div><h2>Use CHECK and OBSERVE from the MCP client you already use.</h2><p>This only connects the SeenRelay protocol. It does not instrument an application's existing validation path and does not automatically authorize reuse.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice"><header><b>Cursor</b><span>One click</span></header><p>Open Cursor's official MCP install flow with the SeenRelay remote endpoint prefilled.</p><div class="rv-actions"><a class="rv-button primary" href="${cursorInstall}">Add SeenRelay to Cursor</a></div><div class="rv-code"><pre>${productionMcp}</pre></div></article>
 
-client = ambient_mcp_client(
-    raw_mcp_client,
-    server_key="docs",
-)
+    <article class="rv-choice"><header><b>VS Code / GitHub Copilot</b><span>One click + CLI</span></header><p>Use VS Code's MCP install URL, or the CLI fallback below.</p><div class="rv-actions"><a class="rv-button primary" href="${vscodeInstall}">Install in VS Code</a></div><div class="rv-code"><pre>${esc(vscodeCommand)}</pre></div></article>
 
-print(client.get_report())</pre></div><a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Python guide →</a></article>
+    <article class="rv-choice"><header><b>Claude Code</b><span>One command</span></header><p>Add the public Streamable HTTP endpoint at user scope.</p><div class="rv-code"><pre>${esc(claudeCommand)}</pre></div><p>No account or SeenRelay API key is currently required.</p></article>
 
-    <article class="rv-choice"><header><b>LangChain / PydanticAI</b><span>Framework adapters</span></header><p>Client ${version} ships Ambient integration helpers for LangChain in JavaScript/TypeScript and Python, plus PydanticAI in Python. These adapters preserve authoritative behavior by default.</p><div class="rv-code"><pre>// JavaScript / TypeScript
-ambientLangChainMcpHooks()
-
-# Python
-ambient_langchain_mcp_client(client)
-ambient_pydantic_ai_toolset(toolset)</pre></div><a href="/quickstart">Integration quickstart →</a></article>
-
-    <article class="rv-choice"><header><b>Remote protocol</b><span>MCP / REST</span></header><p>Use the hosted protocol directly when no local adapter is needed. The hosted domain surface remains CHECK and OBSERVE.</p><div class="rv-code"><pre>MCP Registry  io.github.ovladon/seenrelay
-MCP           ${origin}/mcp
-REST          ${origin}/v1/check
-REST          ${origin}/v1/observe</pre></div><a href="/openapi.json">OpenAPI →</a></article>
+    <article class="rv-choice"><header><b>Other MCP / REST clients</b><span>Open protocol</span></header><p>Any compatible client can connect directly. The hosted domain surface remains exactly CHECK and OBSERVE.</p><div class="rv-code"><pre>MCP Registry  io.github.ovladon/seenrelay
+MCP           ${productionMcp}
+REST          https://seenrelay.com/v1/check
+REST          https://seenrelay.com/v1/observe</pre></div><a href="/openapi.json">OpenAPI →</a></article>
   </div>
 </section>
 
@@ -93,7 +114,7 @@ REST          ${origin}/v1/observe</pre></div><a href="/openapi.json">OpenAPI �
   </div>
 </section>
 
-<section class="rv-shell rv-final"><div><div class="rv-eyebrow">FIRST DEPLOYMENT</div><h2>Measure one existing validation path before changing its reuse policy.</h2><p>The local report should show whether exact repetition is material. If it is not, no optimization needs to be enabled.</p></div><div class="rv-actions"><a class="rv-button" href="/quickstart">Integration quickstart</a><a class="rv-button" href="https://github.com/ovladon/seenrelay">GitHub</a></div></section>
+<section class="rv-shell rv-final"><div><div class="rv-eyebrow">FIRST DEPLOYMENT</div><h2>Wrap one existing validation path and run it normally.</h2><p>Read the local report before changing any reuse policy. If exact repetition is not material, no optimization needs to be enabled.</p></div><div class="rv-actions"><a class="rv-button" href="/quickstart">Integration quickstart</a><a class="rv-button" href="https://github.com/ovladon/seenrelay">GitHub</a></div></section>
 </main>
 ${siteFooterHtml()}
 </body>
