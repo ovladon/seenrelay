@@ -20,17 +20,21 @@ test('human and machine-facing surfaces advertise public package installation fr
   }
 
   const view = read('src', 'public-facts-view.ts');
+  const landing = read('src', 'landing.ts');
   const adoption = read('src', 'adoption.ts');
   const quickstart = read('src', 'quickstart.ts');
+  const integrations = read('src', 'integrations.ts');
   const publicSource = read('src', 'public.ts');
   assert.match(view, /f\.install\.npm_command/);
   assert.match(view, /f\.install\.pypi_command/);
-  assert.match(adoption, /publicInstallHtml\(\)/);
+  assert.match(landing, /f\.install\.npm_command/);
+  assert.match(landing, /f\.install\.pypi_command/);
   assert.match(adoption, /machinePublicFactsText\(origin\)/);
-  assert.match(quickstart, /publicInstallHtml\(\)/);
+  assert.match(quickstart, /publicProductFacts\.install\.client_version/);
+  assert.match(integrations, /publicProductFacts\.install\.client_version/);
   assert.match(publicSource, /publicInstallHtml\(\)/);
 
-  const combined = [view, adoption, quickstart, publicSource].join('\n');
+  const combined = [view, landing, adoption, quickstart, integrations, publicSource].join('\n');
   assert.doesNotMatch(combined, /registry publication is a separate release step/i);
   assert.doesNotMatch(combined, /must not be inferred from repository metadata alone/i);
 });

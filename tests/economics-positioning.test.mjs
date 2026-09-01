@@ -14,6 +14,7 @@ test('public and machine-facing guidance targets repeated expensive validation w
   const indexSource = read('src', 'index.ts');
   const quickstart = read('src', 'quickstart.ts');
   const adoption = read('src', 'adoption.ts');
+  const integrations = read('src', 'integrations.ts');
   const mcp = read('src', 'mcp.ts');
   const facts = JSON.parse(read('public', 'product-facts.json'));
 
@@ -57,17 +58,20 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.doesNotMatch(publicView, /Only shipped or independently release-gated facts belong here; planned work is excluded\./);
   assert.doesNotMatch(publicView, /so new verified configurations can appear without hand-editing this page/);
   assert.doesNotMatch(publicView, /firecrawl-browser-interaction-2026-08-26/);
-  assert.doesNotMatch(economics + publicSource + adoption, /Firecrawl Pay As You Go/);
+  assert.doesNotMatch(economics + publicSource + adoption + integrations, /Firecrawl Pay As You Go/);
   assert.match(economics, /Fixed-tier counterexample/);
   assert.match(economics, /Poor fit:/);
 
-  assert.match(quickstart, /MCP BIND-ONCE/);
+  assert.match(quickstart, /seenrelay\/mcp-auto/);
+  assert.match(quickstart, /local-first bind-once path/i);
   assert.match(quickstart, /original validation remains the fallback/i);
-  assert.match(adoption, /JavaScript\/TypeScript: local-first Zero-State/i);
+  assert.match(adoption, /## Preferred JavaScript \/ TypeScript order/);
   assert.match(adoption, /Shared CHECK is off by default/i);
+  assert.match(integrations, /seenrelay\/mcp-auto/);
+  assert.match(integrations, /Shared CHECK (?:is off|is not enabled) by default/i);
   assert.match(mcp, /paid web search, metered scraping, browser\/extraction/);
 
-  for (const text of [economics, publicSource, publicView, quickstart, adoption, mcp]) {
+  for (const text of [economics, publicSource, publicView, quickstart, adoption, integrations, mcp]) {
     assert.doesNotMatch(text, /guaranteed savings|always cheaper/i);
   }
 });

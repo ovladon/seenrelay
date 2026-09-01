@@ -16,9 +16,9 @@ test('human pages share one accurate legal footer', () => {
   assert.match(view, /currentYear > 2026/);
   assert.match(view, /2026–/);
 
-  for (const file of ['public.ts', 'quickstart.ts', 'adoption.ts', 'economics.ts']) {
+  for (const file of ['public.ts', 'landing.ts', 'quickstart.ts', 'integrations.ts', 'economics.ts']) {
     const text = read('src', file);
     assert.match(text, /siteFooterHtml\(\)/);
-    assert.doesNotMatch(text, /<footer>/);
+    assert.doesNotMatch(text, /All rights reserved|Client libraries: MIT License|Recent observations, not universal truth/);
   }
 });
