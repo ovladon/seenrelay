@@ -86,11 +86,28 @@ test('quickstart is factual, agent-compatible and behavior-preserving', () => {
   assert.match(quickstartSource, /Read the local report before enabling reuse/);
 });
 
-test('integration chooser starts from the stack the adopter already uses', () => {
-  for (const expected of ['Coding agent', 'Existing MCP client', 'Plain read-only function', 'Python MCP', 'LangChain / PydanticAI', 'Remote protocol']) {
+test('integration chooser makes measurement the primary path and hosted protocol connection separate', () => {
+  for (const expected of ['INSTRUMENT AN APPLICATION', 'Coding agent', 'Existing MCP client', 'Python MCP', 'OpenAI Agents / AI SDK', 'LangChain / PydanticAI', 'Plain read-only function', 'CONNECT THE HOSTED PROTOCOL', 'Cursor', 'VS Code / GitHub Copilot', 'Claude Code', 'Other MCP / REST clients']) {
     assert.match(integrationsSource, new RegExp(expected.replaceAll('/', '\\/')));
   }
+  assert.match(integrationsSource, /does not by itself enable reuse/i);
+  assert.match(integrationsSource, /does not instrument an application's existing validation path/i);
   assert.match(adoptionSource, /export \{ clientsPage \} from '.\/integrations\.js'/);
+});
+
+test('published Ambient wrappers are shown in their zero-config form', () => {
+  assert.match(integrationsSource, /ambientMcpClient\(rawMcpClient\)/);
+  assert.match(integrationsSource, /ambient_mcp_client\(raw_mcp_client\)/);
+  assert.doesNotMatch(integrationsSource, /ambientMcpClient\(rawMcpClient,\s*\{/);
+  assert.doesNotMatch(integrationsSource, /ambient_mcp_client\(\s*raw_mcp_client,\s*server_key=/);
+});
+
+test('copy-ready MCP connection paths include current Cursor, VS Code and Claude Code forms', () => {
+  assert.match(integrationsSource, /https:\/\/cursor\.com\/link\/mcp\/install\?name=seenrelay/);
+  assert.match(integrationsSource, /vscode:mcp\/install\?/);
+  assert.match(integrationsSource, /code --add-mcp/);
+  assert.match(integrationsSource, /claude mcp add --transport http --scope user seenrelay/);
+  assert.match(integrationsSource, /https:\/\/seenrelay\.com\/mcp/);
 });
 
 test('revamp visual system is responsive, accessible and dependency free', () => {
