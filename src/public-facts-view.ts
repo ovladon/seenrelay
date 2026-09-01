@@ -33,7 +33,7 @@ export function verifiedBenchmarkHtml(): string {
 <article><b>${esc(b.reuse_median_ms)} ms median</b><span>SeenRelay bounded reuse versus ${esc(b.fresh_baseline_median_ms)} ms fresh extraction — ${esc(b.latency_improvement_vs_fresh_percent)}% lower median latency in this run.</span></article>
 <article><b>Also faster than provider cache</b><span>${esc(b.provider_cached_baseline_median_ms)} ms provider-cached versus ${esc(b.reuse_median_ms)} ms SeenRelay — ${esc(b.latency_improvement_vs_provider_cached_percent)}% lower median latency in this run.</span></article>
 </div>
-<div class="trust-note"><b>Path ordering matters:</b> these synthetic example.com rows remain useful provider-path mechanics evidence, but their tested facts were source-resolvable and therefore have poor workload fit. The basic-scrape benchmark also showed SeenRelay slower than Firecrawl's own cache hit (${esc(negative.baseline_median_ms)} ms baseline vs ${esc(negative.reuse_median_ms)} ms SeenRelay). Better local, source-native and provider-native controls stay ahead of shared CHECK. <a href="https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md#interpretation" rel="noreferrer">Full interpretation →</a></div>
+<div class="trust-note"><b>Path ordering matters:</b> these synthetic example.com rows remain useful provider-path mechanics evidence. Because those tested facts were source-resolvable, source-native validation is the stronger control for those rows. The basic-scrape benchmark also measured ${esc(negative.baseline_median_ms)} ms on Firecrawl's own cache path versus ${esc(negative.reuse_median_ms)} ms on SeenRelay. Better local, source-native and provider-native controls stay ahead of shared CHECK. <a href="https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md#interpretation" rel="noreferrer">Full interpretation →</a></div>
 </section>`;
 }
 
@@ -60,19 +60,13 @@ export function verifiedWorkloadMapHtml(): string {
     .map((item) => {
       if (!('matrix' in item)) return '';
       const m = item.matrix;
-      const costOutcome = String(m.cost_outcome);
-      const latencyOutcome = String(m.latency_outcome);
-      const fitValue = String(m.fit);
-      const cost = costOutcome === 'better' ? '↓ better' : costOutcome === 'worse' ? '↑ worse' : costOutcome;
-      const latency = latencyOutcome === 'better' ? '↓ better' : latencyOutcome === 'worse' ? '↑ worse' : latencyOutcome;
-      const fit = fitValue === 'good' ? 'GOOD' : fitValue === 'conditional' ? 'CONDITIONAL' : fitValue.toUpperCase();
-      return `<tr><td><span class="fit-badge fit-${esc(m.fit)}">${esc(fit)}</span></td><td><b>${esc(m.surface)}</b><small>${esc(item.provider)} · ${esc(m.configuration)}</small></td><td>${esc(m.evidence_level)} · n=${esc(item.samples)}</td><td>${esc(cost)}</td><td>${esc(latency)}</td><td>${esc(m.baseline_median_ms)} ms<small>${esc(m.baseline_context)}</small></td><td>${esc(item.reuse_median_ms)} ms</td><td>${esc(m.provider_calls_avoided)}/${esc(item.samples)} calls<small>${esc(m.provider_units_avoided)} ${esc(m.provider_unit_label)}</small></td><td>${esc(item.freshness_window_seconds)}s</td><td><a href="${esc(item.evidence_url)}" rel="noreferrer">${esc(item.verified_at.slice(0, 10))} ↗</a></td></tr>`;
+      return `<tr><td><b>${esc(m.surface)}</b><small>${esc(item.provider)} · ${esc(m.configuration)}</small></td><td>${esc(m.evidence_level)} · n=${esc(item.samples)}</td><td>${esc(m.baseline_median_ms)} ms<small>${esc(m.baseline_context)}</small></td><td>${esc(item.reuse_median_ms)} ms</td><td>${esc(m.provider_calls_avoided)}/${esc(item.samples)} calls<small>${esc(m.provider_units_avoided)} ${esc(m.provider_unit_label)}</small></td><td>${esc(item.freshness_window_seconds)}s</td><td><a href="${esc(item.evidence_url)}" rel="noreferrer">${esc(item.verified_at.slice(0, 10))} ↗</a></td></tr>`;
     })
     .join('');
   if (!rows) return '';
   return `<section class="section decision" id="workload-map">
-<div class="section-head"><div><div class="eyebrow">VERIFIED WORKLOAD MATRIX</div><h2>Where SeenRelay has helped — and where it has not.</h2></div><p>Latest verified result per tested configuration. Small controlled tests do not predict how often your fleet will produce reusable matches.</p></div>
-<div class="benchmark-table-wrap"><table class="benchmark-table"><thead><tr><th>Fit</th><th>Surface / configuration</th><th>Evidence</th><th>Provider-path cost</th><th>Provider-path latency</th><th>Provider-path baseline</th><th>Reuse median</th><th>Provider work avoided</th><th>Window</th><th>Verified</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="section-head"><div><div class="eyebrow">VERIFIED WORKLOAD MATRIX</div><h2>Measured provider-path results by tested configuration.</h2></div><p>Latest verified result per tested configuration. Small controlled tests do not predict how often your fleet will produce reusable matches.</p></div>
+<div class="benchmark-table-wrap"><table class="benchmark-table"><thead><tr><th>Surface / configuration</th><th>Evidence</th><th>Provider-path baseline</th><th>Reuse median</th><th>Provider work avoided</th><th>Window</th><th>Verified</th></tr></thead><tbody>${rows}</tbody></table></div>
 <div class="trust-note"><a href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md" rel="noreferrer">Measurement rules, evidence and break-even logic →</a></div>
 </section>`;
 }
@@ -89,7 +83,7 @@ export function machinePublicFactsText(origin: string): string {
     .map((item) => {
       if (!('matrix' in item)) return '';
       const m = item.matrix;
-      return `- ${m.surface} / ${m.configuration}: fit=${m.fit}; provider_path_cost=${m.cost_outcome}; provider_path_latency=${m.latency_outcome}; n=${item.samples}; ${m.provider_calls_avoided}/${item.samples} equivalent provider calls avoided; ${m.provider_units_avoided} ${m.provider_unit_label} avoided; provider-path median ${m.baseline_median_ms} ms -> ${item.reuse_median_ms} ms bounded reuse; verified ${item.verified_at.slice(0, 10)}. Evidence: ${item.evidence_url}.`;
+      return `- ${m.surface} / ${m.configuration}: n=${item.samples}; ${m.provider_calls_avoided}/${item.samples} equivalent provider calls avoided; ${m.provider_units_avoided} ${m.provider_unit_label} avoided; provider-path median ${m.baseline_median_ms} ms -> ${item.reuse_median_ms} ms bounded reuse; verified ${item.verified_at.slice(0, 10)}. Evidence: ${item.evidence_url}.`;
     })
     .filter(Boolean)
     .join('\n');

@@ -71,7 +71,9 @@ test('homepage presents readable evidence and its limits together', () => {
   assert.match(landing, /What they do not establish/);
   assert.match(landing, /How to test your own workload/);
   assert.match(landing, /do not establish a universal hit rate, guaranteed savings/i);
-  assert.match(landing, /poor-fit examples/i);
+  assert.match(landing, /controlled synthetic facts to measure provider-path mechanics/i);
+  assert.match(landing, /natural-workload suitability is evaluated separately/i);
+  assert.doesNotMatch(landing, /fit:\s*poor|poor-fit examples/i);
   assert.match(landing, /\/product-facts\.json/);
   assert.match(landing, /\/economics/);
 });
