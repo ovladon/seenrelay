@@ -56,7 +56,7 @@ const client = ambientMcpClient(rawMcpClient);
 
 // use client.callTool(...) normally
 console.log(client.seenRelayAmbient.getReport());</pre></div>
-      <p>That wrapper is shadow-first. When a specific read-only tool is explicitly reviewed as eligible, <code>seenrelay/mcp-auto</code> provides the separate local-first protection path. Shared SeenRelay CHECK is off by default.</p>
+      <p>That wrapper is shadow-first. When a specific read-only tool is explicitly reviewed as eligible, <code>seenrelay/mcp-auto</code> provides the separate local-first bind-once path. Shared SeenRelay CHECK is off by default.</p>
       <a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a>
     </article>
     <article class="rv-choice">
@@ -72,7 +72,7 @@ print(client.get_report())</pre></div>
       <a href="https://github.com/ovladon/seenrelay/tree/main/clients/python">Python guide →</a>
     </article>
   </div>
-  <div class="rv-note"><b>Protocol boundary:</b> MCP remains the discovery and model/tool-routing interface for MCP applications. SeenRelay's local-first client integrations sit around the application's validation path. The hosted SeenRelay protocol exposes exactly CHECK and OBSERVE, and the original validation remains the fallback.</div>
+  <div class="rv-note"><b>Protocol boundary:</b> MCP remains the standard discovery and model/tool-routing interface for MCP applications. SeenRelay's local-first client integrations sit around the application's validation path. The hosted SeenRelay protocol exposes exactly CHECK and OBSERVE, and the original validation remains the fallback.</div>
 </section>
 
 <section class="rv-shell rv-section">
@@ -80,7 +80,7 @@ print(client.get_report())</pre></div>
   <div class="rv-stack">
     <article><h3>Plain JS / TS function</h3><p><code>SeenRelayZeroState</code> can apply exact in-flight reuse, explicit local/private freshness policy and source-native confirmation before the original validation.</p></article>
     <article><h3>Framework adapters</h3><p>Ambient adapters preserve existing framework/tool behavior while measuring exact repetition locally by default.</p></article>
-    <article><h3>Remote MCP clients</h3><p>The Integrations page provides copy-ready Cursor, VS Code/GitHub Copilot and Claude Code connection paths for <code>https://seenrelay.com/mcp</code>. Connecting the protocol alone does not instrument existing validation work.</p></article>
+    <article><h3>Remote MCP clients</h3><p>Official MCP Registry identifier: <code>io.github.ovladon/seenrelay</code>. The Integrations page provides copy-ready Cursor, VS Code/GitHub Copilot and Claude Code connection paths for <code>https://seenrelay.com/mcp</code>. Connecting the protocol alone does not instrument existing validation work.</p></article>
     <article><h3>REST / OpenAPI</h3><p>Direct integrations can use <code>POST /v1/check</code> and <code>POST /v1/observe</code>; the full schema is published at <code>/openapi.json</code>.</p></article>
   </div>
 </section>
