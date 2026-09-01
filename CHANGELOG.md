@@ -13,6 +13,15 @@ Current install/version/verified benchmark facts are generated from `public/prod
 - Coalesce only overlapping request-equivalent CHECKs in process and expose local-only measurement counters plus caller-supplied reuse economics.
 - Preserve the public protocol boundary: no database migration, no third domain operation, and no change to MCP CHECK / OBSERVE semantics.
 
+## 0.3.10 / client 0.2.8 — Multi-signal evidence and coordinate helpers
+
+- Add an aggregate reuse-independence bucket count to fresh CHECK evidence without returning the underlying privacy-salted bucket identifiers; the count remains an anti-farming signal, not identity or truth evidence.
+- Add JavaScript/TypeScript and Python assurance helpers that assess shared CHECK evidence and provide an explicit opt-in multi-signal retained-reuse policy with minimum 2/2/2 observer, cryptographic-key and reuse-independence-bucket thresholds.
+- Add JavaScript/TypeScript and Python Fact Coordinate Kit helpers for deterministic local MCP/OpenAPI coordinates and shared fact descriptors only when a stable source-native locator is available.
+- Add a sanitized three-workload natural-workload evaluator that requires the best measured non-shared baseline and never enables automatic reuse.
+- Add a repository licensing map while leaving the hosted source license and MIT client licenses unchanged.
+- Keep CHECK and OBSERVE as the only hosted domain operations and keep caller policy authoritative for reuse.
+
 ## 0.3.8 — Early value and validator-assisted CHECK
 
 - Return the newest observer-supplied source validator with fresh CHECK evidence without claiming that SeenRelay verified it.
