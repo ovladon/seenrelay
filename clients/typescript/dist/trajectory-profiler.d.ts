@@ -30,8 +30,12 @@ export interface StartTrajectoryInput {
   workloadId?: string;
   sampleType: TrajectorySampleType;
   baselineDefinition?: 'best_native_stack';
+  /** Evidence fingerprint for the concrete best-native baseline definition/configuration used. */
+  baselineEvidenceFingerprint?: string;
   /** Identifies the caller's explicit normalization/pricing policy for comparable costUnits. */
   costUnitPolicyId?: string;
+  /** Fingerprint of the concrete normalization/pricing policy. Required for scalar headroom. */
+  costUnitPolicyFingerprint?: string;
   startedAtMs?: number;
 }
 
