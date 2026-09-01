@@ -4,8 +4,52 @@
 
 Deterministic, standard-library-only client that places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default.
 
-Client 0.2.7 adds Ambient integrations for LangChain and PydanticAI plus a local machine-readable integration catalog. Python behavior remains conservative and shadow-first. The direct Firecrawl SDK shadow adapter is JavaScript / TypeScript-only; Python parity is not claimed.
+Client 0.2.9 includes the multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit alongside Ambient integrations for LangChain and PydanticAI and the local machine-readable integration catalog. Python remains conservative and shadow-first by default. The direct Firecrawl SDK shadow adapter is JavaScript / TypeScript-only; Python parity is not claimed.
 
+## Shared CHECK assurance
+
+`seenrelay_assurance` evaluates additive CHECK evidence without treating it as truth. The multi-signal retained-reuse preset requires at least two observer keys, two cryptographic continuity keys, and two reuse-independence buckets, plus matching value fingerprints and acceptable freshness.
+
+```python
+from seenrelay_assurance import multi_signal_retained_reuse_policy
+
+reuse = multi_signal_retained_reuse_policy({"maxAgeSeconds": 300})
+```
+
+Using the policy is explicit caller opt-in. Multiple keys and buckets make trivial single-origin poisoning harder; they do not prove independent real-world actors or truth. High-consequence validation should still require authoritative source confirmation under the application's own policy.
+
+## Deterministic coordinates
+
+`seenrelay_coordinates` keeps local call coordinates separate from shared source-backed fact descriptors.
+
+```python
+from seenrelay_coordinates import (
+    mcp_tool_coordinate,
+    openapi_operation_coordinate,
+    json_pointer_fact,
+)
+
+local_call = mcp_tool_coordinate(
+    "catalog-prod",
+    "catalog.read",
+    {"id": 42},
+)
+
+api_call = openapi_operation_coordinate(
+    "catalog-api",
+    "getProduct",
+    {"id": 42},
+)
+
+fact = json_pointer_fact(
+    "Product 42 stock",
+    "availability.current",
+    "https://api.example.com/products/42",
+    "/stock",
+)
+```
+
+MCP/OpenAPI coordinates are local repetition keys only. Shared fact builders require a stable source-native locator. Prefer fragmentation to guessed semantic convergence.
 
 ## Ambient MCP
 
@@ -29,7 +73,6 @@ server = ambient_openai_agents_mcp_server(raw_mcp_server)
 ```
 
 The report stores aggregate metrics plus SHA-256 fingerprints only. It identifies exact repetition worth reviewing; it does not claim savings. Active Ambient reuse is intentionally unavailable in the Python client until its local-first semantics match the TypeScript implementation.
-
 
 ## Install
 
