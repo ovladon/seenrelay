@@ -8,6 +8,8 @@ Evaluate three independently defined natural workloads. Repetition must arise fr
 
 Each preliminary workload screen should contain at least 100 protected calls. This is a screening floor, not a statistical-confidence claim.
 
+Instrumentation and commissioning runs do not count toward that floor. Freeze the workload identity and collection rules before starting an evidence series; runs used to build, tune, reopen, debug, or verify the collector itself must be excluded from CHECK/OBSERVE evidence and from cumulative natural-workload counts.
+
 For every workload:
 
 1. `sample_type` is `natural_workload`;
