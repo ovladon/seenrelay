@@ -32,7 +32,7 @@ ${verifiedBenchmarkHtml()}
 <section class="section decision">
 <div class="section-head"><div><div class="eyebrow">USE IT WHERE THE MATH CAN WIN</div><h2>Use it where validation has real cost.</h2></div><p>SeenRelay is a preflight, not a replacement for every fetch. The protected operation should cost meaningfully more than CHECK and should repeat across runs, workers or agents.</p></div>
 <div class="proof-grid"><article><b>Paid web search</b><span>Search tool calls that are billed per request and repeat the same fact validation.</span></article><article><b>Metered scraping</b><span>Commercial scrape, proxy or fetch credits spent re-reading the same source-backed fact.</span></article><article><b>Browser / extraction</b><span>Headless browser, render or extraction work that can be skipped when policy accepts recent evidence.</span></article><article><b>Multi-step validation</b><span>Fetch → render → parse → model or other chains where one reusable observation can prevent the full downstream path.</span></article></div>
-<div class="trust-note"><b>Poor fit:</b> a cheap one-off GET, a fact that almost never repeats, or a policy that requires authoritative live source confirmation on every call.</div>
+<div class="trust-note"><b>Outside the target:</b> a cheap one-off GET, a fact that almost never repeats, or a policy that requires authoritative live source confirmation on every call.</div>
 </section>
 
 <section class="section split">
