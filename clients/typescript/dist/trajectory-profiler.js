@@ -32,6 +32,16 @@ function text(value, name) {
 function optionalText(value, name) {
   return value === undefined || value === null ? undefined : text(value, name);
 }
+function identifier(value, name) {
+  const normalized = text(value, name);
+  if (normalized.length > 160 || !/^[A-Za-z0-9][A-Za-z0-9._:@\/-]*$/.test(normalized)) {
+    throw new TypeError(`${name} must be an opaque identifier (1-160 safe ASCII characters)`);
+  }
+  return normalized;
+}
+function optionalIdentifier(value, name) {
+  return value === undefined || value === null ? undefined : identifier(value, name);
+}
 function finiteNonNegative(value, name) {
   const number = Number(value);
   if (!Number.isFinite(number) || number < 0) throw new TypeError(`${name} must be a finite non-negative number`);
@@ -111,7 +121,7 @@ export class ShadowTrajectoryProfiler {
   startTrajectory(input) {
     return this._account(() => {
       if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('trajectory input must be an object');
-      const id = text(input.trajectoryId, 'trajectoryId');
+      const id = identifier(input.trajectoryId, 'trajectoryId');
       if (this._trajectories.has(id)) throw new TypeError(`trajectoryId already exists: ${id}`);
       const sampleType = text(input.sampleType, 'sampleType');
       if (!SAMPLE_TYPES.has(sampleType)) throw new TypeError(`unsupported sampleType: ${sampleType}`);
@@ -119,10 +129,10 @@ export class ShadowTrajectoryProfiler {
       if (baselineDefinition !== 'best_native_stack') throw new TypeError('baselineDefinition must be best_native_stack');
       const trajectory = {
         id,
-        workloadId: optionalText(input.workloadId, 'workloadId'),
+        workloadId: optionalIdentifier(input.workloadId, 'workloadId'),
         sampleType,
         baselineDefinition,
-        costUnitPolicyId: optionalText(input.costUnitPolicyId, 'costUnitPolicyId'),
+        costUnitPolicyId: optionalIdentifier(input.costUnitPolicyId, 'costUnitPolicyId'),
         startedAtMs: finiteNonNegative(input.startedAtMs ?? this._now(), 'startedAtMs'),
         endedAtMs: undefined,
         operations: new Map(),
@@ -140,7 +150,7 @@ export class ShadowTrajectoryProfiler {
       if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('operation input must be an object');
       const trajectory = this._requireTrajectory(input.trajectoryId);
       if (trajectory.endedAtMs !== undefined) throw new TypeError('cannot record operation after trajectory finish');
-      const operationId = text(input.operationId, 'operationId');
+      const operationId = identifier(input.operationId, 'operationId');
       if (trajectory.operations.has(operationId)) throw new TypeError(`operationId already exists: ${operationId}`);
       const kind = text(input.kind, 'kind');
       if (!OPERATION_KINDS.has(kind)) throw new TypeError(`unsupported operation kind: ${kind}`);
@@ -149,7 +159,7 @@ export class ShadowTrajectoryProfiler {
       const work = normalizeWork(input.work ?? {}, 'work');
       const operation = Object.freeze({
         operationId,
-        parentOperationId: optionalText(input.parentOperationId, 'parentOperationId'),
+        parentOperationId: optionalIdentifier(input.parentOperationId, 'parentOperationId'),
         kind,
         coordinateFingerprint: fingerprint(input.coordinateFingerprint, 'coordinateFingerprint'),
         status,
@@ -170,16 +180,16 @@ export class ShadowTrajectoryProfiler {
       if (!input || typeof input !== 'object' || Array.isArray(input)) throw new TypeError('alternative input must be an object');
       const trajectory = this._requireTrajectory(input.trajectoryId);
       if (trajectory.endedAtMs !== undefined) throw new TypeError('cannot record alternative after trajectory finish');
-      const operationId = text(input.operationId, 'operationId');
+      const operationId = identifier(input.operationId, 'operationId');
       const operation = trajectory.operations.get(operationId);
       if (!operation) throw new TypeError(`unknown operationId: ${operationId}`);
-      const alternativeId = text(input.alternativeId, 'alternativeId');
+      const alternativeId = identifier(input.alternativeId, 'alternativeId');
       const key = `${operationId}\u0000${alternativeId}`;
       if (trajectory.alternatives.has(key)) throw new TypeError(`alternative already exists: ${alternativeId}`);
       const tier = text(input.tier, 'tier');
       if (!ALTERNATIVE_TIERS.has(tier)) throw new TypeError(`unsupported alternative tier: ${tier}`);
       if (input.sameAcceptedOutcome !== true) throw new TypeError('sameAcceptedOutcome must be explicitly true');
-      const proofKind = text(input.proofKind, 'proofKind');
+      const proofKind = identifier(input.proofKind, 'proofKind');
       const proofFingerprint = fingerprint(input.proofFingerprint, 'proofFingerprint');
       if (!proofFingerprint) throw new TypeError('proofFingerprint is required');
       const replacementWork = normalizeWork(input.replacementWork ?? {}, 'replacementWork');
@@ -402,7 +412,7 @@ export class ShadowTrajectoryProfiler {
   }
 
   _requireTrajectory(trajectoryId) {
-    const id = text(trajectoryId, 'trajectoryId');
+    const id = identifier(trajectoryId, 'trajectoryId');
     const trajectory = this._trajectories.get(id);
     if (!trajectory) throw new TypeError(`unknown trajectoryId: ${id}`);
     return trajectory;
