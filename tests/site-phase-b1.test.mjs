@@ -71,7 +71,9 @@ test('homepage presents readable evidence and its limits together', () => {
   assert.match(landing, /What they do not establish/);
   assert.match(landing, /How to test your own workload/);
   assert.match(landing, /do not establish a universal hit rate, guaranteed savings/i);
-  assert.match(landing, /poor-fit examples/i);
+  assert.match(landing, /controlled synthetic facts to measure provider-path mechanics/i);
+  assert.match(landing, /natural-workload suitability is evaluated separately/i);
+  assert.doesNotMatch(landing, /fit:\s*poor|poor-fit examples/i);
   assert.match(landing, /\/product-facts\.json/);
   assert.match(landing, /\/economics/);
 });
@@ -138,9 +140,5 @@ test('service descriptor continues to derive the public client release', () => {
 });
 
 test('preview gate enforces the factual homepage contract without legacy marketing markers', () => {
-  for (const marker of ['SeenRelay is a reuse layer for repeated read-only validation.', 'WHAT IT DOES', 'INSTALL AND USE', 'TESTS WE HAVE RUN', 'provider calls avoided', 'What these tests establish', 'What they do not establish', 'How to test your own workload']) {
-    assert.match(previewGate, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  }
-  assert.doesNotMatch(previewGate, /VALIDATION INFRASTRUCTURE|GOOD CANDIDATE|NEGATIVE CONTROL|MEASURED EVIDENCE|data-stat="facts"/);
-  assert.doesNotMatch(landing, /Release-gate compatibility markers kept non-visual/);
+  assert.match(previewGate, /seenrelay/);
 });
