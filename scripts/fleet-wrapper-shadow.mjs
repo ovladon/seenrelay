@@ -264,6 +264,8 @@ export async function runFleetWrapperShadow({
   const coordinate = buildFleetCoordinate();
   const fact = buildFleetFact({ coordinate });
 
+  // A successful counterpart GitHub workflow on the same head/base is a
+  // stronger provider-native result cache. Shared CHECK is not consulted on hits.
   const provider = await measureProviderNativeControl({ role, headSha, baseSha, fetchImpl });
 
   const client = new SeenRelayClient({
@@ -287,6 +289,8 @@ export async function runFleetWrapperShadow({
     }
   }
 
+  // This always runs, even on provider-cache or hypothetical SeenRelay reuse.
+  // The existing validation remains authoritative throughout evidence collection.
   const validationStarted = performance.now();
   const value = await validate();
   const validationMs = Math.max(0, performance.now() - validationStarted);
@@ -302,16 +306,21 @@ export async function runFleetWrapperShadow({
     const started = performance.now();
     try {
       await client.observe(fact, value, {
+        // Constant role identity avoids manufacturing new observer independence
+        // on every workflow run; CI and Client Wrappers remain two first-party roles.
         observerId: `gha-${role}`,
         idempotencyKey: `${process.env.GITHUB_RUN_ID || 'local'}-${process.env.GITHUB_RUN_ATTEMPT || '1'}-${role}`,
         evidenceFingerprint: sha256(`${coordinate}:pass`)
       });
     } catch {
+      // Measurement must never turn a valid project test into a failure.
     } finally {
       observeMs = Math.max(0, performance.now() - started);
     }
   }
 
+  // Provider-native hits are upstream of SeenRelay and therefore do not enter
+  // the protected-call ledger. Their frequency is retained as control evidence.
   const record = protectedCall ? buildRecord({
     checkStatus: check?.status ?? null,
     policyReusable,
