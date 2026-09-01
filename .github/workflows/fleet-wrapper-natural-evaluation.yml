@@ -1,0 +1,98 @@
+name: Fleet Wrapper Natural Evaluation
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+
+      - name: Restore latest successful role ledgers
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p fleet-role-ledgers/ci fleet-role-ledgers/client-wrappers
+
+          restore_role() {
+            workflow="$1"
+            role="$2"
+            destination="$3"
+            found=''
+            while read -r run_id; do
+              [ -n "$run_id" ] || continue
+              if gh run download "$run_id" \
+                --name "fleet-wrapper-shadow-${role}-${run_id}" \
+                --dir "$destination" >/dev/null 2>&1; then
+                found="$run_id"
+                break
+              fi
+            done < <(gh run list --workflow "$workflow" --status success --limit 20 --json databaseId --jq '.[].databaseId' 2>/dev/null || true)
+            if [ -z "$found" ]; then
+              echo "No compatible successful $role fleet artifact found" >&2
+              return 1
+            fi
+            echo "Restored $role fleet ledger from run $found"
+          }
+
+          restore_role 'CI' 'ci' 'fleet-role-ledgers/ci'
+          restore_role 'Client Wrappers' 'client-wrappers' 'fleet-role-ledgers/client-wrappers'
+
+          test -f fleet-role-ledgers/ci/fleet-wrapper-shadow-ci-ledger.json
+          test -f fleet-role-ledgers/client-wrappers/fleet-wrapper-shadow-client-wrappers-ledger.json
+
+      - name: Combine role ledgers offline
+        run: |
+          node scripts/evaluate-fleet-wrapper-ledgers.mjs \
+            fleet-role-ledgers/ci/fleet-wrapper-shadow-ci-ledger.json \
+            fleet-role-ledgers/client-wrappers/fleet-wrapper-shadow-client-wrappers-ledger.json
+
+      - name: Verify combined privacy and admission contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const ledger = JSON.parse(fs.readFileSync('fleet-wrapper-natural-ledger.json', 'utf8'));
+          const summary = JSON.parse(fs.readFileSync('fleet-wrapper-natural-summary.json', 'utf8'));
+          if (ledger.workload_class !== 'fleet_tool_validations' || ledger.cost_unit !== 'github_actions_runner_ms') process.exit(1);
+          if (summary.external_adoption_evidence !== false || summary.cumulative_protected_calls !== ledger.records.length) process.exit(1);
+          for (const value of [ledger, summary]) {
+            if (value.raw_values_retained !== false || value.fact_identity_retained !== false || value.sources_retained !== false || value.timestamps_retained !== false) process.exit(1);
+          }
+          const allowed = new Set([
+            'check_status','policy_reusable','reuse_would_match_validation','observe_after_baseline',
+            'baseline_ms','baseline_cost','check_ms','observe_ms','check_cost','observe_cost'
+          ]);
+          for (const record of ledger.records || []) {
+            if (Object.keys(record).some((key) => !allowed.has(key))) process.exit(1);
+          }
+          NODE
+
+      - name: Upload combined fleet natural-workload evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: fleet-wrapper-natural-evaluation-${{ github.run_id }}
+          path: |
+            fleet-wrapper-natural-ledger.json
+            fleet-wrapper-natural-summary.json
+            fleet-wrapper-natural-benchmark.json
+            fleet-wrapper-natural-evaluation.json
+          if-no-files-found: warn
+          retention-days: 30
