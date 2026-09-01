@@ -104,6 +104,7 @@ export async function checkFact(body: CheckRequest) {
     observer_keys: g.observers,
     cryptographic_observer_keys: g.cryptographic_observers,
     unverified_observer_keys: g.unverified_observers,
+    reuse_independence_buckets: g.reuse_independence_buckets ?? 0,
     ...(g.source_validator ? {
       source_validator: g.source_validator,
       source_validator_assurance: 'observer_supplied_unverified' as const
@@ -120,7 +121,7 @@ export async function checkFact(body: CheckRequest) {
       max_age_seconds: maxAge,
       conflict_window_seconds: cfg.conflictWindowSeconds,
       evidence,
-      caveat: 'Distinct observer keys are signals, not proof of independent real-world actors. Cryptographic keys prove key possession and continuity only.'
+      caveat: 'Distinct observer keys and privacy-salted reuse-independence buckets are signals, not proof of independent real-world actors. Cryptographic keys prove key possession and continuity only.'
     };
   }
 
@@ -140,9 +141,10 @@ export async function checkFact(body: CheckRequest) {
     recent_observer_keys: latest.observers,
     recent_cryptographic_observer_keys: latest.cryptographic_observers,
     recent_unverified_observer_keys: latest.unverified_observers,
+    recent_reuse_independence_buckets: latest.reuse_independence_buckets ?? 0,
     ...sourceValidatorMetadata(latest.source_validator),
     evidence,
-    caveat: 'SeenRelay reports recent observations; it does not assert universal truth. Cryptographic observer proofs establish key possession, not independent-world identity.'
+    caveat: 'SeenRelay reports recent observations; it does not assert universal truth. Observer keys, cryptographic continuity and privacy-salted reuse-independence buckets are signals only, not proof of independent real-world actors.'
   };
 }
 
