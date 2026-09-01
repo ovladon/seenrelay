@@ -92,6 +92,8 @@ export interface AggregateRow {
   observers: number;
   cryptographic_observers: number;
   unverified_observers: number;
+  /** Distinct privacy-salted network buckets represented by leased observations. Anti-farming signal only. */
+  reuse_independence_buckets?: number;
 }
 
 export interface HiveLeaseRow {
