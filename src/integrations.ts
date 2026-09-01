@@ -51,7 +51,7 @@ export function clientsPage(origin: string): string {
 const client = ambientMcpClient(rawMcpClient);
 
 // use client.callTool(...) normally
-console.log(client.seenRelayAmbient.getReport());</pre></div><p>Only after a specific read-only tool is reviewed should <code>seenrelay/mcp-auto</code> be considered for local-first protection. Shared CHECK remains off by default.</p><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a></article>
+console.log(client.seenRelayAmbient.getReport());</pre></div><p>Only after a specific read-only tool is reviewed should <code>seenrelay/mcp-auto</code> be considered for the local-first bind-once path. Shared CHECK remains off by default.</p><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">JavaScript / TypeScript guide →</a></article>
 
     <article class="rv-choice"><header><b>Python MCP</b><span>Ambient / shadow</span></header><p>Python has the same one-wrapper measurement entry point and remains measurement-only.</p><div class="rv-code"><pre>from seenrelay_ambient import ambient_mcp_client
 
@@ -83,15 +83,15 @@ const edge = new SeenRelayZeroState({
 </section>
 
 <section class="rv-shell rv-section" id="connect">
-  <div class="rv-section-head"><div class="rv-eyebrow">CONNECT THE HOSTED PROTOCOL</div><h2>Use CHECK and OBSERVE from the MCP client you already use.</h2><p>This only connects the SeenRelay protocol. It does not instrument an application's existing validation path and does not automatically authorize reuse.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">REMOTE PROTOCOL</div><h2>Connect CHECK and OBSERVE from the MCP client you already use.</h2><p>Remote protocol connection only exposes the SeenRelay protocol to that client. It does not instrument an application's existing validation path and does not automatically authorize reuse.</p></div>
   <div class="rv-choice-grid">
-    <article class="rv-choice"><header><b>Cursor</b><span>One click</span></header><p>Open Cursor's official MCP install flow with the SeenRelay remote endpoint prefilled.</p><div class="rv-actions"><a class="rv-button primary" href="${cursorInstall}">Add SeenRelay to Cursor</a></div><div class="rv-code"><pre>${productionMcp}</pre></div></article>
+    <article class="rv-choice"><header><b>Cursor</b><span>One click</span></header><p>Open Cursor's MCP install flow with the SeenRelay remote endpoint prefilled.</p><div class="rv-actions"><a class="rv-button primary" href="${cursorInstall}">Add SeenRelay to Cursor</a></div><div class="rv-code"><pre>${productionMcp}</pre></div></article>
 
     <article class="rv-choice"><header><b>VS Code / GitHub Copilot</b><span>One click + CLI</span></header><p>Use VS Code's MCP install URL, or the CLI fallback below.</p><div class="rv-actions"><a class="rv-button primary" href="${vscodeInstall}">Install in VS Code</a></div><div class="rv-code"><pre>${esc(vscodeCommand)}</pre></div></article>
 
     <article class="rv-choice"><header><b>Claude Code</b><span>One command</span></header><p>Add the public Streamable HTTP endpoint at user scope.</p><div class="rv-code"><pre>${esc(claudeCommand)}</pre></div><p>No account or SeenRelay API key is currently required.</p></article>
 
-    <article class="rv-choice"><header><b>Other MCP / REST clients</b><span>Open protocol</span></header><p>Any compatible client can connect directly. The hosted domain surface remains exactly CHECK and OBSERVE.</p><div class="rv-code"><pre>MCP Registry  io.github.ovladon/seenrelay
+    <article class="rv-choice"><header><b>Other MCP / REST clients</b><span>Remote protocol</span></header><p>Any compatible client can connect directly. The hosted domain surface remains exactly CHECK and OBSERVE.</p><div class="rv-code"><pre>MCP Registry  io.github.ovladon/seenrelay
 MCP           ${productionMcp}
 REST          https://seenrelay.com/v1/check
 REST          https://seenrelay.com/v1/observe</pre></div><a href="/openapi.json">OpenAPI →</a></article>
