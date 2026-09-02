@@ -89,7 +89,7 @@ test('rejects a push artifact relabeled as natural', () => {
 });
 
 test('requires a root with null parent and exact parent continuity thereafter', () => {
-  const [root] = chain2();
+  const [root, child] = chain2();
   root.benchmark.parent_run_id = '999'; root.summary.parent_run_id = '999'; root.state.parent_run_id = '999'; root.ledger.parent_run_id = '999';
   assert.throws(() => verifyStandardsShadowNaturalLineage([root]), /root natural run/);
   const [root2, child2] = chain2();
