@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { createShadowTrajectoryProfiler } from '../clients/typescript/dist/trajectory-profiler.js';
 
 const WORKLOAD_ID = 'standards-watch-daily-v1';
+const PRELIMINARY_SAMPLE_FLOOR = 100;
 const POLICY_TEXT = 'sequential-critical-path-ms-v1: costUnits equal measured milliseconds only for the reviewed standards shadow path where CHECK completes before authoritative validation begins; never apply to overlapping or nested spans';
 const PREDICTION_TEXT = 'bypass only records with UNKNOWN CHECK, policy_reusable=false, reuse comparison unavailable, and no OBSERVE; preserve authoritative validation unchanged';
 const CAPTURE_TEXT = 'omit the shadow CHECK invocation and execute the existing authoritative source-native validation exactly as before';
@@ -154,6 +155,8 @@ export function evaluateStandardsShadowBypassGate(input, options = {}) {
   const bypassTotalMs = gateAPass ? baselineTotalMs : null;
   const improvementPercent = gateAPass && prospectiveTotalMs > 0 ? (checkTotalMs / prospectiveTotalMs) * 100 : null;
   const gateBPositive = gateAPass && checkTotalMs > 0 && bypassTotalMs < prospectiveTotalMs;
+  const sampleFloorMet = input.records.length >= PRELIMINARY_SAMPLE_FLOOR;
+  const gateBEvidenceReady = gateBPositive && sampleFloorMet;
 
   return Object.freeze({
     schema: 'seenrelay-standards-shadow-bypass-gate-v1',
@@ -181,7 +184,11 @@ export function evaluateStandardsShadowBypassGate(input, options = {}) {
       automatic_behavior_equivalence_proof: false
     }),
     gate_b: Object.freeze({
+      pass: gateBEvidenceReady,
       positive_headroom: gateBPositive,
+      evidence_ready: gateBEvidenceReady,
+      preliminary_sample_floor: PRELIMINARY_SAMPLE_FLOOR,
+      preliminary_sample_floor_met: sampleFloorMet,
       admission_threshold_applied: false,
       baseline_total_ms: baselineTotalMs,
       current_shadow_path_total_ms: prospectiveTotalMs,
@@ -201,9 +208,11 @@ export function evaluateStandardsShadowBypassGate(input, options = {}) {
       shadow_check_bypass_supported_for_this_workload: gateAPass && gateBPositive,
       generalization_authorized: false,
       optimizer_authorized: false,
-      next_step: gateAPass && gateBPositive
-        ? 'TEST_THE_PROFILER_ON_A_SECOND_LEGITIMATE_TRAJECTORY_CLASS'
-        : 'DO_NOT_ADVANCE_THIS_BYPASS_CANDIDATE'
+      next_step: !gateAPass || !gateBPositive
+        ? 'DO_NOT_ADVANCE_THIS_BYPASS_CANDIDATE'
+        : !sampleFloorMet
+          ? 'COLLECT_MORE_NATURAL_SAMPLES_BEFORE_GATE_B_ADMISSION'
+          : 'TEST_THE_PROFILER_ON_A_SECOND_LEGITIMATE_TRAJECTORY_CLASS'
     })
   });
 }
