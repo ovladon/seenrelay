@@ -13,7 +13,8 @@ function rawResult({ records = 4, floor = false } = {}) {
   const items = Array.from({ length: records }, () => ({
     check_status: 'UNKNOWN', policy_reusable: false, reuse_would_match_validation: null,
     observe_after_baseline: false, baseline_ms: 10, baseline_cost: 0,
-    check_ms: 5, observe_ms: 0, check_cost: 0, observe_cost: 0
+    check_ms: 5, observe_ms: 0, check_cost: 0, observe_cost: 0,
+    source_native_conditional_available: false, source_native_conditional_attempted: false
   }));
   return {
     input: { schema_version: 2, workload_id: 'standards-watch-daily-v1', workload_class: 'structured_source_reads', sample_type: 'natural_workload', records: items },
@@ -36,7 +37,7 @@ test('only schedule events are classified as natural workload', () => {
   assert.throws(() => standardsShadowSamplingProvenance({ runEvent: 'push', runId: '4', parentRunId: '1' }), /cannot inherit/);
 });
 
-test('legacy or pre-v2 evidence cannot seed a natural lineage', () => {
+test('legacy or pre-v3 evidence cannot seed a natural lineage', () => {
   const provenance = standardsShadowSamplingProvenance({ runEvent: 'schedule', runId: '1002', parentRunId: '1001' });
   const legacyState = { schema_version: 1, workload_id: 'standards-watch-daily-v1', entries: {} };
   const legacyLedger = { schema_version: 1, workload_id: 'standards-watch-daily-v1', workload_class: 'structured_source_reads', records: [] };
@@ -103,16 +104,16 @@ test('valid schedule lineage reaches the engine and preserves parent provenance'
   assert.equal(result.input.sample_type, 'natural_workload');
   assert.equal(result.ledger.parent_run_id, '1001');
   assert.equal(result.ledger.run_id, '1002');
-  assert.equal(result.ledger.collection_epoch, 'schedule-only-v2');
+  assert.equal(result.ledger.collection_epoch, 'schedule-only-v3');
 });
 
-test('workflow filters parent lookup to schedule and separates v2 artifacts', async () => {
+test('workflow filters parent lookup to schedule and separates v3 artifacts', async () => {
   const workflow = await fs.readFile(new URL('../.github/workflows/standards-shadow-benchmark.yml', import.meta.url), 'utf8');
   assert.match(workflow, /--event schedule/);
   assert.match(workflow, /scripts\/standards-shadow-collector-v2\.mjs/);
-  assert.match(workflow, /standards-shadow-natural-v2-\$candidate/);
-  assert.match(workflow, /standards-shadow-natural-v2-\$\{\{ github\.run_id \}\}/);
-  assert.match(workflow, /standards-shadow-commissioning-v2-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /standards-shadow-natural-v3-\$candidate/);
+  assert.match(workflow, /standards-shadow-natural-v3-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /standards-shadow-commissioning-v3-\$\{\{ github\.run_id \}\}/);
   assert.match(workflow, /if: github\.event_name == 'schedule'/);
   assert.match(workflow, /if: github\.event_name != 'schedule'/);
   assert.doesNotMatch(workflow, /--status success --limit 1 --json databaseId/);
