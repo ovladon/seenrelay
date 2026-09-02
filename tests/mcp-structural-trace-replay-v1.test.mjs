@@ -92,6 +92,7 @@ test('result is privacy-minimized and structural reduction cannot authorize admi
   const out=replayMcpStructuralTrace(trace);
   const text=JSON.stringify(out);
   assert.equal(text.includes(secret),false);
+  assert.equal('candidate_key_fingerprints' in out,false);
   assert.match(POLICY_FINGERPRINT,/^sha256:[0-9a-f]{64}$/);
   assert.equal(out.decision_overhead_scalarized,false);
   assert.equal(out.structural_reduction_descriptive_only,true);
