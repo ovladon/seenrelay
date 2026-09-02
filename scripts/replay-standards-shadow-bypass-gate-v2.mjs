@@ -73,6 +73,9 @@ function assertRecordContract(record, index) {
   nonNegative(record.baseline_cost, `records[${index}].baseline_cost`);
   nonNegative(record.check_cost, `records[${index}].check_cost`);
   nonNegative(record.observe_cost, `records[${index}].observe_cost`);
+  if (record.baseline_cost !== 0 || record.check_cost !== 0 || record.observe_cost !== 0) {
+    throw new TypeError(`records[${index}] monetary cost fields must be zero for the milliseconds-only Gate B policy`);
+  }
 }
 function assertBestNativeControlsMeasured(input) {
   const controls = input?.controls;
