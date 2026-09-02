@@ -18,7 +18,7 @@ function rawResult() {
 
 function assertProvenance(document, { sampleType, runEvent, runId, parentRunId }) {
   assert.equal(document.provenance_schema_version, 2);
-  assert.equal(document.collection_epoch, 'schedule-only-v2');
+  assert.equal(document.collection_epoch, 'schedule-only-v3');
   assert.equal(document.sample_type, sampleType);
   assert.equal(document.run_event, runEvent);
   assert.equal(document.run_id, runId);

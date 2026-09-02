@@ -13,7 +13,8 @@ const MAX_AGE_SECONDS = 6 * 60 * 60;
 const MAX_LEDGER_RECORDS = 1000;
 const RECORD_KEYS = Object.freeze([
   'check_status', 'policy_reusable', 'reuse_would_match_validation', 'observe_after_baseline',
-  'baseline_ms', 'baseline_cost', 'check_ms', 'observe_ms', 'check_cost', 'observe_cost'
+  'baseline_ms', 'baseline_cost', 'check_ms', 'observe_ms', 'check_cost', 'observe_cost',
+  'source_native_conditional_available', 'source_native_conditional_attempted'
 ]);
 
 function nowMs() {
@@ -221,6 +222,12 @@ function sanitizedRecord(record) {
   if (keys.length !== RECORD_KEYS.length || !RECORD_KEYS.every((key) => keys.includes(key))) {
     throw new TypeError('ledger record contains non-sanitized fields');
   }
+  if (typeof record.source_native_conditional_available !== 'boolean' || typeof record.source_native_conditional_attempted !== 'boolean') {
+    throw new TypeError('ledger record source-native conditional evidence must be boolean');
+  }
+  if (record.source_native_conditional_attempted !== record.source_native_conditional_available) {
+    throw new TypeError('ledger record must measure source-native conditional validation whenever it is available');
+  }
   return Object.fromEntries(RECORD_KEYS.map((key) => [key, record[key]]));
 }
 
@@ -272,8 +279,10 @@ export async function runStandardsShadowBenchmark({
   const priorEntries = validPriorState(previousState);
   const nextEntries = {};
   let validatorAvailabilityCount = 0;
+  let conditionalAvailableCount = 0;
   let conditionalAttemptCount = 0;
   let conditional304Count = 0;
+  const baselineControlEvidence = [];
 
   for (const definition of definitions) {
     await proof.guard({
@@ -283,8 +292,14 @@ export async function runStandardsShadowBenchmark({
       validate: async () => {
         const prior = priorEntries[definition.stateKey];
         const conditional = conditionalHeaders(prior);
-        const attempted = Object.keys(conditional).length > 0;
+        const available = Object.keys(conditional).length > 0;
+        const attempted = available;
+        if (available) conditionalAvailableCount += 1;
         if (attempted) conditionalAttemptCount += 1;
+        baselineControlEvidence.push(Object.freeze({
+          source_native_conditional_available: available,
+          source_native_conditional_attempted: attempted
+        }));
 
         const response = await fetchImpl(definition.fact.source, {
           headers: { ...definition.baseHeaders, ...conditional },
@@ -322,11 +337,16 @@ export async function runStandardsShadowBenchmark({
   }
 
   const priorRecords = priorLedgerRecords(previousLedger);
+  const priorConditionalAvailable = priorCounter(previousLedger, 'conditional_available_calls');
+  const priorConditionalAttempts = priorCounter(previousLedger, 'conditional_attempts');
+  if (priorConditionalAvailable !== priorConditionalAttempts) {
+    throw new TypeError('previous ledger source-native conditional availability/attempt counters disagree');
+  }
   const currentControls = {
     local_cache: { available: false, measured: false },
     source_native_conditional: {
-      available: validatorAvailabilityCount > 0 || priorCounter(previousLedger, 'validator_available_calls') > 0,
-      measured: conditionalAttemptCount > 0 || priorCounter(previousLedger, 'conditional_attempts') > 0
+      available: conditionalAvailableCount > 0 || priorConditionalAvailable > 0,
+      measured: conditionalAttemptCount > 0 || priorConditionalAttempts > 0
     },
     provider_native_cache: { available: false, measured: false }
   };
@@ -335,16 +355,27 @@ export async function runStandardsShadowBenchmark({
     controls: currentControls,
     observeOffCriticalPath: true
   });
-  const records = [...priorRecords, ...currentInput.records.map(sanitizedRecord)].slice(-MAX_LEDGER_RECORDS);
+  if (baselineControlEvidence.length !== currentInput.records.length) {
+    throw new Error('standards shadow baseline-control evidence count must match benchmark records');
+  }
+  const currentRecords = currentInput.records.map((record, index) => sanitizedRecord({
+    ...record,
+    ...baselineControlEvidence[index]
+  }));
+  const records = [...priorRecords, ...currentRecords].slice(-MAX_LEDGER_RECORDS);
   const controlEvidence = {
     validator_available_calls: priorCounter(previousLedger, 'validator_available_calls') + validatorAvailabilityCount,
-    conditional_attempts: priorCounter(previousLedger, 'conditional_attempts') + conditionalAttemptCount,
+    conditional_available_calls: priorConditionalAvailable + conditionalAvailableCount,
+    conditional_attempts: priorConditionalAttempts + conditionalAttemptCount,
     conditional_304_confirmations: priorCounter(previousLedger, 'conditional_304_confirmations') + conditional304Count
   };
+  if (controlEvidence.conditional_available_calls !== controlEvidence.conditional_attempts) {
+    throw new Error('standards shadow source-native conditional availability/attempt counters must match');
+  }
   const cumulativeControls = {
     local_cache: { available: false, measured: false },
     source_native_conditional: {
-      available: controlEvidence.validator_available_calls > 0,
+      available: controlEvidence.conditional_available_calls > 0,
       measured: controlEvidence.conditional_attempts > 0
     },
     provider_native_cache: { available: false, measured: false }
@@ -397,6 +428,7 @@ export async function runStandardsShadowBenchmark({
     external_adoption_evidence: false,
     source_count: definitions.length,
     source_native_validator_available_count: validatorAvailabilityCount,
+    source_native_conditional_available_count: conditionalAvailableCount,
     source_native_conditional_attempt_count: conditionalAttemptCount,
     source_native_conditional_304_count: conditional304Count,
     observe_requests_sent: client.getTelemetry().observeNetworkRequests,

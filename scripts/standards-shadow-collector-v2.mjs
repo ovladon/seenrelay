@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 
 import { runStandardsShadowBenchmark } from './standards-shadow-benchmark.mjs';
 
-export const STANDARDS_SHADOW_COLLECTION_EPOCH = 'schedule-only-v2';
+export const STANDARDS_SHADOW_COLLECTION_EPOCH = 'schedule-only-v3';
 export const STANDARDS_SHADOW_NATURAL_SAMPLE = 'natural_workload';
 export const STANDARDS_SHADOW_COMMISSIONING_SAMPLE = 'commissioning';
 

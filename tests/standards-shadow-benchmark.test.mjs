@@ -42,14 +42,16 @@ function assertSanitizedRecords(records) {
     'observe_cost',
     'observe_ms',
     'policy_reusable',
-    'reuse_would_match_validation'
+    'reuse_would_match_validation',
+    'source_native_conditional_available',
+    'source_native_conditional_attempted'
   ].sort();
   for (const record of records) {
     assert.deepEqual(Object.keys(record).sort(), allowedRecordKeys);
   }
 }
 
-test('first natural standards run is CHECK-only, sanitized, and incomplete until conditional validation is measured', async () => {
+test('first natural standards run uses the best currently available native path and records conditional availability per call', async () => {
   const calls = [];
   const fetchImpl = async (url, options = {}) => {
     const target = String(url);
@@ -73,17 +75,22 @@ test('first natural standards run is CHECK-only, sanitized, and incomplete until
   assert.equal(summary.workload_class, 'structured_source_reads');
   assert.equal(summary.source_count, 4);
   assert.equal(summary.source_native_validator_available_count, 4);
+  assert.equal(summary.source_native_conditional_available_count, 0);
   assert.equal(summary.source_native_conditional_attempt_count, 0);
   assert.equal(summary.cumulative_benchmark_records, 4);
   assert.equal(summary.preliminary_sample_floor_met, false);
-  assert.equal(summary.evaluation_state, 'incomplete');
-  assert.equal(summary.evaluation_reason, 'source_native_conditional_unmeasured');
-  assert.equal(evaluation, null);
+  assert.equal(summary.evaluation_state, 'complete');
+  assert.equal(summary.evaluation_reason, null);
+  assert.ok(evaluation);
+  assert.equal(input.controls.source_native_conditional.available, false);
+  assert.equal(input.controls.source_native_conditional.measured, false);
   assert.equal(input.sample_type, 'natural_workload');
   assert.equal(input.workload_class, 'structured_source_reads');
   assert.equal(input.baseline_definition, 'best_existing_non_shared_path');
   assert.equal(input.records.length, 4);
   assert.ok(input.records.every((record) => record.check_status === 'UNKNOWN'));
+  assert.ok(input.records.every((record) => record.source_native_conditional_available === false));
+  assert.ok(input.records.every((record) => record.source_native_conditional_attempted === false));
   assertSanitizedRecords(input.records);
 
   assert.equal(state.raw_values_retained, false);
@@ -136,6 +143,7 @@ test('next natural run uses retained source validators, measures 304 baseline, a
   });
 
   assert.equal(conditionalCalls.length, 4);
+  assert.equal(second.summary.source_native_conditional_available_count, 4);
   assert.equal(second.summary.source_native_conditional_attempt_count, 4);
   assert.equal(second.summary.source_native_conditional_304_count, 4);
   assert.equal(second.summary.cumulative_benchmark_records, 8);
@@ -143,7 +151,10 @@ test('next natural run uses retained source validators, measures 304 baseline, a
   assert.equal(second.input.controls.source_native_conditional.available, true);
   assert.equal(second.input.controls.source_native_conditional.measured, true);
   assert.equal(second.input.records.length, 8);
+  assert.ok(second.input.records.slice(0, 4).every((record) => record.source_native_conditional_available === false && record.source_native_conditional_attempted === false));
+  assert.ok(second.input.records.slice(4).every((record) => record.source_native_conditional_available === true && record.source_native_conditional_attempted === true));
   assertSanitizedRecords(second.input.records);
+  assert.equal(second.ledger.control_evidence.conditional_available_calls, 4);
   assert.equal(second.ledger.control_evidence.conditional_attempts, 4);
   assert.equal(second.ledger.control_evidence.conditional_304_confirmations, 4);
   assert.equal(second.evaluation.decision.automatic_reuse_enabled_by_evaluator, false);
@@ -171,6 +182,56 @@ test('standards shadow benchmark can reach a conservative negative verdict when 
   assert.equal(evaluation.cost.outcome, 'equal');
   assert.equal(evaluation.decision.beats_baseline_on_both, false);
   assert.equal(evaluation.decision.automatic_reuse_enabled_by_evaluator, false);
+});
+
+test('collector rejects prior control counters that claim an available native conditional was not measured', async () => {
+  const fetchImpl = async (url) => {
+    const target = String(url);
+    if (target === 'https://relay.invalid/v1/check') return response({ status: 'UNKNOWN' });
+    return response(sourceBody(target));
+  };
+  await assert.rejects(
+    runStandardsShadowBenchmark({
+      fetchImpl,
+      origin: 'https://relay.invalid',
+      standardsSource,
+      previousLedger: {
+        workload_id: 'standards-watch-daily-v1',
+        workload_class: 'structured_source_reads',
+        records: [],
+        control_evidence: { conditional_available_calls: 1, conditional_attempts: 0 }
+      }
+    }),
+    /availability\/attempt counters disagree/
+  );
+});
+
+test('collector rejects a prior v3 record where an available native conditional was not measured', async () => {
+  const fetchImpl = async (url) => {
+    const target = String(url);
+    if (target === 'https://relay.invalid/v1/check') return response({ status: 'UNKNOWN' });
+    return response(sourceBody(target));
+  };
+
+  await assert.rejects(
+    runStandardsShadowBenchmark({
+      fetchImpl,
+      origin: 'https://relay.invalid',
+      standardsSource,
+      previousLedger: {
+        workload_id: 'standards-watch-daily-v1',
+        workload_class: 'structured_source_reads',
+        records: [{
+          check_status: 'UNKNOWN', policy_reusable: false, reuse_would_match_validation: null,
+          observe_after_baseline: false, baseline_ms: 10, baseline_cost: 0,
+          check_ms: 5, observe_ms: 0, check_cost: 0, observe_cost: 0,
+          source_native_conditional_available: true,
+          source_native_conditional_attempted: false
+        }]
+      }
+    }),
+    /must measure source-native conditional validation whenever it is available/
+  );
 });
 
 test('collector rejects a prior ledger containing non-sanitized record fields', async () => {
