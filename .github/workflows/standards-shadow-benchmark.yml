@@ -49,7 +49,7 @@ jobs:
             [ "$candidate" != "$GITHUB_RUN_ID" ] || continue
             rm -rf previous-standards-shadow/*
             if gh run download "$candidate" \
-              --name "standards-shadow-natural-v2-$candidate" \
+              --name "standards-shadow-natural-v3-$candidate" \
               --dir previous-standards-shadow >/dev/null 2>&1; then
               if [ -f previous-standards-shadow/standards-shadow-ledger.json ] && \
                  [ -f previous-standards-shadow/standards-shadow-state.json ]; then
@@ -69,7 +69,7 @@ jobs:
             echo "Restored schedule-only natural evidence from run $parent_run"
           else
             rm -rf previous-standards-shadow/*
-            echo 'No schedule-only v2 parent found; starting a new natural collection epoch.'
+            echo 'No schedule-only v3 parent found; starting a new natural collection epoch.'
           fi
 
       - name: Run read-only workload measurement
@@ -100,9 +100,9 @@ jobs:
           if (summary.first_party !== true || summary.external_adoption_evidence !== false) process.exit(1);
           if (summary.observe_requests_sent !== 0) process.exit(1);
           if (input.sample_type !== expectedSampleType || input.workload_class !== 'structured_source_reads') process.exit(1);
-          for (const doc of [summary, ledger, state]) {
+          for (const doc of [input, summary, ledger, state]) {
             if (doc.provenance_schema_version !== 2) process.exit(1);
-            if (doc.collection_epoch !== 'schedule-only-v2') process.exit(1);
+            if (doc.collection_epoch !== 'schedule-only-v3') process.exit(1);
             if (doc.sample_type !== expectedSampleType) process.exit(1);
             if (doc.run_event !== process.env.GITHUB_EVENT_NAME) process.exit(1);
             if (doc.run_id !== process.env.GITHUB_RUN_ID) process.exit(1);
@@ -118,15 +118,21 @@ jobs:
             if (summary.preliminary_sample_floor_met !== false) process.exit(1);
             if (summary.evaluation_state !== 'commissioning' || summary.evaluation_reason !== 'not_natural_workload') process.exit(1);
           }
+          if (summary.source_native_conditional_available_count !== summary.source_native_conditional_attempt_count) process.exit(1);
+          if (ledger.control_evidence?.conditional_available_calls !== ledger.control_evidence?.conditional_attempts) process.exit(1);
           if (ledger.raw_values_retained !== false || ledger.fact_identity_retained !== false || ledger.sources_retained !== false || ledger.timestamps_retained !== false) process.exit(1);
           if (state.raw_values_retained !== false || state.sources_retained !== false) process.exit(1);
           const allowed = new Set([
             'check_status','policy_reusable','reuse_would_match_validation','observe_after_baseline',
-            'baseline_ms','baseline_cost','check_ms','observe_ms','check_cost','observe_cost'
+            'baseline_ms','baseline_cost','check_ms','observe_ms','check_cost','observe_cost',
+            'source_native_conditional_available','source_native_conditional_attempted'
           ]);
           for (const records of [input.records || [], ledger.records || []]) {
             for (const record of records) {
               for (const key of Object.keys(record)) if (!allowed.has(key)) process.exit(1);
+              if (typeof record.source_native_conditional_available !== 'boolean') process.exit(1);
+              if (typeof record.source_native_conditional_attempted !== 'boolean') process.exit(1);
+              if (record.source_native_conditional_attempted !== record.source_native_conditional_available) process.exit(1);
             }
           }
           for (const entry of Object.values(state.entries || {})) {
@@ -139,7 +145,7 @@ jobs:
         if: github.event_name == 'schedule'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: standards-shadow-natural-v2-${{ github.run_id }}
+          name: standards-shadow-natural-v3-${{ github.run_id }}
           path: |
             standards-shadow-benchmark.json
             standards-shadow-summary.json
@@ -153,7 +159,7 @@ jobs:
         if: github.event_name != 'schedule'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: standards-shadow-commissioning-v2-${{ github.run_id }}
+          name: standards-shadow-commissioning-v3-${{ github.run_id }}
           path: |
             standards-shadow-benchmark.json
             standards-shadow-summary.json
