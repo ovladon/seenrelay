@@ -1,0 +1,55 @@
+{
+  "schema": "seenrelay-neutral-task-admission-v1",
+  "frozen_at": "2026-09-03",
+  "frozen_before_headroom_measurement": true,
+  "primary_outcome": "work_per_correct_completion",
+  "same_replay_requirements": [
+    "exact_attempt_coordinate_set",
+    "exact_task_coordinate_per_attempt",
+    "exact_implementation_coordinate_per_attempt",
+    "exact_runtime_coordinate_per_attempt",
+    "accepted_outcome_unchanged_per_attempt",
+    "candidate_work_includes_decision_overhead",
+    "counterfactual_same_outcome_proof_fingerprint",
+    "decision_policy_fingerprint"
+  ],
+  "sample_floors": {
+    "mcp-use-evals-v2": {
+      "distinct_tasks": 9,
+      "minimum_attempts_per_task": 3,
+      "minimum_eligible_attempts": 27,
+      "selection": "all upstream scored tasks in the frozen baseline batch"
+    },
+    "agentarena-coding-v1": {
+      "distinct_tasks": 10,
+      "minimum_attempts_per_task": 3,
+      "minimum_eligible_attempts": 30,
+      "selection": "all 10 official core task packs at the frozen AgentArena revision"
+    },
+    "browsergym-webarena-verified-v1": {
+      "distinct_tasks": 10,
+      "minimum_attempts_per_task": 3,
+      "minimum_eligible_attempts": 30,
+      "selection": "sort runnable frozen WebArenaVerified task ids by sha256('seenrelay-browser-cohort-v1:' + task_id) ascending and take the first 10 before any headroom run"
+    }
+  },
+  "vector_admission": {
+    "candidate_minimum_improvement_percent": 30,
+    "strong_signal_minimum_improvement_percent": 50,
+    "maximum_allowed_regression_percent_on_any_other_fully_observed_metric": 5,
+    "unknown_metrics_are_not_zero": true,
+    "arbitrary_cross_unit_scalarization_forbidden": true
+  },
+  "economic_evidence": {
+    "proven_only_with_complete_monetary_metric_or_explicit_reproducible_scalar_cost_policy": true,
+    "vector_improvement_alone_is_not_an_economic_claim": true
+  },
+  "program_admission": {
+    "attention_microkernel_research_prototype_candidate_requires": "vector candidate in at least two independent workload classes",
+    "active_optimizer_authorized": false,
+    "production_change_authorized": false,
+    "generalization_authorized": false,
+    "minimum_independent_vector_candidate_classes": 2,
+    "shared_decision_policy_fingerprint_required": true
+  }
+}
