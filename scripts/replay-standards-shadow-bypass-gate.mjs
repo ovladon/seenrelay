@@ -5,6 +5,9 @@ import { createShadowTrajectoryProfiler } from '../clients/typescript/dist/traje
 
 const WORKLOAD_ID = 'standards-watch-daily-v1';
 const PRELIMINARY_SAMPLE_FLOOR = 100;
+const PRIVATE255_MARGINAL_HEADROOM_PERCENT = 20;
+const PRIVATE255_ACTIVE_PROTOTYPE_HEADROOM_PERCENT = 30;
+const PRIVATE255_COMMERCIAL_NET_SAVINGS_PERCENT = 50;
 const POLICY_TEXT = 'sequential-critical-path-ms-v1: costUnits equal measured milliseconds only for the reviewed standards shadow path where CHECK completes before authoritative validation begins; never apply to overlapping or nested spans';
 const PREDICTION_TEXT = 'bypass only records with UNKNOWN CHECK, policy_reusable=false, reuse comparison unavailable, and no OBSERVE; preserve authoritative validation unchanged';
 const CAPTURE_TEXT = 'omit the shadow CHECK invocation and execute the existing authoritative source-native validation exactly as before';
@@ -156,7 +159,14 @@ export function evaluateStandardsShadowBypassGate(input, options = {}) {
   const improvementPercent = gateAPass && prospectiveTotalMs > 0 ? (checkTotalMs / prospectiveTotalMs) * 100 : null;
   const gateBPositive = gateAPass && checkTotalMs > 0 && bypassTotalMs < prospectiveTotalMs;
   const sampleFloorMet = input.records.length >= PRELIMINARY_SAMPLE_FLOOR;
-  const gateBEvidenceReady = gateBPositive && sampleFloorMet;
+  const aboveMarginalFloor = gateBPositive && improvementPercent >= PRIVATE255_MARGINAL_HEADROOM_PERCENT;
+  const activePrototypeCandidate = gateBPositive && improvementPercent >= PRIVATE255_ACTIVE_PROTOTYPE_HEADROOM_PERCENT;
+  const workloadEvidenceReady = sampleFloorMet && activePrototypeCandidate;
+  const marginalKillSignal = sampleFloorMet && gateBPositive && improvementPercent < PRIVATE255_MARGINAL_HEADROOM_PERCENT;
+  const headroomBand = !gateBPositive ? 'no_positive_headroom'
+    : improvementPercent < PRIVATE255_MARGINAL_HEADROOM_PERCENT ? 'marginal_below_private255_floor'
+      : improvementPercent < PRIVATE255_ACTIVE_PROTOTYPE_HEADROOM_PERCENT ? 'material_below_active_prototype_threshold'
+        : 'active_prototype_candidate_band';
 
   return Object.freeze({
     schema: 'seenrelay-standards-shadow-bypass-gate-v1',
@@ -184,18 +194,27 @@ export function evaluateStandardsShadowBypassGate(input, options = {}) {
       automatic_behavior_equivalence_proof: false
     }),
     gate_b: Object.freeze({
-      pass: gateBEvidenceReady,
       positive_headroom: gateBPositive,
-      evidence_ready: gateBEvidenceReady,
+      workload_evidence_ready: workloadEvidenceReady,
+      global_gate_pass: false,
       preliminary_sample_floor: PRELIMINARY_SAMPLE_FLOOR,
       preliminary_sample_floor_met: sampleFloorMet,
-      admission_threshold_applied: false,
+      private255_marginal_headroom_floor_percent: PRIVATE255_MARGINAL_HEADROOM_PERCENT,
+      private255_active_prototype_headroom_percent: PRIVATE255_ACTIVE_PROTOTYPE_HEADROOM_PERCENT,
+      private255_commercial_net_savings_reference_percent: PRIVATE255_COMMERCIAL_NET_SAVINGS_PERCENT,
+      above_marginal_floor: aboveMarginalFloor,
+      active_prototype_candidate_for_this_workload: sampleFloorMet && activePrototypeCandidate,
+      marginal_kill_signal_for_this_workload: marginalKillSignal,
+      headroom_band: headroomBand,
+      cross_workload_confirmation_required: true,
+      commercial_net_savings_evaluable: false,
+      commercially_compelling_proven: false,
       baseline_total_ms: baselineTotalMs,
       current_shadow_path_total_ms: prospectiveTotalMs,
       bypass_total_ms: bypassTotalMs,
       measured_saved_ms: savedMs,
       measured_improvement_percent: improvementPercent,
-      criterion: 'under an externally reviewed sequentiality proof, bypass has positive measured critical-path headroom; no product threshold is inferred',
+      criterion: 'PRIVATE255: below 20% is marginal, at least 30% across multiple useful workloads can justify a local prototype, and roughly 50% net savings against the best native stack is the commercial reference',
       measurement_scope: 'first_party_shadow_instrumentation_path_only',
       conditional_on_external_sequentiality_proof: true,
       external_sequentiality_proof_required: true
@@ -208,11 +227,17 @@ export function evaluateStandardsShadowBypassGate(input, options = {}) {
       shadow_check_bypass_supported_for_this_workload: gateAPass && gateBPositive,
       generalization_authorized: false,
       optimizer_authorized: false,
+      attention_microkernel_prototype_authorized: false,
+      commercially_compelling_proven: false,
       next_step: !gateAPass || !gateBPositive
         ? 'DO_NOT_ADVANCE_THIS_BYPASS_CANDIDATE'
         : !sampleFloorMet
           ? 'COLLECT_MORE_NATURAL_SAMPLES_BEFORE_GATE_B_ADMISSION'
-          : 'TEST_THE_PROFILER_ON_A_SECOND_LEGITIMATE_TRAJECTORY_CLASS'
+          : improvementPercent < PRIVATE255_MARGINAL_HEADROOM_PERCENT
+            ? 'DO_NOT_BROADEN_FROM_THIS_WORKLOAD'
+            : improvementPercent < PRIVATE255_ACTIVE_PROTOTYPE_HEADROOM_PERCENT
+              ? 'KEEP_AS_MATERIAL_HEADROOM_BUT_DO_NOT_BUILD_ACTIVE_PROTOTYPE'
+              : 'TEST_A_SECOND_USEFUL_WORKLOAD_BEFORE_ACTIVE_PROTOTYPE'
     })
   });
 }
