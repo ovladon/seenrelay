@@ -20,8 +20,8 @@ jobs:
   npm-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Inspect npm package contents
@@ -79,7 +79,7 @@ jobs:
           ) process.exit(1);
           NODE
       - name: Upload npm validation artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: seenrelay-npm-package
           path: clients/typescript/${{ steps.npm-pack.outputs.tarball }}
@@ -88,8 +88,8 @@ jobs:
   pypi-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
       - name: Install package build tooling
@@ -120,7 +120,7 @@ jobs:
           assert callable(mcp_tool_coordinate) and callable(openapi_operation_coordinate)
           PY
       - name: Upload PyPI validation artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: seenrelay-pypi-package
           path: clients/python/dist/*
