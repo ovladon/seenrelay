@@ -230,11 +230,12 @@ export class ShadowTrajectoryProfiler {
     const startedAtMs = safeNow();
     let result;
     let authoritativeError;
+    let authoritativeFailed = false;
     try { result = await fn(); }
-    catch (error) { authoritativeError = error; }
+    catch (error) { authoritativeFailed = true; authoritativeError = error; }
     const endedAtMs = safeNow();
 
-    if (authoritativeError !== undefined) {
+    if (authoritativeFailed) {
       try {
         this.recordOperation({ ...input, status: 'error', startedAtMs, endedAtMs, work: { ...(input?.work ?? {}) } });
       } catch { if (trajectory) trajectory.measurementFailures += 1; }
