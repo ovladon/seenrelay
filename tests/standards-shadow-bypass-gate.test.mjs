@@ -28,6 +28,10 @@ test('passes Gate A and reports measured Gate B headroom for structurally bypass
   const out = evaluateStandardsShadowBypassGate(input([record(), record({baseline_ms:200,check_ms:100})]), opts);
   assert.equal(out.gate_a.pass, true);
   assert.equal(out.gate_b.positive_headroom, true);
+  assert.equal(out.gate_b.pass, false);
+  assert.equal(out.gate_b.evidence_ready, false);
+  assert.equal(out.gate_b.preliminary_sample_floor, 100);
+  assert.equal(out.gate_b.preliminary_sample_floor_met, false);
   assert.equal(out.gate_b.baseline_total_ms, 300);
   assert.equal(out.gate_b.current_shadow_path_total_ms, 450);
   assert.equal(out.gate_b.measured_saved_ms, 150);
@@ -54,6 +58,15 @@ test('does not invent an admission threshold from positive headroom', () => {
   assert.equal(out.gate_a.pass, true);
   assert.equal(out.gate_b.positive_headroom, true);
   assert.equal(out.gate_b.admission_threshold_applied, false);
+});
+
+test('Gate B admission requires the existing preliminary 100-record sample floor', () => {
+  const out = evaluateStandardsShadowBypassGate(input(Array.from({ length: 100 }, () => record())), opts);
+  assert.equal(out.gate_a.pass, true);
+  assert.equal(out.gate_b.positive_headroom, true);
+  assert.equal(out.gate_b.preliminary_sample_floor_met, true);
+  assert.equal(out.gate_b.evidence_ready, true);
+  assert.equal(out.gate_b.pass, true);
 });
 
 test('requires evidence fingerprints for benchmark and implementation', () => {
