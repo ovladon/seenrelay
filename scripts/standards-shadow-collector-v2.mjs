@@ -82,7 +82,7 @@ function withProvenance(document, provenance, extra = {}) {
 export function annotateStandardsShadowResult(result, provenance) {
   if (!result || typeof result !== 'object') throw new TypeError('benchmark result is required');
   const natural = provenance.sampleType === STANDARDS_SHADOW_NATURAL_SAMPLE;
-  const input = Object.freeze({ ...result.input, sample_type: provenance.sampleType });
+  const input = withProvenance(result.input, provenance);
   const state = withProvenance(result.state, provenance);
   const ledger = withProvenance(result.ledger, provenance, { natural_schedule: natural ? 'daily' : null });
   const summary = withProvenance(result.summary, provenance, {
