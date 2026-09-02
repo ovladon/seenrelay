@@ -28,8 +28,8 @@ test('passes Gate A and reports measured Gate B headroom for structurally bypass
   const out = evaluateStandardsShadowBypassGate(input([record(), record({baseline_ms:200,check_ms:100})]), opts);
   assert.equal(out.gate_a.pass, true);
   assert.equal(out.gate_b.positive_headroom, true);
-  assert.equal(out.gate_b.pass, false);
-  assert.equal(out.gate_b.evidence_ready, false);
+  assert.equal(out.gate_b.workload_evidence_ready, false);
+  assert.equal(out.gate_b.global_gate_pass, false);
   assert.equal(out.gate_b.preliminary_sample_floor, 100);
   assert.equal(out.gate_b.preliminary_sample_floor_met, false);
   assert.equal(out.gate_b.baseline_total_ms, 300);
@@ -40,6 +40,9 @@ test('passes Gate A and reports measured Gate B headroom for structurally bypass
   assert.equal(out.interpretation.behavior_equivalence_inferred_by_harness, false);
   assert.equal(out.gate_a.automatic_behavior_equivalence_proof, false);
   assert.equal(out.gate_b.measurement_scope, 'first_party_shadow_instrumentation_path_only');
+  assert.equal(out.gate_b.headroom_band, 'active_prototype_candidate_band');
+  assert.equal(out.gate_b.commercial_net_savings_evaluable, false);
+  assert.equal(out.gate_b.commercially_compelling_proven, false);
   assert.equal(out.interpretation.generalization_authorized, false);
   assert.equal(out.interpretation.optimizer_authorized, false);
   assert.equal(out.trajectories[0].selected_substitution.alternative_id, 'bypass-shadow-check');
@@ -53,20 +56,44 @@ test('fails closed when any record was reusable or otherwise could have influenc
   assert.equal(out.interpretation.shadow_check_bypass_supported_for_this_workload, false);
 });
 
-test('does not invent an admission threshold from positive headroom', () => {
+test('applies the pre-declared PRIVATE255 headroom bands rather than treating any positive headroom as admission', () => {
   const out = evaluateStandardsShadowBypassGate(input([record({check_ms:0.001})]), opts);
   assert.equal(out.gate_a.pass, true);
   assert.equal(out.gate_b.positive_headroom, true);
-  assert.equal(out.gate_b.admission_threshold_applied, false);
+  assert.equal(out.gate_b.above_marginal_floor, false);
+  assert.equal(out.gate_b.headroom_band, 'marginal_below_private255_floor');
+  assert.equal(out.gate_b.private255_marginal_headroom_floor_percent, 20);
+  assert.equal(out.gate_b.private255_active_prototype_headroom_percent, 30);
+  assert.equal(out.gate_b.private255_commercial_net_savings_reference_percent, 50);
 });
 
-test('Gate B admission requires the existing preliminary 100-record sample floor', () => {
+test('100 records plus at least 30% headroom qualify only this workload, not the cross-workload Gate B', () => {
   const out = evaluateStandardsShadowBypassGate(input(Array.from({ length: 100 }, () => record())), opts);
   assert.equal(out.gate_a.pass, true);
   assert.equal(out.gate_b.positive_headroom, true);
   assert.equal(out.gate_b.preliminary_sample_floor_met, true);
-  assert.equal(out.gate_b.evidence_ready, true);
-  assert.equal(out.gate_b.pass, true);
+  assert.equal(out.gate_b.workload_evidence_ready, true);
+  assert.equal(out.gate_b.active_prototype_candidate_for_this_workload, true);
+  assert.equal(out.gate_b.global_gate_pass, false);
+  assert.equal(out.gate_b.cross_workload_confirmation_required, true);
+  assert.equal(out.interpretation.attention_microkernel_prototype_authorized, false);
+});
+
+test('a mature sample below 20% emits the PRIVATE255 marginal kill signal', () => {
+  const out = evaluateStandardsShadowBypassGate(input(Array.from({ length: 100 }, () => record({ baseline_ms: 100, check_ms: 10 }))), opts);
+  assert.equal(out.gate_b.preliminary_sample_floor_met, true);
+  assert.equal(out.gate_b.measured_improvement_percent < 20, true);
+  assert.equal(out.gate_b.marginal_kill_signal_for_this_workload, true);
+  assert.equal(out.gate_b.workload_evidence_ready, false);
+  assert.equal(out.interpretation.next_step, 'DO_NOT_BROADEN_FROM_THIS_WORKLOAD');
+});
+
+test('gross shadow-path headroom above 50% never proves the PRIVATE255 commercial net-savings criterion', () => {
+  const out = evaluateStandardsShadowBypassGate(input(Array.from({ length: 100 }, () => record({ baseline_ms: 100, check_ms: 120 }))), opts);
+  assert.equal(out.gate_b.measured_improvement_percent > 50, true);
+  assert.equal(out.gate_b.commercial_net_savings_evaluable, false);
+  assert.equal(out.gate_b.commercially_compelling_proven, false);
+  assert.equal(out.interpretation.commercially_compelling_proven, false);
 });
 
 test('requires evidence fingerprints for benchmark and implementation', () => {
