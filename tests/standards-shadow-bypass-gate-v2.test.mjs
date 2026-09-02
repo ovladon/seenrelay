@@ -98,6 +98,10 @@ test('records with fields outside the sanitized benchmark contract are rejected'
   assert.throws(() => evaluateStandardsShadowBypassGateV2(input([record({ source: 'https://example.invalid' })]), opts), /outside the sanitized benchmark contract/);
 });
 
+test('milliseconds-only Gate B refuses nonzero monetary cost fields instead of silently ignoring them', () => {
+  assert.throws(() => evaluateStandardsShadowBypassGateV2(input([record({ check_cost: 0.01 })]), opts), /monetary cost fields must be zero/);
+});
+
 test('fails closed when any record could have influenced the accepted path', () => {
   const out = evaluateStandardsShadowBypassGateV2(input([
     record(),
