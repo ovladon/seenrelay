@@ -101,6 +101,12 @@ export class ShadowTrajectoryProfiler {
     if (!SAMPLE_TYPES.has(sampleType)) throw new TypeError(`unsupported sampleType: ${sampleType}`);
     const baselineDefinition = input.baselineDefinition ?? 'best_native_stack';
     if (baselineDefinition !== 'best_native_stack') throw new TypeError('baselineDefinition must be best_native_stack');
+    let startupMeasurementFailures = 0;
+    let startedAtCandidate = input.startedAtMs;
+    if (startedAtCandidate === undefined) {
+      try { startedAtCandidate = this._now(); }
+      catch { startedAtCandidate = monotonicNow(); startupMeasurementFailures += 1; }
+    }
     const trajectory = {
       id,
       workloadId: optionalIdentifier(input.workloadId, 'workloadId'),
@@ -109,7 +115,7 @@ export class ShadowTrajectoryProfiler {
       baselineEvidenceFingerprint: fingerprint(input.baselineEvidenceFingerprint, 'baselineEvidenceFingerprint'),
       costUnitPolicyId: optionalIdentifier(input.costUnitPolicyId, 'costUnitPolicyId'),
       costUnitPolicyFingerprint: fingerprint(input.costUnitPolicyFingerprint, 'costUnitPolicyFingerprint'),
-      startedAtMs: finiteNonNegative(input.startedAtMs ?? this._now(), 'startedAtMs'),
+      startedAtMs: finiteNonNegative(startedAtCandidate, 'startedAtMs'),
       endedAtMs: undefined,
       operations: new Map(),
       alternatives: new Map(),
@@ -117,7 +123,7 @@ export class ShadowTrajectoryProfiler {
       outcomeEvidenceFingerprint: undefined,
       accountingOverheadMs: 0,
       extractorOverheadMs: 0,
-      measurementFailures: 0
+      measurementFailures: startupMeasurementFailures
     };
     this._trajectories.set(id, trajectory);
     trajectory.accountingOverheadMs += Math.max(0, monotonicNow() - overheadStart);
@@ -199,7 +205,12 @@ export class ShadowTrajectoryProfiler {
       if (trajectory.endedAtMs !== undefined) throw new TypeError('trajectory already finished');
       const normalizedOutcome = outcome(input.outcome);
       const evidence = fingerprint(input.outcomeEvidenceFingerprint, 'outcomeEvidenceFingerprint');
-      const endedAtMs = finiteNonNegative(input.endedAtMs ?? this._now(), 'endedAtMs');
+      let endedAtCandidate = input.endedAtMs;
+      if (endedAtCandidate === undefined) {
+        try { endedAtCandidate = this._now(); }
+        catch { endedAtCandidate = monotonicNow(); trajectory.measurementFailures += 1; }
+      }
+      const endedAtMs = finiteNonNegative(endedAtCandidate, 'endedAtMs');
       if (endedAtMs < trajectory.startedAtMs) throw new TypeError('endedAtMs must be >= startedAtMs');
       trajectory.outcome = normalizedOutcome;
       trajectory.outcomeEvidenceFingerprint = evidence;
@@ -212,27 +223,35 @@ export class ShadowTrajectoryProfiler {
     if (typeof fn !== 'function') throw new TypeError('fn must be a function');
     let trajectory;
     try { trajectory = this._requireTrajectory(input?.trajectoryId); } catch { trajectory = null; }
-    const startedAtMs = this._now();
-    try {
-      const result = await fn();
-      const endedAtMs = this._now();
+    const safeNow = () => {
+      try { return finiteNonNegative(this._now(), 'measurement clock'); }
+      catch { if (trajectory) trajectory.measurementFailures += 1; return undefined; }
+    };
+    const startedAtMs = safeNow();
+    let result;
+    let authoritativeError;
+    try { result = await fn(); }
+    catch (error) { authoritativeError = error; }
+    const endedAtMs = safeNow();
+
+    if (authoritativeError !== undefined) {
       try {
-        let extraWork = {};
-        if (typeof input?.workFromResult === 'function') {
-          const extractorStart = monotonicNow();
-          try { extraWork = input.workFromResult(result) ?? {}; }
-          catch { if (trajectory) trajectory.measurementFailures += 1; }
-          finally { if (trajectory) trajectory.extractorOverheadMs += Math.max(0, monotonicNow() - extractorStart); }
-        }
-        this.recordOperation({ ...input, status: 'ok', startedAtMs, endedAtMs, work: { ...(input?.work ?? {}), ...extraWork } });
+        this.recordOperation({ ...input, status: 'error', startedAtMs, endedAtMs, work: { ...(input?.work ?? {}) } });
       } catch { if (trajectory) trajectory.measurementFailures += 1; }
-      return result;
-    } catch (error) {
-      const endedAtMs = this._now();
-      try { this.recordOperation({ ...input, status: 'error', startedAtMs, endedAtMs, work: { ...(input?.work ?? {}) } }); }
-      catch { if (trajectory) trajectory.measurementFailures += 1; }
-      throw error;
+      throw authoritativeError;
     }
+
+    try {
+      let extraWork = {};
+      if (typeof input?.workFromResult === 'function') {
+        const extractorStart = monotonicNow();
+        try { extraWork = input.workFromResult(result) ?? {}; }
+        catch { if (trajectory) trajectory.measurementFailures += 1; }
+        finally { if (trajectory) trajectory.extractorOverheadMs += Math.max(0, monotonicNow() - extractorStart); }
+      }
+      this.recordOperation({ ...input, status: 'ok', startedAtMs, endedAtMs, work: { ...(input?.work ?? {}), ...extraWork } });
+    } catch { if (trajectory) trajectory.measurementFailures += 1; }
+    return result;
   }
 
   getReport(trajectoryId) {
@@ -340,7 +359,7 @@ export class ShadowTrajectoryProfiler {
         ),
         actual_cost_units: actualCostUnits,
         actual_work: Object.freeze({ ...actualWork }),
-        profiler_accounting_overhead_ms: trajectory.accountingOverheadMs,
+        profiler_recording_overhead_ms: trajectory.accountingOverheadMs,
         result_extractor_overhead_ms: trajectory.extractorOverheadMs,
         measurement_failures: trajectory.measurementFailures,
         headroom: Object.freeze(tiers),
