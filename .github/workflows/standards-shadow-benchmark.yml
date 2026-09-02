@@ -5,7 +5,9 @@ on:
     branches: [main]
     paths:
       - 'scripts/standards-shadow-benchmark.mjs'
+      - 'scripts/standards-shadow-collector-v2.mjs'
       - 'tests/standards-shadow-benchmark.test.mjs'
+      - 'tests/standards-shadow-collector-v2.test.mjs'
       - '.github/workflows/standards-shadow-benchmark.yml'
   schedule:
     - cron: '47 4 * * *'
@@ -32,35 +34,59 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Restore previous natural-workload state and ledger
+      - name: Restore previous schedule-only natural state and ledger
+        id: restore
+        if: github.event_name == 'schedule'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p previous-standards-shadow
-          previous_run="$(gh run list --workflow "$GITHUB_WORKFLOW" --status success --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)"
-          if [ -n "$previous_run" ] && [ "$previous_run" != "$GITHUB_RUN_ID" ]; then
-            gh run download "$previous_run" \
-              --name "standards-shadow-benchmark-$previous_run" \
-              --dir previous-standards-shadow >/dev/null 2>&1 || true
-          fi
-          if [ -f previous-standards-shadow/standards-shadow-ledger.json ]; then
-            echo "Restored cumulative ledger from run $previous_run"
+          parent_run=''
+          while read -r candidate; do
+            [ -n "$candidate" ] || continue
+            [ "$candidate" != "$GITHUB_RUN_ID" ] || continue
+            rm -rf previous-standards-shadow/*
+            if gh run download "$candidate" \
+              --name "standards-shadow-natural-v2-$candidate" \
+              --dir previous-standards-shadow >/dev/null 2>&1; then
+              if [ -f previous-standards-shadow/standards-shadow-ledger.json ] && \
+                 [ -f previous-standards-shadow/standards-shadow-state.json ]; then
+                parent_run="$candidate"
+                break
+              fi
+            fi
+          done < <(gh run list \
+            --workflow "$GITHUB_WORKFLOW" \
+            --event schedule \
+            --status success \
+            --limit 50 \
+            --json databaseId \
+            --jq '.[].databaseId' 2>/dev/null || true)
+          echo "parent_run=$parent_run" >> "$GITHUB_OUTPUT"
+          if [ -n "$parent_run" ]; then
+            echo "Restored schedule-only natural evidence from run $parent_run"
           else
-            echo 'No compatible prior cumulative ledger found; this run starts or restarts the natural ledger.'
+            rm -rf previous-standards-shadow/*
+            echo 'No schedule-only v2 parent found; starting a new natural collection epoch.'
           fi
 
-      - name: Run read-only natural workload measurement
+      - name: Run read-only workload measurement
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SEENRELAY_ORIGIN: https://seenrelay.com
           STANDARDS_SHADOW_PREVIOUS_STATE: previous-standards-shadow/standards-shadow-state.json
           STANDARDS_SHADOW_PREVIOUS_LEDGER: previous-standards-shadow/standards-shadow-ledger.json
-        run: node scripts/standards-shadow-benchmark.mjs
+          STANDARDS_SHADOW_RUN_EVENT: ${{ github.event_name }}
+          STANDARDS_SHADOW_RUN_ID: ${{ github.run_id }}
+          STANDARDS_SHADOW_PARENT_RUN_ID: ${{ steps.restore.outputs.parent_run }}
+        run: node scripts/standards-shadow-collector-v2.mjs
 
-      - name: Verify sanitized measurement contract
+      - name: Verify sanitized measurement and lineage contract
         shell: bash
+        env:
+          STANDARDS_SHADOW_PARENT_RUN_ID: ${{ steps.restore.outputs.parent_run }}
         run: |
           set -euo pipefail
           node - <<'NODE'
@@ -69,10 +95,29 @@ jobs:
           const summary = JSON.parse(fs.readFileSync('standards-shadow-summary.json', 'utf8'));
           const ledger = JSON.parse(fs.readFileSync('standards-shadow-ledger.json', 'utf8'));
           const state = JSON.parse(fs.readFileSync('standards-shadow-state.json', 'utf8'));
+          const expectedSampleType = process.env.GITHUB_EVENT_NAME === 'schedule' ? 'natural_workload' : 'commissioning';
+          const parentRunId = process.env.STANDARDS_SHADOW_PARENT_RUN_ID || null;
           if (summary.first_party !== true || summary.external_adoption_evidence !== false) process.exit(1);
           if (summary.observe_requests_sent !== 0) process.exit(1);
-          if (input.sample_type !== 'natural_workload' || input.workload_class !== 'structured_source_reads') process.exit(1);
+          if (input.sample_type !== expectedSampleType || input.workload_class !== 'structured_source_reads') process.exit(1);
+          for (const doc of [summary, ledger, state]) {
+            if (doc.provenance_schema_version !== 2) process.exit(1);
+            if (doc.collection_epoch !== 'schedule-only-v2') process.exit(1);
+            if (doc.sample_type !== expectedSampleType) process.exit(1);
+            if (doc.run_event !== process.env.GITHUB_EVENT_NAME) process.exit(1);
+            if (doc.run_id !== process.env.GITHUB_RUN_ID) process.exit(1);
+            if (doc.parent_run_id !== parentRunId) process.exit(1);
+          }
+          if (input.schema_version !== 2 || ledger.schema_version !== 1 || state.schema_version !== 1 || summary.schema_version !== 2) process.exit(1);
           if (ledger.workload_class !== 'structured_source_reads') process.exit(1);
+          if (expectedSampleType === 'natural_workload') {
+            if (ledger.natural_schedule !== 'daily') process.exit(1);
+          } else {
+            if (ledger.natural_schedule !== null || parentRunId !== null) process.exit(1);
+            if (summary.cumulative_benchmark_records !== summary.current_run_benchmark_records) process.exit(1);
+            if (summary.preliminary_sample_floor_met !== false) process.exit(1);
+            if (summary.evaluation_state !== 'commissioning' || summary.evaluation_reason !== 'not_natural_workload') process.exit(1);
+          }
           if (ledger.raw_values_retained !== false || ledger.fact_identity_retained !== false || ledger.sources_retained !== false || ledger.timestamps_retained !== false) process.exit(1);
           if (state.raw_values_retained !== false || state.sources_retained !== false) process.exit(1);
           const allowed = new Set([
@@ -90,10 +135,11 @@ jobs:
           }
           NODE
 
-      - name: Upload sanitized natural-workload evidence
+      - name: Upload schedule-only natural evidence
+        if: github.event_name == 'schedule'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: standards-shadow-benchmark-${{ github.run_id }}
+          name: standards-shadow-natural-v2-${{ github.run_id }}
           path: |
             standards-shadow-benchmark.json
             standards-shadow-summary.json
@@ -102,3 +148,17 @@ jobs:
             standards-shadow-ledger.json
           if-no-files-found: error
           retention-days: 30
+
+      - name: Upload commissioning evidence
+        if: github.event_name != 'schedule'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: standards-shadow-commissioning-v2-${{ github.run_id }}
+          path: |
+            standards-shadow-benchmark.json
+            standards-shadow-summary.json
+            standards-shadow-evaluation.json
+            standards-shadow-state.json
+            standards-shadow-ledger.json
+          if-no-files-found: error
+          retention-days: 7
