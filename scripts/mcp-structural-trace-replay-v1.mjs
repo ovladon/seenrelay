@@ -145,7 +145,6 @@ export function replayMcpStructuralTrace(jsonl, options = {}) {
   let mismatchHits = 0;
   let barriers = 0;
   let malformedEvents = 0;
-  const candidateKeys = [];
 
   const barrier = () => { epoch += 1; cache.clear(); barriers += 1; };
 
@@ -174,7 +173,6 @@ export function replayMcpStructuralTrace(jsonl, options = {}) {
           if (predictedHit) {
             predictedHits += 1;
             candidateExecutions -= 1;
-            candidateKeys.push(key);
           }
           pending.set(id, { kind: 'read', key, epoch, predictedHit, priorOutputSha: prior?.outputSha ?? null });
           continue;
@@ -227,7 +225,6 @@ export function replayMcpStructuralTrace(jsonl, options = {}) {
     unresolved_read_calls: unresolvedReads,
     same_outcome_structural_proof: sameOutcomeProof,
     structural_execution_reduction_percent: structuralReductionPercent,
-    candidate_key_fingerprints: [...candidateKeys].sort(),
   };
   return Object.freeze({
     ...envelope,
