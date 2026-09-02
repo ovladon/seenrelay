@@ -1,0 +1,67 @@
+{
+  "schema": "seenrelay-mcp-structural-replay-policy-v1",
+  "frozen_at": "2026-09-03",
+  "frozen_before_structural_hit_measurement": true,
+  "trace_set_fingerprint": "sha256:ec37a2e7bf681095a2e9f78d952cf121eb79adf2059d8ef5b9197ccd1e3a3a59",
+  "evidence_class": "external_neutral_task_structural_replay",
+  "decision": {
+    "current_result_may_influence_cache_decision": false,
+    "cache_key": "sha256(exact tool name + exact stable tool input)",
+    "cache_scope": "same attempt and same mutation epoch only",
+    "admitted_tool": "bash",
+    "required_wrapper": "/bin/bash -lc",
+    "allowed_shell_operators": ["&&", "|"],
+    "allowed_commands": ["pwd", "ls", "cat", "head", "tail", "wc", "cut", "tr", "sort", "rg", "sed-restricted-print-only"],
+    "barriers": [
+      "fileChange tool call",
+      "unrecognized tool call",
+      "bash call not proven read-only by this policy",
+      "tool error",
+      "malformed structural event"
+    ],
+    "disallowed_constructs": [
+      "network access",
+      "package manager or package execution",
+      "process inspection or control",
+      "node or arbitrary interpreter execution",
+      "environment assignment",
+      "redirection",
+      "subshell or command substitution",
+      "background execution",
+      "semicolon or newline command chaining",
+      "absolute or parent-relative filesystem operands",
+      "find",
+      "git",
+      "sed in-place or executable commands",
+      "ripgrep preprocessor execution"
+    ]
+  },
+  "counterfactual_validation": {
+    "every_predicted_hit_must_have_a_prior_successful_result": true,
+    "recorded_current_result_hash_must_equal_cached_prior_result_hash": true,
+    "current_result_hash_is_validation_only_not_decision_input": true,
+    "any_predicted_hit_mismatch_invalidates_same_outcome_proof": true
+  },
+  "work_accounting": {
+    "issued_tool_calls_preserved": true,
+    "executed_tool_calls_may_be_reduced_by_predicted_hits": true,
+    "policy_evaluations_reported": true,
+    "decision_cpu_overhead_scalarized": false,
+    "structural_execution_reduction_is_descriptive_only": true,
+    "structural_execution_reduction_alone_may_satisfy_vector_admission": false,
+    "economic_value_may_be_inferred": false
+  },
+  "privacy": {
+    "retain_raw_commands_in_result": false,
+    "retain_raw_tool_outputs_in_result": false,
+    "retain_model_text_in_result": false,
+    "retain_only_hashes_counts_and_boolean_proofs": true
+  },
+  "authorization": {
+    "candidate_replay_headroom_proven": false,
+    "vector_candidate_authorized": false,
+    "attention_microkernel_authorized": false,
+    "active_optimizer_authorized": false,
+    "production_change_authorized": false
+  }
+}
