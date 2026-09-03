@@ -1,14 +1,7 @@
 import { createHash, createHmac } from 'node:crypto';
 
 const SHA = /^sha256:[0-9a-f]{64}$/;
-const USAGE_KEYS = [
-  'inputTokens',
-  'outputTokens',
-  'totalTokens',
-  'reasoningTokens',
-  'cacheReadTokens',
-  'cacheWriteTokens',
-];
+const USAGE_KEYS = ['inputTokens', 'outputTokens', 'totalTokens'];
 
 function stable(value) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
@@ -103,6 +96,7 @@ export function exportMcpUseEvalsStructuralTrace(rawJsonl, options = {}) {
   let durationMs = null;
   let turns = null;
   const usage = Object.fromEntries(USAGE_KEYS.map((key) => [key, null]));
+  const inputTokenDetails = { noCacheTokens: null, cacheReadTokens: null, cacheWriteTokens: null };
 
   for (let sequenceIndex = 0; sequenceIndex < events.length; sequenceIndex += 1) {
     const { event } = events[sequenceIndex];
@@ -163,6 +157,11 @@ export function exportMcpUseEvalsStructuralTrace(rawJsonl, options = {}) {
       if (event.total_usage !== undefined && event.total_usage !== null) {
         if (!event.total_usage || typeof event.total_usage !== 'object' || Array.isArray(event.total_usage)) throw new TypeError('result total_usage must be object when present');
         for (const key of USAGE_KEYS) usage[key] = numericOrNull(event.total_usage[key], `result total_usage.${key}`);
+        const details = event.total_usage.inputTokenDetails;
+        if (details !== undefined && details !== null) {
+          if (!details || typeof details !== 'object' || Array.isArray(details)) throw new TypeError('result total_usage.inputTokenDetails must be object when present');
+          for (const key of Object.keys(inputTokenDetails)) inputTokenDetails[key] = numericOrNull(details[key], `result total_usage.inputTokenDetails.${key}`);
+        }
       }
     }
   }
@@ -200,9 +199,9 @@ export function exportMcpUseEvalsStructuralTrace(rawJsonl, options = {}) {
       input_tokens: usage.inputTokens,
       output_tokens: usage.outputTokens,
       total_tokens: usage.totalTokens,
-      reasoning_tokens: usage.reasoningTokens,
-      cache_read_tokens: usage.cacheReadTokens,
-      cache_write_tokens: usage.cacheWriteTokens,
+      no_cache_input_tokens: inputTokenDetails.noCacheTokens,
+      cache_read_input_tokens: inputTokenDetails.cacheReadTokens,
+      cache_write_input_tokens: inputTokenDetails.cacheWriteTokens,
     }),
     raw_tool_names_retained: false,
     raw_call_ids_retained: false,
