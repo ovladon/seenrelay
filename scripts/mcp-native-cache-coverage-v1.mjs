@@ -21,7 +21,8 @@ export function evaluateMcpNativeCacheCoverage(traces){
   }
   if(input<=0)throw new TypeError('aggregate input tokens must be positive');
   const nativeCoverage=cacheRead/input*100;
-  const remaining=noCache/input*100;
+  const nonReadVolume=noCache+cacheWrite;
+  const remaining=nonReadVolume/input*100;
   return Object.freeze({
     schema:'seenrelay-mcp-native-cache-coverage-v1',
     attempts:traces.length,
@@ -30,6 +31,7 @@ export function evaluateMcpNativeCacheCoverage(traces){
     cache_read_input_tokens:cacheRead,
     cache_write_input_tokens:cacheWrite,
     provider_native_cache_read_coverage_percent:nativeCoverage,
+    non_cache_read_input_tokens:nonReadVolume,
     additional_prompt_cache_conversion_upper_bound_percent_of_input_tokens:remaining,
     private255_marginal_headroom_floor_percent:MARGINAL_FLOOR_PERCENT,
     private255_active_prototype_headroom_percent:ACTIVE_PROTOTYPE_PERCENT,
