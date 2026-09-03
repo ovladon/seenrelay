@@ -14,7 +14,7 @@ const baseEvents=()=>[
   {type:'tool-error',toolCallId:'secret-call-2',toolName:'secret_tool',error:'SECRET ERROR'},
   {type:'diagnostic',level:'warn',message:'SECRET DIAGNOSTIC'},
   {type:'finish',providerMetadata:{secret:'SECRET PROVIDER'}},
-  {type:'result',subtype:'success',duration_ms:1234,num_turns:3,total_usage:{inputTokens:100,outputTokens:20,totalTokens:120}},
+  {type:'result',subtype:'success',duration_ms:1234,num_turns:3,total_usage:{inputTokens:100,inputTokenDetails:{noCacheTokens:10,cacheReadTokens:90,cacheWriteTokens:0},outputTokens:20,totalTokens:120}},
 ];
 const opts={coordinateKey:KEY,attemptCoordinate:A,sourceEvidenceFingerprint:B};
 
@@ -30,7 +30,9 @@ test('exports only privacy-minimized structural evidence and work counters',()=>
   assert.equal(out.final_result_work.turns,3);
   assert.equal(out.final_result_work.input_tokens,100);
   assert.equal(out.final_result_work.output_tokens,20);
-  assert.equal(out.final_result_work.reasoning_tokens,null);
+  assert.equal(out.final_result_work.no_cache_input_tokens,10);
+  assert.equal(out.final_result_work.cache_read_input_tokens,90);
+  assert.equal(out.final_result_work.cache_write_input_tokens,0);
   assert.equal(out.raw_outputs_retained,false);
   assert.equal(out.eliminability_inferred,false);
   assert.equal(out.same_outcome_proven,false);
@@ -109,5 +111,7 @@ test('unknown and absent usage fields remain null rather than zero',()=>{
   assert.equal(out.final_result_work.turns,null);
   assert.equal(out.final_result_work.input_tokens,10);
   assert.equal(out.final_result_work.output_tokens,null);
+  assert.equal(out.final_result_work.no_cache_input_tokens,null);
+  assert.equal(out.final_result_work.cache_read_input_tokens,null);
   assert.equal(out.counts.unmatched_tool_calls,0);
 });
