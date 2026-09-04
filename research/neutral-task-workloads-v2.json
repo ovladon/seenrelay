@@ -1,0 +1,148 @@
+{
+  "schema": "seenrelay-neutral-task-workloads-v2",
+  "frozen_at": "2026-09-03",
+  "evidence_class": "external_neutral_task_replay",
+  "counts_as_natural_evidence": false,
+  "counts_as_external_adoption": false,
+  "selection_locked_before_results": true,
+  "selection_rule": {
+    "required": [
+      "externally_defined_task",
+      "accepted_outcome_evaluator_independent_of_seenrelay",
+      "structured_or_sanitizable_work_telemetry",
+      "frozen_repository_revision"
+    ],
+    "reject": [
+      "throughput_only_load_generation",
+      "accepted_outcome_depends_only_on_seenrelay_authored_judge",
+      "requires_publishing_raw_prompts_transcripts_screenshots_or_credentials"
+    ],
+    "replacement_rule": "candidate_may_be_replaced_only_before_any_seenrelay_headroom_measurement_and_only_for_failure_of_a_required_admission_property"
+  },
+  "workloads": [
+    {
+      "id": "mcp-use-evals-v2",
+      "class": "mcp_agentic_build_task",
+      "repository": "mcp-use/mcp-use-evals",
+      "commit": "e655f0ad26c02f47e4625cb48617ccff0a437696",
+      "source": {
+        "types_path": "src/types.ts",
+        "types_blob": "087dc5ffaac0c6f3d0c9071c22b2e5f45f50e975"
+      },
+      "accepted_outcome": {
+        "kind": "deterministic_functional_contract",
+        "field": "trial.grade.contractPass",
+        "infra_exclusion": "trial.valid=false",
+        "scored_only": "trial.grade.scoredForPassRate=true",
+        "llm_judge_affects_score": false
+      },
+      "work_vector": [
+        "durationMs",
+        "turns",
+        "tokensIn",
+        "tokensOut",
+        "toolCalls",
+        "costUsd"
+      ],
+      "privacy": {
+        "retain_raw_transcript": false,
+        "retain_prompt": false,
+        "retain_memo": false,
+        "retain_workspace_snapshot": false
+      },
+      "status": "admitted_before_runtime_measurement"
+    },
+    {
+      "id": "browsergym-webarena-verified-v1",
+      "class": "browser_agent_task",
+      "repository": "ServiceNow/BrowserGym",
+      "commit": "9e779f087de9a65668b6974d11f9ce9816026e96",
+      "source": {
+        "evaluator_path": "browsergym/webarena_verified/src/browsergym/webarena_verified/evaluators.py",
+        "evaluator_blob": "bd30bcb3a16d6ee581bbfdae769372a0c4b766fc"
+      },
+      "accepted_outcome": {
+        "kind": "programmatic_task_evaluator",
+        "signals": [
+          "expected_retrieve_value",
+          "expected_backend_state",
+          "expected_ui_state"
+        ],
+        "uses_network_trace": true,
+        "llm_judge_required": false,
+        "primary_field": "cum_raw_reward",
+        "full_success_value": 1,
+        "agentlab_error_classification": "ambiguous_errors_excluded_not_scored"
+      },
+      "work_vector": [
+        "agent_elapsed_seconds",
+        "environment_step_elapsed_seconds",
+        "browser_actions",
+        "model_usage_unknown_until_native_field_available",
+        "network_requests_unknown_in_summary"
+      ],
+      "privacy": {
+        "retain_raw_network_trace": false,
+        "retain_task_text": false,
+        "retain_screenshots": false,
+        "retain_model_content": false
+      },
+      "status": "admitted_before_runtime_measurement",
+      "harness": {
+        "repository": "ServiceNow/AgentLab",
+        "commit": "cbc35a9bc0facaf731bc858c5825edbe757c719f",
+        "summary_source_path": "src/agentlab/experiments/loop.py",
+        "summary_source_blob": "486e2f3543a77239cf5cf07e013dd4b49e5208ec",
+        "format": "ExpResult.get_exp_record()/summary_info.json",
+        "frozen_before_runtime_measurement": true
+      }
+    },
+    {
+      "id": "agentarena-coding-v1",
+      "class": "coding_agent_task",
+      "repository": "aabbcdl/AgentArena",
+      "commit": "8aa817633747ad650f39b3d2708e4c09e30106ce",
+      "sources": {
+        "fairness": "docs/fairness.md",
+        "scoring": "docs/scoring.md",
+        "capabilities": "docs/adapter-capabilities.md"
+      },
+      "accepted_outcome": {
+        "kind": "functional_critical_judges",
+        "requirements": [
+          "run_not_failed",
+          "critical_judges_pass",
+          "task_specific_tests_or_deterministic_judges_present"
+        ],
+        "aggregate_score_alone_sufficient": false
+      },
+      "preferred_harness": {
+        "agent": "codex",
+        "reason": "supported_full_trace_tokens_available",
+        "usd_cost_available": false
+      },
+      "work_vector": [
+        "duration",
+        "tokens",
+        "trace_tool_events",
+        "costUsd_only_when_known"
+      ],
+      "privacy": {
+        "retain_raw_trace": false,
+        "retain_diff": false,
+        "retain_prompt": false,
+        "retain_credentials": false
+      },
+      "status": "admitted_conditionally_before_runtime_measurement"
+    },
+    {
+      "id": "browser-use-bu-bench-v2-rejected-primary",
+      "class": "browser_agent_task_rejected_primary",
+      "repository": "browser-use/benchmark",
+      "commit": "e3c6fc92b55934954831f16ab672d85939c3015e",
+      "rejection_reason": "primary accepted-outcome findings are emitted by an LLM judge and published file omits LLM call/retry/tracing plumbing; may be secondary robustness evidence only",
+      "measured_before_rejection": false,
+      "status": "rejected_before_runtime_measurement"
+    }
+  ]
+}

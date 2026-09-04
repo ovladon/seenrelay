@@ -1,0 +1,31 @@
+{
+  "schema": "seenrelay-neutral-task-admission-amendment-v1",
+  "amendment_id": "001",
+  "amended_at": "2026-09-03",
+  "applies_to_policy_schema": "seenrelay-neutral-task-admission-v1",
+  "workload_id": "mcp-use-evals-v2",
+  "frozen_before_any_headroom_measurement": true,
+  "reason": "The originally frozen 2026-08-24 batch contains infrastructure-invalid trials, so it cannot meet the preregistered minimum of three eligible attempts per task without replacing invalid infrastructure attempts.",
+  "original_preregistered_result_must_remain_reported_separately": true,
+  "original_preregistered_floor_may_not_be_relabelled_as_passed": true,
+  "completion_rule": {
+    "eligible_attempt_definition_unchanged": true,
+    "start_with_original_frozen_batch": "2026-08-24",
+    "only_tasks_below_the_preregistered_attempt_floor_may_receive_completions": true,
+    "use_next_naturally_scheduled_batch_in_chronological_order": true,
+    "within_each_deficit_task_take_the_earliest_eligible_trials_only_until_the_original_floor_is_met": true,
+    "selection_must_not_read_or_depend_on_accepted_outcome": true,
+    "selection_must_not_read_or_depend_on_work_metrics": true,
+    "stop_once_every_preregistered_task_has_three_eligible_attempts": true,
+    "do_not_use_later_batches_after_the_floor_is_met": true
+  },
+  "evidence_label": "pre_headroom_amended_chronological_baseline",
+  "counts_as_original_preregistered_confirmation": false,
+  "counts_as_natural_seenrelay_evidence": false,
+  "counts_as_external_adoption": false,
+  "headroom_measured": false,
+  "optimizer_authorized": false,
+  "attention_microkernel_authorized": false,
+  "production_change_authorized": false,
+  "original_policy_file_sha256": "sha256:023c2f334a12f25c0798adabf9b3d76243cd240dac908af80cd2e84587d61203"
+}
