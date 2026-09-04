@@ -25,3 +25,5 @@ jobs:
         run: npm run typecheck:core
       - name: Typecheck full
         run: npm run typecheck:full
+      - name: Qualify exact Vercel Preview
+        run: node scripts/qualify-preview-fixture.mjs
