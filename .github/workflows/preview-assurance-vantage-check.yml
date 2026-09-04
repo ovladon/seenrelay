@@ -1,0 +1,52 @@
+name: Preview assurance vantage check
+
+on:
+  push:
+    branches:
+      - verify/native-http-fixture-v1
+    paths:
+      - 'scripts/verify-preview-assurance-vantage.mjs'
+      - '.github/workflows/preview-assurance-vantage-check.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seenrelay-preview-assurance-vantage-check
+  cancel-in-progress: false
+
+env:
+  SEENRELAY_PREVIEW_BASE: https://seenrelay-git-preview-native-htt-6a17ce-ovladonn-9636s-projects.vercel.app
+  TARGET_PREVIEW_SHA: 8d22778ccc73dcfdd5acbdbba655e924546f02fb
+  VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+jobs:
+  observe-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/verify-preview-assurance-vantage.mjs
+      - run: node scripts/verify-preview-assurance-vantage.mjs observe
+
+  observe-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/verify-preview-assurance-vantage.mjs
+      - run: node scripts/verify-preview-assurance-vantage.mjs observe
+
+  aggregate-check:
+    needs: [observe-ubuntu, observe-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node scripts/verify-preview-assurance-vantage.mjs check
