@@ -19,7 +19,9 @@ function baseHeaders(started: number, cpuStarted: NodeJS.CpuUsage) {
     etag: ETAG,
     'server-timing': timingHeader(started, cpuStarted),
     vary: 'Accept',
-    'x-seenrelay-fixture-revision': RESOURCE_REVISION
+    'x-seenrelay-fixture-revision': RESOURCE_REVISION,
+    'x-seenrelay-fixture-commit': process.env.VERCEL_GIT_COMMIT_SHA || 'unknown',
+    'x-seenrelay-fixture-env': process.env.VERCEL_ENV || 'unknown'
   };
 }
 
