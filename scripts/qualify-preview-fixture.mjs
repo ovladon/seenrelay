@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 
 const url = 'https://seenrelay-git-preview-native-htt-6a17ce-ovladonn-9636s-projects.vercel.app/api/resource';
 const expectedCommit = process.env.TARGET_PREVIEW_SHA;
@@ -10,8 +11,8 @@ if (!bypassSecret) throw new Error('VERCEL_AUTOMATION_BYPASS_SECRET is required'
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function fetchExact(headers = {}) {
-  return fetch(url, {
+async function fetchExact(headers = {}, targetUrl = url) {
+  return fetch(targetUrl, {
     headers: {
       ...headers,
       'x-vercel-protection-bypass': bypassSecret
@@ -64,11 +65,8 @@ while (attempts < 80 && consecutive < 20) {
     const response = await fetchExact({ accept: 'application/json' });
     lastStatus = response.status;
     lastCommit = response.headers.get('x-seenrelay-fixture-commit');
-    if (response.status === 200 && lastCommit === expectedCommit) {
-      consecutive += 1;
-    } else {
-      consecutive = 0;
-    }
+    if (response.status === 200 && lastCommit === expectedCommit) consecutive += 1;
+    else consecutive = 0;
   } catch {
     consecutive = 0;
   }
@@ -110,8 +108,21 @@ const wrong = await fetchExact({ accept: 'application/json', 'if-none-match': '"
 assert.equal(wrong.status, 200);
 assertFullResponse(wrong, jsonEtag);
 
+// Force an origin-side 304 on a never-before-seen URL. The app compares the strong
+// validator literally; if this request reaches Hono, its diagnostic headers can survive.
+const originDiagnosticUrl = `${url}?origin304=${encodeURIComponent(randomUUID())}`;
+const origin304 = await fetchExact({ accept: 'application/json', 'if-none-match': originEtag }, originDiagnosticUrl);
+assert.equal(origin304.status, 304, 'origin diagnostic did not return 304');
+assertWeakEquivalent(origin304.headers.get('etag'), originEtag, 'origin diagnostic validator mismatch');
+
+const edgeHasCommit = jsonConditional.headers.has('x-seenrelay-fixture-commit');
+const edgeHasTiming = jsonConditional.headers.has('server-timing');
+const originHasCommit = origin304.headers.get('x-seenrelay-fixture-commit') === expectedCommit;
+const originTiming = origin304.headers.get('server-timing') || '';
+const originHasTiming = /(?:^|,\s*)cpu;dur=\d+(?:\.\d+)?(?:,|$)/.test(originTiming);
+
 console.log(JSON.stringify({
-  schema: 'seenrelay.preview-fixture-qualification.v5',
+  schema: 'seenrelay.preview-fixture-qualification.v6',
   qualified: true,
   frozen_preview_commit: expectedCommit,
   stabilization_consecutive_exact: consecutive,
@@ -127,5 +138,10 @@ console.log(JSON.stringify({
   json_if_none_match_status: jsonConditional.status,
   text_if_none_match_status: textConditional.status,
   strong_equivalent_status: strongEquivalent.status,
+  conditional_304_has_commit_header: edgeHasCommit,
+  conditional_304_has_server_timing: edgeHasTiming,
+  origin_diagnostic_304_has_commit_header: originHasCommit,
+  origin_diagnostic_304_has_server_timing: originHasTiming,
+  origin_diagnostic_304_etag: origin304.headers.get('etag'),
   path: '/api/resource'
 }, null, 2));
