@@ -2,15 +2,20 @@ import assert from 'node:assert/strict';
 
 const url = 'https://seenrelay-git-preview-native-htt-6a17ce-ovladonn-9636s-projects.vercel.app/api/resource';
 const expectedCommit = process.env.GITHUB_SHA;
+const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const expectedRevision = 'preview-http-fixture-v1';
 const expectedEtag = '"6e2a8e6f2f2939c870d0402c12ff212b37c3da4995c6c682229f39af306bf3e4"';
 if (!expectedCommit) throw new Error('GITHUB_SHA is required');
+if (!bypassSecret) throw new Error('VERCEL_AUTOMATION_BYPASS_SECRET is required');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function fetchExact(headers = {}) {
   return fetch(url, {
-    headers,
+    headers: {
+      ...headers,
+      'x-vercel-protection-bypass': bypassSecret
+    },
     cache: 'no-store',
     redirect: 'manual',
     signal: AbortSignal.timeout(15_000)
