@@ -134,6 +134,44 @@ app.get('/healthz', (c) => {
     deployment_sha: deploymentSha
   });
 });
+
+app.get('/api/resource', (c) => {
+  if (process.env.VERCEL_ENV === 'production') return c.notFound();
+
+  const started = performance.now();
+  const cpuStarted = process.cpuUsage();
+  const revision = 'preview-http-fixture-v1';
+  const etag = '"6e2a8e6f2f2939c870d0402c12ff212b37c3da4995c6c682229f39af306bf3e4"';
+  const setHeaders = () => {
+    const duration = Math.max(0.001, performance.now() - started);
+    const cpu = process.cpuUsage(cpuStarted);
+    const cpuMs = Math.max(0.001, (cpu.user + cpu.system) / 1000);
+    c.header('cache-control', 'no-store');
+    c.header('etag', etag);
+    c.header('vary', 'Accept');
+    c.header('server-timing', `app;dur=${duration.toFixed(3)}, cpu;dur=${cpuMs.toFixed(3)}`);
+    c.header('x-seenrelay-fixture-revision', revision);
+    c.header('x-seenrelay-fixture-commit', process.env.VERCEL_GIT_COMMIT_SHA || 'unknown');
+    c.header('x-seenrelay-fixture-env', process.env.VERCEL_ENV || 'unknown');
+  };
+
+  if (c.req.header('if-none-match') === etag) {
+    setHeaders();
+    return c.body(null, 304);
+  }
+
+  const accept = c.req.header('accept') || '*/*';
+  if (accept.split(',').some((item) => item.trim().toLowerCase().startsWith('text/plain'))) {
+    const body = 'version=1\n';
+    setHeaders();
+    return c.body(body, 200, { 'content-type': 'text/plain; charset=utf-8' });
+  }
+
+  const body = JSON.stringify({ version: 1, payload: 'x'.repeat(64 * 1024) });
+  setHeaders();
+  return c.body(body, 200, { 'content-type': 'application/json; charset=utf-8' });
+});
+
 app.get('/openapi.json', (c) => { c.header('cache-control', 'public, max-age=3600'); return c.json(openApi(new URL(c.req.url).origin)); });
 app.all('/mcp', (c) => handleMcp(c.req.raw));
 
