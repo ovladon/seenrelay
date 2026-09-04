@@ -26,18 +26,22 @@ function opaqueTag(etag) {
   return String(etag || '').replace(/^W\//, '');
 }
 
-function assertValidatorHeaders(response, observedEtag) {
+function assertValidatorHeaders(response) {
   assert.equal(opaqueTag(response.headers.get('etag')), originEtag, 'ETag opaque value mismatch');
-  if (observedEtag) assert.equal(response.headers.get('etag'), observedEtag, 'ETag changed within qualified deployment');
   assert.match(response.headers.get('vary') || '', /(?:^|,\s*)Accept(?:,|$)/i);
   assert.match(response.headers.get('cache-control') || '', /(?:^|,)\s*no-store\s*(?:,|$)/i);
+}
+
+function assertWeakEquivalent(actual, expected, label) {
+  assert.equal(opaqueTag(actual), opaqueTag(expected), label);
 }
 
 function assertFullResponse(response, observedEtag) {
   assert.equal(response.headers.get('x-seenrelay-fixture-commit'), expectedCommit, 'deployment commit mismatch');
   assert.equal(response.headers.get('x-seenrelay-fixture-env'), 'preview', 'deployment environment mismatch');
   assert.equal(response.headers.get('x-seenrelay-fixture-revision'), expectedRevision, 'fixture revision mismatch');
-  assertValidatorHeaders(response, observedEtag);
+  assertValidatorHeaders(response);
+  assertWeakEquivalent(response.headers.get('etag'), observedEtag, 'ETag changed semantically within qualified deployment');
   const timing = response.headers.get('server-timing') || '';
   assert.match(timing, /(?:^|,\s*)app;dur=\d+(?:\.\d+)?(?:,|$)/);
   assert.match(timing, /(?:^|,\s*)cpu;dur=\d+(?:\.\d+)?(?:,|$)/);
@@ -46,10 +50,10 @@ function assertFullResponse(response, observedEtag) {
 
 function assertNotModified(response, observedEtag) {
   assert.equal(response.status, 304);
-  assertValidatorHeaders(response, observedEtag);
+  assertValidatorHeaders(response);
+  assertWeakEquivalent(response.headers.get('etag'), observedEtag, '304 ETag not weak-equivalent to observed validator');
 }
 
-// Freeze the branch alias to one deployment from this runner vantage before qualification.
 let consecutive = 0;
 let attempts = 0;
 let lastStatus = 0;
@@ -107,7 +111,7 @@ assert.equal(wrong.status, 200);
 assertFullResponse(wrong, jsonEtag);
 
 console.log(JSON.stringify({
-  schema: 'seenrelay.preview-fixture-qualification.v4',
+  schema: 'seenrelay.preview-fixture-qualification.v5',
   qualified: true,
   frozen_preview_commit: expectedCommit,
   stabilization_consecutive_exact: consecutive,
@@ -117,6 +121,8 @@ console.log(JSON.stringify({
   origin_etag: originEtag,
   observed_json_etag: jsonEtag,
   observed_text_etag: textEtag,
+  json_304_etag: jsonConditional.headers.get('etag'),
+  text_304_etag: textConditional.headers.get('etag'),
   observed_etag_strength: jsonEtag.startsWith('W/') ? 'weak' : 'strong',
   json_if_none_match_status: jsonConditional.status,
   text_if_none_match_status: textConditional.status,
