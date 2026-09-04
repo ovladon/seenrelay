@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 
 const url = 'https://seenrelay-git-preview-native-htt-6a17ce-ovladonn-9636s-projects.vercel.app/api/resource';
-const expectedCommit = process.env.GITHUB_SHA;
+const expectedCommit = process.env.TARGET_PREVIEW_SHA;
 const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 const expectedRevision = 'preview-http-fixture-v1';
 const originEtag = '"6e2a8e6f2f2939c870d0402c12ff212b37c3da4995c6c682229f39af306bf3e4"';
-if (!expectedCommit) throw new Error('GITHUB_SHA is required');
+if (!expectedCommit) throw new Error('TARGET_PREVIEW_SHA is required');
 if (!bypassSecret) throw new Error('VERCEL_AUTOMATION_BYPASS_SECRET is required');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -49,24 +49,28 @@ function assertNotModified(response, observedEtag) {
   assertValidatorHeaders(response, observedEtag);
 }
 
-let ready = false;
+// Freeze the branch alias to one deployment from this runner vantage before qualification.
+let consecutive = 0;
+let attempts = 0;
 let lastStatus = 0;
 let lastCommit = null;
-for (let attempt = 0; attempt < 45; attempt += 1) {
+while (attempts < 80 && consecutive < 20) {
+  attempts += 1;
   try {
     const response = await fetchExact({ accept: 'application/json' });
     lastStatus = response.status;
     lastCommit = response.headers.get('x-seenrelay-fixture-commit');
     if (response.status === 200 && lastCommit === expectedCommit) {
-      ready = true;
-      break;
+      consecutive += 1;
+    } else {
+      consecutive = 0;
     }
   } catch {
-    // Deployment may still be becoming reachable.
+    consecutive = 0;
   }
-  await sleep(2_000);
+  if (consecutive < 20) await sleep(500);
 }
-assert.equal(ready, true, `Preview did not converge to exact commit; status=${lastStatus} commit=${lastCommit}`);
+assert.equal(consecutive, 20, `Preview alias did not stabilize on frozen commit; attempts=${attempts} status=${lastStatus} commit=${lastCommit}`);
 
 const json = await fetchExact({ accept: 'application/json' });
 assert.equal(json.status, 200);
@@ -87,7 +91,6 @@ assertFullResponse(text, textEtag);
 assert.match(text.headers.get('content-type') || '', /^text\/plain/i);
 assert.equal(await text.text(), 'version=1\n');
 
-// Replay each validator exactly as observed, against the same negotiated representation.
 const jsonConditional = await fetchExact({ accept: 'application/json', 'if-none-match': jsonEtag });
 assertNotModified(jsonConditional, jsonEtag);
 assert.equal(await jsonConditional.text(), '');
@@ -96,7 +99,6 @@ const textConditional = await fetchExact({ accept: 'text/plain', 'if-none-match'
 assertNotModified(textConditional, textEtag);
 assert.equal(await textConditional.text(), '');
 
-// If-None-Match requires weak comparison, so the strong equivalent must also validate.
 const strongEquivalent = await fetchExact({ accept: 'application/json', 'if-none-match': originEtag });
 assertNotModified(strongEquivalent, jsonEtag);
 
@@ -105,9 +107,11 @@ assert.equal(wrong.status, 200);
 assertFullResponse(wrong, jsonEtag);
 
 console.log(JSON.stringify({
-  schema: 'seenrelay.preview-fixture-qualification.v3',
+  schema: 'seenrelay.preview-fixture-qualification.v4',
   qualified: true,
-  commit: expectedCommit,
+  frozen_preview_commit: expectedCommit,
+  stabilization_consecutive_exact: consecutive,
+  stabilization_attempts: attempts,
   environment: 'preview',
   resource_revision: expectedRevision,
   origin_etag: originEtag,
