@@ -1,9 +1,7 @@
 name: Frozen Preview HTTP measurement
 
 on:
-  push:
-    branches:
-      - verify/native-http-fixture-v1
+  workflow_dispatch:
 
 permissions:
   contents: read
