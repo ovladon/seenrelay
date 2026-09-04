@@ -26,18 +26,27 @@ function opaqueTag(etag) {
   return String(etag || '').replace(/^W\//, '');
 }
 
-function assertCommon(response, observedEtag) {
-  assert.equal(response.headers.get('x-seenrelay-fixture-commit'), expectedCommit, 'deployment commit mismatch');
-  assert.equal(response.headers.get('x-seenrelay-fixture-env'), 'preview', 'deployment environment mismatch');
-  assert.equal(response.headers.get('x-seenrelay-fixture-revision'), expectedRevision, 'fixture revision mismatch');
+function assertValidatorHeaders(response, observedEtag) {
   assert.equal(opaqueTag(response.headers.get('etag')), originEtag, 'ETag opaque value mismatch');
   if (observedEtag) assert.equal(response.headers.get('etag'), observedEtag, 'ETag changed within qualified deployment');
   assert.match(response.headers.get('vary') || '', /(?:^|,\s*)Accept(?:,|$)/i);
   assert.match(response.headers.get('cache-control') || '', /(?:^|,)\s*no-store\s*(?:,|$)/i);
+}
+
+function assertFullResponse(response, observedEtag) {
+  assert.equal(response.headers.get('x-seenrelay-fixture-commit'), expectedCommit, 'deployment commit mismatch');
+  assert.equal(response.headers.get('x-seenrelay-fixture-env'), 'preview', 'deployment environment mismatch');
+  assert.equal(response.headers.get('x-seenrelay-fixture-revision'), expectedRevision, 'fixture revision mismatch');
+  assertValidatorHeaders(response, observedEtag);
   const timing = response.headers.get('server-timing') || '';
   assert.match(timing, /(?:^|,\s*)app;dur=\d+(?:\.\d+)?(?:,|$)/);
   assert.match(timing, /(?:^|,\s*)cpu;dur=\d+(?:\.\d+)?(?:,|$)/);
   assert.equal(response.headers.has('set-cookie'), false, 'unexpected Set-Cookie');
+}
+
+function assertNotModified(response, observedEtag) {
+  assert.equal(response.status, 304);
+  assertValidatorHeaders(response, observedEtag);
 }
 
 let ready = false;
@@ -61,9 +70,9 @@ assert.equal(ready, true, `Preview did not converge to exact commit; status=${la
 
 const json = await fetchExact({ accept: 'application/json' });
 assert.equal(json.status, 200);
-const observedEtag = json.headers.get('etag');
-assert.ok(observedEtag, 'ETag missing');
-assertCommon(json, observedEtag);
+const jsonEtag = json.headers.get('etag');
+assert.ok(jsonEtag, 'JSON ETag missing');
+assertFullResponse(json, jsonEtag);
 assert.match(json.headers.get('content-type') || '', /^application\/json/i);
 const jsonBody = await json.json();
 assert.equal(jsonBody.version, 1);
@@ -72,34 +81,41 @@ assert.ok(jsonBody.payload.length >= 64 * 1024);
 
 const text = await fetchExact({ accept: 'text/plain' });
 assert.equal(text.status, 200);
-assertCommon(text, observedEtag);
+const textEtag = text.headers.get('etag');
+assert.ok(textEtag, 'text ETag missing');
+assertFullResponse(text, textEtag);
 assert.match(text.headers.get('content-type') || '', /^text\/plain/i);
 assert.equal(await text.text(), 'version=1\n');
 
-// A real client must replay the validator exactly as it observed it from the deployed service.
-const conditional = await fetchExact({ accept: 'application/json', 'if-none-match': observedEtag });
-assert.equal(conditional.status, 304, `Observed ETag did not validate with 304; observed=${observedEtag}`);
-assertCommon(conditional, observedEtag);
-assert.equal(await conditional.text(), '');
+// Replay each validator exactly as observed, against the same negotiated representation.
+const jsonConditional = await fetchExact({ accept: 'application/json', 'if-none-match': jsonEtag });
+assertNotModified(jsonConditional, jsonEtag);
+assert.equal(await jsonConditional.text(), '');
 
+const textConditional = await fetchExact({ accept: 'text/plain', 'if-none-match': textEtag });
+assertNotModified(textConditional, textEtag);
+assert.equal(await textConditional.text(), '');
+
+// If-None-Match requires weak comparison, so the strong equivalent must also validate.
 const strongEquivalent = await fetchExact({ accept: 'application/json', 'if-none-match': originEtag });
-assert.equal(strongEquivalent.status, 304, 'Strong equivalent must also weak-match for If-None-Match');
-assertCommon(strongEquivalent, observedEtag);
+assertNotModified(strongEquivalent, jsonEtag);
 
 const wrong = await fetchExact({ accept: 'application/json', 'if-none-match': '"wrong-validator"' });
 assert.equal(wrong.status, 200);
-assertCommon(wrong, observedEtag);
+assertFullResponse(wrong, jsonEtag);
 
 console.log(JSON.stringify({
-  schema: 'seenrelay.preview-fixture-qualification.v2',
+  schema: 'seenrelay.preview-fixture-qualification.v3',
   qualified: true,
   commit: expectedCommit,
   environment: 'preview',
   resource_revision: expectedRevision,
   origin_etag: originEtag,
-  observed_etag: observedEtag,
-  observed_etag_strength: observedEtag.startsWith('W/') ? 'weak' : 'strong',
-  if_none_match_observed_status: conditional.status,
-  if_none_match_strong_equivalent_status: strongEquivalent.status,
+  observed_json_etag: jsonEtag,
+  observed_text_etag: textEtag,
+  observed_etag_strength: jsonEtag.startsWith('W/') ? 'weak' : 'strong',
+  json_if_none_match_status: jsonConditional.status,
+  text_if_none_match_status: textConditional.status,
+  strong_equivalent_status: strongEquivalent.status,
   path: '/api/resource'
 }, null, 2));
