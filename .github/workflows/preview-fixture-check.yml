@@ -1,20 +1,21 @@
-name: Preview fixture check
+name: Frozen Preview fixture qualification
 
 on:
   push:
     branches:
-      - preview/native-http-fixture-v1
+      - verify/native-http-fixture-v1
 
 permissions:
   contents: read
 
 jobs:
-  typecheck:
+  qualify:
     runs-on: ubuntu-latest
     env:
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      TARGET_PREVIEW_SHA: 8d22778ccc73dcfdd5acbdbba655e924546f02fb
     steps:
-      - name: Checkout exact commit
+      - name: Checkout verification commit
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -27,5 +28,5 @@ jobs:
         run: npm run typecheck:core
       - name: Typecheck full
         run: npm run typecheck:full
-      - name: Qualify exact Vercel Preview
+      - name: Qualify frozen Vercel Preview
         run: node scripts/qualify-preview-fixture.mjs
