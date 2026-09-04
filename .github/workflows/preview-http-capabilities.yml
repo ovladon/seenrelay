@@ -1,0 +1,28 @@
+name: Preview HTTP capabilities
+
+on:
+  push:
+    branches:
+      - verify/native-http-fixture-v1
+    paths:
+      - 'scripts/inspect-preview-http-capabilities.mjs'
+      - '.github/workflows/preview-http-capabilities.yml'
+
+permissions:
+  contents: read
+
+env:
+  SEENRELAY_PREVIEW_BASE: https://seenrelay-git-preview-native-htt-6a17ce-ovladonn-9636s-projects.vercel.app
+  TARGET_PREVIEW_SHA: 8d22778ccc73dcfdd5acbdbba655e924546f02fb
+  VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/inspect-preview-http-capabilities.mjs
+      - run: node scripts/inspect-preview-http-capabilities.mjs
