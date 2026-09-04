@@ -20,6 +20,7 @@ jobs:
       VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
       TARGET_PREVIEW_SHA: 8d22778ccc73dcfdd5acbdbba655e924546f02fb
       MEASUREMENT_OUTPUT: native-http-stage0-measurement.json
+      MEASUREMENT_REPLICATION: R2
     steps:
       - name: Checkout verification commit
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
