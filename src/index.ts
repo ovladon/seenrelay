@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { cpuUsage } from 'node:process';
+import process from 'node:process';
 import { assertBillingDisabled } from './billing.js';
 import { canonicalFact, ValidationError } from './canonical.js';
 import { config } from './config.js';
@@ -140,12 +140,12 @@ app.get('/api/resource', (c) => {
   if (process.env.VERCEL_ENV === 'production') return c.notFound();
 
   const started = performance.now();
-  const cpuStarted = cpuUsage();
+  const cpuStarted = process.cpuUsage();
   const revision = 'preview-http-fixture-v1';
   const etag = '"6e2a8e6f2f2939c870d0402c12ff212b37c3da4995c6c682229f39af306bf3e4"';
   const setHeaders = () => {
     const duration = Math.max(0.001, performance.now() - started);
-    const cpu = cpuUsage(cpuStarted);
+    const cpu = process.cpuUsage(cpuStarted);
     const cpuMs = Math.max(0.001, (cpu.user + cpu.system) / 1000);
     c.header('cache-control', 'no-store');
     c.header('etag', etag);
