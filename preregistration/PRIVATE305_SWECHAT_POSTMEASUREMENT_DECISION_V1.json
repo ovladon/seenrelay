@@ -1,0 +1,86 @@
+{
+  "schema": "seenrelay-private305-swechat-postmeasurement-decision-v1",
+  "status": "frozen_before_any_private304_measured_numeric_result",
+  "purpose": "Precommit the next research action after the first admissible numeric PRIVATE304 result so that replay or identity follow-up cannot be selected post hoc from the observed overlap percentage.",
+  "parent": {
+    "private304_exact_head": "d531f5c24f2647426e50747f661a42ecf85ecb50",
+    "private304_current_blocked_run": 33998023599,
+    "current_blocked_status": "ACCESS_BLOCKED_NO_HF_OIDC_RESOURCE",
+    "numeric_result_observed_at_freeze": false
+  },
+  "admissible_input": {
+    "only_first_successful_measured_aggregate_on_exact_parent_head": true,
+    "aggregate_validator_must_pass": true,
+    "artifact_digest_must_be_recorded": true,
+    "blocked_access_runs_are_not_numeric_inputs": true,
+    "failed_or_partial_runs_are_not_inputs": true,
+    "pooling_with_private291_private292_private293_forbidden": true
+  },
+  "frozen_coordinates": {
+    "eligible": "overlap.eligible_http_webfetch_calls",
+    "exact_cross_session_reuse": "overlap.cross_session_exact_reuse_opportunities",
+    "url_cross_session_reuse": "overlap.cross_session_url_reuse_opportunities",
+    "exact_classification": "overlap.classification",
+    "integer_thresholds": {
+      "sample_floor": 100,
+      "low_upper_exclusive_percent": 5,
+      "weak_upper_exclusive_percent": 20
+    }
+  },
+  "decision_tree": [
+    {
+      "when": "eligible < 100",
+      "verdict": "INSUFFICIENT_FULL_SWECHAT_BROWSER_SAMPLE",
+      "authoritative_browser_replay_authorized": false,
+      "prompt_contribution_diagnostic_authorized": false,
+      "meaning": "The full pinned source still does not meet the preregistered sample floor. Do not commission replay and do not reinterpret earlier partial SWE-chat evidence as sufficient."
+    },
+    {
+      "when": "eligible >= 100 AND exact_cross_session_reuse * 100 < eligible * 5",
+      "verdict": "LOW_FULL_SWECHAT_EXACT_OVERLAP_NO_REPLAY",
+      "authoritative_browser_replay_authorized": false,
+      "meaning": "Do not commission authoritative replay from SWE-chat exact URL+prompt repeats. This is negative evidence for this source and identity only; it is not a population prevalence estimate or a global product kill by itself.",
+      "secondary_rule": {
+        "when": "url_cross_session_reuse * 100 >= eligible * 20",
+        "prompt_contribution_diagnostic_authorized": true,
+        "otherwise": false,
+        "scope": "A separately preregistered diagnostic may test whether prompt specificity, rather than URL recurrence, is the dominant reason exact operation reuse is low. It may not reclassify PRIVATE304, alter the frozen operation identity, or authorize replay/Production changes."
+      }
+    },
+    {
+      "when": "eligible >= 100 AND exact_cross_session_reuse * 100 >= eligible * 5 AND exact_cross_session_reuse * 100 < eligible * 20",
+      "verdict": "WEAK_FULL_SWECHAT_EXACT_OVERLAP_AUTHORIZE_REPLAY_PREREG_ONLY",
+      "authoritative_browser_replay_authorized": true,
+      "prompt_contribution_diagnostic_authorized": false,
+      "meaning": "Authorize only creation of a separate authoritative replay preregistration. No repeated operation payload may be inspected for replay selection before that preregistration is frozen."
+    },
+    {
+      "when": "eligible >= 100 AND exact_cross_session_reuse * 100 >= eligible * 20",
+      "verdict": "STRONG_FULL_SWECHAT_EXACT_OVERLAP_AUTHORIZE_REPLAY_PREREG_ONLY",
+      "authoritative_browser_replay_authorized": true,
+      "prompt_contribution_diagnostic_authorized": false,
+      "meaning": "Authorize only creation of a separate authoritative replay preregistration. Strong overlap alone does not establish material savings, observer independence, sequentiality, or SeenRelay value."
+    }
+  ],
+  "replay_preconditions_if_authorized": {
+    "new_preregistration_required_before_raw_repeat_inspection": true,
+    "source_revision_and_operation_identity_must_remain_frozen": true,
+    "selection_rule_must_be_frozen_before_candidate_payloads_are_viewed": true,
+    "authoritative_materiality_must_be_measured_separately": true,
+    "cross_native_session_remains_independence_proxy_only": true,
+    "sequentiality_must_be_proven_separately": true
+  },
+  "forbidden_inferences": {
+    "private285_pass_from_overlap_alone": true,
+    "observer_independence_from_native_session_id_alone": true,
+    "population_prevalence_from_swechat": true,
+    "cross_source_pooled_hit_rate": true,
+    "seenrelay_reuse_authorization_from_overlap_alone": true,
+    "production_change_from_overlap_alone": true,
+    "commercial_claim_from_overlap_alone": true
+  },
+  "interpretation": {
+    "private285_remains_closed_until_all_independent_requirements_pass": true,
+    "production_unchanged": true
+  }
+}
