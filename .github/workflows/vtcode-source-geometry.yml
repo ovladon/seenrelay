@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'preregistration/PRIVATE297_VTCODE_HARNESS_SOURCE_GEOMETRY_V1.json'
+      - 'preregistration/PRIVATE297_PRE_RESULT_FAILFAST_CORRECTION_V1.json'
       - 'scripts/run-private297-vtcode-source-geometry.py'
       - 'tests/private297-vtcode-source-geometry.test.py'
       - '.github/workflows/vtcode-source-geometry.yml'
@@ -63,18 +64,24 @@ jobs:
 
           h = report.get('harness_identity', {})
           required_ints = [
-              'harness_files', 'valid_harness_wrappers', 'nonempty_native_thread_ids',
-              'unique_native_thread_ids', 'duplicate_native_thread_id_groups',
-              'duplicate_native_thread_id_extra_files', 'unique_full_file_contents',
-              'exact_full_file_content_duplicate_groups', 'exact_full_file_content_duplicate_extra_files'
+              'harness_files', 'valid_harness_wrappers', 'invalid_harness_wrappers',
+              'nonempty_native_thread_ids', 'unique_native_thread_ids',
+              'duplicate_native_thread_id_groups', 'duplicate_native_thread_id_extra_files',
+              'unique_full_file_contents', 'exact_full_file_content_duplicate_groups',
+              'exact_full_file_content_duplicate_extra_files'
           ]
           for key in required_ints:
               if not isinstance(h.get(key), int) or h[key] < 0:
                   raise SystemExit(f'invalid aggregate integer: {key}')
+          if h['valid_harness_wrappers'] + h['invalid_harness_wrappers'] != h['harness_files']:
+              raise SystemExit('harness valid/invalid accounting mismatch')
+          if h['nonempty_native_thread_ids'] != h['valid_harness_wrappers']:
+              raise SystemExit('native thread coverage accounting mismatch')
 
           admissible = (
               h['harness_files'] >= 2
               and h['valid_harness_wrappers'] == h['harness_files']
+              and h['invalid_harness_wrappers'] == 0
               and h['nonempty_native_thread_ids'] == h['harness_files']
               and h['unique_native_thread_ids'] == h['harness_files']
               and h['duplicate_native_thread_id_groups'] == 0
