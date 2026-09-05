@@ -1,0 +1,28 @@
+{
+  "schema": "seenrelay-private306-pre-result-validator-correction-v1",
+  "status": "frozen_after_validator_failure_before_any_admissible_private306_artifact",
+  "superseded_run": {
+    "workflow_run_id": 33998997747,
+    "head": "c016739aaef8cc203fa29b086fea8fb204e1cf5d",
+    "tests_passed": true,
+    "diagnostic_step_completed": true,
+    "validator_failed": true,
+    "artifact_uploaded": false,
+    "dataset_access_attempted": false
+  },
+  "problem": "The validator searched the raw JSON text for the substring access_token, which legitimately occurs in the boolean schema key hf_access_token_retained=false. This checks schema vocabulary rather than credential leakage.",
+  "correction": {
+    "remove_access_token_schema_substring_check": true,
+    "retain_token_value_prefix_checks": ["hf_oauth_", "hf_jwt_"],
+    "retain_exact_report_schema_validation": true,
+    "retain_privacy_flags_false_validation": true,
+    "diagnostic_script_changed": false,
+    "claim_allowlist_changed": false,
+    "exchange_request_changed": false,
+    "dataset_access_policy_changed": false
+  },
+  "admissibility": {
+    "superseded_run_claim_values_may_not_be_used": true,
+    "only_successful_aggregate_artifact_after_correction_is_canonical": true
+  }
+}
