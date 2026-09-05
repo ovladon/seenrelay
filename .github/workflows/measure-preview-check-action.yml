@@ -1,0 +1,119 @@
+name: Measure Preview CHECK action
+
+on:
+  push:
+    branches:
+      - verify/frontier-check-instrumentation-v1
+    paths:
+      - '.github/workflows/measure-preview-check-action.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seenrelay-preview-check-action-608735
+  cancel-in-progress: false
+
+env:
+  SEENRELAY_PREVIEW_BASE: https://seenrelay-git-preview-frontier-c-9f112b-ovladonn-9636s-projects.vercel.app
+  TARGET_PREVIEW_SHA: 608735e6137a8fdef873d38d24491fe037399ffc
+  ACTION_CONTRACT_FINGERPRINT: sha256:f489efdafeb83a1dfc7cd0d689442acede822c61d9127d745de9390fda14b887
+  ACTION_FACT_FINGERPRINT: sha256:cce38403cb49e8201be6e0952c4e77d04ee154007459b249195797c5c1f53c41
+  VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+jobs:
+  observe-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify frozen setup collector
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD:scripts/preview-check-action-setup.mjs)" = '42b60b4bf9e042a291e56ba461ef17c2246670c7'
+          test "$(git rev-parse HEAD:scripts/preview-check-action-measure.mjs)" = 'fa1d27fdc8906eccc93810ed74571a950936f230'
+          node --check scripts/preview-check-action-setup.mjs
+          node --check scripts/preview-check-action-measure.mjs
+      - name: Submit independent Ubuntu observation
+        run: node scripts/preview-check-action-setup.mjs observe
+
+  observe-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify frozen setup collector
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD:scripts/preview-check-action-setup.mjs)" = '42b60b4bf9e042a291e56ba461ef17c2246670c7'
+          test "$(git rev-parse HEAD:scripts/preview-check-action-measure.mjs)" = 'fa1d27fdc8906eccc93810ed74571a950936f230'
+          node --check scripts/preview-check-action-setup.mjs
+          node --check scripts/preview-check-action-measure.mjs
+      - name: Submit independent Windows observation
+        run: node scripts/preview-check-action-setup.mjs observe
+
+  qualify:
+    needs: [observe-ubuntu, observe-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Qualify exact action fact
+        env:
+          ACTION_OUTPUT: action-setup-qualification.json
+        run: node scripts/preview-check-action-setup.mjs qualify
+      - name: Upload qualification evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: preview-check-action-qualification-${{ github.run_id }}
+          path: action-setup-qualification.json
+          if-no-files-found: error
+          retention-days: 30
+
+  measure-ubuntu:
+    needs: qualify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Measure exactly 60 Ubuntu CHECK HIT actions
+        env:
+          CANDIDATE_ENVIRONMENT: ubuntu
+          ACTION_OUTPUT: candidate-ubuntu.json
+        run: node scripts/preview-check-action-measure.mjs
+      - name: Upload Ubuntu candidate evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: preview-check-action-ubuntu-${{ github.run_id }}
+          path: candidate-ubuntu.json
+          if-no-files-found: error
+          retention-days: 30
+
+  measure-windows:
+    needs: qualify
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Measure exactly 60 Windows CHECK HIT actions
+        env:
+          CANDIDATE_ENVIRONMENT: windows
+          ACTION_OUTPUT: candidate-windows.json
+        run: node scripts/preview-check-action-measure.mjs
+      - name: Upload Windows candidate evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: preview-check-action-windows-${{ github.run_id }}
+          path: candidate-windows.json
+          if-no-files-found: error
+          retention-days: 30
