@@ -1,0 +1,22 @@
+{
+  "schema": "seenrelay-private302-pre-result-duplicate-payload-definition-v1",
+  "status": "frozen_before_any_swechat_parquet_access_or_numeric_result",
+  "parent_preregistration": "PRIVATE302_SWECHAT_FULL_BROWSER_OVERLAP_V1",
+  "reason": "The parent preregistration requires duplicate physical WebFetch keys to have byte-equivalent parsed tool input JSON but did not define the deterministic serialization used to compare parsed JSON objects.",
+  "correction": {
+    "parsed_tool_input_equivalence": "Parse tool_input_json as a JSON object, then serialize that parsed object as UTF-8 JSON with object keys sorted lexicographically, ensure_ascii=false, and separators ',' and ':' with no added whitespace. Duplicate physical keys are payload-equivalent only when these deterministic serialized bytes are identical.",
+    "raw_input_string_byte_identity_required": false,
+    "operation_identity_changed": false,
+    "eligibility_changed": false,
+    "classification_thresholds_changed": false,
+    "source_population_changed": false,
+    "native_session_identity_changed": false
+  },
+  "consequence": "If the same native physical key has different deterministic parsed-input bytes, fail closed. Otherwise retain one physical call and count the additional occurrence as a removed duplicate.",
+  "authorization": {
+    "numeric_result_observed_before_correction": false,
+    "parquet_content_accessed_before_correction": false,
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}
