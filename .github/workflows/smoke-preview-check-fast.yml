@@ -1,5 +1,5 @@
 name: Smoke Preview CHECK fast path
-# smoke contract v2: reference CHECK establishes lease before candidate fast-path timing
+# smoke contract v3: Vercel Web-signature adapter + reference CHECK lease bootstrap
 
 on:
   push:
