@@ -1,0 +1,88 @@
+{
+  "schema": "seenrelay-private295-jobseek-header-schema-v1",
+  "status": "frozen_before_header_schema_result",
+  "purpose": "Inspect only the publisher header record of the exact PRIVATE293 Phase A files to determine which source-native header fields exist before any candidate session identity is selected. Output schema names and JSON value types only; never output header values.",
+  "production_authorized": false,
+  "public_claim_authorized": false,
+  "private285_class_pass_authorized": false,
+  "parent_results": {
+    "private293": {
+      "research_head": "1ae9ab3b0ec2193ffccdca78d32744a3aa6f516d",
+      "workflow_run_id": 33992072773,
+      "classification": "LOW_EXACT_OVERLAP_SIGNAL"
+    },
+    "private294": {
+      "research_head": "64ee0e39e0b0e608d28f0318f4805899b7b6849e",
+      "workflow_run_id": 33992893536,
+      "diagnosis": "SESSION_ID_ONLY_DOMINANT_GAP",
+      "sessionId_missing_records": 8830,
+      "assistant_uuid_missing_records": 0,
+      "tool_use_id_missing_records": 0
+    }
+  },
+  "source": {
+    "dataset": "viktor-shcherb/jobseek-agent-traces",
+    "resolved_revision": "524f2910f2893b04ccfbb76e56116fe0af3c5bf7",
+    "trace_manifest_sha256": "113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8",
+    "locked_trace_files": 929,
+    "license": "MIT"
+  },
+  "selection": {
+    "must_reuse_private293_phase_a_exactly": true,
+    "phase_a_file_count": 400,
+    "rank": "ascending sha256('seenrelay-private293-phase-a-v1\\0' + UTF8(path)); ties by raw UTF-8 path",
+    "process_all_selected_headers": true,
+    "phase_b_forbidden": true,
+    "selection_must_not_use_header_content": true,
+    "selection_must_not_use_file_size": true,
+    "selection_must_not_use_company_or_issue_metadata": true
+  },
+  "ingestion": {
+    "read_only_first_nonempty_json_record_per_selected_file": true,
+    "first_record_must_have_trace_header_true": true,
+    "do_not_read_transcript_records": true,
+    "do_not_read_urls": true,
+    "do_not_read_prompts": true,
+    "do_not_read_tool_results": true,
+    "do_not_construct_session_identity": true,
+    "do_not_compare_header_values": true,
+    "do_not_compute_overlap": true
+  },
+  "allowed_output": {
+    "files_with_valid_header": true,
+    "top_level_header_key_presence_counts": true,
+    "top_level_header_key_json_type_counts": true,
+    "header_key_names_may_be_output": true,
+    "header_values_may_not_be_output": true,
+    "nested_value_contents_may_not_be_output": true
+  },
+  "json_types": [
+    "null",
+    "boolean",
+    "number",
+    "string",
+    "array",
+    "object"
+  ],
+  "decision_rule": {
+    "result_is_schema_inventory_only": true,
+    "no_header_field_is_authorized_as_session_identity_by_private295": true,
+    "next_step": "After PRIVATE295, any candidate source-native session field must be selected using publisher documentation/schema semantics in a separate preregistration before any value equality, uniqueness, duplicate-safety, or overlap analysis is performed."
+  },
+  "privacy": {
+    "aggregate_schema_counts_only": true,
+    "raw_header_values_output": false,
+    "raw_trace_files_retained": false,
+    "file_paths_output": false,
+    "session_identity_values_output": false,
+    "company_or_issue_metadata_output": false
+  },
+  "interpretation": {
+    "private293_result_frozen": true,
+    "private294_result_frozen": true,
+    "private293_may_not_be_reclassified": true,
+    "private294_may_not_be_reclassified": true,
+    "diagnostic_is_not_reuse_evidence": true,
+    "diagnostic_is_not_population_prevalence_evidence": true
+  }
+}
