@@ -1,0 +1,28 @@
+{
+  "schema": "seenrelay-private308-hf-resource-existence-v1",
+  "status": "frozen_before_resource_lookup",
+  "purpose": "Determine whether the masked HF_OIDC_RESOURCE resolves to an existing public Hugging Face user without retaining or revealing its value and without requesting OIDC or dataset access.",
+  "parent": {
+    "private304_exact_head": "d531f5c24f2647426e50747f661a42ecf85ecb50",
+    "private307_exchange": "invalid_grant",
+    "numeric_measurement_observed": false
+  },
+  "allowed_network": {
+    "endpoint_shape": "https://huggingface.co/api/users/{HF_OIDC_RESOURCE}/overview",
+    "method": "GET",
+    "authentication": false,
+    "dataset_access": false
+  },
+  "allowed_output": ["resource_nonempty", "resource_has_slash", "http_status", "user_exists"],
+  "forbidden_output": ["HF_OIDC_RESOURCE value", "response body", "user profile fields", "email", "tokens"],
+  "decision": {
+    "user_exists_false": "HF_OIDC_RESOURCE is not a valid existing Hugging Face username; correct the GitHub secret before any PRIVATE304 rerun.",
+    "user_exists_true": "The resource resolves to a real Hugging Face user; remaining invalid_grant cause is the account CI/CD identity configuration or another account-level grant condition."
+  },
+  "interpretation": {
+    "private304_result_modified": false,
+    "dataset_access_authorized": false,
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}
