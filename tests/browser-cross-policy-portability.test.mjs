@@ -33,11 +33,14 @@ test('cross-policy portability requires same base task, different policy, and sa
   assert.deepEqual(report.rejected_records, { empty_evidence: 1 });
   assert.equal(report.base_task_ids_with_eligible_contracts, 2);
   assert.equal(report.base_tasks_with_eligible_pair, 2);
-  assert.equal(report.eligible_cross_policy_pairs, 7);
-  assert.equal(report.identical_evidence_pairs, 3);
-  assert.equal(report.identical_evidence_pair_percent, 42.857143);
+  assert.equal(report.eligible_cross_policy_pairs, 6);
+  assert.equal(report.identical_evidence_pairs, 2);
+  assert.equal(report.identical_evidence_pair_percent, 33.333333);
   assert.equal(report.base_tasks_with_cross_policy_portable_evidence, 1);
   assert.equal(report.base_task_cross_policy_portability_percent, 50);
+  assert.equal(report.eligible_contracts_with_prior_cross_policy_candidate, 4);
+  assert.equal(report.contract_reuse_opportunities, 2);
+  assert.equal(report.contract_reuse_opportunity_percent, 50);
   assert.equal(report.classification, 'INSUFFICIENT_CONTROLLED_SAMPLE');
   assert.equal(report.methodology.same_surface_request_required, true);
   assert.equal(report.methodology.semantic_matching_used, false);
