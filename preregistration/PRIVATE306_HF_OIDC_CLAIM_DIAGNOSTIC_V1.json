@@ -1,0 +1,57 @@
+{
+  "schema": "seenrelay-private306-hf-oidc-claim-diagnostic-v1",
+  "status": "frozen_before_private306_oidc_request",
+  "purpose": "Diagnose the PRIVATE304 Hugging Face OIDC exchange rejection without accessing SWE-chat content, altering the frozen PRIVATE304 measurement, or revealing credentials.",
+  "parent": {
+    "private304_exact_head": "d531f5c24f2647426e50747f661a42ecf85ecb50",
+    "blocked_rerun": 33998023599,
+    "blocked_status": "ACCESS_BLOCKED_OIDC_EXCHANGE_REJECTED",
+    "numeric_measurement_observed": false
+  },
+  "allowed_actions": {
+    "request_github_oidc_id_token": true,
+    "audience": "https://huggingface.co",
+    "decode_id_token_payload_locally_without_retention": true,
+    "attempt_hugging_face_token_exchange": true,
+    "dataset_api_or_download_access": false,
+    "swechat_content_access": false
+  },
+  "claim_allowlist": [
+    "iss",
+    "aud",
+    "repository",
+    "repository_owner",
+    "repository_visibility",
+    "event_name",
+    "ref",
+    "ref_type",
+    "workflow",
+    "workflow_ref",
+    "job_workflow_ref"
+  ],
+  "forbidden_output": [
+    "HF_OIDC_RESOURCE value",
+    "GitHub OIDC JWT",
+    "JWT signature",
+    "GitHub OIDC request token",
+    "Hugging Face access token",
+    "email",
+    "actor_id",
+    "repository_owner_id",
+    "subject claim",
+    "arbitrary non-allowlisted JWT claims"
+  ],
+  "exchange_diagnostic": {
+    "retain_success_boolean_only_on_success": true,
+    "on_http_error_retain_only": ["http_status", "oauth_error", "request_id_present"],
+    "error_description_retention": false,
+    "response_body_retention": false,
+    "access_token_retention": false
+  },
+  "interpretation": {
+    "diagnostic_can_modify_private304_result": false,
+    "diagnostic_can_authorize_dataset_access": false,
+    "diagnostic_can_authorize_production": false,
+    "diagnostic_can_pass_private285": false
+  }
+}
