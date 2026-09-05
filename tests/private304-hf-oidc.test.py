@@ -41,7 +41,8 @@ class Private304OidcTests(unittest.TestCase):
         self.assertFalse(report["authentication"]["oidc_exchange_succeeded"])
         self.assertTrue(all(value is False for value in report["privacy"].values()))
         encoded = json.dumps(report)
-        self.assertNotIn("HF_OIDC_RESOURCE", encoded)
+        synthetic_secret_value = "private304-secret-username-sentinel"
+        self.assertNotIn(synthetic_secret_value, encoded)
         self.assertNotIn("access_token", encoded)
 
     def test_github_oidc_request_pins_hugging_face_audience(self):
