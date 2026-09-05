@@ -1,0 +1,134 @@
+name: WebArena cheap canonicalizer falsification
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  cheap-canonicalizer-falsification:
+    if: startsWith(github.head_ref, 'research/browser-request-representation-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SOURCE_REPOSITORY: ServiceNow/webarena-verified
+      SOURCE_REVISION: 6473f72db5dcefc97b5725b59e734504edc28a21
+      SOURCE_SHA256: d65275660814663375028e9017e1f929e3c38321041b125795e2713b52243d30
+      SOURCE_BYTES: '927596'
+      LOCKED_RETRIEVAL_DENOMINATOR: '297'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Run PRIVATE290 hostile tests
+        run: node --test tests/browser-cheap-canonicalizer.test.mjs
+
+      - name: Download and verify pinned WebArena Verified dataset
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import os
+          import pathlib
+          import urllib.request
+
+          repo = os.environ['SOURCE_REPOSITORY']
+          revision = os.environ['SOURCE_REVISION']
+          expected_sha = os.environ['SOURCE_SHA256']
+          expected_bytes = int(os.environ['SOURCE_BYTES'])
+          target = pathlib.Path('.private290-webarena.json')
+          url = f'https://raw.githubusercontent.com/{repo}/{revision}/assets/dataset/webarena-verified.json'
+          request = urllib.request.Request(url, headers={'User-Agent': 'seenrelay-private290-falsification/1.0'})
+          digest = hashlib.sha256()
+          size = 0
+          with urllib.request.urlopen(request, timeout=60) as response, target.open('wb') as handle:
+              while True:
+                  chunk = response.read(1024 * 1024)
+                  if not chunk:
+                      break
+                  digest.update(chunk)
+                  size += len(chunk)
+                  handle.write(chunk)
+          actual_sha = digest.hexdigest()
+          if actual_sha != expected_sha or size != expected_bytes:
+              target.unlink(missing_ok=True)
+              raise SystemExit(f'Pinned dataset mismatch: sha={actual_sha} bytes={size}')
+          print(f'verified pinned dataset: {size} bytes sha256={actual_sha}')
+          PY
+
+      - name: Evaluate preregistered cheap canonicalizer falsification
+        run: |
+          node scripts/evaluate-browser-cheap-canonicalizer.mjs \
+            --input .private290-webarena.json \
+            --source-repository "$SOURCE_REPOSITORY" \
+            --source-revision "$SOURCE_REVISION" \
+            --source-sha256 "$SOURCE_SHA256" \
+            --source-bytes "$SOURCE_BYTES" \
+            --output private290-cheap-canonicalizer-report.json
+          cat private290-cheap-canonicalizer-report.json
+
+      - name: Enforce locked denominator, methodology, and privacy
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('private290-cheap-canonicalizer-report.json', 'utf8'));
+          const top = [
+            'schema','source','locked_retrieval_tasks','renderer_attempted_tasks',
+            'renderer_fully_resolved_tasks','renderer_failures','exact_roundtrip_tasks',
+            'exact_roundtrip_percent_of_locked','exact_payload_cache_miss_tasks',
+            'exact_payload_cache_miss_percent_of_locked','cheap_canonicalizer_hit_tasks',
+            'cheap_canonicalizer_hit_percent_of_locked',
+            'cheap_canonicalizer_hit_percent_of_fully_resolved','classification','methodology','privacy'
+          ].sort();
+          if (report.schema !== 'seenrelay-private290-cheap-canonicalizer-report-v1') process.exit(1);
+          if (report.source?.repository !== process.env.SOURCE_REPOSITORY) process.exit(1);
+          if (report.source?.revision !== process.env.SOURCE_REVISION) process.exit(1);
+          if (report.source?.dataset_sha256 !== process.env.SOURCE_SHA256) process.exit(1);
+          if (report.source?.dataset_bytes !== Number(process.env.SOURCE_BYTES)) process.exit(1);
+          if (report.locked_retrieval_tasks !== Number(process.env.LOCKED_RETRIEVAL_DENOMINATOR)) process.exit(1);
+          if (report.renderer_attempted_tasks !== Number(process.env.LOCKED_RETRIEVAL_DENOMINATOR)) process.exit(1);
+          if (report.methodology?.normalization !== 'CRLF/CR to LF plus trim only') process.exit(1);
+          if (report.methodology?.case_folding !== false) process.exit(1);
+          if (report.methodology?.punctuation_normalization !== false) process.exit(1);
+          if (report.methodology?.whitespace_collapse !== false) process.exit(1);
+          if (report.methodology?.retrieved_data_property_read !== false) process.exit(1);
+          if (report.methodology?.retrieved_data_contents_inspected !== false) process.exit(1);
+          if (report.methodology?.evaluator_answer_used_to_construct_identity !== false) process.exit(1);
+          if (report.methodology?.task_id_used_to_construct_identity !== false) process.exit(1);
+          if (report.methodology?.llm_used !== false) process.exit(1);
+          if (report.methodology?.embeddings_used !== false) process.exit(1);
+          if (report.methodology?.fuzzy_matching_used !== false) process.exit(1);
+          if (report.methodology?.result_is_controlled_falsification_only !== true) process.exit(1);
+          if (report.methodology?.result_is_natural_prevalence !== false) process.exit(1);
+          if (report.methodology?.private285_pass_authorized !== false) process.exit(1);
+          if (report.methodology?.seenrelay_specific_advantage_proven !== false) process.exit(1);
+          if (report.privacy?.aggregate_counts_only !== true) process.exit(1);
+          for (const key of ['raw_intents_retained','rendered_intents_retained','instantiation_values_retained','retrieved_data_retained','task_ids_retained','per_task_hashes_retained']) {
+            if (report.privacy?.[key] !== false) process.exit(1);
+          }
+          if (JSON.stringify(Object.keys(report).sort()) !== JSON.stringify(top)) process.exit(1);
+          const serialized = JSON.stringify(report);
+          if (/https?:\/\//i.test(serialized)) process.exit(1);
+          NODE
+
+      - name: Delete raw dataset before artifact upload
+        if: always()
+        run: rm -f .private290-webarena.json
+
+      - name: Upload aggregate falsification report only
+        if: always() && hashFiles('private290-cheap-canonicalizer-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: private290-cheap-canonicalizer-report
+          path: private290-cheap-canonicalizer-report.json
+          if-no-files-found: error
+          retention-days: 14
