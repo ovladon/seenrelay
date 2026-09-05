@@ -1,0 +1,56 @@
+name: HF resource existence diagnostic (PRIVATE308)
+
+on:
+  pull_request:
+    branches:
+      - research/browser-natural-swechat-full-oidc-v1
+    paths:
+      - preregistration/PRIVATE308_HF_RESOURCE_EXISTENCE_V1.json
+      - scripts/run-private308-hf-resource-existence.py
+      - .github/workflows/private308-hf-resource-existence.yml
+
+permissions:
+  contents: read
+
+jobs:
+  resource-existence:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'research/private308-hf-resource-existence-v1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HF_OIDC_RESOURCE: ${{ secrets.HF_OIDC_RESOURCE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run masked public-user existence diagnostic
+        run: python scripts/run-private308-hf-resource-existence.py --output private308-hf-resource-existence.json
+      - name: Enforce aggregate-only diagnostic
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('private308-hf-resource-existence.json').read_text())
+          if r.get('schema') != 'seenrelay-private308-hf-resource-existence-v1' or r.get('status') != 'DIAGNOSTIC_COMPLETE':
+              raise SystemExit('schema/status mismatch')
+          if set(r) != {'schema','status','resource_nonempty','resource_has_slash','http_status','user_exists','dataset_access_attempted','privacy','interpretation'}:
+              raise SystemExit('unexpected report fields')
+          if r['dataset_access_attempted'] is not False:
+              raise SystemExit('dataset access forbidden')
+          if not isinstance(r['resource_nonempty'], bool) or not isinstance(r['resource_has_slash'], bool) or not isinstance(r['user_exists'], bool):
+              raise SystemExit('boolean type mismatch')
+          if r['http_status'] is not None and not isinstance(r['http_status'], int):
+              raise SystemExit('HTTP status type mismatch')
+          if set(r['privacy']) != {'resource_retained','response_body_retained','profile_fields_retained','token_used'} or any(r['privacy'].values()):
+              raise SystemExit('privacy mismatch')
+          if set(r['interpretation']) != {'private304_result_modified','dataset_access_authorized','production_change_authorized','private285_pass_authorized'} or any(r['interpretation'].values()):
+              raise SystemExit('interpretation mismatch')
+          PY
+      - name: Upload aggregate PRIVATE308 diagnostic only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private308-hf-resource-existence
+          path: private308-hf-resource-existence.json
+          retention-days: 14
+          if-no-files-found: error
