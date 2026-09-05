@@ -1,0 +1,48 @@
+name: Verify Preview CHECK timing
+
+on:
+  push:
+    branches:
+      - verify/frontier-check-instrumentation-v1
+    paths:
+      - 'scripts/verify-frontier-check-timing.mjs'
+      - '.github/workflows/verify-frontier-check-timing.yml'
+
+permissions:
+  contents: read
+
+env:
+  SEENRELAY_PREVIEW_BASE: https://seenrelay-git-preview-frontier-c-9f112b-ovladonn-9636s-projects.vercel.app
+  TARGET_PREVIEW_SHA: 608735e6137a8fdef873d38d24491fe037399ffc
+  VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+jobs:
+  observe-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/verify-frontier-check-timing.mjs
+      - run: node scripts/verify-frontier-check-timing.mjs observe
+
+  observe-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/verify-frontier-check-timing.mjs
+      - run: node scripts/verify-frontier-check-timing.mjs observe
+
+  aggregate-check:
+    needs: [observe-ubuntu, observe-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node scripts/verify-frontier-check-timing.mjs check
