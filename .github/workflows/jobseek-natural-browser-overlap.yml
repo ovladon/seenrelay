@@ -1,0 +1,114 @@
+name: Jobseek natural browser overlap screen
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'preregistration/PRIVATE293_JOBSEEK_NATURAL_BROWSER_SOURCE_V1.json'
+      - 'scripts/screen-browser-trace-overlap.mjs'
+      - 'scripts/run-private293-jobseek-screen.py'
+      - 'tests/browser-trace-overlap-screen.test.mjs'
+      - 'tests/private293-jobseek-screen.test.py'
+      - '.github/workflows/jobseek-natural-browser-overlap.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  natural-browser-overlap:
+    if: startsWith(github.head_ref, 'research/browser-natural-jobseek-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned Hub metadata client
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
+
+      - name: Run frozen overlap and PRIVATE293 hostile tests
+        run: |
+          node --test tests/browser-trace-overlap-screen.test.mjs
+          python tests/private293-jobseek-screen.test.py
+
+      - name: Execute preregistered Phase A and conditional Phase B
+        shell: bash
+        run: |
+          python scripts/run-private293-jobseek-screen.py \
+            --work-dir "$RUNNER_TEMP/private293-jobseek" \
+            --output private293-jobseek-overlap-report.json
+
+      - name: Enforce aggregate-only PRIVATE293 report
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('private293-jobseek-overlap-report.json', 'utf8'));
+          if (report.schema !== 'seenrelay-private293-jobseek-natural-browser-overlap-v1') process.exit(1);
+          if (report.source?.dataset !== 'viktor-shcherb/jobseek-agent-traces') process.exit(1);
+          if (report.source?.resolved_revision !== '524f2910f2893b04ccfbb76e56116fe0af3c5bf7') process.exit(1);
+          if (report.source?.trace_manifest_sha256 !== '113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8') process.exit(1);
+          if (report.source?.locked_trace_files !== 929 || report.source?.locked_trace_total_bytes !== 5700388035) process.exit(1);
+          if (report.selection?.phase_a_file_count !== 400 || report.selection?.phase_a_completed !== true) process.exit(1);
+          if (report.selection?.selection_used_file_size !== false) process.exit(1);
+          if (report.selection?.selection_used_company_or_issue_metadata !== false) process.exit(1);
+          if (report.selection?.selection_used_trace_content !== false) process.exit(1);
+          if (report.selection?.early_stop_within_phase !== false) process.exit(1);
+
+          const overlap = report.overlap;
+          const extraction = report.extraction;
+          if (overlap?.schema !== 'seenrelay-browser-overlap-screen-v1') process.exit(1);
+          if (overlap?.tool_name !== 'WebFetch') process.exit(1);
+          if (!Number.isInteger(extraction?.unique_physical_webfetch_calls) || extraction.unique_physical_webfetch_calls < 0) process.exit(1);
+          if (overlap.webfetch_calls_seen !== extraction.unique_physical_webfetch_calls) process.exit(1);
+          if (overlap.source_sessions !== extraction.native_sessions_with_webfetch) process.exit(1);
+          if (overlap.invalid_json_lines !== 0) process.exit(1);
+          if (!['INSUFFICIENT_EXTERNAL_SAMPLE','LOW_EXACT_OVERLAP_SIGNAL','WEAK_EXACT_OVERLAP_SIGNAL','STRONG_EXACT_OVERLAP_SIGNAL'].includes(overlap.classification)) process.exit(1);
+
+          if (report.selection.phase_b_triggered === true) {
+            if (report.selection.phase_used !== 'A+B_FULL_CORPUS') process.exit(1);
+            if (report.selection.final_files_processed !== 929) process.exit(1);
+            if (report.selection.phase_a_eligible_http_webfetch_calls >= 100) process.exit(1);
+            if (extraction.logical_bytes_processed !== 5700388035) process.exit(1);
+          } else if (report.selection.phase_b_triggered === false) {
+            if (report.selection.phase_used !== 'A_ONLY_FLOOR_MET') process.exit(1);
+            if (report.selection.final_files_processed !== 400) process.exit(1);
+            if (report.selection.phase_a_eligible_http_webfetch_calls < 100) process.exit(1);
+            if (extraction.logical_bytes_processed !== report.selection.phase_a_logical_bytes) process.exit(1);
+          } else process.exit(1);
+
+          if (report.interpretation?.authoritative_browser_replay_performed !== false) process.exit(1);
+          if (report.interpretation?.private285_class_pass_authorized !== false) process.exit(1);
+          if (report.interpretation?.population_prevalence_claim_authorized !== false) process.exit(1);
+          if (report.interpretation?.observer_independence_proven !== false) process.exit(1);
+          if (overlap.interpretation?.natural_workload_class_pass_authorized !== false) process.exit(1);
+          if (overlap.interpretation?.seenrelay_reuse_authorized !== false) process.exit(1);
+
+          for (const [key, value] of Object.entries(report.privacy || {})) {
+            if (value !== false) process.exit(1);
+          }
+          const serialized = JSON.stringify(report);
+          for (const forbidden of ['raw_url','raw_prompt','tool_use_id','assistant_uuid','native_session_id','physical_call_key']) {
+            if (serialized.includes(forbidden)) process.exit(1);
+          }
+          NODE
+
+      - name: Delete transient trace-derived data before artifact upload
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$RUNNER_TEMP/private293-jobseek"
+
+      - name: Upload aggregate report only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private293-jobseek-natural-browser-overlap
+          path: private293-jobseek-overlap-report.json
+          if-no-files-found: error
+          retention-days: 14
