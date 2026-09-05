@@ -15,36 +15,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Lock Jobseek Git/LFS manifest without trace payload download
+      - name: Install pinned Hub metadata client
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
+
+      - name: Lock Jobseek manifest from Hub metadata only
         shell: bash
         run: |
           python3 - <<'PY'
           import hashlib
           import json
-          import os
           import pathlib
           import re
-          import subprocess
+
+          from huggingface_hub import HfApi, hf_hub_download
+          from huggingface_hub.hf_api import RepoFile
 
           repo = 'viktor-shcherb/jobseek-agent-traces'
-          url = f'https://huggingface.co/datasets/{repo}.git'
-          work = pathlib.Path(os.environ['RUNNER_TEMP']) / 'private293-hf-repo'
-          env = os.environ.copy()
-          env['GIT_LFS_SKIP_SMUDGE'] = '1'
-
-          subprocess.run([
-              'git', '-c', 'filter.lfs.smudge=', '-c', 'filter.lfs.required=false',
-              'clone', '--quiet', '--no-checkout', '--filter=blob:none', '--depth=1', url, str(work)
-          ], check=True, env=env)
-
-          def git(*args):
-              return subprocess.check_output(['git', '-C', str(work), *args], env=env)
-
-          resolved = git('rev-parse', 'HEAD').decode().strip()
-          if not re.fullmatch(r'[0-9a-f]{40}', resolved):
+          api = HfApi()
+          info = api.dataset_info(repo_id=repo, revision='main')
+          resolved = info.sha
+          if not isinstance(resolved, str) or not re.fullmatch(r'[0-9a-f]{40}', resolved):
               raise SystemExit(f'invalid resolved revision: {resolved!r}')
 
-          readme = git('show', 'HEAD:README.md')
+          readme_path = hf_hub_download(
+              repo_id=repo,
+              repo_type='dataset',
+              revision=resolved,
+              filename='README.md',
+          )
+          readme = pathlib.Path(readme_path).read_bytes()
           readme_text = readme.decode('utf-8', errors='strict').lower()
           required = [
               'license: mit',
@@ -56,35 +55,53 @@ jobs:
               if fragment not in readme_text:
                   raise SystemExit(f'missing pinned README declaration: {fragment}')
 
-          names = git('ls-tree', '-r', '--name-only', 'HEAD', '--', 'traces').decode('utf-8').splitlines()
-          names = sorted(name for name in names if name.endswith('.jsonl'))
-          if not names:
-              raise SystemExit('no trace JSONL files found')
-          if len(names) != len(set(names)):
-              raise SystemExit('duplicate trace path in tree')
-
-          lfs_re = re.compile(
-              rb'^version https://git-lfs.github.com/spec/v1\n'
-              rb'oid sha256:([0-9a-f]{64})\n'
-              rb'size ([0-9]+)\n?$',
-              re.ASCII,
-          )
-          manifest_rows = []
+          rows = []
           total_bytes = 0
-          for name in names:
-              pointer = git('show', f'HEAD:{name}')
-              match = lfs_re.fullmatch(pointer)
-              if not match:
-                  raise SystemExit(f'trace is not a canonical LFS pointer: {name}')
-              oid = match.group(1).decode('ascii')
-              size = int(match.group(2))
-              if size <= 0:
-                  raise SystemExit(f'non-positive LFS size: {name}')
-              manifest_rows.append((name, oid, size))
+          lfs_count = 0
+          regular_count = 0
+          for item in api.list_repo_tree(
+              repo_id=repo,
+              repo_type='dataset',
+              revision=resolved,
+              recursive=True,
+              expand=True,
+          ):
+              if not isinstance(item, RepoFile):
+                  continue
+              path = getattr(item, 'path', None) or getattr(item, 'rfilename', None)
+              if not isinstance(path, str) or not path.startswith('traces/') or not path.endswith('.jsonl'):
+                  continue
+              size = getattr(item, 'size', None)
+              blob_id = getattr(item, 'blob_id', None)
+              if not isinstance(size, int) or size <= 0:
+                  raise SystemExit(f'invalid logical size for {path}: {size!r}')
+              if not isinstance(blob_id, str) or not re.fullmatch(r'[0-9a-f]{40,64}', blob_id):
+                  raise SystemExit(f'invalid blob id for {path}: {blob_id!r}')
+              lfs = getattr(item, 'lfs', None)
+              lfs_sha = None
+              if lfs is not None:
+                  if isinstance(lfs, dict):
+                      lfs_sha = lfs.get('sha256')
+                  else:
+                      lfs_sha = getattr(lfs, 'sha256', None)
+                  if not isinstance(lfs_sha, str) or not re.fullmatch(r'[0-9a-f]{64}', lfs_sha):
+                      raise SystemExit(f'invalid LFS sha256 for {path}: {lfs_sha!r}')
+                  lfs_count += 1
+              else:
+                  regular_count += 1
+              rows.append((path, blob_id, size, lfs_sha or '-'))
               total_bytes += size
 
-          canonical = ''.join(f'{path}\0{oid}\0{size}\n' for path, oid, size in manifest_rows).encode('utf-8')
-          manifest_sha256 = hashlib.sha256(canonical).hexdigest()
+          rows.sort()
+          if not rows:
+              raise SystemExit('no trace JSONL files found')
+          if len({row[0] for row in rows}) != len(rows):
+              raise SystemExit('duplicate trace path in Hub tree')
+
+          canonical = ''.join(
+              f'{path}\0{blob_id}\0{size}\0{lfs_sha}\n'
+              for path, blob_id, size, lfs_sha in rows
+          ).encode('utf-8')
 
           result = {
               'schema': 'seenrelay-private293-jobseek-source-lock-v1',
@@ -94,11 +111,15 @@ jobs:
               'license': 'MIT',
               'readme_sha256': hashlib.sha256(readme).hexdigest(),
               'readme_bytes': len(readme),
-              'jsonl_file_count': len(manifest_rows),
+              'jsonl_file_count': len(rows),
               'jsonl_total_bytes': total_bytes,
-              'trace_manifest_sha256': manifest_sha256,
-              'manifest_identity': 'sorted path + NUL + LFS sha256 + NUL + decimal size + LF',
-              'trace_payloads_downloaded': False,
+              'regular_git_file_count': regular_count,
+              'lfs_file_count': lfs_count,
+              'trace_manifest_sha256': hashlib.sha256(canonical).hexdigest(),
+              'manifest_identity': 'sorted path + NUL + git blob id + NUL + logical size + NUL + LFS sha256-or-dash + LF',
+              'prior_failed_source_lock_attempt_parsed_trace_payloads': False,
+              'prior_failed_source_lock_attempt_may_have_fetched_one_regular_git_blob': True,
+              'trace_payloads_downloaded_this_attempt': False,
               'trace_payloads_parsed': False,
               'analysis_performed': False,
           }
@@ -121,15 +142,15 @@ jobs:
           if (!/^[0-9a-f]{64}$/.test(lock.trace_manifest_sha256)) process.exit(1);
           if (!Number.isInteger(lock.jsonl_file_count) || lock.jsonl_file_count < 1) process.exit(1);
           if (!Number.isInteger(lock.jsonl_total_bytes) || lock.jsonl_total_bytes < 1) process.exit(1);
-          if (lock.trace_payloads_downloaded !== false) process.exit(1);
+          if (!Number.isInteger(lock.regular_git_file_count) || lock.regular_git_file_count < 0) process.exit(1);
+          if (!Number.isInteger(lock.lfs_file_count) || lock.lfs_file_count < 0) process.exit(1);
+          if (lock.regular_git_file_count + lock.lfs_file_count !== lock.jsonl_file_count) process.exit(1);
+          if (lock.prior_failed_source_lock_attempt_parsed_trace_payloads !== false) process.exit(1);
+          if (lock.prior_failed_source_lock_attempt_may_have_fetched_one_regular_git_blob !== true) process.exit(1);
+          if (lock.trace_payloads_downloaded_this_attempt !== false) process.exit(1);
           if (lock.trace_payloads_parsed !== false) process.exit(1);
           if (lock.analysis_performed !== false) process.exit(1);
           NODE
-
-      - name: Delete source-lock clone before artifact upload
-        if: always()
-        shell: bash
-        run: rm -rf "$RUNNER_TEMP/private293-hf-repo"
 
       - name: Upload source lock only
         uses: actions/upload-artifact@v4
