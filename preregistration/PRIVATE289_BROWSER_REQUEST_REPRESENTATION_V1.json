@@ -1,6 +1,6 @@
 {
   "schema": "seenrelay-private289-browser-request-representation-v1",
-  "status": "source_locked_before_geometry_result",
+  "status": "geometry_frozen_before_representation_comparator",
   "purpose": "Controlled feasibility test of representation portability for browser retrieval tasks: compare a natural-language request surface with an independently available structured task representation without using evaluator answers to construct identity.",
   "production_authorized": false,
   "public_claim_authorized": false,
@@ -57,13 +57,18 @@
     "freeze_eligible_denominator_and_comparator_metrics",
     "only_then_run_representation_comparator"
   ],
-  "planned_geometry_metrics": {
-    "records_seen": true,
-    "parseable_records": true,
-    "retrieval_tasks": true,
-    "retrieval_tasks_with_required_input_identity_fields": true,
-    "retrieval_tasks_with_distinct_surface_a_and_surface_b": true,
-    "evaluator_answer_contents_inspected": false
+  "geometry_result": {
+    "workflow_run_id": 33986201098,
+    "artifact_id": 9975222093,
+    "artifact_digest": "sha256:1875bda80fe883c030efd926b2381ebe4222fb40ae09875589da66071679763e",
+    "records_seen": 812,
+    "parseable_records": 812,
+    "retrieval_tasks": 297,
+    "retrieval_tasks_with_required_input_identity_fields": 297,
+    "retrieval_tasks_with_distinct_surface_a_and_surface_b": 297,
+    "retrieved_data_property_read": false,
+    "retrieved_data_contents_inspected": false,
+    "locked_comparator_denominator": 297
   },
   "interpretation": {
     "positive_result_is_controlled_representation_feasibility_only": true,
