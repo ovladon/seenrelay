@@ -1,0 +1,159 @@
+name: Jobseek header schema inventory
+
+on:
+  pull_request:
+    branches: [research/browser-natural-jobseek-identity-diagnostic-v1]
+    paths:
+      - 'preregistration/PRIVATE295_JOBSEEK_HEADER_SCHEMA_V1.json'
+      - 'scripts/run-private295-jobseek-header-schema.py'
+      - 'tests/private295-jobseek-header-schema.test.py'
+      - '.github/workflows/jobseek-header-schema.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  header-schema:
+    if: startsWith(github.head_ref, 'research/browser-natural-jobseek-header-schema-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned Hub metadata client
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
+
+      - name: Run frozen PRIVATE295 tests
+        run: python tests/private295-jobseek-header-schema.test.py
+
+      - name: Execute preregistered header schema inventory
+        run: |
+          python scripts/run-private295-jobseek-header-schema.py \
+            --output private295-jobseek-header-schema.json
+
+      - name: Enforce aggregate-only PRIVATE295 report
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+
+          report = json.loads(pathlib.Path('private295-jobseek-header-schema.json').read_text(encoding='utf-8'))
+          expected_top = {
+              'schema', 'parent_results', 'source', 'selection', 'ingestion',
+              'header_schema', 'decision', 'privacy', 'interpretation'
+          }
+          if set(report) != expected_top:
+              raise SystemExit('unexpected PRIVATE295 top-level report shape')
+          if report.get('schema') != 'seenrelay-private295-jobseek-header-schema-v1':
+              raise SystemExit('schema mismatch')
+
+          parent = report['parent_results']
+          if parent != {
+              'private293_research_head': '1ae9ab3b0ec2193ffccdca78d32744a3aa6f516d',
+              'private293_workflow_run_id': 33992072773,
+              'private294_research_head': '64ee0e39e0b0e608d28f0318f4805899b7b6849e',
+              'private294_workflow_run_id': 33992893536,
+              'private293_frozen': True,
+              'private294_frozen': True,
+          }:
+              raise SystemExit('parent geometry mismatch')
+
+          source = report['source']
+          if source != {
+              'dataset': 'viktor-shcherb/jobseek-agent-traces',
+              'resolved_revision': '524f2910f2893b04ccfbb76e56116fe0af3c5bf7',
+              'trace_manifest_sha256': '113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8',
+          }:
+              raise SystemExit('source mismatch')
+
+          selection = report['selection']
+          if selection != {
+              'phase': 'PRIVATE293_PHASE_A_EXACT_REUSE',
+              'selected_files': 400,
+              'valid_headers': 400,
+              'phase_b_used': False,
+              'selection_used_header_content': False,
+              'selection_used_file_size': False,
+              'selection_used_company_or_issue_metadata': False,
+          }:
+              raise SystemExit('selection mismatch')
+
+          ingestion = report['ingestion']
+          if ingestion != {
+              'only_first_nonempty_record_read': True,
+              'transcript_records_read': False,
+              'urls_read': False,
+              'prompts_read': False,
+              'tool_results_read': False,
+              'header_values_compared': False,
+              'session_identity_constructed': False,
+              'overlap_computed': False,
+          }:
+              raise SystemExit('ingestion boundary mismatch')
+
+          header_schema = report['header_schema']
+          if set(header_schema) != {'distinct_top_level_key_count', 'keys'}:
+              raise SystemExit('header schema shape mismatch')
+          keys = header_schema['keys']
+          if not isinstance(keys, dict) or not keys:
+              raise SystemExit('empty header schema inventory')
+          if header_schema['distinct_top_level_key_count'] != len(keys):
+              raise SystemExit('header key count mismatch')
+
+          allowed_types = {'null', 'boolean', 'number', 'string', 'array', 'object'}
+          for key, entry in keys.items():
+              if not isinstance(key, str) or not key:
+                  raise SystemExit('invalid header key name')
+              if set(entry) != {'presence_count', 'json_type_counts'}:
+                  raise SystemExit(f'unexpected entry shape for {key!r}')
+              presence = entry['presence_count']
+              if not isinstance(presence, int) or isinstance(presence, bool) or not (1 <= presence <= 400):
+                  raise SystemExit(f'invalid presence count for {key!r}')
+              types = entry['json_type_counts']
+              if not isinstance(types, dict) or not types or not set(types).issubset(allowed_types):
+                  raise SystemExit(f'invalid JSON type inventory for {key!r}')
+              total = 0
+              for type_name, count in types.items():
+                  if not isinstance(count, int) or isinstance(count, bool) or count <= 0 or count > 400:
+                      raise SystemExit(f'invalid type count for {key!r}/{type_name!r}')
+                  total += count
+              if total != presence:
+                  raise SystemExit(f'type/presence mismatch for {key!r}')
+
+          marker = keys.get('_trace_header')
+          if marker != {'presence_count': 400, 'json_type_counts': {'boolean': 400}}:
+              raise SystemExit('publisher header marker mismatch')
+
+          if report['decision'] != {
+              'schema_inventory_only': True,
+              'header_field_authorized_as_session_identity': False,
+              'value_level_followup_requires_new_preregistration': True,
+          }:
+              raise SystemExit('decision boundary mismatch')
+
+          privacy = report['privacy']
+          if not privacy or any(value is not False for value in privacy.values()):
+              raise SystemExit('privacy retention boundary failed')
+
+          interpretation = report['interpretation']
+          if interpretation != {
+              'reuse_evidence': False,
+              'population_prevalence_evidence': False,
+              'private285_class_pass_authorized': False,
+              'private293_reclassification_authorized': False,
+              'private294_reclassification_authorized': False,
+          }:
+              raise SystemExit('interpretation boundary mismatch')
+          PY
+
+      - name: Upload aggregate schema inventory only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private295-jobseek-header-schema
+          path: private295-jobseek-header-schema.json
+          if-no-files-found: error
+          retention-days: 14
