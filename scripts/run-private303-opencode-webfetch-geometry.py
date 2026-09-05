@@ -7,7 +7,6 @@ import tempfile
 from typing import Any, Iterable
 
 from huggingface_hub import HfApi, hf_hub_download
-from huggingface_hub.hf_api import RepoFile
 
 REPO = "dacorvo/hf-hub-session-opencode-traces"
 REQUESTED_REVISION = "main"
@@ -19,36 +18,21 @@ def nonempty_string(value: Any) -> str | None:
     return value if isinstance(value, str) and value.strip() else None
 
 
-def session_files(api: HfApi, revision: str) -> list[dict[str, Any]]:
-    rows = []
-    for item in api.list_repo_tree(
-        repo_id=REPO,
-        repo_type="dataset",
-        revision=revision,
-        recursive=True,
-        expand=True,
-    ):
-        if not isinstance(item, RepoFile):
-            continue
-        path = getattr(item, "path", None) or getattr(item, "rfilename", None)
-        if not isinstance(path, str) or not path.startswith("data/") or not path.endswith(".json"):
-            continue
-        size = getattr(item, "size", None)
-        blob_id = getattr(item, "blob_id", None)
-        if not isinstance(size, int) or size <= 0:
-            raise RuntimeError("invalid session file size in source manifest")
-        if not isinstance(blob_id, str) or not blob_id:
-            raise RuntimeError("missing session file blob identity in source manifest")
-        rows.append({"path": path, "size": size, "blob_id": blob_id})
-    rows.sort(key=lambda row: row["path"].encode("utf-8"))
-    if not rows:
+def session_paths(info: Any) -> list[str]:
+    paths = []
+    for item in getattr(info, "siblings", None) or []:
+        path = getattr(item, "rfilename", None) or getattr(item, "path", None)
+        if isinstance(path, str) and path.startswith("data/") and path.endswith(".json"):
+            paths.append(path)
+    paths = sorted(set(paths), key=lambda value: value.encode("utf-8"))
+    if not paths:
         raise RuntimeError("no OpenCode session JSON files found under data/")
-    return rows
+    return paths
 
 
 def manifest_digest(rows: list[dict[str, Any]]) -> str:
     canonical = "".join(
-        f"{row['path']}\0{row['blob_id']}\0{row['size']}\n" for row in rows
+        f"{row['path']}\0{row['size']}\0{row['sha256']}\n" for row in rows
     ).encode("utf-8")
     return hashlib.sha256(canonical).hexdigest()
 
@@ -136,10 +120,8 @@ def main() -> None:
     if source_license != EXPECTED_LICENSE:
         raise RuntimeError("dataset license metadata differs from preregistered requirement")
 
-    rows = session_files(api, revision)
-    total_bytes = sum(row["size"] for row in rows)
-    digest = manifest_digest(rows)
-
+    paths = session_paths(info)
+    locked_rows: list[dict[str, Any]] = []
     files_processed = 0
     sessions_with_webfetch = 0
     webfetch_calls = 0
@@ -147,17 +129,26 @@ def main() -> None:
     duplicate_physical = 0
 
     with tempfile.TemporaryDirectory(prefix="seenrelay-private303-") as temp_dir:
-        for row in rows:
-            path = hf_hub_download(
+        for source_path in paths:
+            local_path = hf_hub_download(
                 repo_id=REPO,
                 repo_type="dataset",
-                filename=row["path"],
+                filename=source_path,
                 revision=revision,
                 local_dir=temp_dir,
             )
-            if pathlib.Path(path).stat().st_size != row["size"]:
-                raise RuntimeError("downloaded session logical size mismatch")
-            document = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
+            payload = pathlib.Path(local_path).read_bytes()
+            if not payload:
+                raise RuntimeError("downloaded empty OpenCode session file")
+            locked_rows.append({
+                "path": source_path,
+                "size": len(payload),
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            })
+            try:
+                document = json.loads(payload.decode("utf-8", errors="strict"))
+            except Exception as exc:
+                raise RuntimeError("invalid UTF-8/JSON OpenCode session export") from exc
             geometry = inspect_session(document)
             files_processed += 1
             all_tool_parts += geometry["all_tool_parts"]
@@ -166,8 +157,10 @@ def main() -> None:
             if geometry["webfetch_calls"] > 0:
                 sessions_with_webfetch += 1
 
-    if files_processed != len(rows):
+    if files_processed != len(paths):
         raise RuntimeError("did not process all locked session files")
+    total_bytes = sum(row["size"] for row in locked_rows)
+    digest = manifest_digest(locked_rows)
 
     if duplicate_physical > 0:
         decision = "REJECT_SOURCE_IDENTITY_GEOMETRY_FAILURE"
@@ -183,9 +176,10 @@ def main() -> None:
             "requested_revision": REQUESTED_REVISION,
             "resolved_revision": revision,
             "license": source_license,
-            "session_json_files": len(rows),
+            "session_json_files": len(paths),
             "total_logical_bytes": total_bytes,
             "manifest_sha256": digest,
+            "manifest_identity": "sorted path + NUL + downloaded byte count + NUL + content SHA-256 + LF",
         },
         "geometry": {
             "files_processed": files_processed,
@@ -227,7 +221,7 @@ def main() -> None:
     }
     pathlib.Path(args.output).write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({
-        "session_json_files": len(rows),
+        "session_json_files": len(paths),
         "webfetch_tool_calls": webfetch_calls,
         "sessions_with_webfetch": sessions_with_webfetch,
         "verdict": decision,
