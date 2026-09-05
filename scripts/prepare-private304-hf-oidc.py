@@ -30,6 +30,8 @@ def privacy_block() -> dict[str, bool]:
         "raw_urls_retained_in_artifact": False,
         "raw_prompts_retained_in_artifact": False,
         "session_ids_retained_in_artifact": False,
+        "tool_call_ids_retained_in_artifact": False,
+        "turn_ids_retained_in_artifact": False,
         "per_key_hashes_retained_in_artifact": False,
     }
 
