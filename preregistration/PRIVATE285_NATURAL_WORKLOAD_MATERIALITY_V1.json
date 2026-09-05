@@ -1,0 +1,52 @@
+{
+  "schema": "seenrelay-private285-natural-workload-materiality-v1",
+  "status": "frozen_before_complete_three-class_evidence",
+  "purpose": "Classify whether shared CHECK has material incremental value across independently defined natural workload classes after the best non-shared path is accounted for.",
+  "inherits": "docs/NATURAL_WORKLOAD_GATE.md",
+  "production_authorized": false,
+  "public_claim_authorized": false,
+  "classes": [
+    "structured_source_reads",
+    "browser_extraction_reads",
+    "fleet_tool_validations"
+  ],
+  "minimum_protected_calls_per_class": 100,
+  "evidence_rules": {
+    "natural_repetition_only": true,
+    "commissioning_excluded": true,
+    "collector_tuning_runs_excluded": true,
+    "authoritative_shadow_validation_required": true,
+    "best_existing_non_shared_path_required": true,
+    "available_local_cache_measured": true,
+    "available_source_native_conditional_measured": true,
+    "available_provider_native_cache_measured": true,
+    "unsafe_hypothetical_reuse_allowed": false,
+    "raw_fact_identity_exported": false,
+    "raw_source_exported": false,
+    "raw_value_exported": false
+  },
+  "class_materiality_gate": {
+    "comparison_basis": "expected per-protected-call outcome versus the best qualifying non-shared path",
+    "minimum_net_latency_improvement_percent": 20,
+    "minimum_net_marginal_cost_improvement_percent": 20,
+    "unsafe_reuse_count_must_equal": 0,
+    "comparison_evidence_must_be_complete": true,
+    "zero_reuse_is_negative": true,
+    "missing_cost_evidence_is_not_a_pass": true,
+    "missing_latency_evidence_is_not_a_pass": true
+  },
+  "set_classification": {
+    "0_positive_classes": "SHARED_HIVE_BROAD_FIT_NOT_SUPPORTED",
+    "1_positive_class": "CLASS_SPECIFIC_WEDGE_ONLY",
+    "2_positive_classes": "MULTI_WORKLOAD_FIT_SUPPORTED",
+    "3_positive_classes": "THREE_CLASS_FIT_SUPPORTED"
+  },
+  "claim_boundaries": {
+    "technical_fit_is_not_market_size": true,
+    "technical_fit_is_not_adoption": true,
+    "technical_fit_is_not_profitability": true,
+    "one_positive_class_does_not_authorize_universal_check": true,
+    "two_or_three_positive_classes_do_not_authorize_production_without_release_gates": true,
+    "negative_results_are_retained": true
+  }
+}
