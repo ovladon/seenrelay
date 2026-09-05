@@ -1,0 +1,85 @@
+{
+  "schema": "seenrelay-private304-swechat-full-browser-overlap-oidc-v1",
+  "status": "frozen_before_any_private304_oidc_exchange_or_numeric_result",
+  "purpose": "Repeat the already-frozen PRIVATE302 full SWE-chat browser-overlap measurement without a stored Hugging Face token, using Hugging Face's documented user-scoped CI/CD OIDC exchange for read-only gated-repository access.",
+  "parent_measurement": {
+    "private302_exact_head": "a875fdde4f59717a72cd05052d8cfdd267024357",
+    "private302_run": 33996640730,
+    "private302_status": "ACCESS_BLOCKED_NO_AUTHORIZED_HF_TOKEN",
+    "private302_numeric_result_observed": false,
+    "reuse_private302_measurement_code_exactly": true
+  },
+  "source": {
+    "dataset": "SALT-NLP/SWE-chat",
+    "resolved_revision": "f66cca95b14caaa4177f7ed5eaa424608dadcffa",
+    "filename": "conversations.parquet",
+    "logical_size": 1311422253,
+    "git_blob_id": "e8c76683b25698fc4312baf45fa6cb2297773946",
+    "license": "odc-by",
+    "gated": true
+  },
+  "measurement_contract": {
+    "identical_to_private302": true,
+    "whole_pinned_conversations_parquet": true,
+    "sampling_forbidden": true,
+    "turn_type": "tool_use",
+    "tool_name": "WebFetch",
+    "native_session_coordinate": "session_id",
+    "native_physical_key": ["session_id", "tool_call_id"],
+    "turn_id_must_be_unique": true,
+    "operation_identity": "sha256(stable_json({url: WHATWG_canonical_url, prompt: CRLF_CR_to_LF_then_trim}))",
+    "classification": {
+      "eligible_below_100": "INSUFFICIENT_EXTERNAL_SAMPLE",
+      "eligible_at_least_100_exact_reuse_below_5_percent": "LOW_EXACT_OVERLAP_SIGNAL",
+      "exact_reuse_5_to_below_20_percent": "WEAK_EXACT_OVERLAP_SIGNAL",
+      "exact_reuse_at_least_20_percent": "STRONG_EXACT_OVERLAP_SIGNAL",
+      "integer_arithmetic_required": true
+    }
+  },
+  "authentication": {
+    "method": "Hugging Face user-scoped CI/CD OIDC access",
+    "static_hf_token_forbidden": true,
+    "github_permissions_required": ["contents:read", "id-token:write"],
+    "github_actions_variable": "HF_OIDC_RESOURCE",
+    "variable_value_semantics": "Hugging Face username configured as the user-scoped OIDC resource; value must not be output or retained",
+    "hub_side_precondition": "The same Hugging Face user must already have accepted access to SALT-NLP/SWE-chat in the browser and must configure Authentication > CI/CD Access for GitHub Actions with repository ovladon/seenrelay and workflow swechat-full-browser-overlap-oidc.yml.",
+    "oidc_audience": "https://huggingface.co",
+    "token_exchange_endpoint": "https://huggingface.co/oauth/token",
+    "token_exchange_grant": "urn:ietf:params:oauth:grant-type:token-exchange",
+    "token_exchange_subject_type": "urn:ietf:params:oauth:token-type:id_token",
+    "resulting_token_expected_scope": "read-only gated-repos",
+    "resulting_token_retained": false,
+    "resulting_token_output": false
+  },
+  "allowed_results": {
+    "ACCESS_BLOCKED_NO_HF_OIDC_RESOURCE": "GitHub Actions variable HF_OIDC_RESOURCE is absent or empty; no OIDC exchange and no dataset access.",
+    "ACCESS_BLOCKED_OIDC_EXCHANGE_REJECTED": "GitHub OIDC token was requested but Hugging Face rejected the exchange; no dataset measurement is admissible.",
+    "ACCESS_BLOCKED_GATED_DATASET_NOT_ACCESSIBLE": "OIDC exchange succeeded but pinned gated dataset download was denied; no measurement is admissible.",
+    "MEASURED": "OIDC exchange and authorized pinned dataset access succeeded, and the unchanged PRIVATE302 measurement completed and passed the aggregate validator."
+  },
+  "fail_closed": {
+    "no_substitute_dataset": true,
+    "no_gate_bypass": true,
+    "no_partial_result_salvage": true,
+    "no_change_to_private302_parser_or_thresholds": true,
+    "blocked_result_is_not_negative_overlap_evidence": true
+  },
+  "privacy": {
+    "hf_username_output": false,
+    "oidc_id_token_output": false,
+    "hf_access_token_output": false,
+    "raw_parquet_artifact": false,
+    "raw_urls_artifact": false,
+    "raw_prompts_artifact": false,
+    "session_ids_artifact": false,
+    "per_key_hashes_artifact": false
+  },
+  "interpretation": {
+    "observer_independence_proven": false,
+    "private285_class_pass_authorized": false,
+    "seenrelay_reuse_authorized": false,
+    "production_change_authorized": false,
+    "population_prevalence_claim_authorized": false,
+    "commercial_claim_authorized": false
+  }
+}
