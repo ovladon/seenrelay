@@ -1,0 +1,141 @@
+name: Fable5 natural browser overlap screen
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  natural-browser-overlap:
+    if: startsWith(github.head_ref, 'research/browser-natural-fable5-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run frozen browser overlap screener tests
+        run: node --test tests/browser-trace-overlap-screen.test.mjs
+
+      - name: Download and verify pinned Fable5 traces
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import urllib.parse
+          import urllib.request
+
+          repo = 'AlinCiocan/fable-5-claude-code-traces'
+          revision = 'e33ebbca230ae258b2c28aeee9fe3429e7fbeab6'
+          expected_manifest_sha256 = 'fd3275e7c223b8d1f940c096042be515ede343a7e46faf1cd6c9d9c9875a56e2'
+          headers = {'User-Agent': 'seenrelay-private291-overlap/1.0'}
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'private291-fable5'
+          root.mkdir(parents=True, exist_ok=False)
+
+          def fetch(path):
+              quoted = '/'.join(urllib.parse.quote(part, safe='') for part in path.split('/'))
+              url = f'https://huggingface.co/datasets/{repo}/resolve/{revision}/{quoted}?download=true'
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req, timeout=120) as response:
+                  body = response.read()
+                  resolved = response.headers.get('x-repo-commit') or response.headers.get('X-Repo-Commit')
+              if not body:
+                  raise SystemExit(f'empty source file: {path}')
+              if resolved and resolved != revision:
+                  raise SystemExit(f'revision mismatch for {path}: {resolved}')
+              return body
+
+          manifest_bytes = fetch('manifest.json')
+          if hashlib.sha256(manifest_bytes).hexdigest() != expected_manifest_sha256:
+              raise SystemExit('manifest SHA-256 mismatch')
+          manifest = json.loads(manifest_bytes)
+          entries = manifest.get('files')
+          if not isinstance(entries, list):
+              raise SystemExit('manifest files is not an array')
+
+          names = []
+          rows = 0
+          for entry in entries:
+              if not isinstance(entry, dict):
+                  raise SystemExit('invalid manifest file entry')
+              name = entry.get('file')
+              row_count = entry.get('rows')
+              if not isinstance(name, str) or not name.endswith('.jsonl') or '/' in name or '\\' in name:
+                  raise SystemExit(f'unsafe or non-jsonl manifest filename: {name!r}')
+              if not isinstance(row_count, int) or row_count < 0:
+                  raise SystemExit(f'invalid row count for {name}')
+              names.append(name)
+              rows += row_count
+
+          if len(names) != 18 or len(set(names)) != 18:
+              raise SystemExit(f'expected 18 unique JSONL files, got {len(names)}')
+          if rows != 9497:
+              raise SystemExit(f'expected 9497 manifest rows, got {rows}')
+          totals = manifest.get('totals') or {}
+          if totals.get('published_files') != 18 or totals.get('published_rows') != 9497:
+              raise SystemExit('manifest totals mismatch')
+
+          for name in sorted(names):
+              (root / name).write_bytes(fetch(name))
+
+          print(json.dumps({
+              'resolved_revision': revision,
+              'manifest_sha256': expected_manifest_sha256,
+              'jsonl_file_count': len(names),
+              'manifest_rows': rows,
+              'download_dir': str(root)
+          }, sort_keys=True))
+          PY
+
+      - name: Screen pinned natural WebFetch operations
+        shell: bash
+        run: |
+          node scripts/screen-browser-trace-overlap.mjs \
+            --input-dir "$RUNNER_TEMP/private291-fable5" \
+            --source-revision 'e33ebbca230ae258b2c28aeee9fe3429e7fbeab6' \
+            --source-dataset 'AlinCiocan/fable-5-claude-code-traces' \
+            --output private291-fable5-overlap-report.json
+
+      - name: Enforce preregistered source and privacy boundaries
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('private291-fable5-overlap-report.json', 'utf8'));
+          if (report.schema !== 'seenrelay-browser-overlap-screen-v1') process.exit(1);
+          if (report.source_dataset !== 'AlinCiocan/fable-5-claude-code-traces') process.exit(1);
+          if (report.source_revision !== 'e33ebbca230ae258b2c28aeee9fe3429e7fbeab6') process.exit(1);
+          if (report.tool_name !== 'WebFetch') process.exit(1);
+          if (report.source_sessions !== 18) process.exit(1);
+          if (!Number.isInteger(report.webfetch_calls_seen) || report.webfetch_calls_seen < 0) process.exit(1);
+          if (!Number.isInteger(report.eligible_http_webfetch_calls) || report.eligible_http_webfetch_calls < 0) process.exit(1);
+          if (!['INSUFFICIENT_EXTERNAL_SAMPLE','LOW_EXACT_OVERLAP_SIGNAL','WEAK_EXACT_OVERLAP_SIGNAL','STRONG_EXACT_OVERLAP_SIGNAL'].includes(report.classification)) process.exit(1);
+          if (report.interpretation?.observer_independence_proven !== false) process.exit(1);
+          if (report.interpretation?.natural_workload_class_pass_authorized !== false) process.exit(1);
+          if (report.interpretation?.seenrelay_reuse_authorized !== false) process.exit(1);
+          if (report.privacy?.raw_urls_retained !== false) process.exit(1);
+          if (report.privacy?.raw_prompts_retained !== false) process.exit(1);
+          if (report.privacy?.raw_results_retained !== false) process.exit(1);
+          if (report.privacy?.session_ids_retained !== false) process.exit(1);
+          if (report.privacy?.per_key_hashes_retained !== false) process.exit(1);
+          NODE
+
+      - name: Delete raw Fable5 traces before artifact upload
+        if: always()
+        shell: bash
+        run: rm -rf "$RUNNER_TEMP/private291-fable5"
+
+      - name: Upload aggregate overlap report only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private291-fable5-natural-browser-overlap
+          path: private291-fable5-overlap-report.json
+          if-no-files-found: error
+          retention-days: 14
