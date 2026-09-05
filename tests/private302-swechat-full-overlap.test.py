@@ -47,9 +47,9 @@ class Private302ExtractionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "JSON object"):
             module.deterministic_input_bytes([1, 2])
 
-    def test_filters_webfetch_and_deduplicates_native_physical_key(self):
+    def test_filters_webfetch_and_deduplicates_native_physical_key_before_turn_uniqueness(self):
         rows = [
-            base_row(turn_id="s1#2", turn_number=2, timestamp="2026-01-01T00:00:02+00:00"),
+            base_row(turn_id="s1#1", turn_number=1, timestamp="2026-01-01T00:00:02+00:00"),
             base_row(turn_id="s1#1", turn_number=1, timestamp="2026-01-01T00:00:01+00:00"),
             base_row(
                 turn_id="s2#0",
@@ -85,14 +85,15 @@ class Private302ExtractionTests(unittest.TestCase):
         s1 = [call for call in calls if call["session"] == "s1"]
         self.assertEqual(len(s1), 1)
         self.assertEqual(s1[0]["turn_id"], "s1#1")
+        self.assertEqual(s1[0]["timestamp"], "2026-01-01T00:00:01+00:00")
         self.assertEqual(set(s1[0]), {"session", "turn_number", "turn_id", "timestamp", "raw_url", "raw_prompt"})
 
     def test_duplicate_physical_key_with_conflicting_payload_fails_closed(self):
         rows = [
-            base_row(turn_id="s1#0"),
+            base_row(turn_id="s1#0", turn_number=0),
             base_row(
-                turn_id="s1#1",
-                turn_number=1,
+                turn_id="s1#0",
+                turn_number=0,
                 tool_input_json=json.dumps({"url": "https://different.example/x", "prompt": "p"}),
             ),
         ]
@@ -103,10 +104,22 @@ class Private302ExtractionTests(unittest.TestCase):
         finally:
             tmp.cleanup()
 
-    def test_duplicate_turn_id_fails_closed(self):
+    def test_duplicate_physical_key_mapping_to_different_turn_fails_closed(self):
         rows = [
-            base_row(turn_id="same", tool_call_id="toolu_1"),
-            base_row(turn_id="same", tool_call_id="toolu_2", turn_number=1),
+            base_row(turn_id="s1#0", turn_number=0),
+            base_row(turn_id="s1#1", turn_number=1),
+        ]
+        tmp, path = write_parquet(rows)
+        try:
+            with self.assertRaisesRegex(RuntimeError, "maps to multiple turn coordinates"):
+                module.scan_webfetch_calls(str(path))
+        finally:
+            tmp.cleanup()
+
+    def test_duplicate_turn_id_after_physical_dedup_fails_closed(self):
+        rows = [
+            base_row(turn_id="s1#0", turn_number=0, tool_call_id="toolu_1"),
+            base_row(turn_id="s1#0", turn_number=0, tool_call_id="toolu_2"),
         ]
         tmp, path = write_parquet(rows)
         try:
