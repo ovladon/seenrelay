@@ -2,11 +2,26 @@
 import importlib.util
 import pathlib
 import unittest
+from unittest import mock
 
 SCRIPT = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "run-private303-opencode-webfetch-geometry.py"
 spec = importlib.util.spec_from_file_location("private303", SCRIPT)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
+
+
+class FakeResponse:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def read(self):
+        return self.payload
 
 
 class Private303Tests(unittest.TestCase):
@@ -71,6 +86,17 @@ class Private303Tests(unittest.TestCase):
             siblings = [Item("README.md"), Item("data/z/s2.json"), Item("data/a/s1.json"), Item("data/a/note.txt")]
 
         self.assertEqual(module.session_paths(Info()), ["data/a/s1.json", "data/z/s2.json"])
+
+    def test_empty_body_retries_within_same_frozen_budget(self):
+        with mock.patch.object(
+            module.urllib.request,
+            "urlopen",
+            side_effect=[FakeResponse(b""), FakeResponse(b'{"info":{"id":"ses_1"}}')],
+        ) as urlopen, mock.patch.object(module.time, "sleep") as sleep:
+            payload = module.download_exact_bytes("data/run/s1.json", "a" * 40)
+        self.assertEqual(payload, b'{"info":{"id":"ses_1"}}')
+        self.assertEqual(urlopen.call_count, 2)
+        self.assertEqual([call.args[0] for call in sleep.call_args_list], [1.0, 0.25])
 
 
 if __name__ == "__main__":
