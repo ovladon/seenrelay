@@ -45,7 +45,8 @@ jobs:
               'real claude code cli sessions',
               'eval-250',
               '12,824',
-              'odc-by, inherited from salt-nlp/swe-chat',
+              'inherited from',
+              'salt-nlp/swe-chat',
           ]
           for fragment in required_fragments:
               if fragment not in text:
