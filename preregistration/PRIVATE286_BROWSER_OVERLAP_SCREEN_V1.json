@@ -1,0 +1,62 @@
+{
+  "schema": "seenrelay-private286-browser-overlap-screen-v1",
+  "status": "frozen_before_trace_result",
+  "purpose": "Auxiliary lower-bound screen for naturally recurring public WebFetch operations before commissioning live browser_extraction_reads evidence.",
+  "inherits": "preregistration/PRIVATE285_NATURAL_WORKLOAD_MATERIALITY_V1.json",
+  "production_authorized": false,
+  "public_claim_authorized": false,
+  "natural_workload_class_pass_authorized": false,
+  "source": {
+    "dataset": "trace-commons/agent-traces",
+    "host": "huggingface.co",
+    "license": "CC-BY-4.0",
+    "revision": "147684b2fdacbbdcd473e92962f565902b2739d5",
+    "scope": "sessions/claude_code/*.jsonl",
+    "raw_trace_retention_in_seenrelay": false
+  },
+  "eligibility": {
+    "tool_name": "WebFetch",
+    "url_schemes": ["http", "https"],
+    "require_nonempty_url": true,
+    "require_nonempty_prompt": true,
+    "tool_search_discovery_calls_excluded": true,
+    "web_search_calls_excluded": true,
+    "shell_network_calls_excluded_from_v1": true
+  },
+  "canonicalization": {
+    "url": "WHATWG URL; lowercase protocol and hostname; default port removed by parser; fragment removed; query preserved exactly",
+    "prompt": "trim leading/trailing whitespace and normalize CRLF/CR to LF; preserve case and internal whitespace",
+    "exact_operation_key": "sha256(stable_json({url,prompt}))",
+    "url_only_key": "sha256(canonical_url)"
+  },
+  "ordering": {
+    "primary": "event timestamp when parseable",
+    "fallback": "source filename lexical order then JSONL line number",
+    "cross_session_reuse_opportunity": "an eligible exact-operation call for which an earlier eligible call with the same exact-operation key exists in a different source session"
+  },
+  "privacy": {
+    "output_raw_urls": false,
+    "output_raw_prompts": false,
+    "output_raw_results": false,
+    "output_session_ids": false,
+    "output_per_key_hashes": false,
+    "aggregate_counts_only": true
+  },
+  "interpretation": {
+    "minimum_eligible_calls_for_signal": 100,
+    "low_exact_overlap_below_percent": 5,
+    "strong_exact_overlap_at_or_above_percent": 20,
+    "classifications": {
+      "eligible_calls_below_100": "INSUFFICIENT_EXTERNAL_SAMPLE",
+      "cross_session_exact_reuse_below_5_percent": "LOW_EXACT_OVERLAP_SIGNAL",
+      "cross_session_exact_reuse_5_to_below_20_percent": "WEAK_EXACT_OVERLAP_SIGNAL",
+      "cross_session_exact_reuse_at_or_above_20_percent": "STRONG_EXACT_OVERLAP_SIGNAL"
+    },
+    "exact_overlap_is_lower_bound_only": true,
+    "same_fact_across_different_urls_or_prompts_not_inferred": true,
+    "different_session_is_independence_proxy_only": true,
+    "observer_independence_proven": false,
+    "screen_cannot_pass_private285": true,
+    "screen_cannot_enable_seenrelay_reuse": true
+  }
+}
