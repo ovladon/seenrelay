@@ -27,14 +27,20 @@ assert.ok(typeof parsed.payload==='string'&&parsed.payload.length>=64*1024);
 
 const text=await req('/api/resource',{headers:{accept:'text/plain'}});
 assert.equal(text.status,200);
+assert.equal(text.headers.get('x-seenrelay-fixture-commit'),SHA);
+const textEtag=text.headers.get('etag');
+assert.ok(textEtag);
 const textBody=await text.text();
 assert.equal(textBody,'version=1\n');
 
-const head=await req('/api/resource',{method:'HEAD',headers:{accept:'application/json'}});
+const head=await req('/api/resource',{method:'HEAD',headers:{accept:'text/plain'}});
 const headBody=await head.text();
 
-const conditional=await req('/api/resource',{headers:{accept:'application/json','if-none-match':etag}});
+const conditional=await req('/api/resource',{headers:{accept:'text/plain','if-none-match':textEtag}});
 const conditionalBody=await conditional.text();
+
+const conditionalHead=await req('/api/resource',{method:'HEAD',headers:{accept:'text/plain','if-none-match':textEtag}});
+const conditionalHeadBody=await conditionalHead.text();
 
 const range=await req('/api/resource',{headers:{accept:'application/json',range:'bytes=0-31'}});
 const rangeBody=await range.text();
@@ -51,12 +57,13 @@ const perField=await req('/api/resource/version',{headers:{accept:'application/j
 await perField.arrayBuffer();
 
 const result={
-  schema:'seenrelay-preview-http-capabilities-v1',
+  schema:'seenrelay-preview-http-capabilities-v2',
   target_sha:SHA,
   full_json:{status:json.status,large_payload_present:true},
   compact_accept:{status:text.status,available:textBody==='version=1\n'},
-  head:{status:head.status,body_bytes:Buffer.byteLength(headBody),etag_present:Boolean(head.headers.get('etag'))},
-  conditional_etag:{status:conditional.status,empty_body:conditionalBody.length===0},
+  head_compact:{status:head.status,body_bytes:Buffer.byteLength(headBody),etag_present:Boolean(head.headers.get('etag'))},
+  conditional_get_compact:{status:conditional.status,empty_body:conditionalBody.length===0},
+  conditional_head_compact:{status:conditionalHead.status,empty_body:conditionalHeadBody.length===0,etag_present:Boolean(conditionalHead.headers.get('etag'))},
   last_modified_present:Boolean(json.headers.get('last-modified')),
   content_digest_present:Boolean(digest.headers.get('content-digest')),
   repr_digest_present:Boolean(digest.headers.get('repr-digest')),
