@@ -35,15 +35,45 @@ class FakeResponse:
 
 
 class Private304OidcTests(unittest.TestCase):
-    def test_blocked_report_retains_no_identity_or_token(self):
+    def test_blocked_report_has_closed_flags(self):
         report = prep.blocked_report("ACCESS_BLOCKED_NO_HF_OIDC_RESOURCE")
         self.assertFalse(report["measurement_performed"])
         self.assertFalse(report["authentication"]["oidc_exchange_succeeded"])
+        self.assertFalse(report["authentication"]["authorized_content_access_succeeded"])
+        self.assertFalse(report["authentication"]["static_hf_token_used"])
         self.assertTrue(all(value is False for value in report["privacy"].values()))
-        encoded = json.dumps(report)
-        synthetic_secret_value = "private304-secret-username-sentinel"
-        self.assertNotIn(synthetic_secret_value, encoded)
-        self.assertNotIn("access_token", encoded)
+        self.assertTrue(all(value is False for value in report["interpretation"].values()))
+
+    def test_exchange_rejection_report_does_not_leak_secret_values(self):
+        secret_resource = "private304-secret-username-sentinel"
+        secret_request_token = "private304-github-request-token-sentinel"
+        secret_oidc_token = "private304-oidc-id-token-sentinel"
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = pathlib.Path(temp_dir) / "blocked.json"
+            github_env = pathlib.Path(temp_dir) / "github-env"
+            environment = {
+                "HF_OIDC_RESOURCE": secret_resource,
+                "ACTIONS_ID_TOKEN_REQUEST_URL": "https://token.example/id",
+                "ACTIONS_ID_TOKEN_REQUEST_TOKEN": secret_request_token,
+                "GITHUB_ENV": str(github_env),
+                "RUNNER_TEMP": temp_dir,
+            }
+            with (
+                mock.patch.dict(os.environ, environment, clear=False),
+                mock.patch.object(prep, "request_github_oidc_token", return_value=secret_oidc_token),
+                mock.patch.object(prep, "exchange_hf_user_token", side_effect=RuntimeError("synthetic exchange rejection")),
+                mock.patch("sys.argv", ["prepare-private304-hf-oidc.py", "--blocked-output", str(output)]),
+            ):
+                prep.main()
+
+            encoded = output.read_text(encoding="utf-8")
+            report = json.loads(encoded)
+            self.assertEqual(report["status"], "ACCESS_BLOCKED_OIDC_EXCHANGE_REJECTED")
+            self.assertNotIn(secret_resource, encoded)
+            self.assertNotIn(secret_request_token, encoded)
+            self.assertNotIn(secret_oidc_token, encoded)
+            self.assertFalse(report["measurement_performed"])
 
     def test_github_oidc_request_pins_hugging_face_audience(self):
         captured = {}
