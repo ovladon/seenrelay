@@ -195,6 +195,7 @@ def main():
     thread_ids = []
     content_hashes = []
     valid_harness = 0
+    invalid_harness = 0
 
     for row in harness_rows:
         local_path = pathlib.Path(hf_hub_download(
@@ -205,9 +206,17 @@ def main():
             local_dir=work_dir / 'hf',
         ))
         raw = verify_file_bytes(local_path, row)
-        thread_ids.append(first_thread_id_from_harness(raw))
         content_hashes.append(hashlib.sha256(raw).hexdigest())
+        try:
+            thread_id = first_thread_id_from_harness(raw)
+        except RuntimeError:
+            invalid_harness += 1
+            continue
+        thread_ids.append(thread_id)
         valid_harness += 1
+
+    if valid_harness + invalid_harness != len(harness_rows):
+        raise RuntimeError('harness accounting mismatch')
 
     unique_threads, duplicate_thread_groups, duplicate_thread_extra_files = duplicate_summary(thread_ids)
     unique_contents, content_duplicate_groups, content_duplicate_extra_files = duplicate_summary(content_hashes)
@@ -244,6 +253,7 @@ def main():
         'harness_identity': {
             'harness_files': len(harness_rows),
             'valid_harness_wrappers': valid_harness,
+            'invalid_harness_wrappers': invalid_harness,
             'nonempty_native_thread_ids': len(thread_ids),
             'unique_native_thread_ids': unique_threads,
             'duplicate_native_thread_id_groups': duplicate_thread_groups,
@@ -286,6 +296,8 @@ def main():
     print(json.dumps({
         'data_files': data_files,
         'harness_files': len(harness_rows),
+        'valid_harness_wrappers': valid_harness,
+        'invalid_harness_wrappers': invalid_harness,
         'unique_native_thread_ids': unique_threads,
         'duplicate_native_thread_id_groups': duplicate_thread_groups,
         'exact_full_file_content_duplicate_groups': content_duplicate_groups,
