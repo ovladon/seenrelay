@@ -54,13 +54,23 @@ class Private303Tests(unittest.TestCase):
         self.assertEqual(result["webfetch_calls"], 2)
         self.assertEqual(result["duplicate_physical_webfetch_keys"], 1)
 
-    def test_manifest_digest_is_order_sensitive_but_caller_sorts(self):
+    def test_manifest_digest_uses_content_hash_and_is_order_sensitive(self):
         rows = [
-            {"path": "data/run/a.json", "blob_id": "abc", "size": 10},
-            {"path": "data/run/b.json", "blob_id": "def", "size": 20},
+            {"path": "data/run/a.json", "sha256": "a" * 64, "size": 10},
+            {"path": "data/run/b.json", "sha256": "b" * 64, "size": 20},
         ]
         self.assertEqual(module.manifest_digest(rows), module.manifest_digest(list(rows)))
         self.assertNotEqual(module.manifest_digest(rows), module.manifest_digest(list(reversed(rows))))
+
+    def test_session_paths_uses_only_data_json_and_sorts(self):
+        class Item:
+            def __init__(self, name):
+                self.rfilename = name
+
+        class Info:
+            siblings = [Item("README.md"), Item("data/z/s2.json"), Item("data/a/s1.json"), Item("data/a/note.txt")]
+
+        self.assertEqual(module.session_paths(Info()), ["data/a/s1.json", "data/z/s2.json"])
 
 
 if __name__ == "__main__":
