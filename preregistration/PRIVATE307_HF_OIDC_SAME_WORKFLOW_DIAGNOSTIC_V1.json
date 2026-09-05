@@ -1,0 +1,60 @@
+{
+  "schema": "seenrelay-private307-hf-oidc-same-workflow-diagnostic-v1",
+  "status": "frozen_before_private307_oidc_request",
+  "purpose": "Test the Hugging Face CI/CD identity against the exact workflow filename configured for PRIVATE304, without accessing SWE-chat content or altering the frozen PRIVATE304 head.",
+  "parent": {
+    "private304_exact_head": "d531f5c24f2647426e50747f661a42ecf85ecb50",
+    "private304_blocked_status": "ACCESS_BLOCKED_OIDC_EXCHANGE_REJECTED",
+    "private306_canonical_artifact": 9978918185,
+    "private306_exchange_status": "invalid_grant",
+    "numeric_measurement_observed": false
+  },
+  "same_workflow_constraint": {
+    "workflow_path": ".github/workflows/swechat-full-browser-overlap-oidc.yml",
+    "workflow_filename": "swechat-full-browser-overlap-oidc.yml",
+    "diagnostic_replaces_measurement_steps_only_on_private307_branch": true,
+    "private304_branch_or_head_modified": false
+  },
+  "allowed_actions": {
+    "request_github_oidc_id_token": true,
+    "audience": "https://huggingface.co",
+    "decode_only_allowlisted_github_claims": true,
+    "attempt_hugging_face_token_exchange": true,
+    "dataset_api_or_download_access": false,
+    "swechat_content_access": false
+  },
+  "claim_allowlist": [
+    "iss",
+    "aud",
+    "repository",
+    "repository_owner",
+    "repository_visibility",
+    "event_name",
+    "ref",
+    "ref_type",
+    "workflow",
+    "workflow_ref",
+    "job_workflow_ref"
+  ],
+  "exchange_output": {
+    "success_boolean": true,
+    "http_status": true,
+    "oauth_error_class": true,
+    "request_id_present_boolean": true,
+    "error_description": false,
+    "response_body": false,
+    "hf_resource_value": false,
+    "access_token": false
+  },
+  "decision": {
+    "if_exchange_succeeds": "PRIVATE304 exact head may be rerun unchanged; same-workflow HF identity is valid.",
+    "if_invalid_grant": "Do not change PRIVATE304. External Hugging Face CI/CD identity configuration or user resource remains mismatched and must be corrected before another PRIVATE304 rerun.",
+    "if_invalid_request": "Inspect resource formatting/configuration only; do not change the measurement contract."
+  },
+  "interpretation": {
+    "private304_result_modified": false,
+    "dataset_access_authorized": false,
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}
