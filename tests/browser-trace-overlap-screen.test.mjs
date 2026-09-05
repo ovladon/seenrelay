@@ -43,10 +43,14 @@ test('screen counts cross-session exact overlap without treating same-session re
   assert.equal(report.interpretation.natural_workload_class_pass_authorized, false);
 });
 
-test('classification thresholds are frozen at 100 calls, 5 percent and 20 percent', () => {
-  assert.equal(classifyOverlap({ eligibleCalls: 99, crossSessionExactReusePercent: 99 }), 'INSUFFICIENT_EXTERNAL_SAMPLE');
-  assert.equal(classifyOverlap({ eligibleCalls: 100, crossSessionExactReusePercent: 4.999 }), 'LOW_EXACT_OVERLAP_SIGNAL');
-  assert.equal(classifyOverlap({ eligibleCalls: 100, crossSessionExactReusePercent: 5 }), 'WEAK_EXACT_OVERLAP_SIGNAL');
-  assert.equal(classifyOverlap({ eligibleCalls: 100, crossSessionExactReusePercent: 19.999 }), 'WEAK_EXACT_OVERLAP_SIGNAL');
-  assert.equal(classifyOverlap({ eligibleCalls: 100, crossSessionExactReusePercent: 20 }), 'STRONG_EXACT_OVERLAP_SIGNAL');
+test('classification thresholds use exact integer counts, not rounded display percentages', () => {
+  assert.equal(classifyOverlap({ eligibleCalls: 99, crossSessionExactReuseOpportunities: 99 }), 'INSUFFICIENT_EXTERNAL_SAMPLE');
+  assert.equal(classifyOverlap({ eligibleCalls: 100, crossSessionExactReuseOpportunities: 4 }), 'LOW_EXACT_OVERLAP_SIGNAL');
+  assert.equal(classifyOverlap({ eligibleCalls: 100, crossSessionExactReuseOpportunities: 5 }), 'WEAK_EXACT_OVERLAP_SIGNAL');
+  assert.equal(classifyOverlap({ eligibleCalls: 100, crossSessionExactReuseOpportunities: 19 }), 'WEAK_EXACT_OVERLAP_SIGNAL');
+  assert.equal(classifyOverlap({ eligibleCalls: 100, crossSessionExactReuseOpportunities: 20 }), 'STRONG_EXACT_OVERLAP_SIGNAL');
+
+  // These true ratios are just below a boundary but would round upward at six display decimals.
+  assert.equal(classifyOverlap({ eligibleCalls: 200000001, crossSessionExactReuseOpportunities: 10000000 }), 'LOW_EXACT_OVERLAP_SIGNAL');
+  assert.equal(classifyOverlap({ eligibleCalls: 50000001, crossSessionExactReuseOpportunities: 10000000 }), 'WEAK_EXACT_OVERLAP_SIGNAL');
 });
