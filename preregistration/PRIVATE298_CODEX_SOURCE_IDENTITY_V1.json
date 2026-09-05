@@ -1,0 +1,86 @@
+{
+  "schema": "seenrelay-private298-codex-source-identity-v1",
+  "status": "frozen_before_source_identity_result",
+  "purpose": "Determine whether the explicitly MIT, Codex-only historical revision of RangaPrasath/coding-sessions provides a duplicate-safe native-session-derived coordinate before any browser-tool count or overlap statistic is computed.",
+  "source": {
+    "dataset": "RangaPrasath/coding-sessions",
+    "frozen_revision_prefix": "e37635a",
+    "revision_selection_basis": "Dataset history places e37635a after the Codex export and dataset-card/license commit and before 9745612, which added six OpenCode sessions. Revision selection does not use tool content or browser activity.",
+    "resolved_revision_must_be_recorded": true,
+    "dataset_card_required_declarations": [
+      "license: mit",
+      "73 real coding sessions from OpenAI Codex",
+      "Exporter: pi-brain v0.1.0",
+      "Source: OpenAI Codex (~/.codex/sessions/)",
+      "73 sessions with full trajectories"
+    ],
+    "expected_codex_sessions": 73,
+    "expected_source_value": "codex"
+  },
+  "exporter": {
+    "repository": "0xSero/pi-brain",
+    "pinned_commit": "81ec5dbea7e31edf3663fe88b4d4d120f3961dff",
+    "version_declared_by_dataset": "0.1.0",
+    "codex_plugin_semantics": "Each Codex rollout JSONL is loaded as one CanonicalSession; session_meta.payload.id becomes CanonicalSession.id, falling back to path-derived ID only when absent.",
+    "anonymizer_semantics": "One fresh salt is used for the export batch and each session.id is deterministically SHA-256 salted then truncated to 16 hex characters; equality/distinctness within the batch is therefore preserved while original UUIDs are removed.",
+    "exporter_commit_selection_basis": "Latest audited pi-brain commit before the dataset export date; package version remains 0.1.0."
+  },
+  "ingestion": {
+    "read_dataset_card_and_repository_metadata": true,
+    "download_sessions_jsonl_at_pinned_resolved_revision": true,
+    "parse_top_level_json_objects": true,
+    "session_row_definition": "top-level object with nonempty id, source, and messages array",
+    "non_session_rows_may_be_counted_but_not_treated_as_sessions": true,
+    "access_message_contents": false,
+    "access_tools_array_contents": false,
+    "access_tool_call_names": false,
+    "access_tool_call_arguments": false,
+    "access_tool_results": false,
+    "access_urls_or_queries": false,
+    "compute_operation_identity": false,
+    "compute_overlap": false
+  },
+  "identity": {
+    "coordinate": "published anonymized session id",
+    "required_id_pattern": "^[0-9a-f]{16}$",
+    "require_exact_session_count": 73,
+    "require_all_session_rows_source_codex": true,
+    "require_all_session_ids_nonempty_and_pattern_valid": true,
+    "require_unique_session_id_count_equals_session_count": true,
+    "require_zero_duplicate_session_id_groups": true,
+    "require_zero_exact_full_session_row_duplicate_groups": true,
+    "filename_or_row_number_must_not_be_session_identity": true
+  },
+  "decision_rule": {
+    "pass_label": "SOURCE_IDENTITY_ADMISSIBLE_FOR_TOOL_COUNT_FOLLOWUP",
+    "fail_label": "SOURCE_IDENTITY_NOT_ADMISSIBLE",
+    "pass_requires": [
+      "historical revision resolves and dataset card matches frozen MIT/Codex-only declarations",
+      "exactly 73 session rows",
+      "all 73 session rows have source=codex",
+      "all 73 ids match the frozen pi-brain anonymized-id pattern",
+      "73 unique ids",
+      "zero duplicate id groups",
+      "zero exact full-session-row duplicate groups"
+    ],
+    "pass_authorizes_only": "A separate preregistered count-only screen for the source-native Codex first-party web-search tool.",
+    "tool_count_authorized_by_private298": false,
+    "overlap_authorized_by_private298": false
+  },
+  "privacy": {
+    "aggregate_counts_and_source_digests_only": true,
+    "raw_session_ids_output": false,
+    "raw_session_rows_output": false,
+    "raw_messages_output": false,
+    "raw_tool_data_output": false,
+    "downloaded_external_files_retained": false
+  },
+  "interpretation": {
+    "private285_class_pass_authorized": false,
+    "seenrelay_reuse_authorized": false,
+    "production_change_authorized": false,
+    "population_prevalence_claim_authorized": false,
+    "commercial_claim_authorized": false,
+    "prior_negative_sources_reinterpreted": false
+  }
+}
