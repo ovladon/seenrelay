@@ -3,10 +3,13 @@ import argparse
 import hashlib
 import json
 import pathlib
-import tempfile
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from typing import Any, Iterable
 
-from huggingface_hub import HfApi, hf_hub_download
+from huggingface_hub import HfApi
 
 REPO = "dacorvo/hf-hub-session-opencode-traces"
 REQUESTED_REVISION = "main"
@@ -35,6 +38,44 @@ def manifest_digest(rows: list[dict[str, Any]]) -> str:
         f"{row['path']}\0{row['size']}\0{row['sha256']}\n" for row in rows
     ).encode("utf-8")
     return hashlib.sha256(canonical).hexdigest()
+
+
+def exact_download_url(path: str, revision: str) -> str:
+    quoted = "/".join(urllib.parse.quote(part, safe="") for part in path.split("/"))
+    return f"https://huggingface.co/datasets/{REPO}/resolve/{revision}/{quoted}?download=true"
+
+
+def download_exact_bytes(path: str, revision: str) -> bytes:
+    url = exact_download_url(path, revision)
+    last_error: Exception | None = None
+    for attempt in range(6):
+        try:
+            request = urllib.request.Request(
+                url,
+                headers={"User-Agent": "seenrelay-private303-geometry/1.0"},
+            )
+            with urllib.request.urlopen(request, timeout=180) as response:
+                payload = response.read()
+            if not payload:
+                raise RuntimeError("downloaded empty OpenCode session file")
+            time.sleep(0.25)
+            return payload
+        except urllib.error.HTTPError as exc:
+            last_error = exc
+            if exc.code != 429 or attempt == 5:
+                break
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+            try:
+                delay = max(1.0, float(retry_after)) if retry_after is not None else float(2 ** attempt)
+            except ValueError:
+                delay = float(2 ** attempt)
+            time.sleep(min(delay, 32.0))
+        except (urllib.error.URLError, TimeoutError) as exc:
+            last_error = exc
+            if attempt == 5:
+                break
+            time.sleep(float(2 ** attempt))
+    raise RuntimeError("exact-revision source download failed after frozen retries") from last_error
 
 
 def iter_dicts(value: Any) -> Iterable[dict[str, Any]]:
@@ -128,34 +169,24 @@ def main() -> None:
     all_tool_parts = 0
     duplicate_physical = 0
 
-    with tempfile.TemporaryDirectory(prefix="seenrelay-private303-") as temp_dir:
-        for source_path in paths:
-            local_path = hf_hub_download(
-                repo_id=REPO,
-                repo_type="dataset",
-                filename=source_path,
-                revision=revision,
-                local_dir=temp_dir,
-            )
-            payload = pathlib.Path(local_path).read_bytes()
-            if not payload:
-                raise RuntimeError("downloaded empty OpenCode session file")
-            locked_rows.append({
-                "path": source_path,
-                "size": len(payload),
-                "sha256": hashlib.sha256(payload).hexdigest(),
-            })
-            try:
-                document = json.loads(payload.decode("utf-8", errors="strict"))
-            except Exception as exc:
-                raise RuntimeError("invalid UTF-8/JSON OpenCode session export") from exc
-            geometry = inspect_session(document)
-            files_processed += 1
-            all_tool_parts += geometry["all_tool_parts"]
-            webfetch_calls += geometry["webfetch_calls"]
-            duplicate_physical += geometry["duplicate_physical_webfetch_keys"]
-            if geometry["webfetch_calls"] > 0:
-                sessions_with_webfetch += 1
+    for source_path in paths:
+        payload = download_exact_bytes(source_path, revision)
+        locked_rows.append({
+            "path": source_path,
+            "size": len(payload),
+            "sha256": hashlib.sha256(payload).hexdigest(),
+        })
+        try:
+            document = json.loads(payload.decode("utf-8", errors="strict"))
+        except Exception as exc:
+            raise RuntimeError("invalid UTF-8/JSON OpenCode session export") from exc
+        geometry = inspect_session(document)
+        files_processed += 1
+        all_tool_parts += geometry["all_tool_parts"]
+        webfetch_calls += geometry["webfetch_calls"]
+        duplicate_physical += geometry["duplicate_physical_webfetch_keys"]
+        if geometry["webfetch_calls"] > 0:
+            sessions_with_webfetch += 1
 
     if files_processed != len(paths):
         raise RuntimeError("did not process all locked session files")
