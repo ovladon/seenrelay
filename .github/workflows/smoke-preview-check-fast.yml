@@ -1,0 +1,55 @@
+name: Smoke Preview CHECK fast path
+
+on:
+  push:
+    branches:
+      - perf/check-neon-roundtrip-probe-v1
+    paths:
+      - .github/workflows/smoke-preview-check-fast.yml
+
+permissions:
+  contents: read
+
+jobs:
+  observe-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Submit independent Ubuntu observation
+        env:
+          SEENRELAY_PREVIEW_BASE: https://seenrelay-git-perf-check-neon-ro-318a8c-ovladonn-9636s-projects.vercel.app
+          SEENRELAY_SOURCE_BASE: https://seenrelay-git-preview-frontier-c-9f112b-ovladonn-9636s-projects.vercel.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: node scripts/smoke-preview-check-fast.mjs observe
+
+  observe-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Submit independent Windows observation
+        env:
+          SEENRELAY_PREVIEW_BASE: https://seenrelay-git-perf-check-neon-ro-318a8c-ovladonn-9636s-projects.vercel.app
+          SEENRELAY_SOURCE_BASE: https://seenrelay-git-preview-frontier-c-9f112b-ovladonn-9636s-projects.vercel.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: node scripts/smoke-preview-check-fast.mjs observe
+
+  measure:
+    needs: [observe-ubuntu, observe-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify semantic parity and fast-path timing
+        env:
+          SEENRELAY_PREVIEW_BASE: https://seenrelay-git-perf-check-neon-ro-318a8c-ovladonn-9636s-projects.vercel.app
+          SEENRELAY_SOURCE_BASE: https://seenrelay-git-preview-frontier-c-9f112b-ovladonn-9636s-projects.vercel.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: node scripts/smoke-preview-check-fast.mjs measure
