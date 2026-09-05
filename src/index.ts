@@ -39,6 +39,22 @@ app.use('*', async (c, next) => {
   await next();
 });
 
+app.use('/v1/check', async (c, next) => {
+  if (process.env.VERCEL_ENV === 'production') {
+    await next();
+    return;
+  }
+  const labStarted = performance.now();
+  const labCpuStarted = process.cpuUsage();
+  await next();
+  const duration = Math.max(0.001, performance.now() - labStarted);
+  const cpu = process.cpuUsage(labCpuStarted);
+  const cpuMs = Math.max(0.001, (cpu.user + cpu.system) / 1000);
+  c.header('server-timing', `app;dur=${duration.toFixed(3)}, cpu;dur=${cpuMs.toFixed(3)}`);
+  c.header('x-seenrelay-lab-check-timing', 'v1');
+  c.header('x-seenrelay-lab-check-commit', process.env.VERCEL_GIT_COMMIT_SHA || 'unknown');
+});
+
 app.onError((err, c) => {
   if (err instanceof ValidationError) {
     return c.json({ error: { code: 'INVALID_REQUEST', detail: err.message } }, 400);
