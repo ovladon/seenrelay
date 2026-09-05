@@ -27,7 +27,7 @@ class Private297Tests(unittest.TestCase):
         }).encode()
         self.assertEqual(mod.first_thread_id_from_harness(raw), 'session-native-1')
 
-    def test_rejects_missing_or_wrong_first_event(self):
+    def test_rejects_missing_or_wrong_first_event_for_aggregate_accounting(self):
         with self.assertRaises(RuntimeError):
             mod.first_thread_id_from_harness(json.dumps({'lines': []}).encode())
         with self.assertRaises(RuntimeError):
@@ -43,10 +43,14 @@ class Private297Tests(unittest.TestCase):
         unique, groups, extras = mod.duplicate_summary(['a', 'a', 'a', 'b', 'c', 'c'])
         self.assertEqual((unique, groups, extras), (3, 2, 3))
 
-    def test_admission_requires_both_identity_and_content_duplicate_safety(self):
+    def test_admission_requires_complete_identity_and_content_duplicate_safety(self):
         self.assertEqual(
             mod.classify(10, 10, 10, 0, 0, True),
             'SOURCE_IDENTITY_ADMISSIBLE_FOR_COUNT_ONLY_FOLLOWUP',
+        )
+        self.assertEqual(
+            mod.classify(10, 9, 9, 0, 0, True),
+            'SOURCE_IDENTITY_NOT_ADMISSIBLE',
         )
         self.assertEqual(
             mod.classify(10, 10, 9, 1, 0, True),
