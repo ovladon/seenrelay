@@ -1,0 +1,103 @@
+{
+  "schema": "seenrelay-private284-check-fast-native25-preregistration-v1",
+  "status": "frozen_before_formal_candidate_measurement",
+  "frozen_at": "2026-09-05",
+  "purpose": "Evaluate the Preview-only two-wave CHECK fast-path candidate against the complete five-by-five cross-vantage native subsequent-contact comparator set without changing Production or overwriting PRIVATE283.",
+  "historical_boundary": {
+    "private283_current_implementation_verdict_remains_negative": true,
+    "private279_private277_composition_gate_is_not_relabelled_as_cross_vantage_25": true,
+    "historical_verbal_25_rule_was_not_artifact_bound": true,
+    "new_rule_is_preregistered_before_new_candidate_samples": true
+  },
+  "candidate": {
+    "architecture": "shared_relay_two_wave_fast_path",
+    "endpoint": "/api/check-fast-web-timed",
+    "reference_endpoint": "/v1/check",
+    "production_touched": false,
+    "preview_only": true,
+    "reference_check_bootstraps_legitimate_lease_before_candidate_measurement": true,
+    "first_candidate_invocation_is_recorded_as_bundle_warmup_and_excluded_from_the_60_trial_confirmatory_sample": true,
+    "warmup_exclusion_is_fixed_before_measurement": true,
+    "semantic_parity_with_reference_check_is_required_before_and_during_measurement": true
+  },
+  "source_binding": {
+    "target_source_preview_sha": "608735e6137a8fdef873d38d24491fe037399ffc",
+    "resource_revision": "preview-http-fixture-v1",
+    "required_value": 1,
+    "retained_validator_kind": "etag"
+  },
+  "vantages": ["ubuntu", "windows"],
+  "trials_per_vantage": 60,
+  "native_subsequent_paths": [
+    "authoritative_json_get",
+    "compact_text_get",
+    "head_compact_validator",
+    "conditional_get_304_compact",
+    "conditional_head_304_compact"
+  ],
+  "cross_vantage_composition_rule": {
+    "definition": "Cartesian product of one frozen native subsequent-contact path for Ubuntu and one frozen native subsequent-contact path for Windows.",
+    "count": 25,
+    "composition_pass_rule": "A composition passes only when the candidate passes the selected Ubuntu path comparison and the selected Windows path comparison.",
+    "latencies_are_not_summed_across_vantages": true,
+    "latencies_are_not_assumed_sequential": true,
+    "cross_unit_scalarization_forbidden": true
+  },
+  "paired_measurement_rule": {
+    "within_each_vantage_trial": "One candidate CHECK and all five native paths are measured in a six-position rotation; pairing uses the common vantage plus trial index.",
+    "no_interim_selection": true,
+    "no_record_replacement": true,
+    "all_five_native_paths_required": true,
+    "both_vantages_required": true
+  },
+  "metrics": {
+    "primary": [
+      {
+        "name": "observed_total_cpu_ms",
+        "candidate": "agent_cpu_ms + relay_cpu_ms",
+        "native": "agent_cpu_ms + destination_cpu_ms",
+        "minimum_improvement_percent": 20
+      },
+      {
+        "name": "agent_elapsed_ms",
+        "candidate": "agent_elapsed_ms",
+        "native": "agent_elapsed_ms",
+        "minimum_improvement_percent": 20
+      }
+    ],
+    "secondary": [
+      {
+        "name": "normalized_http_application_bytes",
+        "candidate": "normalized_http_application_bytes",
+        "native": "normalized_http_application_bytes",
+        "maximum_regression_percent": 5
+      }
+    ],
+    "diagnostic_only": ["relay_cpu_ms", "relay_app_elapsed_ms", "destination_cpu_ms", "destination_app_elapsed_ms"]
+  },
+  "statistics": {
+    "method": "paired_percentile_bootstrap_mean_difference_v1",
+    "bootstrap_replicates": 20000,
+    "familywise_alpha": 0.05,
+    "global_test_count": 30,
+    "multiplicity_control": "Bonferroni across 2 vantages x 5 native paths x 3 confirmatory metrics",
+    "local_one_sided_alpha": 0.0016666666666666668,
+    "pass_logic": "For each path-vantage comparison, the one-sided upper confidence bound on candidate-minus-native mean difference must be at or below the preregistered threshold on all three metrics. The universal native-25 gate passes only if all 25 cross-vantage compositions pass."
+  },
+  "qualification": {
+    "two_independent_cryptographic_observer_keys_required": true,
+    "two_reuse_independence_buckets_required": true,
+    "same_observed_required": true,
+    "source_validator_alignment_required": true,
+    "raw_lease_emitted": false,
+    "raw_key_material_emitted": false,
+    "raw_response_bodies_retained": false
+  },
+  "claim_boundary": {
+    "benchmark_pass_is_not_production_authorization": true,
+    "economic_claim_authorized": false,
+    "production_authorized": false,
+    "generalization_authorized": false,
+    "platform_overhead": "UNKNOWN_NOT_ZERO"
+  }
+}
