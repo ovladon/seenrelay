@@ -1,0 +1,33 @@
+{
+  "schema": "seenrelay-private297-pre-result-failfast-correction-v1",
+  "status": "recorded_after_deterministic_admissibility_failure_before_aggregate_report",
+  "affected_run": {
+    "workflow_run_id": 33995600644,
+    "head_sha": "a10a06d7727171477f3a80b3ce2807049ca53d26",
+    "aggregate_validator_ran": false,
+    "aggregate_artifact_uploaded": false,
+    "failure": "At least one filename-selected harness candidate parsed as the pinned JSON wrapper but had no logical lines."
+  },
+  "frozen_rule_implication": {
+    "original_requirement": "Every harness candidate must expose a nonempty native thread_id in its first logical thread.started event.",
+    "classification_already_forced": "SOURCE_IDENTITY_NOT_ADMISSIBLE",
+    "positive_classification_still_possible_after_correction": false
+  },
+  "implementation_correction": {
+    "before": "The runner raised immediately on the first invalid harness wrapper, preventing the preregistered aggregate failure report from being written.",
+    "after": "The runner records invalid harness candidates as aggregate counts, continues duplicate/content accounting, and applies the unchanged admission rule at the end.",
+    "source_revision_changed": false,
+    "filename_family_selection_changed": false,
+    "native_session_coordinate_changed": false,
+    "duplicate_safety_requirements_changed": false,
+    "decision_rule_changed": false,
+    "tool_content_reading_enabled": false,
+    "browser_tool_count_enabled": false,
+    "overlap_enabled": false
+  },
+  "interpretation": {
+    "the_failed_run_is_not_an_admissible_aggregate_private297_result": true,
+    "the_observed_fail_fast_condition_is_a_valid_falsification_of_the_all_harness_files_have_native_thread_id_requirement": true,
+    "rerun_purpose": "Quantify the frozen source geometry and emit the aggregate negative report without changing the already-forced verdict."
+  }
+}
