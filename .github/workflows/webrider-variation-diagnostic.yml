@@ -1,0 +1,107 @@
+name: WebRider variation diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  variation-diagnostic:
+    if: startsWith(github.head_ref, 'research/browser-portability-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WEBRIDER_REVISION: 6848308895f11b37c610ecbf4951fa5e53421437
+      WEBRIDER_TASKS_SHA256: e84e18ad9abb872cd0d806d5cbfdaba8d1db6883c5a737af5f8346333f8a55c2
+      WEBRIDER_TASKS_BYTES: '14098420'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Run diagnostic tests
+        run: node --test tests/browser-contract-variation-diagnostic.test.mjs
+
+      - name: Download and verify pinned tasks metadata
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import os
+          import pathlib
+          import urllib.request
+
+          repo = 'WebRider/WebRider'
+          revision = os.environ['WEBRIDER_REVISION']
+          expected_sha = os.environ['WEBRIDER_TASKS_SHA256']
+          expected_bytes = int(os.environ['WEBRIDER_TASKS_BYTES'])
+          target = pathlib.Path('.private287a-tasks.json')
+          url = f'https://huggingface.co/datasets/{repo}/resolve/{revision}/tasks.json?download=true'
+          request = urllib.request.Request(url, headers={'User-Agent': 'seenrelay-private287a-diagnostic/1.0'})
+          digest = hashlib.sha256()
+          size = 0
+          with urllib.request.urlopen(request, timeout=60) as response, target.open('wb') as handle:
+              while True:
+                  chunk = response.read(1024 * 1024)
+                  if not chunk:
+                      break
+                  digest.update(chunk)
+                  size += len(chunk)
+                  handle.write(chunk)
+          actual_sha = digest.hexdigest()
+          if actual_sha != expected_sha or size != expected_bytes:
+              target.unlink(missing_ok=True)
+              raise SystemExit(f'Pinned tasks metadata mismatch: sha={actual_sha} bytes={size}')
+          PY
+
+      - name: Diagnose contract variation only
+        run: |
+          node scripts/diagnose-browser-contract-variation.mjs \
+            --input .private287a-tasks.json \
+            --source-revision "$WEBRIDER_REVISION" \
+            --source-sha256 "$WEBRIDER_TASKS_SHA256" \
+            --source-bytes "$WEBRIDER_TASKS_BYTES" \
+            --output private287a-variation-diagnostic.json
+          cat private287a-variation-diagnostic.json
+
+      - name: Enforce diagnostic boundary
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('private287a-variation-diagnostic.json', 'utf8'));
+          if (report.schema !== 'seenrelay-private287a-contract-variation-report-v1') process.exit(1);
+          if (report.source?.revision !== process.env.WEBRIDER_REVISION) process.exit(1);
+          if (report.source?.tasks_sha256 !== process.env.WEBRIDER_TASKS_SHA256) process.exit(1);
+          if (report.boundaries?.evidence_identity_evaluated !== false) process.exit(1);
+          if (report.boundaries?.evidence_similarity_evaluated !== false) process.exit(1);
+          if (report.boundaries?.semantic_matching_used !== false) process.exit(1);
+          if (report.boundaries?.posthoc_explanatory_only !== true) process.exit(1);
+          if (report.boundaries?.private287_reclassified !== false) process.exit(1);
+          if (report.boundaries?.private285_pass_authorized !== false) process.exit(1);
+          if (report.boundaries?.seenrelay_reuse_authorized !== false) process.exit(1);
+          if (report.privacy?.aggregate_counts_only !== true) process.exit(1);
+          if (report.privacy?.raw_contract_content_retained !== false) process.exit(1);
+          if (report.privacy?.identifiers_retained !== false) process.exit(1);
+          if (/https?:\/\//i.test(JSON.stringify(report))) process.exit(1);
+          NODE
+
+      - name: Delete source metadata before artifact upload
+        if: always()
+        run: rm -f .private287a-tasks.json
+
+      - name: Upload aggregate diagnostic only
+        if: always() && hashFiles('private287a-variation-diagnostic.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: private287a-variation-diagnostic
+          path: private287a-variation-diagnostic.json
+          if-no-files-found: error
+          retention-days: 14
