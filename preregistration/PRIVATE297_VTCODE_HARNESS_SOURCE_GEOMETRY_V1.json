@@ -1,0 +1,77 @@
+{
+  "schema": "seenrelay-private297-vtcode-harness-source-geometry-v1",
+  "status": "frozen_before_geometry_result",
+  "purpose": "Determine whether the public MIT VTCode session corpus exposes a duplicate-safe native session coordinate through the harness representation before any browser-tool prevalence or overlap statistic is computed.",
+  "source": {
+    "dataset": "vinhnx90/vtcode-sessions",
+    "resolved_revision": "78049282e2b4fddb2a6d93a0a0e4784a7bd05fc1",
+    "dataset_card_license": "mit",
+    "dataset_card_declared_examples": 100,
+    "dataset_card_declared_bytes": 21468595,
+    "collector_repository": "vinhnx/vtcode-share-hf",
+    "collector_commit": "8e2114d2276938abb9f28ba9ef8cf3b27bcd60a7",
+    "collector_semantics": "Each source session file is copied as one redacted output file; JSONL sources are wrapped as a JSON object with a lines array. The collector does not concatenate source session files.",
+    "naturalness_basis": "The pinned dataset card describes redacted coding-agent sessions exported from a local VTCode workspace. PRIVATE297 treats this as a natural-use candidate, not as proof that every session is a production task."
+  },
+  "representation": {
+    "canonical_candidate_family": "harness-session-*.jsonl",
+    "family_selected_by_filename_only": true,
+    "reason": "Harness logs are emitted from VTCode's authoritative ThreadEvent stream and predate ATIF export in this corpus; choosing only ATIF would create temporal coverage bias.",
+    "atif_files_are_not_session_units_for_private297": true,
+    "session_summary_files_are_not_session_units_for_private297": true,
+    "other_files_are_not_session_units_for_private297": true
+  },
+  "ingestion": {
+    "list_full_repository_tree_at_pinned_revision": true,
+    "download_only_harness_candidate_files_and_readme": true,
+    "verify_downloaded_file_size_and_source_digest_when_metadata_allows": true,
+    "parse_harness_wrapper_only_to_first_logical_event": true,
+    "required_first_event_type": "thread.started",
+    "native_session_coordinate": "event.thread_id from first logical event",
+    "read_or_count_tool_names": false,
+    "read_or_count_tool_arguments": false,
+    "read_or_count_tool_results": false,
+    "read_or_count_urls": false,
+    "read_or_count_queries": false,
+    "compute_operation_identity": false,
+    "compute_overlap": false
+  },
+  "duplicate_safety": {
+    "require_nonempty_thread_id_for_every_harness_file": true,
+    "require_one_unique_thread_id_per_harness_file": true,
+    "require_zero_thread_ids_spanning_multiple_harness_files": true,
+    "require_zero_exact_full_file_content_duplicate_groups": true,
+    "filename_or_path_must_not_be_used_as_session_identity": true
+  },
+  "decision_rule": {
+    "admissible_if_all_requirements_hold": [
+      "pinned README still declares MIT license and local VTCode workspace session collection",
+      "at least two harness candidate files exist",
+      "every harness candidate exposes a nonempty native thread_id in its first logical thread.started event",
+      "unique native thread_id count equals harness file count",
+      "no native thread_id spans multiple harness files",
+      "no exact full-file-content duplicate group exists"
+    ],
+    "pass_label": "SOURCE_IDENTITY_ADMISSIBLE_FOR_COUNT_ONLY_FOLLOWUP",
+    "fail_label": "SOURCE_IDENTITY_NOT_ADMISSIBLE",
+    "pass_authorizes_only": "A separate preregistered count-only screen of source-native VTCode browser tools.",
+    "browser_tool_count_authorized_by_private297": false,
+    "overlap_authorized_by_private297": false
+  },
+  "privacy": {
+    "aggregate_counts_only": true,
+    "raw_thread_ids_output": false,
+    "raw_file_paths_output": false,
+    "raw_transcripts_output": false,
+    "raw_tool_data_output": false,
+    "downloaded_external_files_retained": false
+  },
+  "interpretation": {
+    "private285_class_pass_authorized": false,
+    "seenrelay_reuse_authorized": false,
+    "production_change_authorized": false,
+    "population_prevalence_claim_authorized": false,
+    "commercial_claim_authorized": false,
+    "prior_jobseek_or_trace_commons_results_reinterpreted": false
+  }
+}
