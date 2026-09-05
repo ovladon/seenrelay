@@ -1,6 +1,6 @@
 {
   "schema": "seenrelay-private287-browser-evidence-portability-v1",
-  "status": "criteria_frozen_before_source_lock_and_result",
+  "status": "source_locked_before_result",
   "purpose": "Controlled auxiliary test of whether identical explicit evidence obligations recur across different persona policies and different user-facing requests for the same underlying browser task.",
   "production_authorized": false,
   "public_claim_authorized": false,
@@ -11,8 +11,11 @@
     "host": "huggingface.co",
     "license": "CC-BY-4.0",
     "file": "tasks.json",
-    "revision": "TO_BE_LOCKED_BEFORE_ANALYSIS",
-    "tasks_sha256": "TO_BE_LOCKED_BEFORE_ANALYSIS"
+    "revision": "6848308895f11b37c610ecbf4951fa5e53421437",
+    "tasks_sha256": "e84e18ad9abb872cd0d806d5cbfdaba8d1db6883c5a737af5f8346333f8a55c2",
+    "tasks_bytes": 14098420,
+    "source_lock_workflow_run": 33984967524,
+    "source_lock_analysis_performed": false
   },
   "required_fields": [
     "task_id",
