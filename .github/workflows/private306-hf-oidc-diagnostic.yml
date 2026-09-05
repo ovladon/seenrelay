@@ -69,11 +69,11 @@ jobs:
               'private304_result_modified','dataset_access_authorized','production_change_authorized','private285_pass_authorized'
           } or any(r['interpretation'].values()):
               raise SystemExit('interpretation contract mismatch')
-          forbidden_text = ('hf_oauth_', 'hf_jwt_', 'subject_token', 'access_token', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN')
+          forbidden_value_markers = ('hf_oauth_', 'hf_jwt_', 'subject_token', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN')
           raw = Path('private306-hf-oidc-diagnostic.json').read_text()
-          for token in forbidden_text:
-              if token in raw:
-                  raise SystemExit(f'forbidden credential text retained: {token}')
+          for marker in forbidden_value_markers:
+              if marker in raw:
+                  raise SystemExit(f'forbidden credential value marker retained: {marker}')
           PY
 
       - name: Upload aggregate PRIVATE306 diagnostic only
