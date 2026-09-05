@@ -57,7 +57,11 @@ def download_exact_bytes(path: str, revision: str) -> bytes:
             with urllib.request.urlopen(request, timeout=180) as response:
                 payload = response.read()
             if not payload:
-                raise RuntimeError("downloaded empty OpenCode session file")
+                last_error = RuntimeError("empty response body")
+                if attempt == 5:
+                    break
+                time.sleep(float(2 ** attempt))
+                continue
             time.sleep(0.25)
             return payload
         except urllib.error.HTTPError as exc:
