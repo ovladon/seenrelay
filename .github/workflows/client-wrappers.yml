@@ -29,7 +29,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/client-wrappers.test.mjs tests/shadow-proof.test.mjs tests/deferred-observe.test.mjs
+      - name: Run wrapper suite with fleet shadow measurement
+        env:
+          SEENRELAY_FLEET_ROLE: client-wrappers
+          SEENRELAY_FLEET_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SEENRELAY_FLEET_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+          FLEET_SHADOW_PREFIX: fleet-wrapper-v2-shadow-client-wrappers
+        run: node scripts/fleet-wrapper-shadow.mjs
+      - name: Upload fleet wrapper shadow evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: fleet-wrapper-v2-shadow-client-wrappers
+          path: |
+            fleet-wrapper-v2-shadow-client-wrappers-measurement.json
+            fleet-wrapper-v2-shadow-client-wrappers-ledger.json
+            fleet-wrapper-v2-shadow-client-wrappers-summary.json
+            fleet-wrapper-v2-shadow-client-wrappers-benchmark.json
+            fleet-wrapper-v2-shadow-client-wrappers-evaluation.json
+          if-no-files-found: warn
+          retention-days: 30
 
   python:
     runs-on: ubuntu-latest
