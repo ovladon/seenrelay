@@ -1,0 +1,31 @@
+name: Probe Preview Neon round trip
+
+on:
+  push:
+    branches:
+      - perf/check-neon-roundtrip-probe-v1
+    paths:
+      - .github/workflows/probe-preview-neon-roundtrip.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      PREVIEW_BASE: https://seenrelay-git-perf-check-neon-ro-318a8c-ovladonn-9636s-projects.vercel.app
+    steps:
+      - name: Run five sanitized probes
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 1 2 3 4 5; do
+            echo "probe=${i}"
+            curl -fsS \
+              -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" \
+              "${PREVIEW_BASE}/api/neon-roundtrip-probe"
+            echo
+          done
