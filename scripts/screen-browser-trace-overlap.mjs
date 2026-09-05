@@ -109,10 +109,15 @@ function percent(numerator, denominator) {
   return Number(((numerator / denominator) * 100).toFixed(6));
 }
 
-export function classifyOverlap({ eligibleCalls, crossSessionExactReusePercent }) {
+export function classifyOverlap({ eligibleCalls, crossSessionExactReuseOpportunities }) {
+  if (!Number.isInteger(eligibleCalls) || eligibleCalls < 0) throw new TypeError('eligibleCalls must be a non-negative integer');
+  if (!Number.isInteger(crossSessionExactReuseOpportunities) || crossSessionExactReuseOpportunities < 0 || crossSessionExactReuseOpportunities > eligibleCalls) {
+    throw new TypeError('crossSessionExactReuseOpportunities must be an integer between zero and eligibleCalls');
+  }
   if (eligibleCalls < 100) return 'INSUFFICIENT_EXTERNAL_SAMPLE';
-  if (crossSessionExactReusePercent < 5) return 'LOW_EXACT_OVERLAP_SIGNAL';
-  if (crossSessionExactReusePercent < 20) return 'WEAK_EXACT_OVERLAP_SIGNAL';
+  const scaledOpportunities = crossSessionExactReuseOpportunities * 100;
+  if (scaledOpportunities < eligibleCalls * 5) return 'LOW_EXACT_OVERLAP_SIGNAL';
+  if (scaledOpportunities < eligibleCalls * 20) return 'WEAK_EXACT_OVERLAP_SIGNAL';
   return 'STRONG_EXACT_OVERLAP_SIGNAL';
 }
 
@@ -194,7 +199,10 @@ export function screenBrowserOverlap(parsedSessions, {
     url_keys_spanning_sessions: urlKeysSpanningSessions,
     cross_session_url_reuse_opportunities: crossSessionUrlReuseOpportunities,
     cross_session_url_reuse_percent: crossSessionUrlReusePercent,
-    classification: classifyOverlap({ eligibleCalls: eligible.length, crossSessionExactReusePercent }),
+    classification: classifyOverlap({
+      eligibleCalls: eligible.length,
+      crossSessionExactReuseOpportunities
+    }),
     interpretation: Object.freeze({
       exact_overlap_is_lower_bound_only: true,
       different_session_is_independence_proxy_only: true,
