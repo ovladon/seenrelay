@@ -1,0 +1,99 @@
+{
+  "schema": "seenrelay-private294-jobseek-physical-identity-coverage-v1",
+  "status": "frozen_before_field_presence_result",
+  "purpose": "Separate aggregate-only diagnostic of why 8,830/9,603 WebFetch records in PRIVATE293 failed the frozen physical-call identity admission rule. This study must not recalculate overlap, relax PRIVATE293, or convert excluded records into evidence.",
+  "production_authorized": false,
+  "public_claim_authorized": false,
+  "private285_class_pass_authorized": false,
+  "parent_result": {
+    "private_id": "PRIVATE293",
+    "research_head": "1ae9ab3b0ec2193ffccdca78d32744a3aa6f516d",
+    "workflow_run_id": 33992072773,
+    "artifact_id": 9977093099,
+    "artifact_digest": "sha256:d4b1f049e9d613130333c8584b4f57b7a9c325d7be3a3b620358a344286ee6e8",
+    "webfetch_records_seen_before_physical_dedup": 9603,
+    "all_three_identity_fields_present": 773,
+    "records_missing_at_least_one_identity_field": 8830,
+    "cross_session_exact_reuse_opportunities": 0,
+    "classification": "LOW_EXACT_OVERLAP_SIGNAL"
+  },
+  "source": {
+    "dataset": "viktor-shcherb/jobseek-agent-traces",
+    "resolved_revision": "524f2910f2893b04ccfbb76e56116fe0af3c5bf7",
+    "trace_manifest_sha256": "113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8",
+    "locked_trace_files": 929,
+    "locked_trace_total_bytes": 5700388035,
+    "license": "MIT"
+  },
+  "selection": {
+    "must_reuse_private293_phase_a_exactly": true,
+    "phase_a_file_count": 400,
+    "rank": "ascending sha256('seenrelay-private293-phase-a-v1\\0' + UTF8(path)); ties by raw UTF-8 path",
+    "process_all_selected_files": true,
+    "phase_b_forbidden": true,
+    "selection_must_not_use_trace_content": true,
+    "selection_must_not_use_file_size": true,
+    "selection_must_not_use_company_or_issue_metadata": true
+  },
+  "records": {
+    "only_native_jsonl_assistant_tool_use_blocks": true,
+    "tool_name_must_equal": "WebFetch",
+    "identity_fields": [
+      "top-level sessionId",
+      "top-level assistant uuid",
+      "tool_use block id"
+    ],
+    "nonempty_string_required": true,
+    "do_not_read_url": true,
+    "do_not_read_prompt": true,
+    "do_not_read_tool_result": true,
+    "do_not_construct_operation_identity": true,
+    "do_not_compute_overlap": true
+  },
+  "metrics": {
+    "files_processed": true,
+    "logical_bytes_verified": true,
+    "webfetch_records_seen": true,
+    "sessionId_present": true,
+    "assistant_uuid_present": true,
+    "tool_use_id_present": true,
+    "missing_sessionId": true,
+    "missing_assistant_uuid": true,
+    "missing_tool_use_id": true,
+    "all_three_present": true,
+    "missing_at_least_one": true,
+    "eight_presence_bitmask_counts": true
+  },
+  "geometry_checks": {
+    "webfetch_records_seen_must_equal_private293": 9603,
+    "all_three_present_must_equal_private293_unique_before_duplicate_effect": 773,
+    "missing_at_least_one_must_equal_private293": 8830,
+    "note": "PRIVATE293 removed zero physical duplicates, so all-three-present equals its unique physical WebFetch count."
+  },
+  "decision_rules": {
+    "single_field_dominant_threshold_percent_of_missing_records": 95,
+    "sessionId_only_gap": "If at least 95% of missing records have assistant uuid and tool_use id present but sessionId absent, a separate preregistered source-native session-identity diagnostic may be commissioned. No overlap rerun is authorized.",
+    "assistant_uuid_only_gap": "If at least 95% of missing records have sessionId and tool_use id present but assistant uuid absent, retain the source as physically underidentified unless a separately preregistered source-native event identity can be proven. No overlap rerun is authorized.",
+    "tool_use_id_only_gap": "If at least 95% of missing records have sessionId and assistant uuid present but tool_use id absent, retain the source as physically underidentified unless a separately preregistered source-native tool identity can be proven. No overlap rerun is authorized.",
+    "mixed_gap": "Otherwise classify the missing-identity population as mixed and do not attempt to rescue PRIVATE293 from this diagnostic."
+  },
+  "privacy": {
+    "aggregate_counts_only": true,
+    "raw_trace_files_retained": false,
+    "raw_values_output": false,
+    "file_paths_output": false,
+    "session_ids_output": false,
+    "assistant_uuids_output": false,
+    "tool_use_ids_output": false,
+    "urls_output": false,
+    "prompts_output": false,
+    "company_or_issue_metadata_output": false
+  },
+  "interpretation": {
+    "private293_result_frozen": true,
+    "private293_may_not_be_reclassified": true,
+    "excluded_records_may_not_be_added_to_private293": true,
+    "diagnostic_is_not_reuse_evidence": true,
+    "diagnostic_is_not_population_prevalence_evidence": true
+  }
+}
