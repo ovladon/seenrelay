@@ -1,0 +1,100 @@
+{
+  "schema": "seenrelay-private310-swechat-full-browser-overlap-dedup-order-v1",
+  "status": "frozen_after_private309_before_any_private310_numeric_result",
+  "purpose": "Retry the frozen full SWE-chat browser-overlap measurement after the PRIVATE309 source-integrity diagnostic proved that the PRIVATE304 failure is caused entirely by one exact duplicate native physical WebFetch record. Change only the order of the already-frozen physical deduplication and turn_id uniqueness checks.",
+  "parent_measurement": {
+    "private304_exact_head": "d531f5c24f2647426e50747f661a42ecf85ecb50",
+    "private304_first_authorized_source_run_job": 101396306994,
+    "private304_failure": "duplicate turn_id among selected WebFetch rows",
+    "private304_aggregate_validator_ran": false,
+    "private304_numeric_result_observed": false
+  },
+  "integrity_evidence": {
+    "private309_exact_head": "7536f43e64fcfd772aaaba23625999ee12d519b8",
+    "private309_run": 33999945690,
+    "private309_artifact": 9979185872,
+    "private309_artifact_digest": "sha256:841a635474ab7dcb4f0295cf49ba241fc7768fe532d22a5f18579e04fdfe69fe",
+    "verdict": "TURN_ID_DUPLICATION_EXPLAINED_BY_PHYSICAL_DUPLICATES",
+    "followup_measurement_preregistration_authorized": true,
+    "selected_webfetch_rows": 882,
+    "unique_native_physical_keys": 881,
+    "duplicate_native_physical_key_groups": 1,
+    "duplicate_native_physical_key_excess_rows": 1,
+    "duplicate_physical_key_groups_with_equal_canonical_input": 1,
+    "duplicate_physical_key_groups_with_conflicting_canonical_input": 0,
+    "duplicate_physical_key_groups_spanning_multiple_turn_ids": 0,
+    "duplicate_physical_key_groups_spanning_multiple_turn_numbers": 0,
+    "unique_turn_ids": 881,
+    "turn_id_duplicates_remaining_after_physical_dedup_groups": 0,
+    "exact_structural_row_duplicate_groups": 1,
+    "overlap_computed": false
+  },
+  "source": {
+    "dataset": "SALT-NLP/SWE-chat",
+    "resolved_revision": "f66cca95b14caaa4177f7ed5eaa424608dadcffa",
+    "filename": "conversations.parquet",
+    "logical_size": 1311422253,
+    "git_blob_id": "e8c76683b25698fc4312baf45fa6cb2297773946"
+  },
+  "correction": {
+    "physical_key": ["session_id", "tool_call_id"],
+    "before": "global turn_id uniqueness was asserted on raw selected WebFetch rows before native physical deduplication",
+    "after": "native physical deduplication is performed first; duplicate native physical records must have equal deterministic parsed tool input and identical turn_id and turn_number; global turn_id uniqueness is then asserted on the deduplicated physical representatives",
+    "remove_global_turn_id_uniqueness_assertion": false,
+    "change_native_physical_key": false,
+    "change_duplicate_payload_equality": false,
+    "change_representative_ordering": false,
+    "change_url_or_prompt_parsing": false,
+    "change_operation_identity": false,
+    "change_overlap_core": false,
+    "change_thresholds": false,
+    "change_source": false
+  },
+  "expected_extraction_geometry": {
+    "selected_webfetch_rows_before_physical_dedup": 882,
+    "duplicate_physical_webfetch_records_removed": 1,
+    "unique_physical_webfetch_calls": 881,
+    "post_dedup_turn_id_unique": true,
+    "mismatch_is_fail_closed": true
+  },
+  "measurement_contract": {
+    "whole_pinned_conversations_parquet": true,
+    "sampling_forbidden": true,
+    "turn_type": "tool_use",
+    "tool_name": "WebFetch",
+    "native_session_coordinate": "session_id",
+    "native_physical_key": ["session_id", "tool_call_id"],
+    "operation_identity": "sha256(stable_json({url: WHATWG_canonical_url, prompt: CRLF_CR_to_LF_then_trim}))",
+    "ordering": "timestamp ascending nonnull first, then session_id, turn_number, turn_id",
+    "classification": {
+      "eligible_below_100": "INSUFFICIENT_EXTERNAL_SAMPLE",
+      "eligible_at_least_100_exact_reuse_below_5_percent": "LOW_EXACT_OVERLAP_SIGNAL",
+      "exact_reuse_5_to_below_20_percent": "WEAK_EXACT_OVERLAP_SIGNAL",
+      "exact_reuse_at_least_20_percent": "STRONG_EXACT_OVERLAP_SIGNAL",
+      "integer_arithmetic_required": true
+    }
+  },
+  "postmeasurement_policy": {
+    "private305_exact_head": "81cc89ae315cf0cd0237703cb800fe17afbd01ef",
+    "private305_was_frozen_before_any_numeric_private304_result": true,
+    "private305_decision_tree_applies_unchanged": true,
+    "low_exact_overlap_below_5_percent_authorizes_authoritative_replay": false,
+    "weak_or_strong_exact_overlap_at_least_5_percent_authorizes_only_separate_replay_preregistration": true,
+    "url_only_at_least_20_percent_with_exact_below_5_percent_authorizes_only_separate_prompt_contribution_diagnostic": true
+  },
+  "rerun_policy": {
+    "failed_preaggregate_private304_run_consumed_numeric_experiment": false,
+    "only_first_successful_measured_aggregate_on_exact_private310_head_is_admissible_numeric_result": true,
+    "failed_or_partial_private310_runs_are_not_numeric_results": true,
+    "no_additional_source_integrity_correction_without_new_preregistration": true
+  },
+  "forbidden_inferences": {
+    "private285_pass_from_overlap_alone": true,
+    "observer_independence_from_native_session_id_alone": true,
+    "population_prevalence_from_swechat": true,
+    "cross_source_pooled_hit_rate": true,
+    "seenrelay_reuse_authorization_from_overlap_alone": true,
+    "production_change_from_overlap_alone": true,
+    "commercial_claim_from_overlap_alone": true
+  }
+}
