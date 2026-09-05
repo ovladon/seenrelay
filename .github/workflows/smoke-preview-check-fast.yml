@@ -1,4 +1,5 @@
 name: Smoke Preview CHECK fast path
+# smoke contract v2: reference CHECK establishes lease before candidate fast-path timing
 
 on:
   push:
