@@ -1,0 +1,28 @@
+{
+  "schema": "seenrelay-private302-pre-result-workflow-load-correction-v1",
+  "status": "frozen_after_configuration_rejection_before_any_job_or_dataset_access",
+  "parent_preregistration": "PRIVATE302_SWECHAT_FULL_BROWSER_OVERLAP_V1",
+  "superseded_run": {
+    "workflow_run_id": 33996554989,
+    "head": "1ecb12b63889bb9ab32601b99f973a3381e212be",
+    "jobs_created": 0,
+    "dataset_accessed": false,
+    "numeric_result_observed": false
+  },
+  "problem": "The first workflow definition was rejected before job creation. The transient HF_HOME path used the runner context in job-level env, before a runner context is available for execution.",
+  "correction": {
+    "remove_runner_context_from_job_env": true,
+    "initialize_HF_HOME_from_RUNNER_TEMP_in_runtime_step": true,
+    "make_job_if_expression_explicit": true,
+    "measurement_code_changed": false,
+    "source_population_changed": false,
+    "operation_identity_changed": false,
+    "eligibility_changed": false,
+    "classification_thresholds_changed": false,
+    "access_policy_changed": false
+  },
+  "authorization": {
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}
