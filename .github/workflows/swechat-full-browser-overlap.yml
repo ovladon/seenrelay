@@ -1,0 +1,242 @@
+name: SWE-chat full browser overlap (PRIVATE302)
+
+on:
+  pull_request:
+    branches:
+      - research/browser-natural-swechat-full-lock-v1
+    paths:
+      - preregistration/PRIVATE302_SWECHAT_FULL_BROWSER_OVERLAP_V1.json
+      - preregistration/PRIVATE302_PRE_RESULT_DUPLICATE_PAYLOAD_DEFINITION_V1.json
+      - preregistration/PRIVATE302_PRE_RESULT_DUPLICATE_REPRESENTATIVE_V1.json
+      - scripts/private302-swechat-overlap-core.mjs
+      - scripts/run-private302-swechat-full-overlap.py
+      - tests/private302-swechat-overlap-core.test.mjs
+      - tests/private302-swechat-full-overlap.test.py
+      - .github/workflows/swechat-full-browser-overlap.yml
+
+permissions:
+  contents: read
+
+jobs:
+  overlap:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'research/browser-natural-swechat-full-v1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_HOME: ${{ runner.temp }}/private302-hf
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pinned PRIVATE302 dependencies
+        run: python -m pip install --disable-pip-version-check huggingface_hub==0.35.3 pyarrow==21.0.0
+
+      - name: Run frozen PRIVATE302 Node tests
+        run: node --test tests/private302-swechat-overlap-core.test.mjs
+
+      - name: Run frozen PRIVATE302 extraction tests
+        run: python tests/private302-swechat-full-overlap.test.py
+
+      - name: Execute preregistered full SWE-chat overlap or access-blocked result
+        run: python scripts/run-private302-swechat-full-overlap.py --output private302-swechat-full-overlap.json
+
+      - name: Enforce aggregate-only PRIVATE302 report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import math
+          from pathlib import Path
+
+          p = Path('private302-swechat-full-overlap.json')
+          r = json.loads(p.read_text(encoding='utf-8'))
+
+          EXPECTED_SOURCE = {
+              'dataset': 'SALT-NLP/SWE-chat',
+              'resolved_revision': 'f66cca95b14caaa4177f7ed5eaa424608dadcffa',
+              'filename': 'conversations.parquet',
+              'logical_size': 1311422253,
+              'git_blob_id': 'e8c76683b25698fc4312baf45fa6cb2297773946',
+          }
+          BLOCKED = {
+              'ACCESS_BLOCKED_NO_AUTHORIZED_HF_TOKEN',
+              'ACCESS_BLOCKED_GATED_DATASET_NOT_ACCEPTED',
+          }
+          FORBIDDEN_EXACT_KEYS = {
+              'raw_url', 'raw_prompt', 'session_id', 'tool_call_id', 'turn_id',
+              'exact_key', 'url_key', 'tool_input_json', 'content', 'rows', 'calls',
+          }
+
+          def walk(value):
+              if isinstance(value, dict):
+                  for key, child in value.items():
+                      if key in FORBIDDEN_EXACT_KEYS:
+                          raise SystemExit(f'forbidden raw/per-call field in aggregate report: {key}')
+                      walk(child)
+              elif isinstance(value, list):
+                  for child in value:
+                      walk(child)
+
+          def require_false_map(value, expected_keys):
+              if set(value) != set(expected_keys):
+                  raise SystemExit('unexpected safety/privacy keys')
+              if any(value[key] is not False for key in expected_keys):
+                  raise SystemExit('safety/privacy flag unexpectedly true')
+
+          if r.get('schema') != 'seenrelay-private302-swechat-full-browser-overlap-v1':
+              raise SystemExit('schema mismatch')
+          if r.get('source') != EXPECTED_SOURCE:
+              raise SystemExit('source lock mismatch')
+          walk(r)
+
+          access = r.get('access')
+          if not isinstance(access, dict) or set(access) != {
+              'authorized_content_access_succeeded', 'gate_bypass_attempted', 'fallback_dataset_used'
+          }:
+              raise SystemExit('invalid access block')
+          if access['gate_bypass_attempted'] is not False or access['fallback_dataset_used'] is not False:
+              raise SystemExit('gate bypass/fallback forbidden')
+
+          require_false_map(r.get('interpretation', {}), {
+              'observer_independence_proven', 'private285_class_pass_authorized',
+              'seenrelay_reuse_authorized', 'production_change_authorized',
+              'population_prevalence_claim_authorized', 'commercial_claim_authorized',
+          })
+          require_false_map(r.get('privacy', {}), {
+              'raw_parquet_retained_in_artifact', 'raw_urls_retained_in_artifact',
+              'raw_prompts_retained_in_artifact', 'session_ids_retained_in_artifact',
+              'tool_call_ids_retained_in_artifact', 'turn_ids_retained_in_artifact',
+              'per_key_hashes_retained_in_artifact',
+          })
+
+          status = r.get('status')
+          if status in BLOCKED:
+              if r.get('measurement_performed') is not False:
+                  raise SystemExit('blocked result cannot contain a measurement')
+              if access['authorized_content_access_succeeded'] is not False:
+                  raise SystemExit('blocked result claims authorized access')
+              if set(r) != {'schema', 'status', 'measurement_performed', 'source', 'access', 'interpretation', 'privacy'}:
+                  raise SystemExit('blocked result contains extra fields')
+              raise SystemExit(0)
+
+          if status != 'MEASURED' or r.get('measurement_performed') is not True:
+              raise SystemExit('unknown PRIVATE302 result status')
+          if access['authorized_content_access_succeeded'] is not True:
+              raise SystemExit('measured result lacks authorized access proof flag')
+          if set(r) != {'schema', 'status', 'measurement_performed', 'source', 'access', 'extraction', 'overlap', 'interpretation', 'privacy'}:
+              raise SystemExit('measured result has unexpected top-level fields')
+
+          e = r['extraction']
+          if set(e) != {
+              'selected_webfetch_rows_before_physical_dedup',
+              'duplicate_physical_webfetch_records_removed',
+              'unique_physical_webfetch_calls',
+          }:
+              raise SystemExit('unexpected extraction fields')
+          if any(not isinstance(v, int) or isinstance(v, bool) or v < 0 for v in e.values()):
+              raise SystemExit('invalid extraction count')
+          if e['selected_webfetch_rows_before_physical_dedup'] != e['duplicate_physical_webfetch_records_removed'] + e['unique_physical_webfetch_calls']:
+              raise SystemExit('physical dedup accounting mismatch')
+
+          o = r['overlap']
+          expected_overlap_keys = {
+              'schema', 'source_sessions_with_webfetch', 'physical_webfetch_calls_seen',
+              'eligible_http_webfetch_calls', 'rejected_calls', 'unique_exact_operation_keys',
+              'exact_repeat_calls_any_session', 'exact_keys_spanning_sessions',
+              'cross_session_exact_reuse_opportunities', 'cross_session_exact_reuse_percent',
+              'unique_url_keys', 'url_keys_spanning_sessions',
+              'cross_session_url_reuse_opportunities', 'cross_session_url_reuse_percent',
+              'classification', 'ordering', 'interpretation', 'privacy',
+          }
+          if set(o) != expected_overlap_keys or o.get('schema') != 'seenrelay-private302-swechat-overlap-core-v1':
+              raise SystemExit('unexpected overlap schema/fields')
+          if o['physical_webfetch_calls_seen'] != e['unique_physical_webfetch_calls']:
+              raise SystemExit('core/extraction physical count mismatch')
+
+          count_fields = [
+              'source_sessions_with_webfetch', 'physical_webfetch_calls_seen',
+              'eligible_http_webfetch_calls', 'unique_exact_operation_keys',
+              'exact_repeat_calls_any_session', 'exact_keys_spanning_sessions',
+              'cross_session_exact_reuse_opportunities', 'unique_url_keys',
+              'url_keys_spanning_sessions', 'cross_session_url_reuse_opportunities',
+          ]
+          if any(not isinstance(o[k], int) or isinstance(o[k], bool) or o[k] < 0 for k in count_fields):
+              raise SystemExit('invalid overlap integer count')
+
+          rejected = o['rejected_calls']
+          if set(rejected) != {'missing_url', 'invalid_url', 'non_http_url', 'missing_prompt'}:
+              raise SystemExit('unexpected rejection fields')
+          if any(not isinstance(v, int) or isinstance(v, bool) or v < 0 for v in rejected.values()):
+              raise SystemExit('invalid rejection count')
+          if o['eligible_http_webfetch_calls'] + sum(rejected.values()) != o['physical_webfetch_calls_seen']:
+              raise SystemExit('eligibility accounting mismatch')
+          if o['exact_repeat_calls_any_session'] != o['eligible_http_webfetch_calls'] - o['unique_exact_operation_keys']:
+              raise SystemExit('exact-repeat accounting mismatch')
+          if o['cross_session_exact_reuse_opportunities'] > o['eligible_http_webfetch_calls']:
+              raise SystemExit('exact opportunities exceed eligible calls')
+          if o['cross_session_url_reuse_opportunities'] > o['eligible_http_webfetch_calls']:
+              raise SystemExit('URL opportunities exceed eligible calls')
+
+          eligible = o['eligible_http_webfetch_calls']
+          exact = o['cross_session_exact_reuse_opportunities']
+          if eligible < 100:
+              expected_class = 'INSUFFICIENT_EXTERNAL_SAMPLE'
+          elif exact * 100 < eligible * 5:
+              expected_class = 'LOW_EXACT_OVERLAP_SIGNAL'
+          elif exact * 100 < eligible * 20:
+              expected_class = 'WEAK_EXACT_OVERLAP_SIGNAL'
+          else:
+              expected_class = 'STRONG_EXACT_OVERLAP_SIGNAL'
+          if o['classification'] != expected_class:
+              raise SystemExit('classification does not match frozen integer thresholds')
+
+          def expected_percent(n, d):
+              return 0 if d == 0 else round((n / d) * 100, 6)
+          if not math.isclose(o['cross_session_exact_reuse_percent'], expected_percent(exact, eligible), rel_tol=0, abs_tol=5e-7):
+              raise SystemExit('exact display percent mismatch')
+          if not math.isclose(o['cross_session_url_reuse_percent'], expected_percent(o['cross_session_url_reuse_opportunities'], eligible), rel_tol=0, abs_tol=5e-7):
+              raise SystemExit('URL display percent mismatch')
+
+          if o['ordering'] != {
+              'primary': 'timestamp_ascending_nonnull_first',
+              'tie_breakers': ['session_id', 'turn_number', 'turn_id'],
+          }:
+              raise SystemExit('ordering mismatch')
+          if o['interpretation'] != {
+              'exact_overlap_is_lower_bound_only': True,
+              'different_native_session_is_independence_proxy_only': True,
+              'observer_independence_proven': False,
+              'natural_workload_class_pass_authorized': False,
+              'seenrelay_reuse_authorized': False,
+          }:
+              raise SystemExit('core interpretation flags mismatch')
+          if o['privacy'] != {
+              'raw_urls_retained': False,
+              'raw_prompts_retained': False,
+              'session_ids_retained': False,
+              'turn_ids_retained': False,
+              'per_key_hashes_retained': False,
+          }:
+              raise SystemExit('core privacy flags mismatch')
+          PY
+
+      - name: Delete transient Hugging Face cache
+        if: always()
+        run: rm -rf "$HF_HOME"
+
+      - name: Upload aggregate PRIVATE302 result only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private302-swechat-full-browser-overlap
+          path: private302-swechat-full-overlap.json
+          retention-days: 14
+          if-no-files-found: error
