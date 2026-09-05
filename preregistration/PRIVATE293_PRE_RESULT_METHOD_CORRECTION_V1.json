@@ -1,0 +1,47 @@
+{
+  "schema": "seenrelay-private293-pre-result-method-correction-v1",
+  "status": "frozen_before_any_private293_numeric_result_was_observed",
+  "pull_request": 177,
+  "superseded_preregistration": "preregistration/PRIVATE293_JOBSEEK_NATURAL_BROWSER_SOURCE_V1.json",
+  "superseded_field": "operation.url_canonicalization",
+  "detection": {
+    "workflow_run_id": 33990483640,
+    "workflow_run_status_at_detection": "in_progress",
+    "active_step_at_detection": "Execute preregistered Phase A and conditional Phase B",
+    "aggregate_report_step_status_at_detection": "pending",
+    "artifact_upload_step_status_at_detection": "pending",
+    "private293_numeric_result_observed": false,
+    "private293_aggregate_report_observed": false
+  },
+  "discrepancy": {
+    "original_prose": "trim, parse URL, lowercase scheme and hostname, remove fragment, preserve path/query/port",
+    "already_frozen_executable_behavior": "trim; parse with the Node WHATWG URL implementation; require http or https; clear the fragment; serialize the resulting URL with WHATWG URL serialization",
+    "material_detail": "WHATWG URL serialization elides default ports such as https:443 and may apply the parser/serializer's standard URL normalization; therefore the phrase preserve path/query/port was not a complete description of the already-frozen executable behavior",
+    "existing_test_evidence": "The pre-result hostile/unit test already expected HTTPS://Example.COM:443/path?q=2#section to canonicalize to https://example.com/path?q=2."
+  },
+  "effective_frozen_rule": {
+    "url_canonicalization": "trim; parse with Node WHATWG URL; require http or https; remove fragment; serialize with WHATWG URL semantics; no semantic, fuzzy, embedding, LLM, company, issue, board, cwd, repo, or tool-result matching is added",
+    "prompt_canonicalization": "CRLF/CR to LF plus trim only",
+    "exact_operation_key": "sha256(stable_json({url:canonical_url,prompt:canonical_prompt}))"
+  },
+  "unchanged": {
+    "source_revision": "524f2910f2893b04ccfbb76e56116fe0af3c5bf7",
+    "trace_manifest_sha256": "113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8",
+    "phase_a_file_count": 400,
+    "phase_a_selection_rank": "ascending sha256('seenrelay-private293-phase-a-v1\\0' + UTF8(path)); ties by raw UTF-8 path",
+    "phase_b_trigger": "only if phase_a eligible_http_webfetch_calls after physical-call deduplication is below 100",
+    "physical_call_identity": "sha256(sessionId + NUL + assistant uuid + NUL + tool_use id)",
+    "sample_floor": 100,
+    "low_threshold_percent": 5,
+    "strong_threshold_percent": 20,
+    "parser_logic_changed": false,
+    "selection_changed": false,
+    "thresholds_changed": false,
+    "identity_fields_changed": false
+  },
+  "validity": {
+    "workflow_run_33990483640_must_not_be_used_as_private293_result": true,
+    "only_a_fresh_run_from_a_commit_containing_this_correction_may_be_used": true,
+    "correction_must_not_be_revised_in_response_to_the_superseded_run_result": true
+  }
+}
