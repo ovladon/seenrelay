@@ -1,0 +1,121 @@
+name: WebRider portability screen
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  portability-screen:
+    if: startsWith(github.head_ref, 'research/browser-portability-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WEBRIDER_REVISION: 6848308895f11b37c610ecbf4951fa5e53421437
+      WEBRIDER_TASKS_SHA256: e84e18ad9abb872cd0d806d5cbfdaba8d1db6883c5a737af5f8346333f8a55c2
+      WEBRIDER_TASKS_BYTES: '14098420'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Run portability evaluator tests
+        run: node --test tests/browser-evidence-portability.test.mjs
+
+      - name: Download and verify pinned tasks metadata
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import os
+          import pathlib
+          import urllib.request
+
+          repo = 'WebRider/WebRider'
+          revision = os.environ['WEBRIDER_REVISION']
+          expected_sha = os.environ['WEBRIDER_TASKS_SHA256']
+          expected_bytes = int(os.environ['WEBRIDER_TASKS_BYTES'])
+          target = pathlib.Path('.private287-tasks.json')
+          url = f'https://huggingface.co/datasets/{repo}/resolve/{revision}/tasks.json?download=true'
+          request = urllib.request.Request(url, headers={'User-Agent': 'seenrelay-private287-portability/1.0'})
+          digest = hashlib.sha256()
+          size = 0
+          with urllib.request.urlopen(request, timeout=60) as response, target.open('wb') as handle:
+              while True:
+                  chunk = response.read(1024 * 1024)
+                  if not chunk:
+                      break
+                  digest.update(chunk)
+                  size += len(chunk)
+                  handle.write(chunk)
+          actual_sha = digest.hexdigest()
+          if actual_sha != expected_sha or size != expected_bytes:
+              target.unlink(missing_ok=True)
+              raise SystemExit(f'Pinned tasks metadata mismatch: sha={actual_sha} bytes={size}')
+          print(f'verified pinned tasks.json: {size} bytes sha256={actual_sha}')
+          PY
+
+      - name: Evaluate controlled evidence portability
+        run: |
+          node scripts/screen-browser-evidence-portability.mjs \
+            --input .private287-tasks.json \
+            --source-revision "$WEBRIDER_REVISION" \
+            --source-sha256 "$WEBRIDER_TASKS_SHA256" \
+            --source-bytes "$WEBRIDER_TASKS_BYTES" \
+            --output private287-browser-portability-report.json
+          cat private287-browser-portability-report.json
+
+      - name: Enforce claim and privacy boundaries
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('private287-browser-portability-report.json', 'utf8'));
+          const exactTopLevel = [
+            'schema','source','records_seen','eligible_contracts','rejected_records',
+            'base_task_ids_with_eligible_contracts','base_tasks_with_eligible_pair',
+            'eligible_cross_policy_cross_request_pairs','identical_evidence_pairs',
+            'identical_evidence_pair_percent','base_tasks_with_portable_evidence',
+            'base_task_portability_percent',
+            'eligible_contracts_with_prior_cross_policy_cross_request_candidate',
+            'contract_reuse_opportunities','contract_reuse_opportunity_percent',
+            'classification','methodology','privacy'
+          ].sort();
+          if (report.schema !== 'seenrelay-private287-browser-evidence-portability-report-v1') process.exit(1);
+          if (report.source?.dataset !== 'WebRider/WebRider') process.exit(1);
+          if (report.source?.revision !== process.env.WEBRIDER_REVISION) process.exit(1);
+          if (report.source?.tasks_sha256 !== process.env.WEBRIDER_TASKS_SHA256) process.exit(1);
+          if (report.source?.tasks_bytes !== Number(process.env.WEBRIDER_TASKS_BYTES)) process.exit(1);
+          if (report.methodology?.semantic_matching_used !== false) process.exit(1);
+          if (report.methodology?.benchmark_repetition_constructed !== true) process.exit(1);
+          if (report.methodology?.result_is_natural_prevalence !== false) process.exit(1);
+          if (report.methodology?.result_authorizes_private285_pass !== false) process.exit(1);
+          if (report.methodology?.result_authorizes_seenrelay_reuse !== false) process.exit(1);
+          if (report.privacy?.aggregate_counts_only !== true) process.exit(1);
+          for (const key of ['surface_requests_retained','evidence_text_retained','persona_profiles_retained','task_ids_retained','base_task_ids_retained','per_key_hashes_retained']) {
+            if (report.privacy?.[key] !== false) process.exit(1);
+          }
+          if (JSON.stringify(Object.keys(report).sort()) !== JSON.stringify(exactTopLevel)) process.exit(1);
+          const serialized = JSON.stringify(report);
+          if (/https?:\/\//i.test(serialized)) process.exit(1);
+          NODE
+
+      - name: Delete source metadata before artifact upload
+        if: always()
+        run: rm -f .private287-tasks.json
+
+      - name: Upload aggregate report only
+        if: always() && hashFiles('private287-browser-portability-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: private287-browser-portability-report
+          path: private287-browser-portability-report.json
+          if-no-files-found: error
+          retention-days: 14
