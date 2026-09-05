@@ -1,6 +1,6 @@
 {
   "schema": "seenrelay-private289-browser-request-representation-v1",
-  "status": "criteria_frozen_before_source_lock_and_geometry_result",
+  "status": "source_locked_before_geometry_result",
   "purpose": "Controlled feasibility test of representation portability for browser retrieval tasks: compare a natural-language request surface with an independently available structured task representation without using evaluator answers to construct identity.",
   "production_authorized": false,
   "public_claim_authorized": false,
@@ -11,11 +11,13 @@
     "revision": "6473f72db5dcefc97b5725b59e734504edc28a21",
     "dataset_file": "assets/dataset/webarena-verified.json",
     "dataset_git_blob_sha": "eb73812e5352e8a26c8f8b4afa612fbc5225bf19",
-    "dataset_sha256": "TO_BE_LOCKED_BEFORE_ANALYSIS",
-    "dataset_bytes": null,
+    "dataset_sha256": "d65275660814663375028e9017e1f929e3c38321041b125795e2713b52243d30",
+    "dataset_bytes": 927596,
     "license": "Apache-2.0",
     "license_file": "LICENSE",
-    "license_sha256": "TO_BE_LOCKED_BEFORE_ANALYSIS"
+    "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "license_bytes": 11357,
+    "source_lock_analysis_performed": false
   },
   "identity_boundary": {
     "must_not_use_eval_expected_to_construct_identity": true,
