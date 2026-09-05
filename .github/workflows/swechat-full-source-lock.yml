@@ -1,0 +1,97 @@
+name: SWE-chat full source metadata lock
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'preregistration/PRIVATE301_SWECHAT_FULL_SOURCE_CANDIDATE_V1.json'
+      - 'scripts/lock-private301-swechat-source.py'
+      - 'tests/private301-swechat-source-lock.test.py'
+      - '.github/workflows/swechat-full-source-lock.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-lock:
+    if: startsWith(github.head_ref, 'research/browser-natural-swechat-full-lock-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned Hub metadata client
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
+
+      - name: Run source-lock tests
+        run: python tests/private301-swechat-source-lock.test.py
+
+      - name: Capture metadata-only source lock
+        run: |
+          python scripts/lock-private301-swechat-source.py \
+            --output private301-swechat-full-source-lock.json
+
+      - name: Enforce metadata-only report
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+          import re
+
+          report = json.loads(pathlib.Path('private301-swechat-full-source-lock.json').read_text(encoding='utf-8'))
+          if report.get('schema') != 'seenrelay-private301-swechat-full-source-lock-v1':
+              raise SystemExit('schema mismatch')
+          source = report.get('source', {})
+          if source.get('dataset') != 'SALT-NLP/SWE-chat' or source.get('requested_revision') != 'main':
+              raise SystemExit('dataset mismatch')
+          resolved = source.get('resolved_revision')
+          if not isinstance(resolved, str) or not re.fullmatch(r'[0-9a-f]{40,64}', resolved):
+              raise SystemExit('resolved revision invalid')
+          if source.get('license') != 'odc-by':
+              raise SystemExit(f'unexpected license: {source.get("license")!r}')
+          if source.get('gated') not in (True, 'auto', 'manual'):
+              raise SystemExit(f'expected gated dataset, got {source.get("gated")!r}')
+
+          expected_files = {'README.md', 'conversations.parquet', 'sessions.parquet', 'session_logs.parquet'}
+          files = report.get('files')
+          if not isinstance(files, dict) or set(files) != expected_files:
+              raise SystemExit('relevant file set mismatch')
+          for name, item in files.items():
+              if item.get('path') != name:
+                  raise SystemExit('path mismatch')
+              if not isinstance(item.get('logical_size'), int) or item['logical_size'] <= 0:
+                  raise SystemExit('invalid logical size')
+              if not isinstance(item.get('git_blob_id'), str) or not re.fullmatch(r'[0-9a-f]{40,64}', item['git_blob_id']):
+                  raise SystemExit('invalid git blob id')
+              if not set(item).issubset({'path', 'logical_size', 'git_blob_id', 'lfs', 'xet_hash'}):
+                  raise SystemExit('unexpected file metadata field')
+
+          if report.get('access') != {
+              'metadata_only': True,
+              'file_content_downloaded': False,
+              'readme_content_downloaded': False,
+              'parquet_content_downloaded': False,
+              'transcript_content_downloaded': False,
+          }:
+              raise SystemExit('access boundary mismatch')
+          if report.get('analysis') != {
+              'webfetch_rows_read': False,
+              'webfetch_count_computed': False,
+              'tool_input_json_read': False,
+              'operation_identity_constructed': False,
+              'overlap_computed': False,
+          }:
+              raise SystemExit('analysis boundary mismatch')
+          PY
+
+      - name: Upload metadata-only source lock
+        uses: actions/upload-artifact@v4
+        with:
+          name: private301-swechat-full-source-lock
+          path: private301-swechat-full-source-lock.json
+          if-no-files-found: error
+          retention-days: 14
