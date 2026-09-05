@@ -1,0 +1,29 @@
+{
+  "schema": "seenrelay-private303-pre-result-manifest-metadata-correction-v1",
+  "status": "frozen_after_manifest_failure_before_any_source_file_download_or_tool_count",
+  "parent_preregistration": "PRIVATE303_OPENCODE_WEBFETCH_GEOMETRY_V1",
+  "superseded_run": {
+    "workflow_run_id": 33996828297,
+    "head": "811eed6123cef129cef4842e3a09943fb850d97b",
+    "frozen_tests_passed": true,
+    "failure_stage": "source manifest metadata inventory",
+    "source_session_files_downloaded": 0,
+    "webfetch_count_observed": false,
+    "geometry_result_observed": false
+  },
+  "problem": "The Hugging Face tree listing with expand=false returned at least one session RepoFile without a usable logical size, causing the fail-closed manifest check before any source file was downloaded.",
+  "correction": {
+    "list_repo_tree_expand": true,
+    "source_selection_changed": false,
+    "requested_revision_changed": false,
+    "tool_parser_changed": false,
+    "native_identity_rules_changed": false,
+    "sample_floor_changed": false,
+    "decision_rule_changed": false,
+    "overlap_computed": false
+  },
+  "authorization": {
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}
