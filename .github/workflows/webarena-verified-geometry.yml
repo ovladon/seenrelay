@@ -1,0 +1,124 @@
+name: WebArena Verified geometry diagnostic
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  geometry-diagnostic:
+    if: startsWith(github.head_ref, 'research/browser-request-representation-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SOURCE_REPOSITORY: ServiceNow/webarena-verified
+      SOURCE_REVISION: 6473f72db5dcefc97b5725b59e734504edc28a21
+      SOURCE_SHA256: d65275660814663375028e9017e1f929e3c38321041b125795e2713b52243d30
+      SOURCE_BYTES: '927596'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Run geometry diagnostic hostile tests
+        run: node --test tests/browser-request-representation-geometry.test.mjs
+
+      - name: Download and verify pinned WebArena Verified dataset
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import os
+          import pathlib
+          import urllib.request
+
+          repo = os.environ['SOURCE_REPOSITORY']
+          revision = os.environ['SOURCE_REVISION']
+          expected_sha = os.environ['SOURCE_SHA256']
+          expected_bytes = int(os.environ['SOURCE_BYTES'])
+          target = pathlib.Path('.private289-webarena.json')
+          url = f'https://raw.githubusercontent.com/{repo}/{revision}/assets/dataset/webarena-verified.json'
+          request = urllib.request.Request(url, headers={'User-Agent': 'seenrelay-private289-geometry/1.0'})
+          digest = hashlib.sha256()
+          size = 0
+          with urllib.request.urlopen(request, timeout=60) as response, target.open('wb') as handle:
+              while True:
+                  chunk = response.read(1024 * 1024)
+                  if not chunk:
+                      break
+                  digest.update(chunk)
+                  size += len(chunk)
+                  handle.write(chunk)
+          actual_sha = digest.hexdigest()
+          if actual_sha != expected_sha or size != expected_bytes:
+              target.unlink(missing_ok=True)
+              raise SystemExit(f'Pinned dataset mismatch: sha={actual_sha} bytes={size}')
+          print(f'verified pinned dataset: {size} bytes sha256={actual_sha}')
+          PY
+
+      - name: Diagnose retrieval representation geometry without answer contents
+        run: |
+          node scripts/diagnose-browser-request-representation-geometry.mjs \
+            --input .private289-webarena.json \
+            --source-repository "$SOURCE_REPOSITORY" \
+            --source-revision "$SOURCE_REVISION" \
+            --source-sha256 "$SOURCE_SHA256" \
+            --source-bytes "$SOURCE_BYTES" \
+            --output private289-geometry-report.json
+          cat private289-geometry-report.json
+
+      - name: Enforce geometry-only and privacy boundaries
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('private289-geometry-report.json', 'utf8'));
+          const top = [
+            'schema','source','records_seen','parseable_records','retrieval_tasks',
+            'retrieval_tasks_with_required_input_identity_fields',
+            'retrieval_tasks_with_distinct_surface_a_and_surface_b','methodology','privacy'
+          ].sort();
+          if (report.schema !== 'seenrelay-private289-geometry-report-v1') process.exit(1);
+          if (report.source?.repository !== process.env.SOURCE_REPOSITORY) process.exit(1);
+          if (report.source?.revision !== process.env.SOURCE_REVISION) process.exit(1);
+          if (report.source?.dataset_sha256 !== process.env.SOURCE_SHA256) process.exit(1);
+          if (report.source?.dataset_bytes !== Number(process.env.SOURCE_BYTES)) process.exit(1);
+          if (report.records_seen !== 812) process.exit(1);
+          if (report.methodology?.retrieved_data_property_read !== false) process.exit(1);
+          if (report.methodology?.retrieved_data_contents_inspected !== false) process.exit(1);
+          if (report.methodology?.eval_expected_used_to_construct_identity !== false) process.exit(1);
+          if (report.methodology?.task_id_used_to_construct_identity !== false) process.exit(1);
+          if (report.methodology?.llm_used !== false) process.exit(1);
+          if (report.methodology?.embeddings_used !== false) process.exit(1);
+          if (report.methodology?.fuzzy_matching_used !== false) process.exit(1);
+          if (report.methodology?.result_is_geometry_only !== true) process.exit(1);
+          if (report.methodology?.private285_pass_authorized !== false) process.exit(1);
+          if (JSON.stringify(report.methodology?.evaluator_fields_read) !== JSON.stringify(['evaluator','expected.task_type','expected.status'])) process.exit(1);
+          if (report.privacy?.aggregate_counts_only !== true) process.exit(1);
+          for (const key of ['raw_intents_retained','structured_surfaces_retained','task_ids_retained','retrieved_data_retained','per_task_hashes_retained']) {
+            if (report.privacy?.[key] !== false) process.exit(1);
+          }
+          if (JSON.stringify(Object.keys(report).sort()) !== JSON.stringify(top)) process.exit(1);
+          const serialized = JSON.stringify(report);
+          if (/https?:\/\//i.test(serialized)) process.exit(1);
+          NODE
+
+      - name: Delete raw dataset before artifact upload
+        if: always()
+        run: rm -f .private289-webarena.json
+
+      - name: Upload aggregate geometry only
+        if: always() && hashFiles('private289-geometry-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: private289-webarena-geometry-report
+          path: private289-geometry-report.json
+          if-no-files-found: error
+          retention-days: 14
