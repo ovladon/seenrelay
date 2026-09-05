@@ -16,9 +16,10 @@ function webFetch(url, prompt, id = 'toolu_x') {
   return { type: 'tool_use', id, name: 'WebFetch', input: { url, prompt } };
 }
 
-test('canonicalization is conservative and removes only URL fragments', () => {
+test('canonicalization follows frozen WHATWG URL serialization and removes fragments', () => {
   assert.equal(canonicalizePrompt('  Verify X\r\nLine 2  '), 'Verify X\nLine 2');
   assert.equal(canonicalizeUrl('HTTPS://Example.COM:443/path?q=2#section').value, 'https://example.com/path?q=2');
+  assert.equal(canonicalizeUrl('HTTPS://Example.COM:8443/path?q=2#section').value, 'https://example.com:8443/path?q=2');
   assert.deepEqual(canonicalizeUrl('ftp://example.com/a'), { ok: false, reason: 'non_http_url' });
 });
 
