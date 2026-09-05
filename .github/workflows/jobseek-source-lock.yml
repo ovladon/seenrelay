@@ -64,7 +64,7 @@ jobs:
               repo_type='dataset',
               revision=resolved,
               recursive=True,
-              expand=True,
+              expand=False,
           ):
               if not isinstance(item, RepoFile):
                   continue
