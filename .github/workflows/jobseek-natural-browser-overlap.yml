@@ -7,6 +7,7 @@ on:
       - 'preregistration/PRIVATE293_JOBSEEK_NATURAL_BROWSER_SOURCE_V1.json'
       - 'preregistration/PRIVATE293_PRE_RESULT_METHOD_CORRECTION_V1.json'
       - 'preregistration/PRIVATE293_PRE_RESULT_CLASSIFICATION_CORRECTION_V1.json'
+      - 'preregistration/PRIVATE293_PRE_RESULT_OUTPUT_GATE_CORRECTION_V1.json'
       - 'scripts/screen-browser-trace-overlap.mjs'
       - 'scripts/run-private293-jobseek-screen.py'
       - 'tests/browser-trace-overlap-screen.test.mjs'
@@ -104,13 +105,35 @@ jobs:
           if (overlap.interpretation?.natural_workload_class_pass_authorized !== false) process.exit(1);
           if (overlap.interpretation?.seenrelay_reuse_authorized !== false) process.exit(1);
 
-          for (const value of Object.values(report.privacy || {})) {
+          if (!report.privacy || Object.keys(report.privacy).length === 0) process.exit(1);
+          if (!overlap.privacy || Object.keys(overlap.privacy).length === 0) process.exit(1);
+          for (const value of Object.values(report.privacy)) {
             if (value !== false) process.exit(1);
           }
-          const serialized = JSON.stringify(report);
-          for (const forbidden of ['raw_url','raw_prompt','tool_use_id','assistant_uuid','native_session_id','physical_call_key']) {
-            if (serialized.includes(forbidden)) process.exit(1);
+          for (const value of Object.values(overlap.privacy)) {
+            if (value !== false) process.exit(1);
           }
+
+          const forbiddenExactKeys = new Set([
+            'raw_url',
+            'raw_prompt',
+            'tool_use_id',
+            'assistant_uuid',
+            'native_session_id',
+            'physical_call_key'
+          ]);
+          function rejectForbiddenRawFields(value) {
+            if (Array.isArray(value)) {
+              for (const item of value) rejectForbiddenRawFields(item);
+              return;
+            }
+            if (!value || typeof value !== 'object') return;
+            for (const [key, child] of Object.entries(value)) {
+              if (forbiddenExactKeys.has(key)) process.exit(1);
+              rejectForbiddenRawFields(child);
+            }
+          }
+          rejectForbiddenRawFields(report);
           NODE
 
       - name: Delete transient trace-derived data before artifact upload
