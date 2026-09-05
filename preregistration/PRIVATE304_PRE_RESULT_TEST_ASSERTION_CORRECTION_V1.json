@@ -1,0 +1,28 @@
+{
+  "schema": "seenrelay-private304-pre-result-test-assertion-correction-v1",
+  "status": "frozen_after_test_failure_before_any_oidc_exchange_or_dataset_access",
+  "parent_preregistration": "PRIVATE304_SWECHAT_FULL_BROWSER_OVERLAP_OIDC_V1",
+  "superseded_run": {
+    "workflow_run_id": 33997497111,
+    "head": "d937952295ad3426fa5cc466679105ac3fcad54f",
+    "private302_node_tests_passed": true,
+    "private302_extraction_tests_passed": true,
+    "private304_oidc_test_failed_before_exchange": true,
+    "oidc_exchange_attempted": false,
+    "dataset_accessed": false,
+    "numeric_result_observed": false
+  },
+  "problem": "The privacy unit test rejected the literal text HF_OIDC_RESOURCE anywhere in the aggregate JSON, but that literal legitimately appears inside the preregistered status name ACCESS_BLOCKED_NO_HF_OIDC_RESOURCE. The assertion therefore tested the configuration key name rather than whether a secret value leaked.",
+  "correction": {
+    "test_secret_value_leakage_instead_of_configuration_key_literal": true,
+    "measurement_code_changed": false,
+    "authentication_exchange_code_changed": false,
+    "source_changed": false,
+    "operation_identity_changed": false,
+    "thresholds_changed": false
+  },
+  "authorization": {
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}

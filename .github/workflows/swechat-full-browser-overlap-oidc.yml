@@ -1,0 +1,202 @@
+name: SWE-chat full browser overlap OIDC (PRIVATE304)
+
+on:
+  pull_request:
+    branches:
+      - research/browser-natural-swechat-full-v1
+    paths:
+      - preregistration/PRIVATE309_SWECHAT_TURNID_INTEGRITY_V1.json
+      - scripts/run-private309-swechat-turnid-integrity.py
+      - tests/private309-swechat-turnid-integrity.test.py
+      - .github/workflows/swechat-full-browser-overlap-oidc.yml
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  private309-integrity:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'research/private309-swechat-turnid-integrity-v1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      HF_OIDC_RESOURCE: ${{ secrets.HF_OIDC_RESOURCE }}
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Initialize transient Hugging Face cache
+        run: echo "HF_HOME=$RUNNER_TEMP/private309-hf" >> "$GITHUB_ENV"
+
+      - name: Install pinned diagnostic dependencies
+        run: python -m pip install --disable-pip-version-check huggingface_hub==0.35.3 pyarrow==21.0.0
+
+      - name: Run frozen PRIVATE309 synthetic tests
+        run: python tests/private309-swechat-turnid-integrity.test.py
+
+      - name: Execute preregistered PRIVATE309 integrity diagnostic
+        run: python scripts/run-private309-swechat-turnid-integrity.py --output private309-swechat-turnid-integrity.json
+
+      - name: Enforce aggregate-only PRIVATE309 report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          r = json.loads(Path('private309-swechat-turnid-integrity.json').read_text(encoding='utf-8'))
+          EXPECTED_SOURCE = {
+              'dataset': 'SALT-NLP/SWE-chat',
+              'resolved_revision': 'f66cca95b14caaa4177f7ed5eaa424608dadcffa',
+              'filename': 'conversations.parquet',
+              'logical_size': 1311422253,
+              'git_blob_id': 'e8c76683b25698fc4312baf45fa6cb2297773946',
+          }
+          BLOCKED = {
+              'ACCESS_BLOCKED_NO_HF_OIDC_RESOURCE',
+              'ACCESS_BLOCKED_OIDC_EXCHANGE_REJECTED',
+              'ACCESS_BLOCKED_GATED_DATASET_NOT_ACCESSIBLE',
+          }
+          FORBIDDEN_KEYS = {
+              'session_id','turn_id','tool_call_id','tool_input_json','url','prompt',
+              'subject_token','access_token','resource','hf_username','rows','calls',
+              'per_row_hash','raw_url','raw_prompt'
+          }
+
+          def walk(value):
+              if isinstance(value, dict):
+                  for key, child in value.items():
+                      if key in FORBIDDEN_KEYS:
+                          raise SystemExit(f'forbidden raw/auth key in aggregate report: {key}')
+                      walk(child)
+              elif isinstance(value, list):
+                  for child in value:
+                      walk(child)
+
+          if r.get('schema') != 'seenrelay-private309-swechat-turnid-integrity-v1':
+              raise SystemExit('schema mismatch')
+          if r.get('source') != EXPECTED_SOURCE:
+              raise SystemExit('source lock mismatch')
+          walk(r)
+
+          privacy_keys = {
+              'hf_resource_retained','github_oidc_token_retained','hf_access_token_retained',
+              'raw_parquet_retained_in_artifact','raw_tool_input_retained_in_artifact',
+              'url_or_prompt_value_retained','session_ids_retained_in_artifact',
+              'turn_ids_retained_in_artifact','tool_call_ids_retained_in_artifact',
+              'per_row_hashes_retained_in_artifact'
+          }
+          if set(r.get('privacy', {})) != privacy_keys or any(r['privacy'].values()):
+              raise SystemExit('privacy contract mismatch')
+          interpretation_keys = {
+              'overlap_computed','reuse_opportunity_count_computed','private285_pass_authorized',
+              'observer_independence_proven','production_change_authorized','commercial_claim_authorized'
+          }
+          if set(r.get('interpretation', {})) != interpretation_keys or any(r['interpretation'].values()):
+              raise SystemExit('interpretation contract mismatch')
+
+          auth = r.get('authentication', {})
+          if set(auth) != {'method','oidc_exchange_succeeded','authorized_content_access_succeeded'}:
+              raise SystemExit('authentication schema mismatch')
+          if auth['method'] != 'HUGGING_FACE_USER_CICD_OIDC':
+              raise SystemExit('authentication method mismatch')
+
+          if r.get('status') in BLOCKED:
+              if r.get('diagnostic_performed') is not False:
+                  raise SystemExit('blocked result cannot be diagnostic')
+              if set(r) != {'schema','status','diagnostic_performed','source','authentication','privacy','interpretation'}:
+                  raise SystemExit('blocked report has unexpected fields')
+              if r['status'] == 'ACCESS_BLOCKED_GATED_DATASET_NOT_ACCESSIBLE':
+                  if auth['oidc_exchange_succeeded'] is not True or auth['authorized_content_access_succeeded'] is not False:
+                      raise SystemExit('post-exchange blocked flags mismatch')
+              else:
+                  if auth['oidc_exchange_succeeded'] is not False or auth['authorized_content_access_succeeded'] is not False:
+                      raise SystemExit('pre-exchange blocked flags mismatch')
+              raise SystemExit(0)
+
+          if r.get('status') != 'DIAGNOSTIC_COMPLETE' or r.get('diagnostic_performed') is not True:
+              raise SystemExit('unknown PRIVATE309 result status')
+          if auth['oidc_exchange_succeeded'] is not True or auth['authorized_content_access_succeeded'] is not True:
+              raise SystemExit('diagnostic lacks authorized source access')
+          if set(r) != {
+              'schema','status','diagnostic_performed','source','authentication','metrics','verdict',
+              'followup_measurement_preregistration_authorized','privacy','interpretation'
+          }:
+              raise SystemExit('diagnostic report has unexpected fields')
+
+          metric_keys = {
+              'selected_webfetch_rows','source_sessions_with_webfetch','unique_turn_ids',
+              'duplicate_turn_id_groups','duplicate_turn_id_excess_rows','max_rows_per_turn_id',
+              'turn_id_matches_session_hash_turn_number_rows','turn_id_format_mismatch_rows',
+              'duplicate_turn_groups_spanning_multiple_sessions','duplicate_turn_groups_spanning_multiple_turn_numbers',
+              'duplicate_turn_groups_with_multiple_physical_keys','duplicate_turn_groups_with_single_physical_key',
+              'duplicate_turn_groups_all_physical_keys_distinct','duplicate_turn_groups_with_repeated_physical_key',
+              'turn_id_duplicates_remaining_after_physical_dedup_groups',
+              'turn_id_duplicates_remaining_after_physical_dedup_excess_rows',
+              'unique_physical_keys','duplicate_physical_key_groups','duplicate_physical_key_excess_rows',
+              'duplicate_physical_key_groups_spanning_multiple_turn_ids',
+              'duplicate_physical_key_groups_spanning_multiple_turn_numbers',
+              'duplicate_physical_key_groups_with_equal_canonical_input',
+              'duplicate_physical_key_groups_with_conflicting_canonical_input',
+              'exact_structural_row_duplicate_groups','exact_structural_row_duplicate_excess_rows'
+          }
+          m = r['metrics']
+          if set(m) != metric_keys:
+              raise SystemExit('metric schema mismatch')
+          if any(not isinstance(v, int) or isinstance(v, bool) or v < 0 for v in m.values()):
+              raise SystemExit('invalid metric value')
+          if m['selected_webfetch_rows'] != m['unique_turn_ids'] + m['duplicate_turn_id_excess_rows']:
+              raise SystemExit('turn-id accounting mismatch')
+          if m['selected_webfetch_rows'] != m['unique_physical_keys'] + m['duplicate_physical_key_excess_rows']:
+              raise SystemExit('physical-key accounting mismatch')
+          if m['selected_webfetch_rows'] != m['turn_id_matches_session_hash_turn_number_rows'] + m['turn_id_format_mismatch_rows']:
+              raise SystemExit('turn-id format accounting mismatch')
+          if m['duplicate_turn_groups_with_multiple_physical_keys'] + m['duplicate_turn_groups_with_single_physical_key'] != m['duplicate_turn_id_groups']:
+              raise SystemExit('duplicate-turn physical-key partition mismatch')
+          if m['duplicate_turn_groups_all_physical_keys_distinct'] + m['duplicate_turn_groups_with_repeated_physical_key'] != m['duplicate_turn_id_groups']:
+              raise SystemExit('duplicate-turn distinctness partition mismatch')
+          if m['duplicate_physical_key_groups_with_equal_canonical_input'] + m['duplicate_physical_key_groups_with_conflicting_canonical_input'] != m['duplicate_physical_key_groups']:
+              raise SystemExit('physical-input equality partition mismatch')
+
+          if m['duplicate_turn_id_groups'] == 0:
+              expected_verdict = 'PRIVATE304_FAILURE_NOT_REPRODUCED'
+              expected_authorize = False
+          elif m['duplicate_turn_groups_spanning_multiple_sessions'] > 0 or m['duplicate_turn_groups_spanning_multiple_turn_numbers'] > 0:
+              expected_verdict = 'TURN_ID_COORDINATE_INCONSISTENT'
+              expected_authorize = False
+          elif m['duplicate_physical_key_groups_spanning_multiple_turn_ids'] > 0 or m['duplicate_physical_key_groups_spanning_multiple_turn_numbers'] > 0:
+              expected_verdict = 'NATIVE_PHYSICAL_COORDINATE_ALIAS_CONFLICT'
+              expected_authorize = False
+          elif m['duplicate_physical_key_groups_with_conflicting_canonical_input'] > 0:
+              expected_verdict = 'NATIVE_PHYSICAL_KEY_CONFLICT'
+              expected_authorize = False
+          elif m['turn_id_duplicates_remaining_after_physical_dedup_groups'] == 0:
+              expected_verdict = 'TURN_ID_DUPLICATION_EXPLAINED_BY_PHYSICAL_DUPLICATES'
+              expected_authorize = True
+          elif m['turn_id_duplicates_remaining_after_physical_dedup_groups'] > 0:
+              expected_verdict = 'TURN_ID_IS_TURN_COORDINATE_NOT_TOOLCALL_PRIMARY_KEY'
+              expected_authorize = True
+          else:
+              expected_verdict = 'UNCLASSIFIED_INTEGRITY_GEOMETRY'
+              expected_authorize = False
+          if r['verdict'] != expected_verdict:
+              raise SystemExit('verdict differs from frozen decision tree')
+          if r['followup_measurement_preregistration_authorized'] is not expected_authorize:
+              raise SystemExit('follow-up authorization mismatch')
+          PY
+
+      - name: Delete transient Hugging Face cache
+        if: always()
+        run: rm -rf "${HF_HOME:-$RUNNER_TEMP/private309-hf}"
+
+      - name: Upload aggregate PRIVATE309 result only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private309-swechat-turnid-integrity
+          path: private309-swechat-turnid-integrity.json
+          retention-days: 14
+          if-no-files-found: error

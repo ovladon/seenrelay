@@ -1,0 +1,29 @@
+{
+  "schema": "seenrelay-private304-pre-result-test-assertion-correction-v2",
+  "status": "frozen_after_second_test_failure_before_any_oidc_exchange_or_dataset_access",
+  "parent_preregistration": "PRIVATE304_SWECHAT_FULL_BROWSER_OVERLAP_OIDC_V1",
+  "superseded_run": {
+    "workflow_run_id": 33997978149,
+    "head": "9cbf5144aa5011f90261900b5d774b9221d51124",
+    "private302_node_tests_passed": true,
+    "private302_extraction_tests_passed": true,
+    "private304_oidc_test_failed_before_exchange": true,
+    "oidc_exchange_attempted": false,
+    "dataset_accessed": false,
+    "numeric_result_observed": false
+  },
+  "problem": "The revised privacy test still rejected a field-name substring, access_token, which legitimately appears in the aggregate boolean key hf_access_token_retained=false. This again tests schema vocabulary rather than leakage of a secret value.",
+  "correction": {
+    "remove_field_name_substring_leak_assertions": true,
+    "inject_synthetic_secret_value_sentinels_and_assert_values_are_absent_from_blocked_output": true,
+    "measurement_code_changed": false,
+    "authentication_exchange_code_changed": false,
+    "source_changed": false,
+    "operation_identity_changed": false,
+    "thresholds_changed": false
+  },
+  "authorization": {
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}
