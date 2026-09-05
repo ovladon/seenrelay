@@ -1,6 +1,6 @@
 {
   "schema": "seenrelay-private290-browser-cheap-canonicalizer-falsification-v1",
-  "status": "criteria_frozen_before_roundtrip_or_baseline_result",
+  "status": "completed_falsification_result_frozen",
   "purpose": "Falsification test for SeenRelay-specific representation advantage on the PRIVATE289 WebArena-Verified retrieval subset. Test whether a cheap deterministic template renderer can collapse the natural-language request and benchmark-supplied structured input representation without using evaluator answers.",
   "production_authorized": false,
   "public_claim_authorized": false,
@@ -75,6 +75,27 @@
       "cheap_canonicalizer_hit_tasks_at_or_above_100": "CHEAP_CANONICALIZER_PARITY_EXISTS_ON_CONTROLLED_SUBSET"
     },
     "meaning_of_parity": "At least 100 locked retrieval tasks can be bridged exactly by the frozen deterministic renderer; therefore this corpus cannot establish a SeenRelay-specific advantage over that cheaper representation adapter on those tasks."
+  },
+  "result": {
+    "workflow_run_id": 33986397318,
+    "artifact_id": 9975279462,
+    "artifact_digest": "sha256:cd3b63b4c0c512416ef2fd8e40aa94a06f51757e09909e09198896ecfe8d8802",
+    "locked_retrieval_tasks": 297,
+    "renderer_attempted_tasks": 297,
+    "renderer_fully_resolved_tasks": 294,
+    "renderer_failures": {
+      "missing_placeholder_value": 3
+    },
+    "exact_roundtrip_tasks": 294,
+    "exact_roundtrip_percent_of_locked": 98.989899,
+    "exact_payload_cache_miss_tasks": 297,
+    "exact_payload_cache_miss_percent_of_locked": 100,
+    "cheap_canonicalizer_hit_tasks": 294,
+    "cheap_canonicalizer_hit_percent_of_locked": 98.989899,
+    "cheap_canonicalizer_hit_percent_of_fully_resolved": 100,
+    "classification": "CHEAP_CANONICALIZER_PARITY_EXISTS_ON_CONTROLLED_SUBSET",
+    "retrieved_data_property_read": false,
+    "retrieved_data_contents_inspected": false
   },
   "kill_or_limit_interpretation": {
     "if_parity_exists": "Do not use PRIVATE289/WebArena-Verified representation portability as evidence of SeenRelay-specific differentiation from a cheap deterministic canonicalizer.",
