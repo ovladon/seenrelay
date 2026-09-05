@@ -1,0 +1,21 @@
+{
+  "schema": "seenrelay-private302-pre-result-duplicate-representative-v1",
+  "status": "frozen_before_any_swechat_parquet_access_or_numeric_result",
+  "parent_preregistration": "PRIVATE302_SWECHAT_FULL_BROWSER_OVERLAP_V1",
+  "reason": "The parent preregistration says to retain one payload-equivalent duplicate physical call but does not specify which row represents that physical call. Representative choice can affect temporal ordering if duplicate rows have different row coordinates.",
+  "correction": {
+    "duplicate_representative_rule": "For all rows sharing a native physical key and passing the frozen payload-equivalence rule, retain the row that sorts first under PRIVATE302's already-frozen call ordering: valid non-null timestamp ascending, then native session_id ascending, then turn_number ascending, then turn_id ascending. Invalid or absent timestamp is ordered after valid non-null timestamps exactly as in the overlap core.",
+    "parquet_scan_order_used_as_tie_breaker": false,
+    "operation_identity_changed": false,
+    "eligibility_changed": false,
+    "classification_thresholds_changed": false,
+    "source_population_changed": false,
+    "native_session_identity_changed": false
+  },
+  "authorization": {
+    "numeric_result_observed_before_correction": false,
+    "parquet_content_accessed_before_correction": false,
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}
