@@ -18,7 +18,7 @@ jobs:
       - name: Install pinned Hub metadata client
         run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
 
-      - name: Lock Jobseek manifest from Hub metadata only
+      - name: Verify frozen Jobseek manifest from Hub metadata only
         shell: bash
         run: |
           python3 - <<'PY'
@@ -31,16 +31,25 @@ jobs:
           from huggingface_hub.hf_api import RepoFile
 
           repo = 'viktor-shcherb/jobseek-agent-traces'
+          expected_revision = '524f2910f2893b04ccfbb76e56116fe0af3c5bf7'
+          expected_readme_sha256 = '4c5dbc3f66e8e1c9f21d486473d775c6c030f3a10e940c34304ee5a687bca727'
+          expected_readme_bytes = 1405
+          expected_jsonl_files = 929
+          expected_jsonl_bytes = 5700388035
+          expected_regular_files = 850
+          expected_lfs_files = 79
+          expected_manifest_sha256 = '113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8'
+
           api = HfApi()
-          info = api.dataset_info(repo_id=repo, revision='main')
+          info = api.dataset_info(repo_id=repo, revision=expected_revision)
           resolved = info.sha
-          if not isinstance(resolved, str) or not re.fullmatch(r'[0-9a-f]{40}', resolved):
-              raise SystemExit(f'invalid resolved revision: {resolved!r}')
+          if resolved != expected_revision:
+              raise SystemExit(f'frozen revision mismatch: {resolved!r}')
 
           readme_path = hf_hub_download(
               repo_id=repo,
               repo_type='dataset',
-              revision=resolved,
+              revision=expected_revision,
               filename='README.md',
           )
           readme = pathlib.Path(readme_path).read_bytes()
@@ -54,6 +63,8 @@ jobs:
           for fragment in required:
               if fragment not in readme_text:
                   raise SystemExit(f'missing pinned README declaration: {fragment}')
+          if len(readme) != expected_readme_bytes or hashlib.sha256(readme).hexdigest() != expected_readme_sha256:
+              raise SystemExit('frozen README no longer matches PRIVATE293')
 
           rows = []
           total_bytes = 0
@@ -62,7 +73,7 @@ jobs:
           for item in api.list_repo_tree(
               repo_id=repo,
               repo_type='dataset',
-              revision=resolved,
+              revision=expected_revision,
               recursive=True,
               expand=False,
           ):
@@ -93,8 +104,6 @@ jobs:
               total_bytes += size
 
           rows.sort()
-          if not rows:
-              raise SystemExit('no trace JSONL files found')
           if len({row[0] for row in rows}) != len(rows):
               raise SystemExit('duplicate trace path in Hub tree')
 
@@ -102,11 +111,21 @@ jobs:
               f'{path}\0{blob_id}\0{size}\0{lfs_sha}\n'
               for path, blob_id, size, lfs_sha in rows
           ).encode('utf-8')
+          manifest_sha256 = hashlib.sha256(canonical).hexdigest()
+
+          if len(rows) != expected_jsonl_files:
+              raise SystemExit('frozen trace file count no longer matches PRIVATE293')
+          if total_bytes != expected_jsonl_bytes:
+              raise SystemExit('frozen trace byte count no longer matches PRIVATE293')
+          if regular_count != expected_regular_files or lfs_count != expected_lfs_files:
+              raise SystemExit('frozen Git/LFS file geometry no longer matches PRIVATE293')
+          if manifest_sha256 != expected_manifest_sha256:
+              raise SystemExit('frozen trace manifest no longer matches PRIVATE293')
 
           result = {
               'schema': 'seenrelay-private293-jobseek-source-lock-v1',
               'dataset': repo,
-              'requested_revision': 'main',
+              'requested_revision': expected_revision,
               'resolved_revision': resolved,
               'license': 'MIT',
               'readme_sha256': hashlib.sha256(readme).hexdigest(),
@@ -115,7 +134,7 @@ jobs:
               'jsonl_total_bytes': total_bytes,
               'regular_git_file_count': regular_count,
               'lfs_file_count': lfs_count,
-              'trace_manifest_sha256': hashlib.sha256(canonical).hexdigest(),
+              'trace_manifest_sha256': manifest_sha256,
               'manifest_identity': 'sorted path + NUL + git blob id + NUL + logical size + NUL + LFS sha256-or-dash + LF',
               'prior_failed_source_lock_attempt_parsed_trace_payloads': False,
               'prior_failed_source_lock_attempt_may_have_fetched_one_regular_git_blob': True,
@@ -136,14 +155,14 @@ jobs:
           const lock = JSON.parse(fs.readFileSync('private293-jobseek-source-lock.json', 'utf8'));
           if (lock.schema !== 'seenrelay-private293-jobseek-source-lock-v1') process.exit(1);
           if (lock.dataset !== 'viktor-shcherb/jobseek-agent-traces') process.exit(1);
-          if (!/^[0-9a-f]{40}$/.test(lock.resolved_revision)) process.exit(1);
+          if (lock.requested_revision !== '524f2910f2893b04ccfbb76e56116fe0af3c5bf7') process.exit(1);
+          if (lock.resolved_revision !== '524f2910f2893b04ccfbb76e56116fe0af3c5bf7') process.exit(1);
           if (lock.license !== 'MIT') process.exit(1);
-          if (!/^[0-9a-f]{64}$/.test(lock.readme_sha256)) process.exit(1);
-          if (!/^[0-9a-f]{64}$/.test(lock.trace_manifest_sha256)) process.exit(1);
-          if (!Number.isInteger(lock.jsonl_file_count) || lock.jsonl_file_count < 1) process.exit(1);
-          if (!Number.isInteger(lock.jsonl_total_bytes) || lock.jsonl_total_bytes < 1) process.exit(1);
-          if (!Number.isInteger(lock.regular_git_file_count) || lock.regular_git_file_count < 0) process.exit(1);
-          if (!Number.isInteger(lock.lfs_file_count) || lock.lfs_file_count < 0) process.exit(1);
+          if (lock.readme_sha256 !== '4c5dbc3f66e8e1c9f21d486473d775c6c030f3a10e940c34304ee5a687bca727') process.exit(1);
+          if (lock.readme_bytes !== 1405) process.exit(1);
+          if (lock.trace_manifest_sha256 !== '113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8') process.exit(1);
+          if (lock.jsonl_file_count !== 929 || lock.jsonl_total_bytes !== 5700388035) process.exit(1);
+          if (lock.regular_git_file_count !== 850 || lock.lfs_file_count !== 79) process.exit(1);
           if (lock.regular_git_file_count + lock.lfs_file_count !== lock.jsonl_file_count) process.exit(1);
           if (lock.prior_failed_source_lock_attempt_parsed_trace_payloads !== false) process.exit(1);
           if (lock.prior_failed_source_lock_attempt_may_have_fetched_one_regular_git_blob !== true) process.exit(1);
