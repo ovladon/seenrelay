@@ -1,0 +1,98 @@
+{
+  "schema": "seenrelay-private309-swechat-turnid-integrity-v1",
+  "status": "frozen_after_private304_preaggregate_failure_before_duplicate_geometry_inspection",
+  "purpose": "Determine why the full pinned SWE-chat source contains repeated turn_id values among WebFetch rows, without inspecting URL/prompt values and without computing overlap or any SeenRelay reuse statistic.",
+  "parent_failure": {
+    "private304_exact_head": "d531f5c24f2647426e50747f661a42ecf85ecb50",
+    "workflow_run": 33998023599,
+    "failed_job": 101396306994,
+    "oidc_exchange_succeeded": true,
+    "authorized_source_download_reached": true,
+    "failure": "duplicate turn_id among selected WebFetch rows",
+    "aggregate_validator_ran": false,
+    "admissible_numeric_overlap_result_observed": false
+  },
+  "source": {
+    "dataset": "SALT-NLP/SWE-chat",
+    "resolved_revision": "f66cca95b14caaa4177f7ed5eaa424608dadcffa",
+    "filename": "conversations.parquet",
+    "logical_size": 1311422253,
+    "git_blob_id": "e8c76683b25698fc4312baf45fa6cb2297773946"
+  },
+  "selection": {
+    "whole_pinned_file": true,
+    "sampling_forbidden": true,
+    "predicate": "turn_type == tool_use AND tool_name == WebFetch"
+  },
+  "allowed_columns": [
+    "turn_type",
+    "tool_name",
+    "session_id",
+    "turn_id",
+    "turn_number",
+    "tool_call_id",
+    "timestamp",
+    "tool_input_json"
+  ],
+  "content_constraints": {
+    "url_field_parsing_forbidden": true,
+    "prompt_field_parsing_forbidden": true,
+    "overlap_key_construction_forbidden": true,
+    "url_or_prompt_output_forbidden": true,
+    "session_turn_or_tool_call_identifier_output_forbidden": true,
+    "per_row_hash_output_forbidden": true,
+    "tool_input_json_may_only_be_json_parsed_and_canonicalized_as_an_opaque_whole_for_equality_testing": true
+  },
+  "aggregate_metrics": [
+    "selected_webfetch_rows",
+    "source_sessions_with_webfetch",
+    "unique_turn_ids",
+    "duplicate_turn_id_groups",
+    "duplicate_turn_id_excess_rows",
+    "max_rows_per_turn_id",
+    "turn_id_matches_session_hash_turn_number_rows",
+    "turn_id_format_mismatch_rows",
+    "duplicate_turn_groups_spanning_multiple_sessions",
+    "duplicate_turn_groups_spanning_multiple_turn_numbers",
+    "duplicate_turn_groups_with_multiple_physical_keys",
+    "duplicate_turn_groups_with_single_physical_key",
+    "duplicate_turn_groups_all_physical_keys_distinct",
+    "duplicate_turn_groups_with_repeated_physical_key",
+    "unique_physical_keys",
+    "duplicate_physical_key_groups",
+    "duplicate_physical_key_excess_rows",
+    "duplicate_physical_key_groups_with_equal_canonical_input",
+    "duplicate_physical_key_groups_with_conflicting_canonical_input",
+    "exact_structural_row_duplicate_groups",
+    "exact_structural_row_duplicate_excess_rows"
+  ],
+  "structural_row_signature": "(turn_id, session_id, turn_number, tool_call_id, normalized timestamp string, sha256(canonical whole tool_input_json JSON))",
+  "decision_tree": [
+    {
+      "when": "duplicate_turn_groups_spanning_multiple_sessions > 0 OR duplicate_turn_groups_spanning_multiple_turn_numbers > 0",
+      "verdict": "TURN_ID_COORDINATE_INCONSISTENT",
+      "authorize_followup_measurement_preregistration": false,
+      "meaning": "Do not relax the frozen turn_id assumption until source semantics are resolved."
+    },
+    {
+      "when": "duplicate_physical_key_groups_with_conflicting_canonical_input > 0",
+      "verdict": "NATIVE_PHYSICAL_KEY_CONFLICT",
+      "authorize_followup_measurement_preregistration": false,
+      "meaning": "The native physical coordinate is not deterministic for this source; stop this source track."
+    },
+    {
+      "when": "all duplicate turn_id groups remain within one session and turn_number, and each duplicated turn can contain distinct native physical keys, with no conflicting native physical key",
+      "verdict": "TURN_ID_IS_TURN_COORDINATE_NOT_TOOLCALL_PRIMARY_KEY",
+      "authorize_followup_measurement_preregistration": true,
+      "meaning": "A separately preregistered PRIVATE310 may remove only the global turn_id uniqueness assertion while retaining the frozen native physical key, duplicate policy, operation identity, source lock, ordering and thresholds."
+    }
+  ],
+  "forbidden_inferences": {
+    "overlap_rate": true,
+    "reuse_opportunity_count": true,
+    "private285_pass": true,
+    "observer_independence": true,
+    "production_change": true,
+    "commercial_claim": true
+  }
+}
