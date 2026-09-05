@@ -1,0 +1,140 @@
+name: Jobseek natural browser source lock
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  source-lock:
+    if: startsWith(github.head_ref, 'research/browser-natural-jobseek-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lock Jobseek Git/LFS manifest without trace payload download
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import re
+          import subprocess
+
+          repo = 'viktor-shcherb/jobseek-agent-traces'
+          url = f'https://huggingface.co/datasets/{repo}.git'
+          work = pathlib.Path(os.environ['RUNNER_TEMP']) / 'private293-hf-repo'
+          env = os.environ.copy()
+          env['GIT_LFS_SKIP_SMUDGE'] = '1'
+
+          subprocess.run([
+              'git', '-c', 'filter.lfs.smudge=', '-c', 'filter.lfs.required=false',
+              'clone', '--quiet', '--no-checkout', '--filter=blob:none', '--depth=1', url, str(work)
+          ], check=True, env=env)
+
+          def git(*args):
+              return subprocess.check_output(['git', '-C', str(work), *args], env=env)
+
+          resolved = git('rev-parse', 'HEAD').decode().strip()
+          if not re.fullmatch(r'[0-9a-f]{40}', resolved):
+              raise SystemExit(f'invalid resolved revision: {resolved!r}')
+
+          readme = git('show', 'HEAD:README.md')
+          readme_text = readme.decode('utf-8', errors='strict').lower()
+          required = [
+              'license: mit',
+              'claude code agent session traces from',
+              'each trace captures a complete agent workflow session',
+              'raw session transcripts',
+          ]
+          for fragment in required:
+              if fragment not in readme_text:
+                  raise SystemExit(f'missing pinned README declaration: {fragment}')
+
+          names = git('ls-tree', '-r', '--name-only', 'HEAD', '--', 'traces').decode('utf-8').splitlines()
+          names = sorted(name for name in names if name.endswith('.jsonl'))
+          if not names:
+              raise SystemExit('no trace JSONL files found')
+          if len(names) != len(set(names)):
+              raise SystemExit('duplicate trace path in tree')
+
+          lfs_re = re.compile(
+              rb'^version https://git-lfs.github.com/spec/v1\n'
+              rb'oid sha256:([0-9a-f]{64})\n'
+              rb'size ([0-9]+)\n?$',
+              re.ASCII,
+          )
+          manifest_rows = []
+          total_bytes = 0
+          for name in names:
+              pointer = git('show', f'HEAD:{name}')
+              match = lfs_re.fullmatch(pointer)
+              if not match:
+                  raise SystemExit(f'trace is not a canonical LFS pointer: {name}')
+              oid = match.group(1).decode('ascii')
+              size = int(match.group(2))
+              if size <= 0:
+                  raise SystemExit(f'non-positive LFS size: {name}')
+              manifest_rows.append((name, oid, size))
+              total_bytes += size
+
+          canonical = ''.join(f'{path}\0{oid}\0{size}\n' for path, oid, size in manifest_rows).encode('utf-8')
+          manifest_sha256 = hashlib.sha256(canonical).hexdigest()
+
+          result = {
+              'schema': 'seenrelay-private293-jobseek-source-lock-v1',
+              'dataset': repo,
+              'requested_revision': 'main',
+              'resolved_revision': resolved,
+              'license': 'MIT',
+              'readme_sha256': hashlib.sha256(readme).hexdigest(),
+              'readme_bytes': len(readme),
+              'jsonl_file_count': len(manifest_rows),
+              'jsonl_total_bytes': total_bytes,
+              'trace_manifest_sha256': manifest_sha256,
+              'manifest_identity': 'sorted path + NUL + LFS sha256 + NUL + decimal size + LF',
+              'trace_payloads_downloaded': False,
+              'trace_payloads_parsed': False,
+              'analysis_performed': False,
+          }
+          pathlib.Path('private293-jobseek-source-lock.json').write_text(
+              json.dumps(result, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+
+      - name: Enforce source-lock-only boundary
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const lock = JSON.parse(fs.readFileSync('private293-jobseek-source-lock.json', 'utf8'));
+          if (lock.schema !== 'seenrelay-private293-jobseek-source-lock-v1') process.exit(1);
+          if (lock.dataset !== 'viktor-shcherb/jobseek-agent-traces') process.exit(1);
+          if (!/^[0-9a-f]{40}$/.test(lock.resolved_revision)) process.exit(1);
+          if (lock.license !== 'MIT') process.exit(1);
+          if (!/^[0-9a-f]{64}$/.test(lock.readme_sha256)) process.exit(1);
+          if (!/^[0-9a-f]{64}$/.test(lock.trace_manifest_sha256)) process.exit(1);
+          if (!Number.isInteger(lock.jsonl_file_count) || lock.jsonl_file_count < 1) process.exit(1);
+          if (!Number.isInteger(lock.jsonl_total_bytes) || lock.jsonl_total_bytes < 1) process.exit(1);
+          if (lock.trace_payloads_downloaded !== false) process.exit(1);
+          if (lock.trace_payloads_parsed !== false) process.exit(1);
+          if (lock.analysis_performed !== false) process.exit(1);
+          NODE
+
+      - name: Delete source-lock clone before artifact upload
+        if: always()
+        shell: bash
+        run: rm -rf "$RUNNER_TEMP/private293-hf-repo"
+
+      - name: Upload source lock only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private293-jobseek-source-lock
+          path: private293-jobseek-source-lock.json
+          if-no-files-found: error
+          retention-days: 14
