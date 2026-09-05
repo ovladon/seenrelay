@@ -1,0 +1,115 @@
+{
+  "schema": "seenrelay-private296-jobseek-file-session-identity-v1",
+  "status": "frozen_before_identity_diagnostic_result",
+  "purpose": "Test whether the publisher-defined one-trace-file-per-session boundary is duplicate-safe enough to serve as the source-native session coordinate in a separate future overlap study. PRIVATE296 does not compute operation overlap.",
+  "production_authorized": false,
+  "public_prevalence_claim_authorized": false,
+  "reuse_authorized": false,
+  "private285_class_pass_authorized": false,
+  "parent_results": {
+    "private293": {
+      "research_head": "1ae9ab3b0ec2193ffccdca78d32744a3aa6f516d",
+      "workflow_run_id": 33992072773,
+      "classification": "LOW_EXACT_OVERLAP_SIGNAL",
+      "result_frozen": true
+    },
+    "private294": {
+      "research_head": "64ee0e39e0b0e608d28f0318f4805899b7b6849e",
+      "workflow_run_id": 33992893536,
+      "diagnosis": "SESSION_ID_ONLY_DOMINANT_GAP",
+      "result_frozen": true
+    },
+    "private295": {
+      "research_head": "91765e08b87b5f248a9e859de7aac03bedfcb813",
+      "workflow_run_id": 33994009968,
+      "artifact_id": 9977495770,
+      "header_field_authorized_as_session_identity": false,
+      "result_frozen": true
+    }
+  },
+  "source": {
+    "dataset": "viktor-shcherb/jobseek-agent-traces",
+    "resolved_revision": "524f2910f2893b04ccfbb76e56116fe0af3c5bf7",
+    "trace_manifest_sha256": "113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8",
+    "readme_sha256": "4c5dbc3f66e8e1c9f21d486473d775c6c030f3a10e940c34304ee5a687bca727",
+    "readme_bytes": 1405,
+    "publisher_semantics": {
+      "each_trace_is_a_complete_agent_workflow_session": true,
+      "trace_path_structure_is_company_slug_then_date_jsonl": true,
+      "publisher_describes_one_trace_per_session": true
+    }
+  },
+  "selection": {
+    "must_reuse_private293_phase_a_exactly": true,
+    "phase_a_file_count": 400,
+    "phase_b_forbidden": true,
+    "selection_must_not_use_trace_content": true,
+    "selection_must_not_use_file_size": true,
+    "selection_must_not_use_company_or_issue_metadata": true
+  },
+  "candidate_identity": {
+    "session_coordinate": "publisher-defined selected trace file boundary",
+    "physical_event_coordinate": "assistant uuid + tool_use id within publisher-defined trace file",
+    "candidate_physical_key": "selected-file coordinate + assistant uuid + tool_use id",
+    "header_slug_not_used_as_session_identity": true,
+    "header_date_not_used_as_session_identity": true,
+    "header_issue_not_used_as_session_identity": true,
+    "header_source_not_used_as_session_identity": true,
+    "sessionId_record_field_not_required": true
+  },
+  "allowed_analysis": {
+    "validate_first_record_trace_header": true,
+    "count_WebFetch_records": true,
+    "test_presence_of_assistant_uuid": true,
+    "test_presence_of_tool_use_id": true,
+    "count_duplicate_candidate_physical_keys_within_file_boundary": true,
+    "count_assistant_uuid_plus_tool_use_id_pairs_spanning_multiple_files": true,
+    "count_exact_full_file_content_sha256_duplicate_groups": true,
+    "count_files_with_WebFetch": true
+  },
+  "forbidden_analysis": {
+    "access_WebFetch_url_or_prompt_fields": true,
+    "access_tool_result_values": true,
+    "construct_operation_identity": true,
+    "compute_exact_operation_overlap": true,
+    "compute_url_only_overlap": true,
+    "compare_header_values": true,
+    "infer_sessions_from_company_issue_date_or_board_metadata": true,
+    "reclassify_PRIVATE293": true,
+    "reclassify_PRIVATE294": true,
+    "reclassify_PRIVATE295": true
+  },
+  "locked_consistency": {
+    "expected_files": 400,
+    "expected_logical_bytes": 2828013200,
+    "expected_WebFetch_records": 9603,
+    "expected_missing_assistant_uuid": 0,
+    "expected_missing_tool_use_id": 0
+  },
+  "decision_rule": {
+    "supported_label": "FILE_SESSION_BOUNDARY_SUPPORTED_FOR_SEPARATE_OVERLAP_STUDY",
+    "ambiguous_label": "FILE_SESSION_BOUNDARY_NOT_DUPLICATE_SAFE",
+    "supported_requires_all": [
+      "all 400 frozen Phase A files pass content-integrity and publisher-header checks",
+      "exactly 9603 WebFetch records reproduce PRIVATE294 geometry",
+      "zero missing assistant uuid",
+      "zero missing tool_use id",
+      "zero duplicate candidate physical keys within file boundary",
+      "zero assistant-uuid+tool-use-id pairs spanning multiple selected files",
+      "zero exact full-file-content duplicate groups among selected files"
+    ],
+    "supported_result_only_authorizes": "a separate preregistered overlap study using file boundary as source-native session coordinate",
+    "private296_itself_never_authorizes_overlap_or_reuse": true
+  },
+  "privacy": {
+    "aggregate_counts_only": true,
+    "raw_file_paths_output": false,
+    "file_content_hashes_output": false,
+    "assistant_uuid_values_output": false,
+    "tool_use_id_values_output": false,
+    "urls_output": false,
+    "prompts_output": false,
+    "tool_results_output": false,
+    "header_values_output": false
+  }
+}
