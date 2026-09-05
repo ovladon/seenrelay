@@ -1,0 +1,133 @@
+name: Codex natural source identity
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'preregistration/PRIVATE298_CODEX_SOURCE_IDENTITY_V1.json'
+      - 'scripts/run-private298-codex-source-identity.py'
+      - 'tests/private298-codex-source-identity.test.py'
+      - '.github/workflows/codex-source-identity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-identity:
+    if: startsWith(github.head_ref, 'research/codex-natural-source-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned Hub metadata client
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
+
+      - name: Run frozen PRIVATE298 tests
+        run: python tests/private298-codex-source-identity.test.py
+
+      - name: Execute preregistered Codex source identity gate
+        shell: bash
+        run: |
+          python scripts/run-private298-codex-source-identity.py \
+            --work-dir "$RUNNER_TEMP/private298-codex" \
+            --output private298-codex-source-identity.json
+
+      - name: Enforce aggregate-only PRIVATE298 report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          report = json.loads(Path('private298-codex-source-identity.json').read_text(encoding='utf-8'))
+          if report.get('schema') != 'seenrelay-private298-codex-source-identity-v1':
+              raise SystemExit('schema mismatch')
+          source = report.get('source', {})
+          if source.get('dataset') != 'RangaPrasath/coding-sessions':
+              raise SystemExit('dataset mismatch')
+          if source.get('frozen_revision_prefix') != 'e37635a':
+              raise SystemExit('revision prefix mismatch')
+          resolved = source.get('resolved_revision')
+          if not isinstance(resolved, str) or not re.fullmatch(r'[0-9a-f]{40}', resolved) or not resolved.startswith('e37635a'):
+              raise SystemExit('resolved revision mismatch')
+          if source.get('dataset_card_mit_codex_only_declarations_confirmed') is not True:
+              raise SystemExit('dataset card declarations were not confirmed')
+
+          identity = report.get('identity', {})
+          required_ints = [
+              'session_rows', 'non_session_rows', 'invalid_json_lines', 'codex_source_rows',
+              'anonymized_id_pattern_rows', 'unique_anonymized_session_ids',
+              'duplicate_anonymized_session_id_groups', 'duplicate_anonymized_session_id_extra_rows',
+              'unique_full_session_rows', 'exact_full_session_row_duplicate_groups',
+              'exact_full_session_row_duplicate_extra_rows'
+          ]
+          for key in required_ints:
+              if not isinstance(identity.get(key), int) or identity[key] < 0:
+                  raise SystemExit(f'invalid aggregate integer: {key}')
+
+          admissible = (
+              identity['session_rows'] == 73
+              and identity['codex_source_rows'] == 73
+              and identity['anonymized_id_pattern_rows'] == 73
+              and identity['unique_anonymized_session_ids'] == 73
+              and identity['duplicate_anonymized_session_id_groups'] == 0
+              and identity['exact_full_session_row_duplicate_groups'] == 0
+          )
+          expected = (
+              'SOURCE_IDENTITY_ADMISSIBLE_FOR_TOOL_COUNT_FOLLOWUP'
+              if admissible else 'SOURCE_IDENTITY_NOT_ADMISSIBLE'
+          )
+          decision = report.get('decision', {})
+          if decision.get('classification') != expected:
+              raise SystemExit('classification mismatch')
+          if decision.get('tool_count_followup_authorized') is not admissible:
+              raise SystemExit('tool-count followup authorization mismatch')
+          if decision.get('overlap_authorized') is not False:
+              raise SystemExit('overlap must remain unauthorized')
+
+          ingestion = report.get('ingestion', {})
+          if not ingestion or any(value is not False for value in ingestion.values()):
+              raise SystemExit('forbidden tool/message analysis was enabled')
+          privacy = report.get('privacy', {})
+          if not privacy or any(value is not False for value in privacy.values()):
+              raise SystemExit('raw retention flag is not false')
+          interpretation = report.get('interpretation', {})
+          if not interpretation or any(value is not False for value in interpretation.values()):
+              raise SystemExit('unauthorized interpretation flag is not false')
+
+          forbidden_exact_keys = {
+              'session_id', 'session_ids', 'raw_id', 'raw_ids', 'message', 'messages',
+              'tool', 'tools', 'tool_name', 'tool_names', 'tool_call', 'tool_calls',
+              'arguments', 'tool_results', 'url', 'urls', 'query', 'queries',
+              'operation_key', 'operation_keys'
+          }
+          def walk(value):
+              if isinstance(value, list):
+                  for item in value:
+                      walk(item)
+              elif isinstance(value, dict):
+                  for key, child in value.items():
+                      if key in forbidden_exact_keys:
+                          raise SystemExit(f'forbidden raw/content key in report: {key}')
+                      walk(child)
+          walk(report)
+          PY
+
+      - name: Delete transient external files before artifact upload
+        if: always()
+        shell: bash
+        run: rm -rf "$RUNNER_TEMP/private298-codex"
+
+      - name: Upload aggregate source identity only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private298-codex-source-identity
+          path: private298-codex-source-identity.json
+          if-no-files-found: error
+          retention-days: 14
