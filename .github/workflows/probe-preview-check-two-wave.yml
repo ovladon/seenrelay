@@ -1,0 +1,31 @@
+name: Probe Preview CHECK two-wave database path
+
+on:
+  push:
+    branches:
+      - perf/check-neon-roundtrip-probe-v1
+    paths:
+      - .github/workflows/probe-preview-check-two-wave.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      PREVIEW_BASE: https://seenrelay-git-perf-check-neon-ro-318a8c-ovladonn-9636s-projects.vercel.app
+    steps:
+      - name: Run ten sanitized two-wave probes
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 10); do
+            echo "probe=${i}"
+            curl -fsS \
+              -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" \
+              "${PREVIEW_BASE}/api/check-two-wave-probe"
+            echo
+          done
