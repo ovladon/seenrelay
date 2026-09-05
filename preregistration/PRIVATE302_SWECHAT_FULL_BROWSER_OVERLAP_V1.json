@@ -1,0 +1,106 @@
+{
+  "schema": "seenrelay-private302-swechat-full-browser-overlap-v1",
+  "status": "frozen_before_any_swechat_webfetch_content_or_numeric_result",
+  "purpose": "Measure exact cross-native-session WebFetch operation overlap in the full pinned SALT-NLP/SWE-chat conversations table, using only native session identity and the already-frozen conservative URL+prompt operation identity.",
+  "source_lock": {
+    "parent_private301_head": "de79ee8d6d2711541b0dbbc2d591ef10d04669d5",
+    "parent_private301_run": 33995068613,
+    "dataset": "SALT-NLP/SWE-chat",
+    "resolved_revision": "f66cca95b14caaa4177f7ed5eaa424608dadcffa",
+    "license": "odc-by",
+    "gated": "auto",
+    "conversations_parquet": {
+      "logical_size": 1311422253,
+      "git_blob_id": "e8c76683b25698fc4312baf45fa6cb2297773946"
+    }
+  },
+  "access_rule": {
+    "no_gate_bypass": true,
+    "runner_must_already_have_HF_TOKEN": true,
+    "token_account_must_already_be_authorized_for_dataset": true,
+    "if_HF_TOKEN_absent": "ACCESS_BLOCKED_NO_AUTHORIZED_HF_TOKEN",
+    "if_Hub_returns_gated_access_denial": "ACCESS_BLOCKED_GATED_DATASET_NOT_ACCEPTED",
+    "other_download_or_integrity_errors_are_failures_not_results": true,
+    "no_fallback_dataset_after_access_result": true
+  },
+  "population": {
+    "process_full_pinned_conversations_parquet": true,
+    "phase_sampling_forbidden": true,
+    "filter": {
+      "turn_type": "tool_use",
+      "tool_name": "WebFetch"
+    },
+    "agent_filter": null,
+    "reason_no_agent_filter": "Tool identity is exact WebFetch; do not introduce a post-source agent subset unless separately preregistered."
+  },
+  "native_coordinates": {
+    "session": "session_id",
+    "row_primary_key": "turn_id",
+    "tool_call": "tool_call_id",
+    "physical_call_key": "session_id + NUL + tool_call_id",
+    "turn_id_must_be_unique_across_selected_rows": true,
+    "session_id_must_be_nonempty": true,
+    "tool_call_id_must_be_nonempty": true,
+    "duplicate_physical_key_policy": "If duplicate physical keys have byte-equivalent parsed tool input JSON, retain one physical call and count removed duplicates; if payloads disagree, fail closed."
+  },
+  "tool_input": {
+    "source_column": "tool_input_json",
+    "must_parse_as_JSON_object": true,
+    "read_only_fields": ["url", "prompt"],
+    "all_other_tool_input_fields_ignored": true,
+    "content_column_forbidden": true,
+    "tool_result_rows_forbidden": true
+  },
+  "operation_identity": {
+    "url": "trim; Node WHATWG URL parse; require http/https; remove fragment; lowercase protocol/hostname through WHATWG serialization; serialize with URL.toString()",
+    "prompt": "CRLF/CR to LF, then trim; must remain nonempty",
+    "exact_key": "sha256(stable_json({url: canonical_url, prompt: canonical_prompt}))",
+    "url_key": "sha256(canonical_url)",
+    "semantic_matching": false,
+    "fuzzy_matching": false,
+    "embeddings": false,
+    "LLM_matching": false,
+    "repo_issue_user_checkpoint_metadata_used_in_identity": false
+  },
+  "ordering": {
+    "primary": "timestamp ascending when present",
+    "null_timestamp_after_nonnull": true,
+    "tie_breakers": ["session_id ascending", "turn_number ascending", "turn_id ascending"]
+  },
+  "metrics": {
+    "eligible_http_webfetch_calls": true,
+    "unique_exact_operation_keys": true,
+    "exact_repeat_calls_any_session": true,
+    "exact_keys_spanning_sessions": true,
+    "cross_session_exact_reuse_opportunities": "A call counts when the same exact operation key has appeared previously in at least one different native session.",
+    "cross_session_exact_reuse_percent": true,
+    "unique_url_keys": true,
+    "url_keys_spanning_sessions": true,
+    "cross_session_url_reuse_opportunities": true,
+    "url_only_is_diagnostic": true
+  },
+  "classification": {
+    "if_eligible_below_100": "INSUFFICIENT_EXTERNAL_SAMPLE",
+    "if_eligible_at_least_100_and_exact_opportunities_percent_below_5": "LOW_EXACT_OVERLAP_SIGNAL",
+    "if_exact_opportunities_percent_at_least_5_and_below_20": "WEAK_EXACT_OVERLAP_SIGNAL",
+    "if_exact_opportunities_percent_at_least_20": "STRONG_EXACT_OVERLAP_SIGNAL",
+    "threshold_comparison_uses_exact_integer_counts_not_rounded_display_percent": true
+  },
+  "consequences": {
+    "LOW_EXACT_OVERLAP_SIGNAL": "Do not commission authoritative browser replay from this source; retain as negative evidence for exact browser-operation reuse under this identity.",
+    "WEAK_EXACT_OVERLAP_SIGNAL": "Only a separate preregistered authoritative replay/materiality study may follow.",
+    "STRONG_EXACT_OVERLAP_SIGNAL": "Only a separate preregistered authoritative replay/materiality study may follow.",
+    "INSUFFICIENT_EXTERNAL_SAMPLE": "Seek a different disjoint natural source; do not pool overlapping subsets post hoc.",
+    "any_result": "Does not pass PRIVATE285, prove observer independence, authorize SeenRelay reuse, change Production, or authorize population/commercial claims."
+  },
+  "privacy": {
+    "raw_parquet_retained_in_artifact": false,
+    "raw_urls_retained_in_artifact": false,
+    "raw_prompts_retained_in_artifact": false,
+    "session_ids_retained_in_artifact": false,
+    "tool_call_ids_retained_in_artifact": false,
+    "turn_ids_retained_in_artifact": false,
+    "per_key_hashes_retained_in_artifact": false,
+    "aggregate_counts_only": true
+  }
+}
