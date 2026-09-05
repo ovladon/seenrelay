@@ -1,0 +1,53 @@
+name: Analyze PRIVATE284 existing formal samples
+
+on:
+  push:
+    branches:
+      - perf/check-neon-roundtrip-probe-v1
+    paths:
+      - 'scripts/analyze-check-fast-native25-v1-recovery.mjs'
+      - '.github/workflows/analyze-private284-existing-samples.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  SOURCE_RUN_ID: '33982661024'
+
+jobs:
+  analyze-existing-samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: private284-fast-native25-ubuntu
+          path: evidence/ubuntu
+          repository: ovladon/seenrelay
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: private284-fast-native25-windows
+          path: evidence/windows
+          repository: ovladon/seenrelay
+          run-id: ${{ env.SOURCE_RUN_ID }}
+          github-token: ${{ github.token }}
+      - run: node --check scripts/analyze-check-fast-native25-v1-recovery.mjs
+      - name: Analyze frozen formal samples without remeasurement
+        env:
+          UBUNTU_SAMPLE: evidence/ubuntu/private284-fast-native25-ubuntu.json
+          WINDOWS_SAMPLE: evidence/windows/private284-fast-native25-windows.json
+          ANALYSIS_OUTPUT: private284-fast-native25-analysis.json
+        run: node scripts/analyze-check-fast-native25-v1-recovery.mjs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: private284-fast-native25-analysis-recovery
+          path: private284-fast-native25-analysis.json
+          if-no-files-found: error
+          retention-days: 30
