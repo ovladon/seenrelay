@@ -1,0 +1,179 @@
+name: Jobseek file-session identity diagnostic
+
+on:
+  pull_request:
+    branches: [research/browser-natural-jobseek-header-schema-v1]
+    paths:
+      - 'preregistration/PRIVATE296_JOBSEEK_FILE_SESSION_IDENTITY_V1.json'
+      - 'scripts/run-private296-jobseek-file-session-identity.py'
+      - 'tests/private296-jobseek-file-session-identity.test.py'
+      - '.github/workflows/jobseek-file-session-identity.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  file-session-identity:
+    if: startsWith(github.head_ref, 'research/browser-natural-jobseek-file-session-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned Hub metadata client
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
+
+      - name: Run frozen PRIVATE296 tests
+        run: python tests/private296-jobseek-file-session-identity.test.py
+
+      - name: Execute preregistered file-session identity diagnostic
+        run: |
+          python scripts/run-private296-jobseek-file-session-identity.py \
+            --output private296-jobseek-file-session-identity.json
+
+      - name: Enforce aggregate-only PRIVATE296 report
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+
+          report = json.loads(pathlib.Path('private296-jobseek-file-session-identity.json').read_text(encoding='utf-8'))
+          expected_top = {
+              'schema', 'parent_results', 'source', 'selection', 'coverage',
+              'decision', 'analysis_boundaries', 'privacy', 'interpretation'
+          }
+          if set(report) != expected_top:
+              raise SystemExit('unexpected PRIVATE296 top-level report shape')
+          if report['schema'] != 'seenrelay-private296-jobseek-file-session-identity-v1':
+              raise SystemExit('schema mismatch')
+
+          if report['parent_results'] != {
+              'private293_research_head': '1ae9ab3b0ec2193ffccdca78d32744a3aa6f516d',
+              'private293_workflow_run_id': 33992072773,
+              'private294_research_head': '64ee0e39e0b0e608d28f0318f4805899b7b6849e',
+              'private294_workflow_run_id': 33992893536,
+              'private295_research_head': '91765e08b87b5f248a9e859de7aac03bedfcb813',
+              'private295_workflow_run_id': 33994009968,
+              'all_parent_results_frozen': True,
+          }:
+              raise SystemExit('parent geometry mismatch')
+
+          if report['source'] != {
+              'dataset': 'viktor-shcherb/jobseek-agent-traces',
+              'resolved_revision': '524f2910f2893b04ccfbb76e56116fe0af3c5bf7',
+              'trace_manifest_sha256': '113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8',
+              'publisher_readme_sha256': '4c5dbc3f66e8e1c9f21d486473d775c6c030f3a10e940c34304ee5a687bca727',
+              'publisher_one_trace_per_session_semantics_frozen': True,
+          }:
+              raise SystemExit('source mismatch')
+
+          selection = report['selection']
+          if selection != {
+              'phase': 'PRIVATE293_PHASE_A_EXACT_REUSE',
+              'files_processed': 400,
+              'logical_bytes_verified': 2828013200,
+              'phase_b_used': False,
+              'selection_used_trace_content': False,
+              'selection_used_file_size': False,
+              'selection_used_company_or_issue_metadata': False,
+          }:
+              raise SystemExit('selection mismatch')
+
+          coverage = report['coverage']
+          required_coverage = {
+              'webfetch_records_seen',
+              'files_with_webfetch',
+              'missing_assistant_uuid',
+              'missing_tool_use_id',
+              'missing_either_event_id_field',
+              'candidate_physical_unique_keys',
+              'duplicate_candidate_physical_records',
+              'unique_assistant_uuid_tool_use_id_pairs',
+              'assistant_uuid_tool_use_id_pairs_spanning_files',
+              'cross_file_pair_extra_records',
+              'files_participating_in_cross_file_pair_collisions',
+              'exact_full_file_content_duplicate_groups',
+              'exact_full_file_content_extra_duplicate_files',
+          }
+          if set(coverage) != required_coverage:
+              raise SystemExit('coverage shape mismatch')
+          for key, value in coverage.items():
+              if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                  raise SystemExit(f'invalid aggregate count {key!r}')
+          if coverage['webfetch_records_seen'] != 9603:
+              raise SystemExit('WebFetch geometry mismatch')
+          if coverage['missing_assistant_uuid'] != 0 or coverage['missing_tool_use_id'] != 0 or coverage['missing_either_event_id_field'] != 0:
+              raise SystemExit('event-ID coverage mismatch')
+          if coverage['files_with_webfetch'] > 400:
+              raise SystemExit('invalid files_with_webfetch')
+          if coverage['candidate_physical_unique_keys'] + coverage['duplicate_candidate_physical_records'] != 9603:
+              raise SystemExit('candidate physical-key accounting mismatch')
+          if coverage['unique_assistant_uuid_tool_use_id_pairs'] > 9603:
+              raise SystemExit('invalid bare event-pair count')
+
+          expected_supported = (
+              coverage['duplicate_candidate_physical_records'] == 0
+              and coverage['assistant_uuid_tool_use_id_pairs_spanning_files'] == 0
+              and coverage['exact_full_file_content_duplicate_groups'] == 0
+          )
+          expected_verdict = (
+              'FILE_SESSION_BOUNDARY_SUPPORTED_FOR_SEPARATE_OVERLAP_STUDY'
+              if expected_supported
+              else 'FILE_SESSION_BOUNDARY_NOT_DUPLICATE_SAFE'
+          )
+          decision = report['decision']
+          if decision != {
+              'verdict': expected_verdict,
+              'separate_overlap_study_authorized': expected_supported,
+              'overlap_computed_in_private296': False,
+              'reuse_authorized': False,
+              'private293_reclassification_authorized': False,
+          }:
+              raise SystemExit('decision mismatch')
+
+          if report['analysis_boundaries'] != {
+              'publisher_file_boundary_used_as_candidate_session_coordinate': True,
+              'header_values_compared': False,
+              'operation_identity_constructed': False,
+              'operation_overlap_computed': False,
+              'url_or_prompt_fields_accessed_by_analysis_logic': False,
+              'tool_result_values_accessed_by_analysis_logic': False,
+              'company_issue_date_or_board_metadata_used_for_session_identity': False,
+          }:
+              raise SystemExit('analysis boundary mismatch')
+
+          privacy = report['privacy']
+          if privacy != {
+              'aggregate_counts_only': True,
+              'raw_file_paths_retained': False,
+              'file_content_hashes_retained': False,
+              'assistant_uuid_values_retained': False,
+              'tool_use_id_values_retained': False,
+              'urls_retained': False,
+              'prompts_retained': False,
+              'tool_results_retained': False,
+              'header_values_retained': False,
+          }:
+              raise SystemExit('privacy boundary mismatch')
+
+          if report['interpretation'] != {
+              'identity_diagnostic_only': True,
+              'reuse_evidence': False,
+              'population_prevalence_evidence': False,
+              'private285_class_pass_authorized': False,
+              'production_change_authorized': False,
+          }:
+              raise SystemExit('interpretation boundary mismatch')
+          PY
+
+      - name: Upload aggregate identity diagnostic only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private296-jobseek-file-session-identity
+          path: private296-jobseek-file-session-identity.json
+          if-no-files-found: error
+          retention-days: 14
