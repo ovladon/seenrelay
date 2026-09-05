@@ -1,0 +1,77 @@
+name: Remeasure native paths on instrumented Preview
+
+on:
+  push:
+    branches:
+      - verify/frontier-check-instrumentation-v1
+    paths:
+      - 'scripts/native-cross-vantage-http-measure.mjs'
+      - '.github/workflows/remeasure-native-on-instrumented-preview.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seenrelay-native-remeasurement-608735
+  cancel-in-progress: false
+
+env:
+  SEENRELAY_PREVIEW_BASE: https://seenrelay-git-preview-frontier-c-9f112b-ovladonn-9636s-projects.vercel.app
+  TARGET_PREVIEW_SHA: 608735e6137a8fdef873d38d24491fe037399ffc
+  VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+jobs:
+  measure-ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VANTAGE_LABEL: ubuntu
+      MEASUREMENT_OUTPUT: native-remeasure-ubuntu.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/native-cross-vantage-http-measure.mjs
+      - run: node scripts/native-cross-vantage-http-measure.mjs
+      - name: Submit independent qualification observation
+        run: node scripts/verify-frontier-check-timing.mjs observe
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-remeasure-ubuntu-${{ github.run_id }}
+          path: native-remeasure-ubuntu.json
+          if-no-files-found: error
+          retention-days: 30
+
+  measure-windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      VANTAGE_LABEL: windows
+      MEASUREMENT_OUTPUT: native-remeasure-windows.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/native-cross-vantage-http-measure.mjs
+      - run: node scripts/native-cross-vantage-http-measure.mjs
+      - name: Submit independent qualification observation
+        run: node scripts/verify-frontier-check-timing.mjs observe
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-remeasure-windows-${{ github.run_id }}
+          path: native-remeasure-windows.json
+          if-no-files-found: error
+          retention-days: 30
+
+  qualify-vantages:
+    needs: [measure-ubuntu, measure-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node scripts/verify-frontier-check-timing.mjs check
