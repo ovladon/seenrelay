@@ -108,7 +108,6 @@ def scan_webfetch_calls(parquet_path: str) -> tuple[list[dict[str, Any]], dict[s
         use_threads=True,
     )
 
-    seen_turn_ids: set[str] = set()
     physical: dict[tuple[str, str], tuple[bytes, dict[str, Any]]] = {}
     selected_rows = 0
     duplicate_physical_removed = 0
@@ -128,9 +127,6 @@ def scan_webfetch_calls(parquet_path: str) -> tuple[list[dict[str, Any]], dict[s
                 raise RuntimeError("selected WebFetch row missing native session_id")
             if not tool_call_id:
                 raise RuntimeError("selected WebFetch row missing native tool_call_id")
-            if turn_id in seen_turn_ids:
-                raise RuntimeError("duplicate turn_id among selected WebFetch rows")
-            seen_turn_ids.add(turn_id)
 
             turn_number = row.get("turn_number")
             if not isinstance(turn_number, int) or isinstance(turn_number, bool) or turn_number < 0:
@@ -154,11 +150,21 @@ def scan_webfetch_calls(parquet_path: str) -> tuple[list[dict[str, Any]], dict[s
             prior_payload, prior_call = prior
             if prior_payload != payload_bytes:
                 raise RuntimeError("duplicate native physical WebFetch key has inconsistent parsed tool input")
+            if prior_call["turn_id"] != call["turn_id"] or prior_call["turn_number"] != call["turn_number"]:
+                raise RuntimeError("duplicate native physical WebFetch key maps to multiple turn coordinates")
             duplicate_physical_removed += 1
             if representative_key(call) < representative_key(prior_call):
                 physical[physical_key] = (payload_bytes, call)
 
     calls = [entry[1] for entry in physical.values()]
+
+    seen_turn_ids: set[str] = set()
+    for call in calls:
+        turn_id = call["turn_id"]
+        if turn_id in seen_turn_ids:
+            raise RuntimeError("duplicate turn_id among deduplicated WebFetch calls")
+        seen_turn_ids.add(turn_id)
+
     stats = {
         "selected_webfetch_rows_before_physical_dedup": selected_rows,
         "duplicate_physical_webfetch_records_removed": duplicate_physical_removed,
