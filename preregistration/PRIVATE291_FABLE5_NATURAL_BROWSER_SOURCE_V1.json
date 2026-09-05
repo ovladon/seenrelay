@@ -1,6 +1,6 @@
 {
   "schema": "seenrelay-private291-fable5-natural-browser-source-v1",
-  "status": "source_locked_before_webfetch_result",
+  "status": "completed_negative_insufficient_external_sample",
   "purpose": "Auxiliary natural-source screen for browser_extraction_reads using opt-in public Claude Code sessions described by the publisher as real coding-agent behavior and not a benchmark. Determine whether exact WebFetch operations naturally recur across sessions before any expensive replay or PRIVATE285 materiality collection is commissioned.",
   "production_authorized": false,
   "public_claim_authorized": false,
@@ -17,6 +17,7 @@
     "readme_sha256": "2f0c1acd8e0b1f12a9497b590042584447f1947942812abf0f25d64286cf8a60",
     "readme_bytes": 6628,
     "jsonl_file_count": 18,
+    "manifest_rows": 9497,
     "source_lock_analysis_performed": false,
     "source_lock_trace_files_downloaded": false
   },
@@ -41,20 +42,6 @@
     "embeddings": false,
     "fuzzy_matching": false
   },
-  "metrics": {
-    "source_sessions": true,
-    "webfetch_calls_seen": true,
-    "eligible_http_webfetch_calls": true,
-    "unique_exact_operation_keys": true,
-    "exact_repeat_calls_any_session": true,
-    "exact_keys_spanning_sessions": true,
-    "cross_session_exact_reuse_opportunities": true,
-    "cross_session_exact_reuse_percent": true,
-    "unique_url_keys": true,
-    "url_keys_spanning_sessions": true,
-    "cross_session_url_reuse_opportunities": true,
-    "cross_session_url_reuse_percent": true
-  },
   "classification": {
     "sample_floor": 100,
     "rules": {
@@ -64,11 +51,39 @@
       "cross_session_exact_reuse_percent_at_or_above_20": "STRONG_EXACT_OVERLAP_SIGNAL"
     }
   },
+  "result": {
+    "workflow_head_sha": "945c8de012f89855199b0213a4aff8bfa86f3de9",
+    "workflow_run_id": 33987305881,
+    "artifact_id": 9975552166,
+    "artifact_digest": "sha256:5f67d0809e7f26a210de00a9db5c082de3bf1dfddf69a7f2e54e9d56de84e42b",
+    "source_sessions": 18,
+    "invalid_json_lines": 0,
+    "webfetch_calls_seen": 8,
+    "eligible_http_webfetch_calls": 8,
+    "unique_exact_operation_keys": 8,
+    "exact_repeat_calls_any_session": 0,
+    "exact_keys_spanning_sessions": 0,
+    "cross_session_exact_reuse_opportunities": 0,
+    "cross_session_exact_reuse_percent": 0,
+    "unique_url_keys": 8,
+    "url_keys_spanning_sessions": 0,
+    "cross_session_url_reuse_opportunities": 0,
+    "cross_session_url_reuse_percent": 0,
+    "classification": "INSUFFICIENT_EXTERNAL_SAMPLE"
+  },
   "next_step_rules": {
     "insufficient_or_low": "Do not commission expensive authoritative browser replay from this corpus; retain result and continue natural-source search/passive collection.",
     "weak_or_strong": "May commission a separate preregistered authoritative replay/materiality experiment, still excluded from PRIVATE285 until all NATURAL_WORKLOAD_GATE evidence requirements are satisfied.",
     "url_only_overlap_never_counts_as_exact_reuse": true,
     "positive_screen_does_not_pass_private285": true
+  },
+  "interpretation": {
+    "expensive_authoritative_browser_replay_commissioned": false,
+    "private285_remains_closed": true,
+    "zero_overlap_in_eight_calls_is_not_a_population_prevalence_claim": true,
+    "different_session_is_independence_proxy_only": true,
+    "observer_independence_proven": false,
+    "negative_or_insufficient_result_retained": true
   },
   "privacy_and_rights": {
     "raw_trace_files_processed_transiently_only": true,
