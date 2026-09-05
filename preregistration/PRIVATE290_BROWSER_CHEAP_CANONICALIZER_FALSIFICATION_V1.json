@@ -1,0 +1,101 @@
+{
+  "schema": "seenrelay-private290-browser-cheap-canonicalizer-falsification-v1",
+  "status": "criteria_frozen_before_roundtrip_or_baseline_result",
+  "purpose": "Falsification test for SeenRelay-specific representation advantage on the PRIVATE289 WebArena-Verified retrieval subset. Test whether a cheap deterministic template renderer can collapse the natural-language request and benchmark-supplied structured input representation without using evaluator answers.",
+  "production_authorized": false,
+  "public_claim_authorized": false,
+  "natural_hit_rate_claim_authorized": false,
+  "private285_class_pass_authorized": false,
+  "source": {
+    "repository": "ServiceNow/webarena-verified",
+    "revision": "6473f72db5dcefc97b5725b59e734504edc28a21",
+    "dataset_sha256": "d65275660814663375028e9017e1f929e3c38321041b125795e2713b52243d30",
+    "dataset_bytes": 927596,
+    "locked_retrieval_denominator": 297,
+    "denominator_source": "PRIVATE289 geometry result"
+  },
+  "frozen_eligibility": {
+    "same_as_private289_locked_retrieval_subset": true,
+    "require_agent_response_evaluator_retrieve_success_metadata": true,
+    "require_nonempty_sites": true,
+    "require_nonempty_intent": true,
+    "require_integer_intent_template_id": true,
+    "require_nonempty_intent_template": true,
+    "require_instantiation_dict_object": true,
+    "must_not_read_retrieved_data_property": true,
+    "must_not_read_retrieved_data_contents": true
+  },
+  "renderer": {
+    "placeholder_syntax": "{{ optional_whitespace identifier optional_whitespace }}",
+    "identifier_regex": "[A-Za-z_][A-Za-z0-9_]*",
+    "replacement_lookup": "own property of instantiation_dict with exactly matching identifier",
+    "accepted_placeholder_value_types": ["string", "number", "boolean"],
+    "rejected_placeholder_value_types": ["null", "array", "object", "undefined"],
+    "replacement_serialization": "JavaScript String(value)",
+    "all_placeholders_must_resolve": true,
+    "remaining_double_brace_placeholder_after_render_is_failure": true,
+    "normalization_before_comparison": "CRLF/CR to LF plus trim only",
+    "case_folding": false,
+    "punctuation_normalization": false,
+    "whitespace_collapse": false,
+    "semantic_matching": false,
+    "llm": false,
+    "embeddings": false,
+    "fuzzy_matching": false
+  },
+  "baselines": {
+    "exact_payload_cache": {
+      "surface_a_key": "sha256('text\\0' + normalized_intent)",
+      "surface_b_key": "sha256('json\\0' + stable_json({sites,intent_template_id,intent_template,instantiation_dict}))",
+      "expected_behavior_not_assumed": "count exact key equality/miss empirically"
+    },
+    "cheap_template_canonicalizer": {
+      "structured_input_to_text": "apply frozen renderer to intent_template using instantiation_dict",
+      "canonical_key_for_surface_a": "sha256(normalized_intent)",
+      "canonical_key_for_surface_b": "sha256(normalized_rendered_template)",
+      "hit_requires_exact_hash_equality": true
+    }
+  },
+  "metrics": {
+    "locked_retrieval_tasks": 297,
+    "renderer_attempted_tasks": true,
+    "renderer_fully_resolved_tasks": true,
+    "exact_roundtrip_tasks": true,
+    "exact_roundtrip_percent_of_locked": true,
+    "exact_payload_cache_miss_tasks": true,
+    "exact_payload_cache_miss_percent_of_locked": true,
+    "cheap_canonicalizer_hit_tasks": true,
+    "cheap_canonicalizer_hit_percent_of_locked": true,
+    "cheap_canonicalizer_hit_percent_of_fully_resolved": true
+  },
+  "classification": {
+    "sample_floor_for_specific_falsification": 100,
+    "rules": {
+      "cheap_canonicalizer_hit_tasks_below_100": "INSUFFICIENT_CONTROLLED_CANONICALIZER_SAMPLE",
+      "cheap_canonicalizer_hit_tasks_at_or_above_100": "CHEAP_CANONICALIZER_PARITY_EXISTS_ON_CONTROLLED_SUBSET"
+    },
+    "meaning_of_parity": "At least 100 locked retrieval tasks can be bridged exactly by the frozen deterministic renderer; therefore this corpus cannot establish a SeenRelay-specific advantage over that cheaper representation adapter on those tasks."
+  },
+  "kill_or_limit_interpretation": {
+    "if_parity_exists": "Do not use PRIVATE289/WebArena-Verified representation portability as evidence of SeenRelay-specific differentiation from a cheap deterministic canonicalizer.",
+    "if_insufficient": "Retain as insufficient; do not infer SeenRelay advantage.",
+    "does_not_kill_seenrelay_product": true,
+    "does_not_kill_browser_extraction_reads_class": true,
+    "does_not_pass_private285": true,
+    "does_not_measure_natural_prevalence": true,
+    "does_not_measure_market_size": true,
+    "does_not_measure_adoption": true,
+    "does_not_compare_against_general_semantic_caches": true,
+    "does_not_prove_agents_can_derive_benchmark_structure": true
+  },
+  "privacy_and_rights": {
+    "raw_dataset_not_committed": true,
+    "raw_intents_not_output": true,
+    "rendered_intents_not_output": true,
+    "instantiation_values_not_output": true,
+    "retrieved_data_not_output": true,
+    "task_ids_not_output": true,
+    "per_task_hashes_not_output": true,
+    "aggregate_counts_and_source_hashes_only": true
+  }
+}
