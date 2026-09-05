@@ -35,12 +35,12 @@ async function measure(){
   let lease=normal.headers.get('x-seenrelay-lease')||''; assert.ok(lease,'normal CHECK must establish a valid lease'); const samples=[];
   for(let i=0;i<12;i++){
     const headers={'content-type':'application/json','x-seenrelay-lease':lease};
-    const r=await req(CURRENT_BASE,'/api/check-fast-timed',{method:'POST',headers,body:JSON.stringify(requestBody)},i===0?60000:15000);assert.equal(r.status,200);const b=await r.json();assert.equal(b.status,'SAME_OBSERVED');assert.deepEqual(core(b),core(normalBody));assert.equal(b.source_validator?.kind,'etag');assert.equal(b.source_validator?.value,s.etag);assert.ok(Number(b.recent_cryptographic_observer_keys)>=2);assert.ok(Number(b.recent_reuse_independence_buckets)>=2);
+    const r=await req(CURRENT_BASE,'/api/check-fast-web-timed',{method:'POST',headers,body:JSON.stringify(requestBody)},i===0?60000:15000);assert.equal(r.status,200);const b=await r.json();assert.equal(b.status,'SAME_OBSERVED');assert.deepEqual(core(b),core(normalBody));assert.equal(b.source_validator?.kind,'etag');assert.equal(b.source_validator?.value,s.etag);assert.ok(Number(b.recent_cryptographic_observer_keys)>=2);assert.ok(Number(b.recent_reuse_independence_buckets)>=2);
     lease=r.headers.get('x-seenrelay-lease')||lease;assert.ok(lease);
     const st=timing(r.headers.get('server-timing'));assert.ok(st.app>0&&st.cpu>0);
     samples.push({trial:i+1,app_ms:st.app,cpu_ms:st.cpu,lease_present:true,useful_reuse_awards:Number(b.useful_reuse_awards||0)});
   }
   const steady=samples.slice(1),mean=xs=>xs.reduce((a,b)=>a+b,0)/xs.length,median=xs=>{const a=[...xs].sort((x,y)=>x-y);const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;};
-  console.log(JSON.stringify({schema:'seenrelay-smoke-fast-measure-v2',semantic_parity:true,trials:samples.length,lease_bootstrapped_by_reference_check:true,first_candidate_trial_is_bundle_warmup:true,first_trial:samples[0],steady_app_mean_ms:mean(steady.map(x=>x.app_ms)),steady_app_median_ms:median(steady.map(x=>x.app_ms)),steady_cpu_mean_ms:mean(steady.map(x=>x.cpu_ms)),steady_cpu_median_ms:median(steady.map(x=>x.cpu_ms)),samples,raw_lease_emitted:false},null,2));
+  console.log(JSON.stringify({schema:'seenrelay-smoke-fast-measure-v3',semantic_parity:true,trials:samples.length,lease_bootstrapped_by_reference_check:true,first_candidate_trial_is_bundle_warmup:true,web_signature_adapter:true,first_trial:samples[0],steady_app_mean_ms:mean(steady.map(x=>x.app_ms)),steady_app_median_ms:median(steady.map(x=>x.app_ms)),steady_cpu_mean_ms:mean(steady.map(x=>x.cpu_ms)),steady_cpu_median_ms:median(steady.map(x=>x.cpu_ms)),samples,raw_lease_emitted:false},null,2));
 }
 if(MODE==='observe')await observe();else await measure();
