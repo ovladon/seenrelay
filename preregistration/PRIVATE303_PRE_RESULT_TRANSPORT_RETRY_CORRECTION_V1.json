@@ -1,0 +1,30 @@
+{
+  "schema": "seenrelay-private303-pre-result-transport-retry-correction-v1",
+  "status": "frozen_after_transient_429_before_any_aggregate_geometry_result",
+  "parent_preregistration": "PRIVATE303_OPENCODE_WEBFETCH_GEOMETRY_V1",
+  "superseded_run": {
+    "workflow_run_id": 33996942367,
+    "head": "d5c2d01345298a6e50aaed1af8265bfab56b6ea3",
+    "frozen_tests_passed": true,
+    "failure": "HTTP 429 maximum queue size reached during exact-revision public file retrieval",
+    "aggregate_artifact_created": false,
+    "geometry_result_observed": false,
+    "partial_counts_may_not_be_used": true
+  },
+  "correction": {
+    "transport": "serial exact-revision HTTP GET from Hugging Face resolve endpoint",
+    "retry_policy": "up to 6 attempts per file; honor numeric Retry-After when present, otherwise exponential backoff 1,2,4,8,16 seconds; deterministic 250ms pacing between successful files",
+    "content_integrity": "unchanged local byte count and SHA-256 content manifest",
+    "source_selection_changed": false,
+    "resolved_revision_semantics_changed": false,
+    "tool_parser_changed": false,
+    "native_identity_rules_changed": false,
+    "sample_floor_changed": false,
+    "decision_rule_changed": false,
+    "overlap_computed": false
+  },
+  "authorization": {
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}
