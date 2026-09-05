@@ -1,0 +1,63 @@
+{
+  "schema": "seenrelay-private303-opencode-webfetch-geometry-v1",
+  "status": "frozen_before_source_tool_geometry_result",
+  "purpose": "Determine whether the public dacorvo/hf-hub-session-opencode-traces corpus has enough native OpenCode webfetch calls and source-native session identity coverage to justify a separately preregistered OpenCode overlap study.",
+  "production_authorized": false,
+  "private285_class_pass_authorized": false,
+  "source": {
+    "dataset": "dacorvo/hf-hub-session-opencode-traces",
+    "requested_revision": "main",
+    "license_required": "apache-2.0",
+    "source_family_exclusions": [
+      "SALT-NLP/SWE-chat",
+      "viktor-shcherb/jobseek-agent-traces",
+      "Fable-5 derived corpora"
+    ],
+    "process_all_json_session_files_under_data": true,
+    "sampling_forbidden": true
+  },
+  "native_identity": {
+    "file_contains_one_native_opencode_session": "publisher dataset card claim to be verified structurally",
+    "top_level_session_field": "info.id",
+    "tool_part_session_field": "sessionID",
+    "tool_call_field": "callID",
+    "webfetch_tool_name": "webfetch",
+    "each_webfetch_sessionID_must_equal_top_level_info_id": true,
+    "each_webfetch_callID_must_be_nonempty": true
+  },
+  "allowed_analysis": {
+    "resolve_exact_hub_revision": true,
+    "inventory_session_json_file_count_and_total_logical_bytes": true,
+    "count_native_webfetch_tool_calls": true,
+    "count_sessions_with_webfetch": true,
+    "count_duplicate_native_physical_keys_sessionID_plus_callID": true,
+    "read_webfetch_input_fields": false,
+    "read_webfetch_output_or_error_fields": false,
+    "read_user_prompt_or_assistant_reasoning": false,
+    "construct_operation_identity": false,
+    "compute_url_or_operation_overlap": false
+  },
+  "decision_rule": {
+    "if_webfetch_tool_calls_below_100": "REJECT_SOURCE_INSUFFICIENT_WEBFETCH_GEOMETRY",
+    "if_webfetch_tool_calls_at_least_100_and_native_identity_checks_pass": "AUTHORIZE_SEPARATE_OPENCODE_IDENTITY_PREREGISTRATION_ONLY",
+    "if_native_identity_checks_fail": "REJECT_SOURCE_IDENTITY_GEOMETRY_FAILURE",
+    "future_open_code_operation_identity_must_be_separately_preregistered": true,
+    "must_not_pool_with_claude_webfetch_results": true
+  },
+  "privacy": {
+    "aggregate_counts_only": true,
+    "file_paths_output": false,
+    "session_ids_output": false,
+    "call_ids_output": false,
+    "urls_output": false,
+    "tool_inputs_output": false,
+    "tool_outputs_output": false
+  },
+  "interpretation": {
+    "geometry_is_not_reuse_evidence": true,
+    "geometry_is_not_population_prevalence_evidence": true,
+    "observer_independence_proven": false,
+    "seenrelay_reuse_authorized": false,
+    "production_change_authorized": false
+  }
+}
