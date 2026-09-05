@@ -1,0 +1,42 @@
+name: Probe Preview execution region
+
+on:
+  push:
+    branches:
+      - verify/frontier-check-instrumentation-v1
+    paths:
+      - '.github/workflows/probe-preview-region.yml'
+
+permissions:
+  contents: read
+
+env:
+  SEENRELAY_PREVIEW_BASE: https://seenrelay-git-preview-frontier-c-9f112b-ovladonn-9636s-projects.vercel.app
+  VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read sanitized Vercel routing coordinate
+        shell: bash
+        run: |
+          curl -sS -D /tmp/headers -o /tmp/body \
+            -H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}" \
+            "${SEENRELAY_PREVIEW_BASE}/healthz"
+          node - <<'NODE'
+          const fs=require('fs');
+          const h=fs.readFileSync('/tmp/headers','utf8');
+          const body=JSON.parse(fs.readFileSync('/tmp/body','utf8'));
+          const m=/^x-vercel-id:\s*([^\r\n]+)/mi.exec(h);
+          if(!m) throw new Error('x-vercel-id missing');
+          const raw=m[1].trim();
+          const parts=raw.split('::').filter(Boolean);
+          console.log(JSON.stringify({
+            schema:'seenrelay-preview-region-probe-v1',
+            vercel_id_parts:parts,
+            deployment_sha:body.deployment_sha,
+            environment:body.environment,
+            raw_bypass_secret_emitted:false
+          },null,2));
+          NODE
