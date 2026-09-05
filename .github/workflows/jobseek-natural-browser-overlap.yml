@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'preregistration/PRIVATE293_JOBSEEK_NATURAL_BROWSER_SOURCE_V1.json'
+      - 'preregistration/PRIVATE293_PRE_RESULT_METHOD_CORRECTION_V1.json'
+      - 'preregistration/PRIVATE293_PRE_RESULT_CLASSIFICATION_CORRECTION_V1.json'
       - 'scripts/screen-browser-trace-overlap.mjs'
       - 'scripts/run-private293-jobseek-screen.py'
       - 'tests/browser-trace-overlap-screen.test.mjs'
@@ -18,7 +20,7 @@ jobs:
   natural-browser-overlap:
     if: startsWith(github.head_ref, 'research/browser-natural-jobseek-')
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -69,7 +71,19 @@ jobs:
           if (overlap.webfetch_calls_seen !== extraction.unique_physical_webfetch_calls) process.exit(1);
           if (overlap.source_sessions !== extraction.native_sessions_with_webfetch) process.exit(1);
           if (overlap.invalid_json_lines !== 0) process.exit(1);
-          if (!['INSUFFICIENT_EXTERNAL_SAMPLE','LOW_EXACT_OVERLAP_SIGNAL','WEAK_EXACT_OVERLAP_SIGNAL','STRONG_EXACT_OVERLAP_SIGNAL'].includes(overlap.classification)) process.exit(1);
+
+          const eligible = overlap.eligible_http_webfetch_calls;
+          const exactOpportunities = overlap.cross_session_exact_reuse_opportunities;
+          if (!Number.isInteger(eligible) || eligible < 0) process.exit(1);
+          if (!Number.isInteger(exactOpportunities) || exactOpportunities < 0 || exactOpportunities > eligible) process.exit(1);
+          const expectedPercent = eligible === 0 ? 0 : Number(((exactOpportunities / eligible) * 100).toFixed(6));
+          if (overlap.cross_session_exact_reuse_percent !== expectedPercent) process.exit(1);
+          let expectedClassification;
+          if (eligible < 100) expectedClassification = 'INSUFFICIENT_EXTERNAL_SAMPLE';
+          else if (exactOpportunities * 100 < eligible * 5) expectedClassification = 'LOW_EXACT_OVERLAP_SIGNAL';
+          else if (exactOpportunities * 100 < eligible * 20) expectedClassification = 'WEAK_EXACT_OVERLAP_SIGNAL';
+          else expectedClassification = 'STRONG_EXACT_OVERLAP_SIGNAL';
+          if (overlap.classification !== expectedClassification) process.exit(1);
 
           if (report.selection.phase_b_triggered === true) {
             if (report.selection.phase_used !== 'A+B_FULL_CORPUS') process.exit(1);
@@ -90,7 +104,7 @@ jobs:
           if (overlap.interpretation?.natural_workload_class_pass_authorized !== false) process.exit(1);
           if (overlap.interpretation?.seenrelay_reuse_authorized !== false) process.exit(1);
 
-          for (const [key, value] of Object.entries(report.privacy || {})) {
+          for (const value of Object.values(report.privacy || {})) {
             if (value !== false) process.exit(1);
           }
           const serialized = JSON.stringify(report);
