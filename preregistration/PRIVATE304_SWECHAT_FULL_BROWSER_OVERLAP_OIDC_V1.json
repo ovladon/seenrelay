@@ -57,6 +57,13 @@
     "ACCESS_BLOCKED_GATED_DATASET_NOT_ACCESSIBLE": "OIDC exchange succeeded but pinned gated dataset download was denied; no measurement is admissible.",
     "MEASURED": "OIDC exchange and authorized pinned dataset access succeeded, and the unchanged PRIVATE302 measurement completed and passed the aggregate validator."
   },
+  "rerun_policy": {
+    "blocked_access_result_consumes_numeric_experiment": false,
+    "same_exact_head_may_be_rerun_after_external_oidc_configuration": true,
+    "code_or_measurement_change_required_before_rerun": false,
+    "only_first_successful_measured_aggregate_after_access_is_admissible_numeric_result": true,
+    "blocked_runs_must_not_be_interpreted_as_overlap_evidence": true
+  },
   "fail_closed": {
     "no_substitute_dataset": true,
     "no_gate_bypass": true,
