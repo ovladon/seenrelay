@@ -1,0 +1,117 @@
+name: Benchmark Preview CHECK fast path vs native-25
+
+on:
+  push:
+    branches:
+      - perf/check-neon-roundtrip-probe-v1
+    paths:
+      - 'preregistration/PRIVATE284_CHECK_FAST_NATIVE_25_PREREGISTRATION_V1.json'
+      - 'scripts/benchmark-check-fast-native25-v1.mjs'
+      - 'scripts/analyze-check-fast-native25-v1.mjs'
+      - '.github/workflows/benchmark-check-fast-native25-v1.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seenrelay-private284-fast-native25-v1
+  cancel-in-progress: false
+
+env:
+  SEENRELAY_CANDIDATE_BASE: https://seenrelay-git-perf-check-neon-ro-318a8c-ovladonn-9636s-projects.vercel.app
+  SEENRELAY_SOURCE_BASE: https://seenrelay-git-preview-frontier-c-9f112b-ovladonn-9636s-projects.vercel.app
+  SOURCE_SHA: 608735e6137a8fdef873d38d24491fe037399ffc
+  CANDIDATE_SHA: ${{ github.sha }}
+  VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+jobs:
+  observe-ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VANTAGE_LABEL: ubuntu
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/benchmark-check-fast-native25-v1.mjs
+      - name: Submit independent Ubuntu observation
+        run: node scripts/benchmark-check-fast-native25-v1.mjs observe
+
+  observe-windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    env:
+      VANTAGE_LABEL: windows
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/benchmark-check-fast-native25-v1.mjs
+      - name: Submit independent Windows observation
+        run: node scripts/benchmark-check-fast-native25-v1.mjs observe
+
+  measure:
+    needs: [observe-ubuntu, observe-windows]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: ubuntu
+            output: private284-fast-native25-ubuntu.json
+          - os: windows-latest
+            label: windows
+            output: private284-fast-native25-windows.json
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      VANTAGE_LABEL: ${{ matrix.label }}
+      MEASUREMENT_OUTPUT: ${{ matrix.output }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/benchmark-check-fast-native25-v1.mjs
+      - name: Measure candidate and all five native paths
+        run: node scripts/benchmark-check-fast-native25-v1.mjs measure
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: private284-fast-native25-${{ matrix.label }}
+          path: ${{ matrix.output }}
+          if-no-files-found: error
+          retention-days: 30
+
+  analyze:
+    needs: [measure]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: private284-fast-native25-ubuntu
+          path: evidence/ubuntu
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: private284-fast-native25-windows
+          path: evidence/windows
+      - run: node --check scripts/analyze-check-fast-native25-v1.mjs
+      - name: Analyze preregistered native-25 gate
+        env:
+          UBUNTU_SAMPLE: evidence/ubuntu/private284-fast-native25-ubuntu.json
+          WINDOWS_SAMPLE: evidence/windows/private284-fast-native25-windows.json
+          ANALYSIS_OUTPUT: private284-fast-native25-analysis.json
+        run: node scripts/analyze-check-fast-native25-v1.mjs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: private284-fast-native25-analysis
+          path: private284-fast-native25-analysis.json
+          if-no-files-found: error
+          retention-days: 30
