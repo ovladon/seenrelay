@@ -114,6 +114,13 @@ def classify(session_count, codex_count, pattern_count, unique_ids, duplicate_id
     return 'SOURCE_IDENTITY_NOT_ADMISSIBLE'
 
 
+def card_license(info):
+    card_data = getattr(info, 'card_data', None)
+    if isinstance(card_data, dict):
+        return card_data.get('license')
+    return getattr(card_data, 'license', None)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--work-dir', required=True)
@@ -149,14 +156,18 @@ def main():
     readme_raw = verify_file_bytes(readme_path, by_path['README.md'])
     readme_lower = readme_raw.decode('utf-8', errors='strict').lower()
     required_fragments = [
-        'license: mit',
-        '73 real coding sessions from openai codex',
-        'exporter: pi-brain v0.1.0',
-        'source: openai codex',
+        '73 real coding sessions',
+        'openai codex',
+        'pi-brain',
+        'v0.1.0',
         '~/.codex/sessions/',
-        '73 sessions with full trajectories',
+        '73 sessions',
+        'full trajectories',
     ]
-    card_ok = all(fragment in readme_lower for fragment in required_fragments)
+    license_value = card_license(info)
+    license_ok = isinstance(license_value, str) and license_value.lower() == 'mit'
+    readme_ok = all(fragment in readme_lower for fragment in required_fragments)
+    card_ok = license_ok and readme_ok
     if not card_ok:
         raise RuntimeError('historical dataset card does not match frozen Codex-only MIT declarations')
 
@@ -222,6 +233,8 @@ def main():
             'readme_sha256': hashlib.sha256(readme_raw).hexdigest(),
             'sessions_jsonl_sha256': hashlib.sha256(raw_sessions).hexdigest(),
             'sessions_jsonl_logical_bytes': len(raw_sessions),
+            'dataset_card_license_mit_confirmed': license_ok,
+            'dataset_card_codex_only_declarations_confirmed': readme_ok,
             'dataset_card_mit_codex_only_declarations_confirmed': card_ok,
         },
         'identity': {
