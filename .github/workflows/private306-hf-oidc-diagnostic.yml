@@ -1,0 +1,85 @@
+name: HF OIDC claim diagnostic (PRIVATE306)
+
+on:
+  pull_request:
+    branches:
+      - research/browser-natural-swechat-full-oidc-v1
+    paths:
+      - preregistration/PRIVATE306_HF_OIDC_CLAIM_DIAGNOSTIC_V1.json
+      - scripts/run-private306-hf-oidc-claim-diagnostic.py
+      - tests/private306-hf-oidc-claim-diagnostic.test.py
+      - .github/workflows/private306-hf-oidc-diagnostic.yml
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  oidc-diagnostic:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'research/private306-hf-oidc-diagnostic-v1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HF_OIDC_RESOURCE: ${{ secrets.HF_OIDC_RESOURCE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run frozen PRIVATE306 tests
+        run: python tests/private306-hf-oidc-claim-diagnostic.test.py
+
+      - name: Execute metadata-only OIDC diagnostic
+        run: python scripts/run-private306-hf-oidc-claim-diagnostic.py --output private306-hf-oidc-diagnostic.json
+
+      - name: Enforce diagnostic-only report
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r = json.loads(Path('private306-hf-oidc-diagnostic.json').read_text())
+          if r.get('schema') != 'seenrelay-private306-hf-oidc-claim-diagnostic-v1' or r.get('status') != 'DIAGNOSTIC_COMPLETE':
+              raise SystemExit('schema/status mismatch')
+          if r.get('dataset_access_attempted') is not False:
+              raise SystemExit('dataset access forbidden')
+          gh = r.get('github_oidc', {})
+          if set(gh) != {'audience_requested','claims'} or gh['audience_requested'] != 'https://huggingface.co':
+              raise SystemExit('github oidc schema mismatch')
+          allowed = {'iss','aud','repository','repository_owner','repository_visibility','event_name','ref','ref_type','workflow','workflow_ref','job_workflow_ref'}
+          if set(gh.get('claims', {})) != allowed:
+              raise SystemExit('claim allowlist mismatch')
+          hf = r.get('hugging_face_exchange', {})
+          if set(hf) != {'succeeded','http_status','oauth_error','request_id_present'}:
+              raise SystemExit('exchange diagnostic schema mismatch')
+          if not isinstance(hf['succeeded'], bool) or not isinstance(hf['request_id_present'], bool):
+              raise SystemExit('exchange booleans invalid')
+          if not isinstance(hf['http_status'], int):
+              raise SystemExit('http status invalid')
+          if hf['oauth_error'] is not None and not isinstance(hf['oauth_error'], str):
+              raise SystemExit('oauth error invalid')
+          if set(r.get('privacy', {})) != {
+              'hf_oidc_resource_retained','github_oidc_jwt_retained','github_oidc_request_token_retained',
+              'hf_access_token_retained','subject_claim_retained','non_allowlisted_claims_retained',
+              'error_description_retained','response_body_retained'
+          } or any(r['privacy'].values()):
+              raise SystemExit('privacy contract mismatch')
+          if set(r.get('interpretation', {})) != {
+              'private304_result_modified','dataset_access_authorized','production_change_authorized','private285_pass_authorized'
+          } or any(r['interpretation'].values()):
+              raise SystemExit('interpretation contract mismatch')
+          forbidden_value_markers = ('hf_oauth_', 'hf_jwt_', 'subject_token', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN')
+          raw = Path('private306-hf-oidc-diagnostic.json').read_text()
+          for marker in forbidden_value_markers:
+              if marker in raw:
+                  raise SystemExit(f'forbidden credential value marker retained: {marker}')
+          PY
+
+      - name: Upload aggregate PRIVATE306 diagnostic only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private306-hf-oidc-diagnostic
+          path: private306-hf-oidc-diagnostic.json
+          retention-days: 14
+          if-no-files-found: error
