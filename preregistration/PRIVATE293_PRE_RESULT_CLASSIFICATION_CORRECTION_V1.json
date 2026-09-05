@@ -1,0 +1,44 @@
+{
+  "schema": "seenrelay-private293-pre-result-classification-correction-v1",
+  "status": "frozen_before_any_private293_numeric_result_was_observed",
+  "pull_request": 177,
+  "detection": {
+    "workflow_run_id": 33991517192,
+    "workflow_run_status_at_detection": "in_progress",
+    "active_step_at_detection": "Execute preregistered Phase A and conditional Phase B",
+    "aggregate_report_step_status_at_detection": "pending",
+    "artifact_upload_step_status_at_detection": "pending",
+    "private293_numeric_result_observed": false,
+    "private293_aggregate_report_observed": false
+  },
+  "defect": {
+    "description": "The displayed cross-session exact reuse percentage was rounded to six decimals before threshold classification. Values immediately below 5% or 20% could therefore round upward across a frozen boundary.",
+    "thresholds_are_wrong": false,
+    "display_rounding_is_wrong": false,
+    "classification_input_rounding_is_wrong": true
+  },
+  "effective_frozen_rule": {
+    "sample_floor": 100,
+    "low_boundary": "cross_session_exact_reuse_opportunities * 100 < eligible_http_webfetch_calls * 5",
+    "strong_boundary": "cross_session_exact_reuse_opportunities * 100 >= eligible_http_webfetch_calls * 20",
+    "display_percent": "round to six decimals only after the integer counts are fixed; display rounding must not determine classification"
+  },
+  "unchanged": {
+    "source_revision": "524f2910f2893b04ccfbb76e56116fe0af3c5bf7",
+    "trace_manifest_sha256": "113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8",
+    "phase_a_file_count": 400,
+    "phase_b_trigger": "only if phase_a eligible_http_webfetch_calls after physical-call deduplication is below 100",
+    "sample_floor": 100,
+    "low_threshold_percent": 5,
+    "strong_threshold_percent": 20,
+    "selection_changed": false,
+    "identity_changed": false,
+    "canonicalization_changed": false,
+    "thresholds_changed": false
+  },
+  "validity": {
+    "workflow_run_33991517192_must_not_be_used_as_private293_result": true,
+    "only_a_fresh_run_from_a_commit_containing_this_correction_and_the_exact_count_comparison_fix_may_be_used": true,
+    "correction_must_not_be_revised_in_response_to_any_superseded_run_result": true
+  }
+}
