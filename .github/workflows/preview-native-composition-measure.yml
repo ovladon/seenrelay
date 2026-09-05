@@ -1,0 +1,80 @@
+name: Preview native composition measurement
+
+on:
+  push:
+    branches:
+      - verify/native-http-fixture-v1
+    paths:
+      - 'scripts/native-cross-vantage-http-measure.mjs'
+      - '.github/workflows/preview-native-composition-measure.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seenrelay-preview-native-composition-v1
+  cancel-in-progress: false
+
+env:
+  SEENRELAY_PREVIEW_BASE: https://seenrelay-git-preview-native-htt-6a17ce-ovladonn-9636s-projects.vercel.app
+  TARGET_PREVIEW_SHA: 8d22778ccc73dcfdd5acbdbba655e924546f02fb
+  VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+jobs:
+  measure-ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VANTAGE_LABEL: ubuntu
+      MEASUREMENT_OUTPUT: native-composition-ubuntu.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/native-cross-vantage-http-measure.mjs
+      - name: Measure native paths
+        run: node scripts/native-cross-vantage-http-measure.mjs
+      - name: Submit independent qualification observation
+        run: node scripts/verify-preview-assurance-vantage.mjs observe
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-composition-ubuntu-${{ github.run_id }}
+          path: native-composition-ubuntu.json
+          if-no-files-found: error
+          retention-days: 30
+
+  measure-windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      VANTAGE_LABEL: windows
+      MEASUREMENT_OUTPUT: native-composition-windows.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --check scripts/native-cross-vantage-http-measure.mjs
+      - name: Measure native paths
+        run: node scripts/native-cross-vantage-http-measure.mjs
+      - name: Submit independent qualification observation
+        run: node scripts/verify-preview-assurance-vantage.mjs observe
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-composition-windows-${{ github.run_id }}
+          path: native-composition-windows.json
+          if-no-files-found: error
+          retention-days: 30
+
+  qualify-vantages:
+    needs: [measure-ubuntu, measure-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Verify aggregate vantage separation
+        run: node scripts/verify-preview-assurance-vantage.mjs check
