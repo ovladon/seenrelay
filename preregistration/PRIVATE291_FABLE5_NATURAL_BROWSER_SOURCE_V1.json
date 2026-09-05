@@ -1,6 +1,6 @@
 {
   "schema": "seenrelay-private291-fable5-natural-browser-source-v1",
-  "status": "criteria_frozen_before_source_lock_and_webfetch_result",
+  "status": "source_locked_before_webfetch_result",
   "purpose": "Auxiliary natural-source screen for browser_extraction_reads using opt-in public Claude Code sessions described by the publisher as real coding-agent behavior and not a benchmark. Determine whether exact WebFetch operations naturally recur across sessions before any expensive replay or PRIVATE285 materiality collection is commissioned.",
   "production_authorized": false,
   "public_claim_authorized": false,
@@ -9,11 +9,16 @@
     "dataset": "AlinCiocan/fable-5-claude-code-traces",
     "host": "huggingface.co",
     "requested_revision": "v1.0-full-scrubbed",
-    "resolved_revision": "TO_BE_LOCKED_BEFORE_WEBFETCH_ANALYSIS",
+    "resolved_revision": "e33ebbca230ae258b2c28aeee9fe3429e7fbeab6",
     "license": "CC-BY-4.0",
     "publisher_description": "real coding-agent behavior; not a benchmark",
-    "manifest_sha256": "TO_BE_LOCKED_BEFORE_WEBFETCH_ANALYSIS",
-    "jsonl_file_count": null
+    "manifest_sha256": "fd3275e7c223b8d1f940c096042be515ede343a7e46faf1cd6c9d9c9875a56e2",
+    "manifest_bytes": 16636,
+    "readme_sha256": "2f0c1acd8e0b1f12a9497b590042584447f1947942812abf0f25d64286cf8a60",
+    "readme_bytes": 6628,
+    "jsonl_file_count": 18,
+    "source_lock_analysis_performed": false,
+    "source_lock_trace_files_downloaded": false
   },
   "source_admission": {
     "publisher_declares_not_a_benchmark": true,
