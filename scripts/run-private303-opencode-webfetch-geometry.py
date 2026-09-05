@@ -4,7 +4,6 @@ import hashlib
 import json
 import pathlib
 import tempfile
-from collections import Counter
 from typing import Any, Iterable
 
 from huggingface_hub import HfApi, hf_hub_download
@@ -27,7 +26,7 @@ def session_files(api: HfApi, revision: str) -> list[dict[str, Any]]:
         repo_type="dataset",
         revision=revision,
         recursive=True,
-        expand=False,
+        expand=True,
     ):
         if not isinstance(item, RepoFile):
             continue
