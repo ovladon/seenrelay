@@ -1,0 +1,124 @@
+{
+  "schema": "seenrelay-private292-swechat250-natural-browser-source-v1",
+  "status": "completed_insufficient_external_sample_with_one_exact_cross_session_repeat",
+  "purpose": "Auxiliary natural-source screen for browser_extraction_reads using a publicly redistributed ODC-BY subset of real SWE-chat Claude Code CLI sessions. Determine whether exact WebFetch operations naturally recur across sessions before any authoritative replay or PRIVATE285 materiality collection is commissioned.",
+  "production_authorized": false,
+  "public_claim_authorized": false,
+  "private285_class_pass_authorized": false,
+  "source": {
+    "dataset": "alex-remedios/swe-chat-auto-mode",
+    "host": "huggingface.co",
+    "requested_revision": "main",
+    "resolved_revision": "0557f8175f919cf081710cf7e7ac3c8faac0b3f1",
+    "config": "eval-250",
+    "expected_rows": 250,
+    "license": "ODC-BY",
+    "upstream": "SALT-NLP/SWE-chat",
+    "publisher_description": "real Claude Code CLI sessions reshaped from SWE-chat",
+    "data_file": "data/eval-250.parquet",
+    "data_file_sha256": "b423ed410d05cfa973b783350b988eb42c4b8fa9268be9ced0c8ba150cc9d24a",
+    "data_file_bytes": 11202473,
+    "readme_sha256": "12fed1f615dc1a7a0a224af0871217e051dcfc5e96f170685b010881d8138dce",
+    "readme_bytes": 3879,
+    "tree_sha256": "fc14f265fc0e2fc04dd94003564cf3bda9aff27fa7c1061baf7be116b94a4a79",
+    "source_lock_workflow_run_id": 33987591300,
+    "source_lock_artifact_id": 9975630501,
+    "source_lock_artifact_digest": "sha256:42cddda775af6d2b979ce029ab8ea0a1266a8ead3ffd296d0c76b2ee0f381c19",
+    "source_lock_data_file_parsed": false,
+    "source_lock_analysis_performed": false
+  },
+  "source_admission": {
+    "public_derivative_is_not_access_gated": true,
+    "license_declared_odc_by": true,
+    "upstream_attribution_required": true,
+    "sessions_are_historical_real_cli_sessions": true,
+    "distribution_not_constructed_by_seenrelay": true,
+    "raw_dataset_republication_by_seenrelay": false,
+    "cross_session_is_independence_proxy_only": true,
+    "observer_independence_proven": false
+  },
+  "operation": {
+    "tool_name": "WebFetch",
+    "eligible_call_requires_http_or_https_url": true,
+    "eligible_call_requires_nonempty_prompt": true,
+    "url_canonicalization": "trim, parse URL, lowercase scheme and hostname, remove fragment, preserve path/query/port",
+    "prompt_canonicalization": "CRLF/CR to LF plus trim only",
+    "exact_operation_key": "sha256(stable_json({url:canonical_url,prompt:canonical_prompt}))",
+    "url_only_key": "sha256(canonical_url)",
+    "semantic_matching": false,
+    "llm": false,
+    "embeddings": false,
+    "fuzzy_matching": false
+  },
+  "ingestion_boundary": {
+    "read_only_transcript_json": true,
+    "anthropic_tool_use_blocks_only": true,
+    "tool_use_name_must_equal_WebFetch": true,
+    "do_not_infer_tool_arguments_from_text": true,
+    "do_not_use_tool_results_to_construct_identity": true,
+    "do_not_use_repo_id_or_cwd_to_construct_identity": true
+  },
+  "classification": {
+    "sample_floor": 100,
+    "rules": {
+      "eligible_calls_below_100": "INSUFFICIENT_EXTERNAL_SAMPLE",
+      "cross_session_exact_reuse_percent_below_5": "LOW_EXACT_OVERLAP_SIGNAL",
+      "cross_session_exact_reuse_percent_5_to_below_20": "WEAK_EXACT_OVERLAP_SIGNAL",
+      "cross_session_exact_reuse_percent_at_or_above_20": "STRONG_EXACT_OVERLAP_SIGNAL"
+    }
+  },
+  "result": {
+    "workflow_head_sha": "809dfc859b516b9b9cab6ba9f9aaecb61d3a2388",
+    "workflow_run_id": 33987788418,
+    "artifact_id": 9975688127,
+    "artifact_digest": "sha256:2e65bfed3a442fbeac20d5713203c7ecd148feb474ea05f56588fb14435b8efe",
+    "source_sessions": 250,
+    "recognized_transcript_rows": 250,
+    "invalid_json_lines": 0,
+    "webfetch_calls_seen": 76,
+    "eligible_http_webfetch_calls": 76,
+    "rejected_calls": {
+      "missing_url": 0,
+      "invalid_url": 0,
+      "non_http_url": 0,
+      "missing_prompt": 0
+    },
+    "unique_exact_operation_keys": 75,
+    "exact_repeat_calls_any_session": 1,
+    "exact_keys_spanning_sessions": 1,
+    "cross_session_exact_reuse_opportunities": 1,
+    "cross_session_exact_reuse_percent": 1.315789,
+    "unique_url_keys": 69,
+    "url_keys_spanning_sessions": 2,
+    "cross_session_url_reuse_opportunities": 3,
+    "cross_session_url_reuse_percent": 3.947368,
+    "classification": "INSUFFICIENT_EXTERNAL_SAMPLE"
+  },
+  "next_step_rules": {
+    "insufficient_or_low": "Do not commission authoritative browser replay from this corpus; retain result and continue natural-source search/passive collection.",
+    "weak_or_strong": "May commission a separate preregistered authoritative replay/materiality experiment, still excluded from PRIVATE285 until all NATURAL_WORKLOAD_GATE evidence requirements are satisfied.",
+    "url_only_overlap_never_counts_as_exact_reuse": true,
+    "positive_screen_does_not_pass_private285": true
+  },
+  "interpretation": {
+    "authoritative_browser_replay_commissioned": false,
+    "private285_remains_closed": true,
+    "one_exact_cross_session_repeat_observed": true,
+    "sample_floor_met": false,
+    "one_of_seventy_six_is_not_population_prevalence": true,
+    "cross_session_is_independence_proxy_only": true,
+    "observer_independence_proven": false,
+    "negative_or_insufficient_result_retained": true
+  },
+  "privacy_and_rights": {
+    "raw_dataset_processed_transiently_only": true,
+    "raw_urls_not_output": true,
+    "raw_prompts_not_output": true,
+    "raw_results_not_output": true,
+    "session_ids_not_output": true,
+    "repo_ids_not_output": true,
+    "cwd_not_output": true,
+    "per_key_hashes_not_output": true,
+    "aggregate_counts_and_source_hashes_only": true
+  }
+}

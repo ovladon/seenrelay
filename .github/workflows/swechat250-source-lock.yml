@@ -1,0 +1,140 @@
+name: SWE-chat 250 natural source lock
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  source-lock:
+    if: startsWith(github.head_ref, 'research/browser-natural-swechat250-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lock public derivative without transcript analysis
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import urllib.parse
+          import urllib.request
+
+          repo = 'alex-remedios/swe-chat-auto-mode'
+          requested = 'main'
+          headers = {'User-Agent': 'seenrelay-private292-source-lock/1.0'}
+
+          def get(url):
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  return response.read(), dict(response.headers.items())
+
+          readme_url = f'https://huggingface.co/datasets/{repo}/resolve/{requested}/README.md?download=true'
+          readme, readme_headers = get(readme_url)
+          resolved = readme_headers.get('x-repo-commit') or readme_headers.get('X-Repo-Commit')
+          if not resolved or len(resolved) < 20:
+              raise SystemExit(f'could not resolve immutable revision: {resolved!r}')
+
+          text = readme.decode('utf-8', errors='strict').lower()
+          required_fragments = [
+              'license: odc-by',
+              'real claude code cli sessions',
+              'eval-250',
+              '12,824',
+              'inherited from',
+              'salt-nlp/swe-chat',
+          ]
+          for fragment in required_fragments:
+              if fragment not in text:
+                  raise SystemExit(f'missing pinned README declaration: {fragment}')
+
+          tree_url = f'https://huggingface.co/api/datasets/{repo}/tree/{resolved}?recursive=true&expand=true'
+          tree_bytes, _ = get(tree_url)
+          tree = json.loads(tree_bytes)
+          if not isinstance(tree, list):
+              raise SystemExit('unexpected Hub tree response')
+
+          files = []
+          for entry in tree:
+              if not isinstance(entry, dict) or entry.get('type') != 'file':
+                  continue
+              path = entry.get('path')
+              if not isinstance(path, str):
+                  continue
+              files.append({
+                  'path': path,
+                  'size': entry.get('size'),
+                  'oid': entry.get('oid'),
+                  'lfs': entry.get('lfs'),
+              })
+
+          candidates = [f for f in files if 'eval-250' in f['path'].lower() and f['path'].lower().endswith(('.parquet', '.jsonl', '.json'))]
+          if len(candidates) != 1:
+              raise SystemExit('expected one eval-250 data file, found: ' + json.dumps([f['path'] for f in candidates]))
+          data = candidates[0]
+          if not isinstance(data.get('size'), int) or data['size'] <= 0:
+              raise SystemExit('candidate has no positive size')
+
+          # Lock the actual public file bytes without parsing transcript content.
+          quoted = '/'.join(urllib.parse.quote(part, safe='') for part in data['path'].split('/'))
+          data_url = f'https://huggingface.co/datasets/{repo}/resolve/{resolved}/{quoted}?download=true'
+          data_bytes, data_headers = get(data_url)
+          data_resolved = data_headers.get('x-repo-commit') or data_headers.get('X-Repo-Commit')
+          if data_resolved and data_resolved != resolved:
+              raise SystemExit(f'data revision mismatch: {data_resolved}')
+          if len(data_bytes) != data['size']:
+              raise SystemExit(f'data size mismatch: tree={data["size"]} downloaded={len(data_bytes)}')
+
+          result = {
+              'schema': 'seenrelay-private292-swechat250-source-lock-v1',
+              'dataset': repo,
+              'requested_revision': requested,
+              'resolved_revision': resolved,
+              'config': 'eval-250',
+              'expected_rows': 250,
+              'license': 'ODC-BY',
+              'upstream': 'SALT-NLP/SWE-chat',
+              'readme_sha256': hashlib.sha256(readme).hexdigest(),
+              'readme_bytes': len(readme),
+              'tree_sha256': hashlib.sha256(tree_bytes).hexdigest(),
+              'data_file': data['path'],
+              'data_file_bytes': len(data_bytes),
+              'data_file_sha256': hashlib.sha256(data_bytes).hexdigest(),
+              'data_file_parsed': False,
+              'analysis_performed': False,
+          }
+          with open('private292-source-lock.json', 'w', encoding='utf-8') as handle:
+              json.dump(result, handle, indent=2, sort_keys=True)
+              handle.write('\n')
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+
+      - name: Enforce source-lock-only boundary
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const lock = JSON.parse(fs.readFileSync('private292-source-lock.json', 'utf8'));
+          if (lock.schema !== 'seenrelay-private292-swechat250-source-lock-v1') process.exit(1);
+          if (lock.dataset !== 'alex-remedios/swe-chat-auto-mode') process.exit(1);
+          if (!/^[0-9a-f]{40,64}$/i.test(lock.resolved_revision)) process.exit(1);
+          if (lock.config !== 'eval-250' || lock.expected_rows !== 250) process.exit(1);
+          if (lock.license !== 'ODC-BY' || lock.upstream !== 'SALT-NLP/SWE-chat') process.exit(1);
+          if (!/^[0-9a-f]{64}$/i.test(lock.readme_sha256)) process.exit(1);
+          if (!/^[0-9a-f]{64}$/i.test(lock.tree_sha256)) process.exit(1);
+          if (!/^[0-9a-f]{64}$/i.test(lock.data_file_sha256)) process.exit(1);
+          if (!(lock.readme_bytes > 0 && lock.data_file_bytes > 0)) process.exit(1);
+          if (lock.data_file_parsed !== false) process.exit(1);
+          if (lock.analysis_performed !== false) process.exit(1);
+          NODE
+
+      - name: Upload source lock only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private292-swechat250-source-lock
+          path: private292-source-lock.json
+          if-no-files-found: error
+          retention-days: 14

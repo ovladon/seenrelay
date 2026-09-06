@@ -1,0 +1,176 @@
+name: SWE-chat 250 natural browser overlap screen
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  natural-browser-overlap:
+    if: startsWith(github.head_ref, 'research/browser-natural-swechat250-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run frozen overlap and hostile ingestion tests
+        run: |
+          node --test tests/browser-trace-overlap-screen.test.mjs
+          python tests/swechat250-webfetch-extractor.test.py
+
+      - name: Install pinned Parquet reader
+        run: python -m pip install --disable-pip-version-check 'pyarrow==21.0.0'
+
+      - name: Download and verify locked eval-250 Parquet
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import os
+          import pathlib
+          import urllib.parse
+          import urllib.request
+
+          repo = 'alex-remedios/swe-chat-auto-mode'
+          revision = '0557f8175f919cf081710cf7e7ac3c8faac0b3f1'
+          path = 'data/eval-250.parquet'
+          expected_bytes = 11202473
+          expected_sha256 = 'b423ed410d05cfa973b783350b988eb42c4b8fa9268be9ced0c8ba150cc9d24a'
+          headers = {'User-Agent': 'seenrelay-private292-overlap/1.0'}
+          quoted = '/'.join(urllib.parse.quote(part, safe='') for part in path.split('/'))
+          url = f'https://huggingface.co/datasets/{repo}/resolve/{revision}/{quoted}?download=true'
+          req = urllib.request.Request(url, headers=headers)
+          with urllib.request.urlopen(req, timeout=180) as response:
+              body = response.read()
+              resolved = response.headers.get('x-repo-commit') or response.headers.get('X-Repo-Commit')
+          if resolved and resolved != revision:
+              raise SystemExit(f'revision mismatch: {resolved}')
+          if len(body) != expected_bytes:
+              raise SystemExit(f'byte mismatch: expected {expected_bytes}, got {len(body)}')
+          digest = hashlib.sha256(body).hexdigest()
+          if digest != expected_sha256:
+              raise SystemExit(f'SHA-256 mismatch: {digest}')
+          target = pathlib.Path(os.environ['RUNNER_TEMP']) / 'private292-eval-250.parquet'
+          target.write_bytes(body)
+          print(f'locked parquet verified: {len(body)} bytes {digest}')
+          PY
+
+      - name: Extract only exact WebFetch tool_use blocks
+        shell: bash
+        run: |
+          python scripts/extract-swechat250-webfetch.py \
+            --input "$RUNNER_TEMP/private292-eval-250.parquet" \
+            --output-dir "$RUNNER_TEMP/private292-webfetch-sessions" \
+            --report private292-extraction-report.json
+
+      - name: Enforce fail-closed extraction geometry
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const x = JSON.parse(fs.readFileSync('private292-extraction-report.json', 'utf8'));
+          if (x.schema !== 'seenrelay-private292-swechat250-extraction-v1') process.exit(1);
+          if (x.source_rows !== 250) process.exit(1);
+          if (x.recognized_transcript_rows !== 250) process.exit(1);
+          if (x.output_session_files !== 250) process.exit(1);
+          if (!Number.isInteger(x.webfetch_blocks_emitted) || x.webfetch_blocks_emitted < 0) process.exit(1);
+          if (x.tool_results_used !== false) process.exit(1);
+          if (x.repo_id_used !== false) process.exit(1);
+          if (x.cwd_used !== false) process.exit(1);
+          if (x.free_text_argument_inference_used !== false) process.exit(1);
+          if (x.raw_values_retained_in_report !== false) process.exit(1);
+          NODE
+
+      - name: Screen locked natural WebFetch operations
+        shell: bash
+        run: |
+          node scripts/screen-browser-trace-overlap.mjs \
+            --input-dir "$RUNNER_TEMP/private292-webfetch-sessions" \
+            --source-revision '0557f8175f919cf081710cf7e7ac3c8faac0b3f1' \
+            --source-dataset 'alex-remedios/swe-chat-auto-mode/eval-250' \
+            --output private292-overlap-core.json
+
+      - name: Build and enforce aggregate-only PRIVATE292 report
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const extraction = JSON.parse(fs.readFileSync('private292-extraction-report.json', 'utf8'));
+          const overlap = JSON.parse(fs.readFileSync('private292-overlap-core.json', 'utf8'));
+          if (overlap.schema !== 'seenrelay-browser-overlap-screen-v1') process.exit(1);
+          if (overlap.source_dataset !== 'alex-remedios/swe-chat-auto-mode/eval-250') process.exit(1);
+          if (overlap.source_revision !== '0557f8175f919cf081710cf7e7ac3c8faac0b3f1') process.exit(1);
+          if (overlap.tool_name !== 'WebFetch') process.exit(1);
+          if (overlap.source_sessions !== 250) process.exit(1);
+          if (overlap.invalid_json_lines !== 0) process.exit(1);
+          if (overlap.webfetch_calls_seen !== extraction.webfetch_blocks_emitted) process.exit(1);
+          if (!['INSUFFICIENT_EXTERNAL_SAMPLE','LOW_EXACT_OVERLAP_SIGNAL','WEAK_EXACT_OVERLAP_SIGNAL','STRONG_EXACT_OVERLAP_SIGNAL'].includes(overlap.classification)) process.exit(1);
+          if (overlap.interpretation?.observer_independence_proven !== false) process.exit(1);
+          if (overlap.interpretation?.natural_workload_class_pass_authorized !== false) process.exit(1);
+          if (overlap.interpretation?.seenrelay_reuse_authorized !== false) process.exit(1);
+          if (overlap.privacy?.raw_urls_retained !== false) process.exit(1);
+          if (overlap.privacy?.raw_prompts_retained !== false) process.exit(1);
+          if (overlap.privacy?.raw_results_retained !== false) process.exit(1);
+          if (overlap.privacy?.session_ids_retained !== false) process.exit(1);
+          if (overlap.privacy?.per_key_hashes_retained !== false) process.exit(1);
+
+          const report = {
+            schema: 'seenrelay-private292-swechat250-natural-browser-overlap-v1',
+            source: {
+              dataset: 'alex-remedios/swe-chat-auto-mode',
+              config: 'eval-250',
+              resolved_revision: '0557f8175f919cf081710cf7e7ac3c8faac0b3f1',
+              data_file: 'data/eval-250.parquet',
+              data_file_bytes: 11202473,
+              data_file_sha256: 'b423ed410d05cfa973b783350b988eb42c4b8fa9268be9ced0c8ba150cc9d24a',
+              license: 'ODC-BY',
+              upstream: 'SALT-NLP/SWE-chat'
+            },
+            extraction,
+            overlap,
+            interpretation: {
+              auxiliary_natural_screen_only: true,
+              authoritative_browser_replay_performed: false,
+              private285_class_pass_authorized: false,
+              population_prevalence_claim_authorized: false,
+              cross_session_is_independence_proxy_only: true,
+              observer_independence_proven: false
+            },
+            privacy: {
+              raw_parquet_retained: false,
+              extracted_session_files_retained: false,
+              raw_urls_retained: false,
+              raw_prompts_retained: false,
+              raw_results_retained: false,
+              session_ids_retained: false,
+              repo_ids_retained: false,
+              cwd_retained: false,
+              per_key_hashes_retained: false
+            }
+          };
+          fs.writeFileSync('private292-swechat250-overlap-report.json', JSON.stringify(report, null, 2) + '\n');
+          NODE
+
+      - name: Delete raw and transient data before artifact upload
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$RUNNER_TEMP/private292-eval-250.parquet"
+          rm -rf "$RUNNER_TEMP/private292-webfetch-sessions"
+          rm -f private292-extraction-report.json private292-overlap-core.json
+
+      - name: Upload aggregate report only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private292-swechat250-natural-browser-overlap
+          path: private292-swechat250-overlap-report.json
+          if-no-files-found: error
+          retention-days: 14
