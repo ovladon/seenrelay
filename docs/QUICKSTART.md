@@ -11,12 +11,12 @@ npm install seenrelay
 pip install seenrelay
 ```
 
-Client v0.2.9 was clean-install verified from both public registries on 2026-09-01. JavaScript/TypeScript 0.2.9 supports provider-independent local-first Zero-State; Python remains shadow-first in this release. Reuse remains caller policy.
+Client v0.2.10 was clean-install verified from both public registries on 2026-09-06. JavaScript/TypeScript and Python 0.2.10 support provider-independent local-first Zero-State. Reuse remains caller policy.
 <!-- END GENERATED:PUBLIC-INSTALL -->
 
 SeenRelay reduces redundant source-backed validation while preserving the application's existing validation policy. It still has exactly two domain operations: **CHECK** and **OBSERVE**.
 
-The recommended JavaScript/TypeScript 0.2.9 path is local-first: use caller-side reuse and source-native confirmation before considering shared evidence. Both JavaScript/TypeScript and Python include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1; Python 0.2.9 remains shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
+The recommended 0.2.10 path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
 
 ## Choose the right target
 
@@ -180,7 +180,7 @@ validate_price = protect_validation(
 value = validate_price(known_value)
 ```
 
-With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python classic behavior remains shadow-first in 0.2.9.
+With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python's classic API remains shadow-first in 0.2.10; Python Zero-State is a separate explicit local-first path for caller-controlled read-only validation.
 
 The current JavaScript / TypeScript Shadow Proof can additionally retain bounded, sanitized natural-workload benchmark records while authoritative validation still runs. The export excludes fact identity, source, raw values and per-call timestamps; unavailable CHECKs remain in the sample, mismatches fail safety evidence and uncomparable hypothetical reuse remains incomplete. It does not enable reuse.
 
