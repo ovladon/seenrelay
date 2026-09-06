@@ -31,9 +31,15 @@ test('primary public and machine surfaces are fleet-first without universal clai
   assert.match(adoption, /provider-independent validation reuse layer for agent fleets/i);
   assert.match(adoption, /\/fleet/);
   assert.match(index, /app\.get\('\/fleet'/);
+
+  // Negative caveats are required and must not be mistaken for positive claims.
+  assert.match(landing, /not a universal ROI claim/i);
+  assert.match(landing, /do not establish a universal hit rate, guaranteed savings/i);
+
   for (const source of [fleet, landing, quickstart, adoption]) {
-    assert.doesNotMatch(source, /universal (?:hit rate|reuse|cache|solution)/i);
-    assert.doesNotMatch(source, /guaranteed savings/i);
+    assert.doesNotMatch(source, /(?:SeenRelay|we)\s+(?:guarantees?|promises?)\b/i);
+    assert.doesNotMatch(source, /(?:offers?|provides?|delivers?|ensures?)\s+(?:a\s+)?universal\s+(?:hit rate|reuse|cache|solution)/i);
+    assert.doesNotMatch(source, /(?:offers?|provides?|delivers?|ensures?)\s+guaranteed savings/i);
   }
 });
 
