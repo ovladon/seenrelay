@@ -19,7 +19,7 @@ test('fleet page exposes only current caller-owned fleet capability', () => {
   assert.match(fleet, /privateMaxAgeMs/);
   assert.match(fleet, /source-native/i);
   assert.match(fleet, /optional shared CHECK/i);
-  assert.match(fleet, /not a hosted private tenant/i);
+  assert.match(fleet, /not a hosted tenant claim|does not claim[^.]*private tenant store/i);
   assert.match(fleet, /original validation remains the fallback/i);
 });
 
