@@ -217,20 +217,38 @@ async function resourceHashes() {
   return hashes;
 }
 
+export function retryDelayMs(retryIndex, retryAfterHeader) {
+  if (!Number.isInteger(retryIndex) || retryIndex < 0 || retryIndex > 4) throw new TypeError('retryIndex must be integer 0..4');
+  if (typeof retryAfterHeader === 'string' && /^\d+$/.test(retryAfterHeader.trim())) {
+    const seconds = Number(retryAfterHeader.trim());
+    if (Number.isSafeInteger(seconds)) return Math.min(60, Math.max(1, seconds)) * 1000;
+  }
+  return (2 ** (retryIndex + 1)) * 1000;
+}
+
 async function createBrowserbaseSession(apiKey) {
-  const response = await fetch(SESSIONS_URL, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-bb-api-key': apiKey },
-    body: JSON.stringify({
-      region: REGION,
-      userMetadata: { experiment: EXPERIMENT_ID, workload: 'rendered-state-stability-v2' }
-    }),
-    signal: AbortSignal.timeout(20_000)
-  });
-  if (!response.ok) throw new Error(`session create HTTP ${response.status}`);
-  const body = await response.json();
-  if (!body || typeof body.id !== 'string' || typeof body.projectId !== 'string' || typeof body.connectUrl !== 'string' || !body.connectUrl.startsWith('ws')) throw new Error('session create response invalid');
-  return { sessionId: body.id, projectId: body.projectId, connectUrl: body.connectUrl };
+  for (let createAttempt = 0; createAttempt <= 5; createAttempt++) {
+    const response = await fetch(SESSIONS_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-bb-api-key': apiKey },
+      body: JSON.stringify({
+        region: REGION,
+        userMetadata: { experiment: EXPERIMENT_ID, workload: 'rendered-state-stability-v2' }
+      }),
+      signal: AbortSignal.timeout(20_000)
+    });
+
+    if (response.ok) {
+      const body = await response.json();
+      if (!body || typeof body.id !== 'string' || typeof body.projectId !== 'string' || typeof body.connectUrl !== 'string' || !body.connectUrl.startsWith('ws')) throw new Error('session create response invalid');
+      return { sessionId: body.id, projectId: body.projectId, connectUrl: body.connectUrl };
+    }
+
+    if (response.status !== 429 || createAttempt === 5) throw new Error(`session create HTTP ${response.status}`);
+    const delayMs = retryDelayMs(createAttempt, response.headers.get('retry-after'));
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  throw new Error('session create retry loop exhausted');
 }
 
 async function requestRelease(apiKey, sessionId, projectId) {
