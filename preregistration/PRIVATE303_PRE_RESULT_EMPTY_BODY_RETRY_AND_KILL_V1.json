@@ -1,0 +1,29 @@
+{
+  "schema": "seenrelay-private303-pre-result-empty-body-retry-and-kill-v1",
+  "status": "frozen_after_empty-body_transport_failure_before_any_aggregate_geometry_result",
+  "parent_preregistration": "PRIVATE303_OPENCODE_WEBFETCH_GEOMETRY_V1",
+  "superseded_run": {
+    "workflow_run_id": 33996993851,
+    "head": "b6d1c3263725e73b3cdaaff8703ba4dce32445d0",
+    "frozen_tests_passed": true,
+    "failure": "exact-revision HTTP retrieval returned an empty response body",
+    "aggregate_artifact_created": false,
+    "geometry_result_observed": false,
+    "partial_counts_may_not_be_used": true
+  },
+  "correction": {
+    "empty_body_is_retriable_transport_failure": true,
+    "retry_budget_per_file_remains": 6,
+    "backoff_policy_changed": false,
+    "source_selection_changed": false,
+    "tool_parser_changed": false,
+    "native_identity_rules_changed": false,
+    "sample_floor_changed": false,
+    "decision_rule_changed": false
+  },
+  "kill_criterion": "The next exact-head run is the final transport attempt for PRIVATE303. If it fails before aggregate validation because any source file cannot be retrieved under the frozen retry policy, stop commissioning this corpus and record it as operationally inadmissible for this evidence track. No further transport tuning is authorized under PRIVATE303.",
+  "authorization": {
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}

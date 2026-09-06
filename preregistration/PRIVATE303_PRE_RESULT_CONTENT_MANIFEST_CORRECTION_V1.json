@@ -1,0 +1,31 @@
+{
+  "schema": "seenrelay-private303-pre-result-content-manifest-correction-v1",
+  "status": "frozen_after_second_metadata_failure_before_any_source_file_download_or_tool_count",
+  "parent_preregistration": "PRIVATE303_OPENCODE_WEBFETCH_GEOMETRY_V1",
+  "superseded_runs": [33996828297, 33996872590],
+  "facts_before_correction": {
+    "frozen_tests_passed": true,
+    "source_session_files_downloaded": 0,
+    "webfetch_count_observed": false,
+    "geometry_result_observed": false
+  },
+  "problem": "The pinned Hugging Face client receives null/invalid logical size metadata for at least one Xet-backed session JSON even with expanded tree metadata.",
+  "correction": {
+    "file_population": "all sorted data/**/*.json paths exposed by dataset_info at the resolved exact revision",
+    "per_file_identity": "path + actual downloaded byte count + SHA-256 of downloaded bytes",
+    "manifest_identity": "SHA-256 over sorted UTF-8 lines path + NUL + byte_count + NUL + content_sha256 + LF",
+    "metadata_reported_size_required": false,
+    "metadata_blob_id_required": false,
+    "source_selection_changed": false,
+    "requested_revision_changed": false,
+    "tool_parser_changed": false,
+    "native_identity_rules_changed": false,
+    "sample_floor_changed": false,
+    "decision_rule_changed": false,
+    "overlap_computed": false
+  },
+  "authorization": {
+    "production_change_authorized": false,
+    "private285_pass_authorized": false
+  }
+}

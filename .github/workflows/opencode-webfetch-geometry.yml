@@ -1,0 +1,145 @@
+name: OpenCode webfetch geometry (PRIVATE303)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - preregistration/PRIVATE303_OPENCODE_WEBFETCH_GEOMETRY_V1.json
+      - scripts/run-private303-opencode-webfetch-geometry.py
+      - tests/private303-opencode-webfetch-geometry.test.py
+      - .github/workflows/opencode-webfetch-geometry.yml
+
+permissions:
+  contents: read
+
+jobs:
+  geometry:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'research/browser-natural-opencode-geometry-v1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Initialize transient Hugging Face cache
+        run: echo "HF_HOME=$RUNNER_TEMP/private303-hf" >> "$GITHUB_ENV"
+
+      - name: Install pinned Hub client
+        run: python -m pip install --disable-pip-version-check huggingface_hub==0.35.3
+
+      - name: Run frozen PRIVATE303 tests
+        run: python tests/private303-opencode-webfetch-geometry.test.py
+
+      - name: Execute preregistered source geometry diagnostic
+        run: python scripts/run-private303-opencode-webfetch-geometry.py --output private303-opencode-webfetch-geometry.json
+
+      - name: Enforce aggregate-only PRIVATE303 report
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          r = json.loads(Path('private303-opencode-webfetch-geometry.json').read_text(encoding='utf-8'))
+          if r.get('schema') != 'seenrelay-private303-opencode-webfetch-geometry-v1':
+              raise SystemExit('schema mismatch')
+          if set(r) != {'schema','source','geometry','decision','ingestion','privacy','interpretation'}:
+              raise SystemExit('unexpected top-level fields')
+
+          s = r['source']
+          if s.get('dataset') != 'dacorvo/hf-hub-session-opencode-traces':
+              raise SystemExit('dataset mismatch')
+          if s.get('requested_revision') != 'main':
+              raise SystemExit('requested revision mismatch')
+          if not isinstance(s.get('resolved_revision'), str) or not re.fullmatch(r'[0-9a-f]{40}', s['resolved_revision']):
+              raise SystemExit('invalid resolved revision')
+          if s.get('license') != 'apache-2.0':
+              raise SystemExit('license mismatch')
+          for key in ('session_json_files','total_logical_bytes'):
+              if not isinstance(s.get(key), int) or isinstance(s[key], bool) or s[key] <= 0:
+                  raise SystemExit(f'invalid source count: {key}')
+          if not isinstance(s.get('manifest_sha256'), str) or not re.fullmatch(r'[0-9a-f]{64}', s['manifest_sha256']):
+              raise SystemExit('invalid manifest digest')
+
+          g = r['geometry']
+          expected_geometry = {
+              'files_processed','native_sessions_validated','all_tool_parts_seen',
+              'webfetch_tool_calls','sessions_with_webfetch','duplicate_native_physical_webfetch_keys'
+          }
+          if set(g) != expected_geometry:
+              raise SystemExit('unexpected geometry fields')
+          if any(not isinstance(g[k], int) or isinstance(g[k], bool) or g[k] < 0 for k in expected_geometry):
+              raise SystemExit('invalid geometry count')
+          if g['files_processed'] != s['session_json_files'] or g['native_sessions_validated'] != s['session_json_files']:
+              raise SystemExit('session file accounting mismatch')
+          if g['sessions_with_webfetch'] > g['native_sessions_validated']:
+              raise SystemExit('sessions_with_webfetch exceeds sessions')
+          if g['webfetch_tool_calls'] > g['all_tool_parts_seen']:
+              raise SystemExit('webfetch calls exceed tool parts')
+
+          d = r['decision']
+          if d.get('sample_floor_webfetch_calls') != 100:
+              raise SystemExit('sample floor mismatch')
+          if g['duplicate_native_physical_webfetch_keys'] > 0:
+              expected = 'REJECT_SOURCE_IDENTITY_GEOMETRY_FAILURE'
+          elif g['webfetch_tool_calls'] < 100:
+              expected = 'REJECT_SOURCE_INSUFFICIENT_WEBFETCH_GEOMETRY'
+          else:
+              expected = 'AUTHORIZE_SEPARATE_OPENCODE_IDENTITY_PREREGISTRATION_ONLY'
+          if d.get('verdict') != expected:
+              raise SystemExit('verdict mismatch')
+          if d.get('separate_opencode_overlap_study_authorized') is not (expected == 'AUTHORIZE_SEPARATE_OPENCODE_IDENTITY_PREREGISTRATION_ONLY'):
+              raise SystemExit('followup authorization mismatch')
+          if d.get('claude_webfetch_pooling_authorized') is not False:
+              raise SystemExit('Claude pooling must remain false')
+
+          if r['ingestion'] != {
+              'webfetch_input_fields_accessed': False,
+              'webfetch_output_or_error_fields_accessed': False,
+              'operation_identity_constructed': False,
+              'overlap_computed': False,
+          }:
+              raise SystemExit('ingestion flags mismatch')
+          if any(value is not False for value in r['privacy'].values()):
+              raise SystemExit('privacy retention flag unexpectedly true')
+          if r['interpretation'] != {
+              'geometry_is_reuse_evidence': False,
+              'population_prevalence_evidence': False,
+              'observer_independence_proven': False,
+              'private285_class_pass_authorized': False,
+              'seenrelay_reuse_authorized': False,
+              'production_change_authorized': False,
+          }:
+              raise SystemExit('interpretation flags mismatch')
+
+          forbidden_keys = {'path','sessionID','callID','url','input','output','error','reasoning','prompt'}
+          def walk(value):
+              if isinstance(value, dict):
+                  for key, child in value.items():
+                      if key in forbidden_keys:
+                          raise SystemExit(f'forbidden raw field in aggregate report: {key}')
+                      walk(child)
+              elif isinstance(value, list):
+                  for child in value:
+                      walk(child)
+          walk(r)
+          PY
+
+      - name: Delete transient source cache
+        if: always()
+        run: rm -rf "${HF_HOME:-$RUNNER_TEMP/private303-hf}"
+
+      - name: Upload aggregate PRIVATE303 geometry only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private303-opencode-webfetch-geometry
+          path: private303-opencode-webfetch-geometry.json
+          retention-days: 14
+          if-no-files-found: error
