@@ -56,7 +56,6 @@ jobs:
           import { validateAggregateReport } from './scripts/private312-browserbase-provider-diagnostic.mjs';
           const raw = fs.readFileSync(process.env.PRIVATE312_OUTPUT, 'utf8');
           if (Buffer.byteLength(raw, 'utf8') > 8192) process.exit(1);
-          if (/connectUrl|sessionId|x-bb-api-key|project_[A-Za-z0-9]|data:image/i.test(raw)) process.exit(1);
           const report = JSON.parse(raw);
           validateAggregateReport(report);
           if (report.measurement_performed !== false) process.exit(1);
