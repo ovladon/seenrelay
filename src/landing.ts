@@ -79,7 +79,7 @@ export function publicLandingPage(origin: string): string {
   <div>
     <div class="rv-kicker"><i></i><span>SEENRELAY · CLIENT ${version}</span></div>
     <h1>Validation reuse for agent fleets.</h1>
-    <p class="rv-lead">SeenRelay sits in front of repeated expensive read-only validation. Workers can reuse caller-owned local/private state, prefer source-native freshness confirmation, optionally consult recent shared observations, and fall through to the original validation whenever a cheaper path is not justified.</p>
+    <p class="rv-lead">SeenRelay is a reuse layer for repeated read-only validation. For agent fleets, it sits in front of repeated expensive work so workers can reuse caller-owned local/private state, prefer source-native freshness confirmation, optionally consult recent shared observations, and fall through to the original validation whenever a cheaper path is not justified.</p>
     <div class="rv-proofline" aria-label="Current product facts">
       <span>npm + PyPI verified</span>
       <span>caller-owned private L1</span>
@@ -117,7 +117,7 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-section" id="install">
   <div class="rv-section-head">
-    <div class="rv-eyebrow">MEASURE BEFORE REUSE</div>
+    <div class="rv-eyebrow">INSTALL AND USE</div>
     <h2>First run: measure repetition without changing application behavior.</h2>
     <p>Ambient/shadow integration is the lowest-risk entry point. The existing call remains authoritative while SeenRelay measures exact repetition locally. If the report shows no meaningful repeat work, leave the path alone.</p>
   </div>
@@ -180,8 +180,8 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
 <section class="rv-shell rv-section" id="tests">
   <div class="rv-section-head">
     <div class="rv-eyebrow">TESTS WE HAVE RUN</div>
-    <h2>Mechanics are measured. Workload fit still has to earn its place.</h2>
-    <p>These are first-party smoke tests, not a universal ROI claim. A separate workload can be a poor fit even when the reuse mechanism works correctly.</p>
+    <h2>What the current measured tests show.</h2>
+    <p>Mechanics are measured, but workload fit still has to earn its place. These are first-party smoke tests, not a universal ROI claim; a separate workload can be a poor fit even when the reuse mechanism works correctly.</p>
   </div>
 
   <div class="rv-evidence-cards" aria-label="SeenRelay benchmark results">${evidenceCards()}</div>
@@ -189,7 +189,7 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
   <div class="rv-evidence-interpretation">
     <article><b>What these tests establish</b><p>SeenRelay's bounded reuse path can bypass equivalent provider work and can reduce provider-unit consumption. In the structured extraction and browser-interaction tests it also reduced measured path latency.</p></article>
     <article><b>What they do not establish</b><p>They do not establish a universal hit rate, guaranteed savings, or that SeenRelay should sit ahead of a cheaper authoritative/source-native mechanism. Natural-workload suitability is evaluated separately.</p></article>
-    <article><b>How to test your fleet</b><p>Start with Ambient/Shadow Proof while every authoritative validation still runs. Measure exact repetition before deciding whether private or shared reuse is appropriate.</p><a href="/quickstart">Open the measurement-first quickstart →</a></article>
+    <article><b>How to test your own workload</b><p>For a fleet, start with Ambient/Shadow Proof while every authoritative validation still runs. Measure exact repetition before deciding whether private or shared reuse is appropriate.</p><a href="/quickstart">Open the measurement-first quickstart →</a></article>
   </div>
   <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/economics">Full benchmark details and caveats</a><a class="rv-button quiet" href="/product-facts.json">Machine-readable evidence →</a></div>
 </section>
