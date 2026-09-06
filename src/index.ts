@@ -12,6 +12,7 @@ import { adminControl, adminHousekeeping, adminLogin, adminLogout, adminOperatio
 import { serviceDescriptor } from './public.js';
 import { publicLandingPage } from './landing.js';
 import { quickstartPage } from './quickstart.js';
+import { fleetPage } from './fleet.js';
 import { economicsPage } from './economics.js';
 import { trustDescriptor, trustPage } from './trust.js';
 import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
@@ -71,6 +72,11 @@ app.get('/quickstart', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(quickstartPage(new URL(c.req.url).origin));
+});
+app.get('/fleet', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(fleetPage(new URL(c.req.url).origin));
 });
 app.get('/trust', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
