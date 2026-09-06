@@ -1,0 +1,22 @@
+{
+  "schema": "seenrelay-pre-result-correction-v1",
+  "experiment_id": "PRIVATE312",
+  "correction_id": "PRIVATE312_PRE_ARTIFACT_VALIDATOR_CORRECTION_V1",
+  "superseded_run_id": 34025067640,
+  "superseded_head": "016e7646cae00e107ebecee4ff38d2ebae4e16fe",
+  "diagnostic_step_executed": true,
+  "validated_artifact_produced": false,
+  "diagnostic_result_admissible": false,
+  "private311_stability_result_observed": false,
+  "failure": "The aggregate artifact validator rejected legitimate aggregate schema vocabulary because the raw substring pattern project_[A-Za-z0-9] matches fields such as project_count. The aggregate JSON was therefore not uploaded or admitted.",
+  "authorized_correction": "Remove raw substring leakage scanning from the workflow validator and rely on the typed allowlisted validateAggregateReport contract plus the 8 KiB aggregate size ceiling. The report schema contains no arbitrary provider strings: status and stage are allowlisted and all other diagnostic values are numbers, booleans, null, fixed identity strings, or a fixed privacy envelope.",
+  "frozen_components": [
+    "PRIVATE312 provider diagnostic script",
+    "provider request sequence",
+    "session-create request body",
+    "stop-after-first-failed-stage rule",
+    "privacy envelope",
+    "PRIVATE311 exact-render contract and 20/20 threshold"
+  ],
+  "rerun_semantics": "The same diagnostic may be rerun solely to obtain the first validator-admitted aggregate artifact. It may not be repeated to obtain a more favorable stage outcome after an admitted artifact exists."
+}
