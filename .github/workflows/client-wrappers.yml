@@ -27,17 +27,35 @@ jobs:
   javascript:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: '22'
-      - run: node --test tests/client-wrappers.test.mjs tests/shadow-proof.test.mjs tests/deferred-observe.test.mjs
+      - name: Run wrapper suite with fleet shadow measurement
+        env:
+          SEENRELAY_FLEET_ROLE: client-wrappers
+          SEENRELAY_FLEET_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SEENRELAY_FLEET_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+          FLEET_SHADOW_PREFIX: fleet-wrapper-v2-shadow-client-wrappers
+        run: node scripts/fleet-wrapper-shadow.mjs
+      - name: Upload fleet wrapper shadow evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: fleet-wrapper-v2-shadow-client-wrappers
+          path: |
+            fleet-wrapper-v2-shadow-client-wrappers-measurement.json
+            fleet-wrapper-v2-shadow-client-wrappers-ledger.json
+            fleet-wrapper-v2-shadow-client-wrappers-summary.json
+            fleet-wrapper-v2-shadow-client-wrappers-benchmark.json
+            fleet-wrapper-v2-shadow-client-wrappers-evaluation.json
+          if-no-files-found: warn
+          retention-days: 90
 
   python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.13'
       - name: Install Python client with optional crypto test dependency
