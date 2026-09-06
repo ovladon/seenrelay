@@ -47,11 +47,17 @@ test('blocked report carries no diagnostic or measurement result', () => {
   assert.equal(r.highest_stage, 'NONE');
 });
 
-test('project-id create rejection is representable without provider body or identifiers', () => {
+test('project-id create rejection is representable without retaining secret values', () => {
   const r = report();
   assert.equal(validateAggregateReport(r), true);
+  const syntheticApiKey = 'bb_test_private312_secret_sentinel';
+  const syntheticProjectId = 'proj_private312_secret_sentinel';
+  const syntheticSessionId = 'sess_private312_secret_sentinel';
+  const syntheticConnectUrl = 'wss://private312-secret-sentinel.invalid';
   const encoded = JSON.stringify(r);
-  assert.doesNotMatch(encoded, /connectUrl|sessionId|project_[A-Za-z0-9]|api[_ -]?key/i);
+  for (const sentinel of [syntheticApiKey, syntheticProjectId, syntheticSessionId, syntheticConnectUrl]) {
+    assert.equal(encoded.includes(sentinel), false);
+  }
 });
 
 test('all-stages success remains diagnostic-only', () => {
