@@ -1,0 +1,98 @@
+name: Fable5 natural source lock
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  source-lock:
+    if: startsWith(github.head_ref, 'research/browser-natural-fable5-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lock requested Fable5 dataset revision without trace analysis
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import urllib.request
+
+          repo = 'AlinCiocan/fable-5-claude-code-traces'
+          requested = 'v1.0-full-scrubbed'
+          headers = {'User-Agent': 'seenrelay-private291-source-lock/1.0'}
+
+          def fetch(path):
+              url = f'https://huggingface.co/datasets/{repo}/resolve/{requested}/{path}?download=true'
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  body = response.read()
+                  resolved = response.headers.get('x-repo-commit') or response.headers.get('X-Repo-Commit')
+              if not body:
+                  raise SystemExit(f'empty source file: {path}')
+              return body, resolved
+
+          manifest, resolved_manifest = fetch('manifest.json')
+          readme, resolved_readme = fetch('README.md')
+          if not resolved_manifest or not resolved_readme or resolved_manifest != resolved_readme:
+              raise SystemExit(f'could not establish one immutable revision: manifest={resolved_manifest!r} readme={resolved_readme!r}')
+          if len(resolved_manifest) < 20:
+              raise SystemExit('resolved revision is not stable')
+
+          readme_text = readme.decode('utf-8', errors='strict')
+          normalized = readme_text.lower()
+          if 'license: cc-by-4.0' not in normalized and 'cc-by-4.0' not in normalized:
+              raise SystemExit('CC-BY-4.0 declaration not found in pinned README')
+          if 'not a benchmark' not in normalized:
+              raise SystemExit('publisher non-benchmark declaration not found in pinned README')
+
+          result = {
+              'schema': 'seenrelay-private291-fable5-source-lock-v1',
+              'dataset': repo,
+              'requested_revision': requested,
+              'resolved_revision': resolved_manifest,
+              'manifest_sha256': hashlib.sha256(manifest).hexdigest(),
+              'manifest_bytes': len(manifest),
+              'readme_sha256': hashlib.sha256(readme).hexdigest(),
+              'readme_bytes': len(readme),
+              'license': 'CC-BY-4.0',
+              'publisher_non_benchmark_declaration_present': True,
+              'trace_files_downloaded': False,
+              'analysis_performed': False,
+          }
+          with open('private291-source-lock.json', 'w', encoding='utf-8') as handle:
+              json.dump(result, handle, indent=2, sort_keys=True)
+              handle.write('\n')
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+
+      - name: Enforce source-lock-only boundary
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const lock = JSON.parse(fs.readFileSync('private291-source-lock.json', 'utf8'));
+          if (lock.schema !== 'seenrelay-private291-fable5-source-lock-v1') process.exit(1);
+          if (lock.dataset !== 'AlinCiocan/fable-5-claude-code-traces') process.exit(1);
+          if (lock.requested_revision !== 'v1.0-full-scrubbed') process.exit(1);
+          if (!/^[0-9a-f]{40,64}$/i.test(lock.resolved_revision)) process.exit(1);
+          if (!/^[0-9a-f]{64}$/i.test(lock.manifest_sha256)) process.exit(1);
+          if (!/^[0-9a-f]{64}$/i.test(lock.readme_sha256)) process.exit(1);
+          if (!(lock.manifest_bytes > 0 && lock.readme_bytes > 0)) process.exit(1);
+          if (lock.license !== 'CC-BY-4.0') process.exit(1);
+          if (lock.publisher_non_benchmark_declaration_present !== true) process.exit(1);
+          if (lock.trace_files_downloaded !== false) process.exit(1);
+          if (lock.analysis_performed !== false) process.exit(1);
+          NODE
+
+      - name: Upload source lock only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private291-fable5-source-lock
+          path: private291-source-lock.json
+          if-no-files-found: error
+          retention-days: 14
