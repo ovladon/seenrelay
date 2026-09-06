@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-09-06T14:28:20Z",
+  "updated_at": "2026-09-06T16:33:04Z",
   "positioning": {
     "category": "validation cost avoidance and shared freshness evidence for AI agents",
     "headline": "Avoid redundant expensive validation",
-    "subheadline": "Client 0.2.10 adds provider-independent Python Zero-State with caller-owned private L1, source-native conditional validation and authoritative fallback alongside the existing JavaScript/TypeScript path. Completed-result reuse remains opt-in through an explicit freshness window; shared CHECK remains optional.",
+    "subheadline": "Client 0.2.11 adds Python parity for bounded, sanitized natural-workload evidence and hostile economics evaluation while authoritative validation remains mandatory. Provider-independent Zero-State, caller-owned private L1, source-native validation and optional shared CHECK remain unchanged.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.10",
+    "client_version": "0.2.11",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-09-06T14:28:20Z",
-    "verification": "Client 0.2.10 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. Python now includes provider-independent Zero-State, caller-owned private L1 support, source-native conditional validation and authoritative fallback; the base Python package remains dependency-free and built-in AES-256-GCM support is available through the optional crypto extra. JavaScript/TypeScript and Python coordinate fingerprints agree for interoperable JSON values, while mixed-language private ciphertext compatibility remains caller-owned rather than implied."
+    "registry_install_verified_at": "2026-09-06T16:33:04Z",
+    "verification": "Client 0.2.11 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. Python Shadow Proof now supports bounded sanitized natural-workload evidence export and the packaged Python hostile economics evaluator, with authoritative validation always retained, ambiguous per-call timing attribution failing closed, and evaluator-driven automatic reuse remaining disabled. Provider-independent Zero-State and existing JavaScript/TypeScript behavior are otherwise unchanged."
   },
   "fit": {
     "use_when": [
@@ -167,6 +167,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-09-06",
+      "title": "Public client 0.2.11",
+      "summary": "SeenRelay 0.2.11 is published and independently clean-install verified on npm and PyPI. Python adds bounded sanitized natural-workload evidence parity and hostile economics evaluation; authoritative validation always runs during measurement, ambiguous per-call timing attribution fails closed, and the evaluator never enables reuse."
+    },
     {
       "date": "2026-09-06",
       "title": "Public client 0.2.10",

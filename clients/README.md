@@ -1,14 +1,14 @@
 # SeenRelay deterministic client wrappers
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.10 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.11 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-Client 0.2.10 is published and independently clean-install verified on npm and PyPI. JavaScript / TypeScript and Python include provider-independent Zero-State, multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. Python Zero-State supports explicit read-only in-flight/local reuse, caller-owned private L1 and source-native conditional validation before authoritative fallback. Shared evidence remains explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates remain local repetition keys unless a stable source-native locator supports a shared fact descriptor.
+Client 0.2.11 is published on npm and PyPI. JavaScript / TypeScript and Python include provider-independent Zero-State, multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. Python 0.2.11 also adds bounded sanitized natural-workload evidence export and hostile economics evaluation while authoritative validation remains mandatory. Shared evidence remains explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates remain local repetition keys unless a stable source-native locator supports a shared fact descriptor.
 
 The clients have two deliberately different execution modes:
 
@@ -28,9 +28,9 @@ The clients have two deliberately different execution modes:
 - Firecrawl active/local-first adapter: `seenrelay/firecrawl`
 - Firecrawl MCP measurement-only shadow pilot: `seenrelay/firecrawl-shadow`
 - Firecrawl JavaScript SDK measurement-only shadow pilot: `seenrelay/firecrawl-sdk-shadow`
-- Hostile benchmark evaluator: `seenrelay/economics`
+- Hostile benchmark evaluator: `seenrelay/economics` / `seenrelay_economics`
 
-The base clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.10` on npm and PyPI. Python's built-in AES-256-GCM private-L1 codec is optional through `seenrelay[crypto]`.
+The base clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.11` on npm and PyPI. Python's built-in AES-256-GCM private-L1 codec is optional through `seenrelay[crypto]`.
 
 ## Install
 
@@ -155,7 +155,7 @@ value = relay.guard(
 )
 ```
 
-The classic Python API and Python Ambient integrations remain shadow-first by default in 0.2.10. Python also has an explicit provider-independent Zero-State path for caller-controlled read-only validation, including caller-owned private L1 and source-native conditional validation. Active Ambient reuse, the JavaScript / TypeScript natural-workload collector, Firecrawl shadow pilots and packaged economics evaluator parity are not claimed for Python.
+The classic Python API and Python Ambient integrations remain shadow-first by default in 0.2.11. Python also has an explicit provider-independent Zero-State path for caller-controlled read-only validation. Python Shadow Proof can export bounded sanitized natural-workload evidence and `seenrelay_economics` can evaluate it against the best measured non-shared path; ambiguous per-call timing attribution fails closed and the evaluator never enables reuse. Active Ambient reuse and Firecrawl shadow pilots remain JavaScript / TypeScript-only.
 
 ## Shadow Proof
 
@@ -176,9 +176,9 @@ await proof.guard({
 console.log(proof.report({ avoidedValidationCost: 0.01 }));
 ```
 
-JavaScript / TypeScript keeps authoritative validation enabled and can export bounded, sanitized natural-workload records directly into the hostile benchmark input format. The export excludes fact identity, source, raw values and per-call timestamps. CHECK-unavailable calls remain in the sample; an observed mismatch fails safety evidence, and an unavailable deterministic comparison leaves the evidence incomplete rather than safe.
+JavaScript / TypeScript and Python keep authoritative validation enabled and can export bounded, sanitized natural-workload records into the same schema-v2 hostile benchmark input format. The export excludes fact identity, source, raw values and per-call timestamps. CHECK-unavailable calls remain in the sample; an observed mismatch fails safety evidence, and an unavailable deterministic comparison leaves the evidence incomplete rather than safe.
 
-The current JavaScript / TypeScript client can evaluate that format directly through `seenrelay/economics`. The evaluator reports evidence only and never enables reuse.
+JavaScript / TypeScript evaluates that format through `seenrelay/economics`; Python 0.2.11 provides `seenrelay_economics`. Both evaluators report evidence only and never enable reuse.
 
 Potential direct savings count only measured `SAME_OBSERVED` cases. Conditional ETag / Last-Modified savings remain excluded until the consuming application measures them separately.
 
