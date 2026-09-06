@@ -3,11 +3,14 @@ name: SWE-chat full browser overlap OIDC (PRIVATE304)
 on:
   pull_request:
     branches:
-      - research/browser-natural-swechat-full-v1
+      - research/browser-natural-swechat-full-oidc-v1
     paths:
-      - preregistration/PRIVATE304_SWECHAT_FULL_BROWSER_OVERLAP_OIDC_V1.json
+      - preregistration/PRIVATE310_SWECHAT_FULL_BROWSER_OVERLAP_DEDUP_ORDER_V1.json
+      - scripts/run-private302-swechat-full-overlap.py
       - scripts/prepare-private304-hf-oidc.py
       - scripts/run-private304-swechat-full-overlap.py
+      - tests/private302-swechat-full-overlap.test.py
+      - tests/private302-swechat-overlap-core.test.mjs
       - tests/private304-hf-oidc.test.py
       - .github/workflows/swechat-full-browser-overlap-oidc.yml
 
@@ -17,7 +20,7 @@ permissions:
 
 jobs:
   overlap-oidc:
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'research/browser-natural-swechat-full-oidc-v1' }}
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'research/private310-swechat-dedup-order-v1' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -35,7 +38,7 @@ jobs:
           node-version: '22'
 
       - name: Initialize transient Hugging Face cache
-        run: echo "HF_HOME=$RUNNER_TEMP/private304-hf" >> "$GITHUB_ENV"
+        run: echo "HF_HOME=$RUNNER_TEMP/private310-hf" >> "$GITHUB_ENV"
 
       - name: Install pinned frozen measurement dependencies
         run: python -m pip install --disable-pip-version-check huggingface_hub==0.35.3 pyarrow==21.0.0
@@ -43,20 +46,20 @@ jobs:
       - name: Re-run frozen PRIVATE302 Node tests
         run: node --test tests/private302-swechat-overlap-core.test.mjs
 
-      - name: Re-run frozen PRIVATE302 extraction tests
+      - name: Run corrected PRIVATE302 extraction tests
         run: python tests/private302-swechat-full-overlap.test.py
 
-      - name: Run frozen PRIVATE304 OIDC tests
+      - name: Re-run frozen PRIVATE304 OIDC tests
         run: python tests/private304-hf-oidc.test.py
 
       - name: Attempt preregistered Hugging Face user OIDC exchange
-        run: python scripts/prepare-private304-hf-oidc.py --blocked-output private304-swechat-full-browser-overlap-oidc.json
+        run: python scripts/prepare-private304-hf-oidc.py --blocked-output private310-swechat-full-browser-overlap.json
 
-      - name: Execute unchanged frozen SWE-chat measurement when OIDC is ready
+      - name: Execute frozen overlap measurement with PRIVATE310 extraction correction
         if: ${{ env.PRIVATE304_OIDC_READY == 'true' }}
-        run: python scripts/run-private304-swechat-full-overlap.py --output private304-swechat-full-browser-overlap-oidc.json
+        run: python scripts/run-private304-swechat-full-overlap.py --output private310-swechat-full-browser-overlap.json > "$RUNNER_TEMP/private310-measurement-stdout.txt"
 
-      - name: Enforce aggregate-only PRIVATE304 report
+      - name: Enforce aggregate-only PRIVATE310 report
         shell: bash
         run: |
           python - <<'PY'
@@ -64,7 +67,8 @@ jobs:
           import math
           from pathlib import Path
 
-          r = json.loads(Path('private304-swechat-full-browser-overlap-oidc.json').read_text(encoding='utf-8'))
+          path = Path('private310-swechat-full-browser-overlap.json')
+          r = json.loads(path.read_text(encoding='utf-8'))
           EXPECTED_SOURCE = {
               'dataset': 'SALT-NLP/SWE-chat',
               'resolved_revision': 'f66cca95b14caaa4177f7ed5eaa424608dadcffa',
@@ -99,15 +103,15 @@ jobs:
               raise SystemExit('source lock mismatch')
           walk(r)
 
-          if set(r.get('authentication', {})) != {
+          auth = r.get('authentication', {})
+          if set(auth) != {
               'method','oidc_exchange_succeeded','authorized_content_access_succeeded',
               'static_hf_token_used','gate_bypass_attempted','fallback_dataset_used'
           }:
               raise SystemExit('authentication schema mismatch')
-          a = r['authentication']
-          if a['method'] != 'HUGGING_FACE_USER_CICD_OIDC':
+          if auth['method'] != 'HUGGING_FACE_USER_CICD_OIDC':
               raise SystemExit('authentication method mismatch')
-          if a['static_hf_token_used'] is not False or a['gate_bypass_attempted'] is not False or a['fallback_dataset_used'] is not False:
+          if auth['static_hf_token_used'] is not False or auth['gate_bypass_attempted'] is not False or auth['fallback_dataset_used'] is not False:
               raise SystemExit('forbidden authentication behavior')
 
           expected_privacy = {
@@ -128,37 +132,33 @@ jobs:
 
           status = r.get('status')
           if status in BLOCKED_NO_EXCHANGE:
-              if r.get('measurement_performed') is not False or a['oidc_exchange_succeeded'] is not False or a['authorized_content_access_succeeded'] is not False:
-                  raise SystemExit('pre-exchange blocked result flags mismatch')
+              if r.get('measurement_performed') is not False or auth['oidc_exchange_succeeded'] is not False or auth['authorized_content_access_succeeded'] is not False:
+                  raise SystemExit('pre-exchange blocked flags mismatch')
               if set(r) != {'schema','status','measurement_performed','source','authentication','interpretation','privacy'}:
                   raise SystemExit('blocked report has unexpected fields')
               raise SystemExit(0)
 
           if status in BLOCKED_AFTER_EXCHANGE:
-              if r.get('measurement_performed') is not False or a['oidc_exchange_succeeded'] is not True or a['authorized_content_access_succeeded'] is not False:
-                  raise SystemExit('post-exchange blocked result flags mismatch')
+              if r.get('measurement_performed') is not False or auth['oidc_exchange_succeeded'] is not True or auth['authorized_content_access_succeeded'] is not False:
+                  raise SystemExit('post-exchange blocked flags mismatch')
               if set(r) != {'schema','status','measurement_performed','source','authentication','interpretation','privacy'}:
                   raise SystemExit('blocked report has unexpected fields')
               raise SystemExit(0)
 
           if status != 'MEASURED' or r.get('measurement_performed') is not True:
               raise SystemExit('unknown result status')
-          if a['oidc_exchange_succeeded'] is not True or a['authorized_content_access_succeeded'] is not True:
+          if auth['oidc_exchange_succeeded'] is not True or auth['authorized_content_access_succeeded'] is not True:
               raise SystemExit('measured result lacks authorized OIDC access')
           if set(r) != {'schema','status','measurement_performed','source','authentication','extraction','overlap','interpretation','privacy'}:
               raise SystemExit('measured report has unexpected fields')
 
           e = r['extraction']
-          if set(e) != {
-              'selected_webfetch_rows_before_physical_dedup',
-              'duplicate_physical_webfetch_records_removed',
-              'unique_physical_webfetch_calls'
+          if e != {
+              'selected_webfetch_rows_before_physical_dedup': 882,
+              'duplicate_physical_webfetch_records_removed': 1,
+              'unique_physical_webfetch_calls': 881,
           }:
-              raise SystemExit('extraction fields mismatch')
-          if any(not isinstance(v, int) or isinstance(v, bool) or v < 0 for v in e.values()):
-              raise SystemExit('invalid extraction count')
-          if e['selected_webfetch_rows_before_physical_dedup'] != e['duplicate_physical_webfetch_records_removed'] + e['unique_physical_webfetch_calls']:
-              raise SystemExit('physical dedup accounting mismatch')
+              raise SystemExit('extraction geometry differs from frozen PRIVATE309 result')
 
           o = r['overlap']
           expected_overlap = {
@@ -170,8 +170,8 @@ jobs:
           }
           if set(o) != expected_overlap or o.get('schema') != 'seenrelay-private302-swechat-overlap-core-v1':
               raise SystemExit('frozen overlap-core schema mismatch')
-          if o['physical_webfetch_calls_seen'] != e['unique_physical_webfetch_calls']:
-              raise SystemExit('core/extraction count mismatch')
+          if o['physical_webfetch_calls_seen'] != 881:
+              raise SystemExit('overlap core did not receive exactly the deduplicated physical population')
 
           counts = [
               'source_sessions_with_webfetch','physical_webfetch_calls_seen','eligible_http_webfetch_calls',
@@ -184,7 +184,7 @@ jobs:
           rejected = o['rejected_calls']
           if set(rejected) != {'missing_url','invalid_url','non_http_url','missing_prompt'} or any(not isinstance(v, int) or isinstance(v, bool) or v < 0 for v in rejected.values()):
               raise SystemExit('rejection accounting invalid')
-          if o['eligible_http_webfetch_calls'] + sum(rejected.values()) != o['physical_webfetch_calls_seen']:
+          if o['eligible_http_webfetch_calls'] + sum(rejected.values()) != 881:
               raise SystemExit('eligibility accounting mismatch')
           if o['exact_repeat_calls_any_session'] != o['eligible_http_webfetch_calls'] - o['unique_exact_operation_keys']:
               raise SystemExit('exact repeat accounting mismatch')
@@ -225,16 +225,17 @@ jobs:
               raise SystemExit('overlap privacy flags changed')
           PY
 
-      - name: Delete transient OIDC token and Hugging Face cache
+      - name: Delete transient OIDC token, stdout and Hugging Face cache
         if: always()
         run: |
           rm -f "${PRIVATE304_HF_TOKEN_FILE:-$RUNNER_TEMP/private304-hf-token}"
-          rm -rf "${HF_HOME:-$RUNNER_TEMP/private304-hf}"
+          rm -f "$RUNNER_TEMP/private310-measurement-stdout.txt"
+          rm -rf "${HF_HOME:-$RUNNER_TEMP/private310-hf}"
 
-      - name: Upload aggregate PRIVATE304 result only
+      - name: Upload aggregate PRIVATE310 result only
         uses: actions/upload-artifact@v4
         with:
-          name: private304-swechat-full-browser-overlap-oidc
-          path: private304-swechat-full-browser-overlap-oidc.json
+          name: private310-swechat-full-browser-overlap
+          path: private310-swechat-full-browser-overlap.json
           retention-days: 14
           if-no-files-found: error
