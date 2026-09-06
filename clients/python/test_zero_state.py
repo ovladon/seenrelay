@@ -103,6 +103,24 @@ class ZeroStateTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(observed, {"If-None-Match":"\"abc\""})
         self.assertEqual(second.get_telemetry()["edge"]["source_not_modified_hits"], 1)
 
+    async def test_future_confirmed_private_entry_from_clock_skew_fails_closed(self):
+        store = MemoryStore()
+        codec = create_aes_gcm_private_codec(os.urandom(32))
+        ahead = SeenRelayZeroState(private_store=store, private_codec=codec, private_max_age_ms=1000, now=lambda: 2000.0)
+        await ahead.guard(coordinate={"id":"skew"}, validate=lambda _headers=None: fresh_result({"v":1}, {"etag":"\"v1\""}))
+        behind = SeenRelayZeroState(private_store=store, private_codec=codec, private_max_age_ms=1000, now=lambda: 1000.0)
+        calls = 0
+        async def validate(headers):
+            nonlocal calls
+            calls += 1
+            self.assertEqual(headers, {})
+            return {"v":2}
+        value = await behind.guard(coordinate={"id":"skew"}, validate=validate)
+        self.assertEqual(value, {"v":2})
+        self.assertEqual(calls, 1)
+        self.assertEqual(behind.get_telemetry()["edge"]["private_fresh_hits"], 0)
+        self.assertEqual(behind.get_telemetry()["edge"]["source_conditional_attempts"], 0)
+
     async def test_expired_validator_state_cannot_authorize_not_modified_reuse(self):
         now = [1000.0]
         edge = SeenRelayZeroState(local_max_age_ms=0, validator_retention_ms=50, now=lambda: now[0])
