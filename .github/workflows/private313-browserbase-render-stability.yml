@@ -1,9 +1,9 @@
-name: PRIVATE313 Browserbase Render Stability v2
+name: PRIVATE315 Browserbase Render Stability v2 with 429 Retry
 
 on:
   push:
     branches:
-      - research/browserbase-rendered-state-stability-v2
+      - research/browserbase-rendered-state-stability-v2-rate-limit-v1
 
 permissions:
   contents: read
@@ -23,26 +23,34 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$GITHUB_REF_NAME" = 'research/browserbase-rendered-state-stability-v2'
+          test "$GITHUB_REF_NAME" = 'research/browserbase-rendered-state-stability-v2-rate-limit-v1'
 
       - name: Use Node.js 22
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: '22'
 
-      - name: Validate preregistration
+      - name: Validate preregistration and amendment
         shell: bash
         run: |
           set -euo pipefail
           node - <<'NODE'
           const fs = require('fs');
           const p = JSON.parse(fs.readFileSync('preregistration/PRIVATE313_BROWSERBASE_RENDERED_STATE_STABILITY_V2.json','utf8'));
+          const a = JSON.parse(fs.readFileSync('preregistration/PRIVATE315_BROWSERBASE_429_TRANSPORT_AMENDMENT_V1.json','utf8'));
           if (p.experiment_id !== 'PRIVATE313') process.exit(1);
           if (p.production_source_commit !== '2cc216207044f55b27aced00aa0baa5af738ba62') process.exit(1);
           if (p.frozen_target_contract?.selector !== '.rv-mechanism') process.exit(1);
           if (p.thresholds?.exact_stability_pass_numerator !== 20 || p.thresholds?.exact_stability_pass_denominator !== 20) process.exit(1);
           if (p.thresholds?.fuzzy_or_perceptual_matching_allowed !== false) process.exit(1);
-          if (p.selection_provenance?.screenshots_observed_before_freeze !== false || p.selection_provenance?.render_digests_observed_before_freeze !== false) process.exit(1);
+          if (a.experiment_id !== 'PRIVATE315') process.exit(1);
+          if (a.parent_exact_head !== 'fe114669bcf5e5c29e2ba10e5ffad96af9e6fdec') process.exit(1);
+          if (a.diagnostic_evidence?.exact_head !== '3380f393f1da57fd08486d55dec760e408231cff') process.exit(1);
+          if (a.diagnostic_evidence?.first_create_failure_http_status !== 429 || a.diagnostic_evidence?.retry_after_seconds !== 48) process.exit(1);
+          if (a.authorized_change?.retry_only_http_status !== 429 || a.authorized_change?.maximum_retries_per_capture !== 5) process.exit(1);
+          if (a.authorized_change?.retry_non_429 !== false) process.exit(1);
+          if (a.unchanged_parent_contract?.target_selector !== '.rv-mechanism' || a.unchanged_parent_contract?.required_captures !== 20) process.exit(1);
+          if (a.unchanged_parent_contract?.fuzzy_or_perceptual_matching_allowed !== false) process.exit(1);
           NODE
 
       - name: Run hostile synthetic tests
@@ -58,7 +66,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/private313-browserbase-render-stability.mjs > "$RUNNER_TEMP/private313-run-summary.json"
+          node scripts/private313-browserbase-render-stability.mjs > "$RUNNER_TEMP/private315-run-summary.json"
 
       - name: Validate aggregate artifact contract
         shell: bash
@@ -81,12 +89,12 @@ jobs:
         run: |
           rm -rf node_modules
           git checkout -- package-lock.json 2>/dev/null || true
-          rm -f "$RUNNER_TEMP/private313-run-summary.json" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/private315-run-summary.json" 2>/dev/null || true
 
       - name: Upload validated aggregate only
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: private313-browserbase-render-stability-${{ github.run_id }}
+          name: private315-browserbase-render-stability-${{ github.run_id }}
           path: private313-browserbase-render-stability.json
           if-no-files-found: error
           retention-days: 14
