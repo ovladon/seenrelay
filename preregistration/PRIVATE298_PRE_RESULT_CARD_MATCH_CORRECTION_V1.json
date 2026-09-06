@@ -1,0 +1,30 @@
+{
+  "schema": "seenrelay-private298-pre-result-card-match-correction-v1",
+  "status": "recorded_before_any_sessions_jsonl_identity_result",
+  "affected_run": {
+    "workflow_run_id": 33995995557,
+    "head_sha": "c153051944903c78737ddd459e5c8b2500989d10",
+    "frozen_tests_passed": true,
+    "sessions_jsonl_download_or_analysis_reached": false,
+    "aggregate_validator_ran": false,
+    "aggregate_artifact_uploaded": false,
+    "failure": "Historical README semantic declarations were checked with overly rigid whole-string fragments."
+  },
+  "correction": {
+    "historical_revision_prefix_changed": false,
+    "expected_session_count_changed": false,
+    "expected_source_changed": false,
+    "session_identity_rule_changed": false,
+    "duplicate_safety_rule_changed": false,
+    "decision_rule_changed": false,
+    "tool_or_message_analysis_enabled": false,
+    "overlap_enabled": false,
+    "license_check": "Use Hugging Face card metadata license=mit at the resolved historical revision rather than requiring a literal YAML substring in README text.",
+    "readme_check": "Require the same semantic declarations as atomic case-insensitive fragments: 73 real coding sessions, OpenAI Codex, pi-brain, v0.1.0, ~/.codex/sessions/, 73 sessions, and full trajectories."
+  },
+  "interpretation": {
+    "failed_run_is_not_a_private298_identity_result": true,
+    "no_session_identity_counts_were_observed": true,
+    "fresh_run_on_corrected_matcher_required": true
+  }
+}
