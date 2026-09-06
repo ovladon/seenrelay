@@ -5,7 +5,7 @@ SeenRelay is a reuse layer for repeated read-only validation.
 It sits in front of validation work an AI agent or application already performs. For an exact eligible repeat, it can use caller-owned local/private reuse, source-native freshness confirmation, or optional shared CHECK evidence. If none of those paths is sufficient, the original validation runs normally.
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.9 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.10 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
@@ -52,7 +52,7 @@ Run the existing workload and inspect the report before enabling any bounded reu
 
 SeenRelay has exactly two hosted domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
 
-JavaScript/TypeScript and Python 0.2.9 add multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. JavaScript/TypeScript keeps Zero-State local-first; Python remains shadow-first by default. Shared evidence is explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates are local repetition keys unless a stable source-native locator supports a shared fact descriptor. Provider-specific adapters are optional.
+JavaScript/TypeScript and Python 0.2.10 include multi-signal shared-evidence assurance helpers, deterministic Fact Coordinate Kit v1 and provider-independent Zero-State. Python Zero-State now supports explicit read-only in-flight/local reuse, caller-owned private L1 and source-native conditional validation before authoritative fallback. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence is explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates are local repetition keys unless a stable source-native locator supports a shared fact descriptor. Provider-specific adapters are optional.
 
 ## What it can avoid
 
