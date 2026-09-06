@@ -34,13 +34,13 @@ jobs:
           npm run audit:all
           node scripts/run-structural-remainder.mjs
           npm run test:runtime
-      - name: Measure fleet wrapper shadow
+      - name: Run natural fleet eligibility firewall
         env:
           SEENRELAY_FLEET_ROLE: ci
           SEENRELAY_FLEET_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           SEENRELAY_FLEET_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
           FLEET_SHADOW_PREFIX: fleet-wrapper-v2-shadow-ci
-        run: node scripts/fleet-wrapper-shadow.mjs
+        run: node scripts/run-fleet-wrapper-natural.mjs
       - name: Upload fleet wrapper shadow evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
