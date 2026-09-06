@@ -20,6 +20,10 @@ class BenchmarkFakeClient:
 
     def reset_telemetry(self):
         self.telemetry = SimpleNamespace(
+            guard_calls=0,
+            check_calls=0,
+            validation_calls=0,
+            observe_attempts=0,
             check_network_requests=0,
             check_network_latency_ms_total=0.0,
             check_network_latency_ms_average=0.0,
@@ -35,6 +39,8 @@ class BenchmarkFakeClient:
         if reuse is not None:
             raise AssertionError("Shadow Proof must force reuse=None")
         entry = self.entries.pop(0)
+        self.telemetry.guard_calls += 1 + entry.get("extra_guard_calls", 0)
+        self.telemetry.check_calls += 1 + entry.get("extra_check_calls", 0)
         check_requests = entry.get("check_requests", 1)
         self.telemetry.check_network_requests += check_requests
         self.telemetry.check_network_latency_ms_total += entry.get("check_ms", 2.0)
@@ -43,7 +49,9 @@ class BenchmarkFakeClient:
                 self.telemetry.check_network_latency_ms_total / self.telemetry.check_network_requests
             )
         check = entry.get("check")
+        self.telemetry.validation_calls += 1 + entry.get("extra_validation_calls", 0)
         value = validate(SimpleNamespace(check=check, conditional_headers={}))
+        self.telemetry.observe_attempts += 1 + entry.get("extra_observe_attempts", 0)
         observe_requests = entry.get("observe_requests", 1)
         self.telemetry.observe_network_requests += observe_requests
         self.telemetry.observe_network_latency_ms_total += entry.get("observe_ms", 3.0)
@@ -113,9 +121,18 @@ class PythonShadowBenchmarkParityTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             proof.hostile_benchmark_input(controls=CONTROLS)
 
-    def test_concurrent_telemetry_attribution_fails_closed(self):
+    def test_multiple_network_requests_make_timing_attribution_fail_closed(self):
         proof = SeenRelayShadowProof(BenchmarkFakeClient([
             {"check": {"status": "UNKNOWN"}, "check_requests": 2, "check_ms": 4}
+        ]))
+        proof.guard(fact={}, known_value=1, validate=lambda _ctx: 1, benchmark={})
+        self.assertIn("ambiguous_per_call_relay_timings", proof.benchmark_snapshot()["invalid_reasons"])
+        with self.assertRaises(RuntimeError):
+            proof.hostile_benchmark_input(controls=CONTROLS)
+
+    def test_interfering_guard_scope_fails_closed_even_with_one_network_request(self):
+        proof = SeenRelayShadowProof(BenchmarkFakeClient([
+            {"check": {"status": "UNKNOWN"}, "extra_guard_calls": 1}
         ]))
         proof.guard(fact={}, known_value=1, validate=lambda _ctx: 1, benchmark={})
         self.assertIn("ambiguous_per_call_relay_timings", proof.benchmark_snapshot()["invalid_reasons"])
