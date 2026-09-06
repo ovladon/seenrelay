@@ -1,0 +1,73 @@
+{
+  "schema": "seenrelay-preregistration-v1",
+  "experiment_id": "PRIVATE315",
+  "title": "Browserbase 429-only transport amendment for PRIVATE313",
+  "parent_experiment": "PRIVATE313",
+  "parent_exact_head": "fe114669bcf5e5c29e2ba10e5ffad96af9e6fdec",
+  "diagnostic_evidence": {
+    "experiment": "PRIVATE314",
+    "exact_head": "3380f393f1da57fd08486d55dec760e408231cff",
+    "workflow_run": 34025913342,
+    "artifact_id": 9987039744,
+    "artifact_digest": "sha256:8dec7da6761671e390adf940d0e576ed283f3c9cd6ca3c8bfaeda2967e777370",
+    "attempted_create_count": 6,
+    "successful_create_count": 5,
+    "cdp_connect_success_count": 5,
+    "release_attempt_count": 5,
+    "first_create_failure_http_status": 429,
+    "first_create_failure_class": "RATE_LIMIT_429",
+    "retry_after_present": true,
+    "retry_after_seconds": 48,
+    "measurement_performed": false
+  },
+  "authorized_change": {
+    "scope": "Browserbase session-create transport only",
+    "function": "createBrowserbaseSession",
+    "retry_only_http_status": 429,
+    "maximum_retries_per_capture": 5,
+    "maximum_total_create_attempts_per_capture": 6,
+    "integer_retry_after_policy": "wait clamp(Retry-After seconds, 1, 60)",
+    "fallback_retry_delays_seconds_by_retry_index": [2, 4, 8, 16, 32],
+    "read_provider_body_on_429": false,
+    "retry_non_429": false,
+    "after_final_429": "fail closed as SESSION_CREATE failure"
+  },
+  "unchanged_parent_contract": {
+    "production_source_commit": "2cc216207044f55b27aced00aa0baa5af738ba62",
+    "target_url": "https://seenrelay.com/",
+    "target_selector": ".rv-mechanism",
+    "required_captures": 20,
+    "exact_digest": "sha256 over exact locator PNG bytes",
+    "exact_pass_threshold": "20/20 identical",
+    "any_complete_admissible_mismatch_kills_v2": true,
+    "source_and_deployment_invariance_controls": "unchanged",
+    "browser_version_invariance_control": "unchanged",
+    "aggregate_output_schema": "unchanged",
+    "privacy_contract": "unchanged",
+    "fuzzy_or_perceptual_matching_allowed": false,
+    "semantic_embedding_or_llm_rescue_allowed": false,
+    "seenrelay_check_or_observe_allowed": false
+  },
+  "result_admission": {
+    "first_successful_measured_aggregate_under_private315_is_canonical": true,
+    "incomplete_or_inadmissible_run_consumes_numeric_result": false,
+    "rerun_to_improve_measured_result_allowed": false
+  },
+  "post_result_interpretation": {
+    "EXACT_RENDER_STABLE_CANDIDATE_V2": "Authorize only a separate preregistered economics/safety experiment. Do not infer natural overlap or adoption.",
+    "KILL_EXACT_VISUAL_DIGEST_V2": "Stop exact PNG rendered-state identity for this target. No fuzzy/perceptual rescue.",
+    "SESSION_CREATE_retry_exhausted": "Do not increase retry count or delay post hoc. A separate diagnostic/preregistration would be required.",
+    "other_incomplete_or_inadmissible": "No stability conclusion and no partial digest interpretation."
+  },
+  "non_authorizations": [
+    "No render identity change.",
+    "No source contract change.",
+    "No 20/20 threshold change.",
+    "No output-schema relaxation.",
+    "No retries for non-429 statuses.",
+    "No Browserbase plan upgrade or purchase.",
+    "No SeenRelay CHECK or OBSERVE.",
+    "No production change.",
+    "No external-adoption or generalization claim."
+  ]
+}
