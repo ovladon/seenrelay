@@ -59,7 +59,7 @@ def _reject_lossy_integers(value: Any, path: str = "coordinate", active: Optiona
             if not math.isfinite(as_float) or int(as_float) != value:
                 raise TypeError(f"{path} integer is not exactly representable as a JavaScript number")
         return
-    if isinstance(value, list):
+    if isinstance(value, (list, tuple)):
         oid = id(value)
         if oid in active:
             raise TypeError(f"{path} must not be cyclic")
@@ -308,11 +308,11 @@ class SeenRelayZeroState:
 
     @staticmethod
     def _fresh(entry: Optional[_Entry], max_age_ms: float, now_ms: float) -> bool:
-        return bool(entry and max_age_ms > 0 and now_ms - entry.confirmed_at_ms <= max_age_ms)
+        return bool(entry and max_age_ms > 0 and 0 <= now_ms - entry.confirmed_at_ms <= max_age_ms)
 
     @staticmethod
     def _retained(entry: Optional[_Entry], retention_ms: float, now_ms: float) -> bool:
-        return bool(entry and entry.source_validator and retention_ms > 0 and now_ms - entry.confirmed_at_ms <= retention_ms)
+        return bool(entry and entry.source_validator and retention_ms > 0 and 0 <= now_ms - entry.confirmed_at_ms <= retention_ms)
 
     async def _read_private(self, key: str) -> Optional[_Entry]:
         if self.private_store is None:
