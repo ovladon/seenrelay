@@ -97,7 +97,8 @@ grep -q 'ambientMcpClient(rawMcpClient)' /tmp/llms.txt
 grep -q 'client.seenRelayAmbient.getReport()' /tmp/llms.txt
 grep -q 'ambient_mcp_client(raw_mcp_client)' /tmp/llms.txt
 grep -q 'client.get_report()' /tmp/llms.txt
-grep -q "Python ${client_version} remains shadow-first" /tmp/llms.txt
+grep -q "Python ${client_version} includes an explicit provider-independent Zero-State path" /tmp/llms.txt
+grep -q "classic Python API and Python Ambient adapters remain shadow-first" /tmp/llms.txt
 ! grep -q '0.2.1' /tmp/llms.txt
 grep -q 'Shared CHECK is off by default' /tmp/llms.txt
 grep -q '## Verified measured results' /tmp/llms.txt

@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-09-01T13:32:16Z",
+  "updated_at": "2026-09-06T14:28:20Z",
   "positioning": {
     "category": "validation cost avoidance and shared freshness evidence for AI agents",
     "headline": "Avoid redundant expensive validation",
-    "subheadline": "Client 0.2.9 adds multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1 alongside Ambient framework integrations and local-first validation surfaces. Shared evidence remains explicit caller policy and does not establish truth or independent real-world actors.",
+    "subheadline": "Client 0.2.10 adds provider-independent Python Zero-State with caller-owned private L1, source-native conditional validation and authoritative fallback alongside the existing JavaScript/TypeScript path. Completed-result reuse remains opt-in through an explicit freshness window; shared CHECK remains optional.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.9",
+    "client_version": "0.2.10",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-09-01T13:32:16Z",
-    "verification": "Client 0.2.9 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. JavaScript/TypeScript and Python include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. Shared evidence remains explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates remain local repetition keys unless a stable source-native locator supports a shared fact descriptor."
+    "registry_install_verified_at": "2026-09-06T14:28:20Z",
+    "verification": "Client 0.2.10 was published to npm and PyPI through trusted publishing and independently clean-install verified from both public registries. Python now includes provider-independent Zero-State, caller-owned private L1 support, source-native conditional validation and authoritative fallback; the base Python package remains dependency-free and built-in AES-256-GCM support is available through the optional crypto extra. JavaScript/TypeScript and Python coordinate fingerprints agree for interoperable JSON values, while mixed-language private ciphertext compatibility remains caller-owned rather than implied."
   },
   "fit": {
     "use_when": [
@@ -168,6 +168,11 @@
   },
   "latest_verified_updates": [
     {
+      "date": "2026-09-06",
+      "title": "Public client 0.2.10",
+      "summary": "SeenRelay 0.2.10 is published and independently clean-install verified on npm and PyPI. Python adds provider-independent Zero-State with caller-owned private L1, source-native conditional validation and authoritative fallback; the base package remains dependency-free and AES-256-GCM support is optional. JavaScript/TypeScript and Python both fail closed on negative-age private entries caused by worker clock skew."
+    },
+    {
       "date": "2026-09-01",
       "title": "Public client 0.2.9",
       "summary": "SeenRelay 0.2.9 is published and independently clean-install verified on npm and PyPI. JavaScript/TypeScript and Python add multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. Shared evidence remains explicit caller policy and does not establish truth or independent real-world actors."
@@ -195,7 +200,7 @@
     {
       "date": "2026-08-30",
       "title": "Public client 0.2.4",
-      "summary": "SeenRelay 0.2.4 is published on npm and PyPI. JavaScript/TypeScript adds a measurement-only Firecrawl shadow pilot and a packaged hostile benchmark evaluator; Firecrawl remains authoritative during measurement, provider-cache hits are not relabeled as independent observations, and the evaluator never enables automatic reuse. Python remains shadow-first."
+      "summary": "SeenRelay 0.2.4 is published on npm and PyPI. JavaScript/TypeScript adds a measurement-only Firecrawl shadow pilot and a packaged hostile benchmark evaluator; Firecrawl remains authoritative during measurement, provider-cache hits are not relabeled as independent observations, and the evaluator never enables reuse. Python remains shadow-first."
     },
     {
       "date": "2026-08-29",

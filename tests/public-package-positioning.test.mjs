@@ -43,7 +43,7 @@ test('machine guidance preserves canonical install facts before integration guid
   const adoption = read('src', 'adoption.ts');
   const view = read('src', 'public-facts-view.ts');
   const factsIndex = adoption.indexOf('${machinePublicFactsText(origin)}');
-  const integrationIndex = adoption.indexOf('## Preferred JavaScript / TypeScript order');
+  const integrationIndex = adoption.indexOf('## Preferred Zero-State order');
   assert.ok(factsIndex >= 0 && integrationIndex > factsIndex, 'canonical install facts must precede integration guidance');
   assert.match(view, /## Public install/);
   assert.match(view, /Client version:/);

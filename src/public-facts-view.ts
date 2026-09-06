@@ -11,7 +11,7 @@ function esc(value: unknown): string {
 export function publicInstallHtml(): string {
   const f = publicProductFacts;
   return `<section class="section split decision" id="install">
-<div><div class="eyebrow">PUBLIC INSTALL · CLIENT v${esc(f.install.client_version)}</div><h2>Two commands. Zero runtime dependencies.</h2><p>No SeenRelay account or API key is required. The public npm and PyPI packages were clean-install verified from their registries before this claim was published.</p></div>
+<div><div class="eyebrow">PUBLIC INSTALL · CLIENT v${esc(f.install.client_version)}</div><h2>Two commands. Zero required base runtime dependencies.</h2><p>No SeenRelay account or API key is required. The public npm and PyPI packages were clean-install verified from their registries before this claim was published.</p></div>
 <div class="terminal"><pre>${esc(f.install.npm_command)}
 
 # or
@@ -87,7 +87,7 @@ export function machinePublicFactsText(origin: string): string {
     })
     .filter(Boolean)
     .join('\n');
-  return `## Public install\n\n- JavaScript / TypeScript: ${f.install.npm_command}\n- Python: ${f.install.pypi_command}\n- Client version: ${f.install.client_version}\n- Runtime dependencies: ${f.install.runtime_dependencies}\n- Account/API key required: no\n- Current SeenRelay API fee: $0\n\n## Verified measured results\n\n${measured || '- No verified benchmark currently published.'}\n- These are controlled measurements, not promised natural-world reuse rates.\n- Canonical machine-readable product facts: ${origin}/product-facts.json\n- Full measured-result interpretation: https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md\n`;
+  return `## Public install\n\n- JavaScript / TypeScript: ${f.install.npm_command}\n- Python: ${f.install.pypi_command}\n- Client version: ${f.install.client_version}\n- Required base runtime dependencies: ${f.install.runtime_dependencies}\n- Account/API key required: no\n- Current SeenRelay API fee: $0\n\n## Verified measured results\n\n${measured || '- No verified benchmark currently published.'}\n- These are controlled measurements, not promised natural-world reuse rates.\n- Canonical machine-readable product facts: ${origin}/product-facts.json\n- Full measured-result interpretation: https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md\n`;
 }
 export function productFactsForOrigin(origin: string) {
   return {

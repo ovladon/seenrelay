@@ -139,7 +139,7 @@ ${latestVerifiedHtml()}
 </section>
 
 <section class="section split">
-<div><div class="eyebrow">ZERO-STATE</div><h2>Works without shared network data.</h2><p>JavaScript/TypeScript ${publicProductFacts.install.client_version} starts with in-process reuse, explicit-TTL L0, optional encrypted caller-owned L1 and source-native checks. Shared CHECK is off by default.</p><p>Completed-result TTL defaults to zero. SeenRelay does not invent freshness or infer that a tool is safe to suppress.</p></div>
+<div><div class="eyebrow">ZERO-STATE</div><h2>Works without shared network data.</h2><p>JavaScript/TypeScript and Python ${publicProductFacts.install.client_version} support provider-independent Zero-State with in-process reuse, explicit-TTL local reuse, optional caller-owned private L1 and source-native checks. Shared CHECK is off by default.</p><p>Completed-result TTL defaults to zero. SeenRelay does not invent freshness or infer that a tool is safe to suppress.</p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>zero-state</b></div><pre>L0 local
   ↓
 L1 private (optional)
@@ -182,16 +182,19 @@ OBSERVE fresh independent result</pre></div>
 </section>
 
 <section id="integrate" class="section split">
-<div><div class="eyebrow">INTEGRATION</div><h2>JavaScript/TypeScript: local-first. Python: shadow-first.</h2><p>Use Zero-State for eligible read-only calls you control. Use classic clients to measure shared CHECK evidence. Use MCP or REST for the hosted CHECK/OBSERVE protocol.</p><div class="flow"><span>local/private</span><i>→</i><span>source native</span><i>→</i><span>optional CHECK</span><i>→</i><span>validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Choose an integration path →</a></p></div>
+<div><div class="eyebrow">INTEGRATION</div><h2>Zero-State is local-first in JavaScript/TypeScript and Python.</h2><p>Use Zero-State for eligible read-only calls you control. Classic clients and Python Ambient adapters remain shadow-first for shared-evidence measurement. Use MCP or REST for the hosted CHECK/OBSERVE protocol.</p><div class="flow"><span>local/private</span><i>→</i><span>source native</span><i>→</i><span>optional CHECK</span><i>→</i><span>validate</span><i>→</i><span>OBSERVE</span></div><p><a href="/clients">Choose an integration path →</a></p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>integration</b></div><pre>JavaScript / TypeScript ${publicProductFacts.install.client_version}
 seenrelay/zero-state
 seenrelay/auto
 seenrelay/mcp-auto
 
+Python Zero-State
+seenrelay_zero_state
+
 Classic shared evidence
 SeenRelayClient
 SeenRelayShadowProof
-Python: shadow-first
+Python classic/Ambient: shadow-first
 
 Remote MCP
 ${origin}/mcp

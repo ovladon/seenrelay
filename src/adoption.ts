@@ -53,13 +53,13 @@ For a fleet, ask the coding agent to find repeated expensive read-only validatio
 
 ## Fleet path
 
-JavaScript / TypeScript private L1 is caller-owned storage for exact completed-result state across workers or process restarts. The store receives an opaque SHA-256 coordinate key and a sealed payload; the encryption key stays in the caller's secret-management boundary. This is not a claim that the public SeenRelay relay is a hosted private tenant store.
+JavaScript / TypeScript and Python Zero-State private L1 are caller-owned storage paths for exact completed-result state across workers or process restarts. The store receives an opaque SHA-256 coordinate key and a sealed payload; the encryption key stays in the caller's secret-management boundary. This is not a claim that the public SeenRelay relay is a hosted private tenant store.
 
 A positive \`privateMaxAgeMs\` is an explicit caller freshness decision. With \`privateMaxAgeMs = 0\`, a private result does not suppress source validation, while retained ETag/Last-Modified state can still support conditional source confirmation.
 
 See ${origin}/fleet for the current deployment pattern.
 
-## Preferred JavaScript / TypeScript order
+## Preferred Zero-State order
 
 - exact in-flight / explicit-TTL local reuse;
 - optional encrypted caller-owned private L1 across workers/restarts;
@@ -72,9 +72,9 @@ For an existing MCP client, start with \`seenrelay/ambient\` for behavior-preser
 
 Shared CHECK is off by default in Zero-State. Completed-result TTL defaults to zero. Provider-specific adapters are optional integrations and are not dependencies of SeenRelay Core.
 
-## Python / classic client
+## Python Zero-State / classic clients
 
-Python ${clientVersion} remains shadow-first. The classic JavaScript / TypeScript API also remains available for CHECK-first measurement and explicit bounded shared-evidence reuse.
+Python ${clientVersion} includes an explicit provider-independent Zero-State path for caller-controlled read-only validation. The classic Python API and Python Ambient adapters remain shadow-first by default. The classic JavaScript / TypeScript API also remains available for CHECK-first measurement and explicit bounded shared-evidence reuse.
 
 ## Use SeenRelay when
 

@@ -74,11 +74,11 @@ ambientLangChainMcpHooks()
 ambient_langchain_mcp_client(client)
 ambient_pydantic_ai_toolset(toolset)</pre></div><a href="/quickstart">Integration quickstart →</a></article>
 
-    <article class="rv-choice"><header><b>Plain read-only function</b><span>JavaScript / TypeScript</span></header><p>Use Zero-State when the application directly controls the validation function and can define exact identity and a defensible freshness policy.</p><div class="rv-code"><pre>import { SeenRelayZeroState } from 'seenrelay/zero-state';
+    <article class="rv-choice"><header><b>Plain read-only function</b><span>JavaScript / TypeScript + Python</span></header><p>Use Zero-State when the application directly controls the validation function and can define exact identity and a defensible freshness policy. Client ${version} exposes this local-first path in both languages.</p><div class="rv-code"><pre>// JavaScript / TypeScript
+import { SeenRelayZeroState } from 'seenrelay/zero-state';
 
-const edge = new SeenRelayZeroState({
-  localMaxAgeMs: 30_000
-});</pre></div><a href="https://github.com/ovladon/seenrelay/tree/main/clients/typescript">Zero-State guide →</a></article>
+// Python
+from seenrelay_zero_state import SeenRelayZeroState</pre></div><p>Caller-owned private L1 is optional. Python's built-in AES-256-GCM helper is available through <code>seenrelay[crypto]</code>; the base package remains dependency-free.</p><a href="https://github.com/ovladon/seenrelay/tree/main/clients">Zero-State guides →</a></article>
   </div>
 </section>
 
@@ -110,7 +110,7 @@ REST          https://seenrelay.com/v1/observe</pre></div><a href="/openapi.json
 <section class="rv-shell rv-section">
   <div class="rv-contract">
     <div class="rv-contract-main"><div class="rv-eyebrow">ELIGIBILITY</div><h3>Only exact, reviewed read-only work should be considered for suppression.</h3><p>Do not infer safety from a tool name, description or untrusted annotation. Define the operation, exact identity and freshness contract, and keep the original validation available when the shortcut does not apply.</p></div>
-    <div class="rv-contract-list"><article><b>No account or API key currently required</b><span>The public service can be tested without provisioning credentials.</span></article><article><b>Zero third-party client runtime dependencies</b><span>The core public package keeps its runtime dependency surface at zero.</span></article><article><b>Machine-readable integration metadata</b><span>Agent Skill discovery and the local integration catalog expose supported adapters to compatible tooling.</span></article></div>
+    <div class="rv-contract-list"><article><b>No account or API key currently required</b><span>The public service can be tested without provisioning credentials.</span></article><article><b>Zero required base runtime dependencies</b><span>The base public packages keep their required runtime dependency surface at zero; Python's optional <code>crypto</code> extra adds its documented cryptography dependency.</span></article><article><b>Machine-readable integration metadata</b><span>Agent Skill discovery and the local integration catalog expose supported adapters to compatible tooling.</span></article></div>
   </div>
 </section>
 
