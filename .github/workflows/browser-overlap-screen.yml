@@ -1,0 +1,112 @@
+name: Browser overlap screen
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trace-commons-screen:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'research/browser-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TRACE_COMMONS_REVISION: 147684b2fdacbbdcd473e92962f565902b2739d5
+      TRACE_COMMONS_DATASET: trace-commons/agent-traces
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Run overlap screener tests
+        run: node --test tests/browser-trace-overlap-screen.test.mjs
+
+      - name: Download pinned Trace Commons Claude Code traces
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+          import urllib.parse
+          import urllib.request
+
+          revision = os.environ['TRACE_COMMONS_REVISION']
+          dataset = os.environ['TRACE_COMMONS_DATASET']
+          out = pathlib.Path('.private286-traces')
+          out.mkdir(exist_ok=True)
+          api = f'https://huggingface.co/api/datasets/{dataset}/tree/{revision}/sessions/claude_code?recursive=false&expand=false'
+          request = urllib.request.Request(api, headers={'User-Agent': 'seenrelay-private286-screen/1.0'})
+          with urllib.request.urlopen(request, timeout=30) as response:
+              entries = json.load(response)
+
+          paths = sorted(
+              entry['path'] for entry in entries
+              if entry.get('type') == 'file' and str(entry.get('path', '')).endswith('.jsonl')
+          )
+          if len(paths) < 20:
+              raise SystemExit(f'Pinned corpus unexpectedly small: {len(paths)} JSONL files')
+
+          for index, source_path in enumerate(paths, start=1):
+              encoded = urllib.parse.quote(source_path, safe='/')
+              url = f'https://huggingface.co/datasets/{dataset}/resolve/{revision}/{encoded}?download=true'
+              target = out / pathlib.Path(source_path).name
+              request = urllib.request.Request(url, headers={'User-Agent': 'seenrelay-private286-screen/1.0'})
+              with urllib.request.urlopen(request, timeout=60) as response, target.open('wb') as handle:
+                  while True:
+                      chunk = response.read(1024 * 1024)
+                      if not chunk:
+                          break
+                      handle.write(chunk)
+              print(f'downloaded {index}/{len(paths)}: {target.name} ({target.stat().st_size} bytes)')
+          PY
+
+      - name: Screen natural cross-session WebFetch overlap
+        run: |
+          node scripts/screen-browser-trace-overlap.mjs \
+            --input-dir .private286-traces \
+            --source-revision "$TRACE_COMMONS_REVISION" \
+            --source-dataset "$TRACE_COMMONS_DATASET" \
+            --output private286-browser-overlap-screen.json
+          cat private286-browser-overlap-screen.json
+
+      - name: Enforce commissioning boundaries
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const report = JSON.parse(fs.readFileSync('private286-browser-overlap-screen.json', 'utf8'));
+          const expectedRevision = process.env.TRACE_COMMONS_REVISION;
+          if (report.schema !== 'seenrelay-browser-overlap-screen-v1') process.exit(1);
+          if (report.source_revision !== expectedRevision) process.exit(1);
+          if (report.source_dataset !== process.env.TRACE_COMMONS_DATASET) process.exit(1);
+          if (report.interpretation?.observer_independence_proven !== false) process.exit(1);
+          if (report.interpretation?.natural_workload_class_pass_authorized !== false) process.exit(1);
+          if (report.interpretation?.seenrelay_reuse_authorized !== false) process.exit(1);
+          for (const key of ['raw_urls_retained','raw_prompts_retained','raw_results_retained','session_ids_retained','per_key_hashes_retained']) {
+            if (report.privacy?.[key] !== false) process.exit(1);
+          }
+          const serialized = JSON.stringify(report);
+          if (/https?:\/\//i.test(serialized)) process.exit(1);
+          NODE
+
+      - name: Delete raw traces before artifact upload
+        if: always()
+        run: rm -rf .private286-traces
+
+      - name: Upload aggregate screen only
+        if: always() && hashFiles('private286-browser-overlap-screen.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: private286-browser-overlap-screen
+          path: private286-browser-overlap-screen.json
+          if-no-files-found: error
+          retention-days: 14
