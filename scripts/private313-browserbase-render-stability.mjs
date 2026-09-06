@@ -256,7 +256,6 @@ async function captureOne(apiKey) {
   let browser = null;
   let stage = 'SESSION_CREATE';
   let selectorCount = null;
-  let releaseAttempted = false;
   try {
     const session = await createBrowserbaseSession(apiKey);
     sessionId = session.sessionId;
@@ -281,7 +280,7 @@ async function captureOne(apiKey) {
     stage = 'SELECTOR_CARDINALITY';
     const locator = page.locator(TARGET_SELECTOR);
     selectorCount = await locator.count();
-    if (selectorCount !== 1) return { kind: 'selector-failure', stage, selectorCount, release: async () => false };
+    if (selectorCount !== 1) return { kind: 'selector-failure', stage, selectorCount, sessionId, projectId, browser };
 
     stage = 'SCREENSHOT';
     const png = await locator.screenshot({ type: 'png', animations: 'disabled', caret: 'hide', scale: 'css', timeout: 20_000 });
@@ -292,8 +291,6 @@ async function captureOne(apiKey) {
     return { kind: 'capture', digest: sha256(png), browserVersion, stage: 'NONE', selectorCount: 1, sessionId, projectId, browser };
   } catch {
     return { kind: 'failure', stage, selectorCount, sessionId, projectId, browser };
-  } finally {
-    // Cleanup is performed by the caller because successful return values require browser version before disconnect.
   }
 }
 
