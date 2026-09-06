@@ -8,6 +8,16 @@ function sql() {
 
 export interface PublicStats {
   generated_at: string;
+  classification: 'aggregate-hosted-operational-activity-not-external-adoption';
+  semantics: {
+    includes_first_party: true;
+    includes_controlled_benchmarks: true;
+    external_adoption_metric: false;
+    unique_actor_metric: false;
+    client_only_usage_visible: false;
+    active_hive_leases_5m: 'pseudonymous operational leases; not unique callers';
+    useful_reuse_metrics: 'qualified hosted reuse events across all traffic; not external-adoption reuse';
+  };
   facts: number;
   recent_observations: number;
   active_hive_leases_5m: number;
@@ -36,6 +46,16 @@ export async function getPublicStats(): Promise<PublicStats> {
   const unknown = Number(row.unknown_month || 0);
   return {
     generated_at: new Date().toISOString(),
+    classification: 'aggregate-hosted-operational-activity-not-external-adoption',
+    semantics: {
+      includes_first_party: true,
+      includes_controlled_benchmarks: true,
+      external_adoption_metric: false,
+      unique_actor_metric: false,
+      client_only_usage_visible: false,
+      active_hive_leases_5m: 'pseudonymous operational leases; not unique callers',
+      useful_reuse_metrics: 'qualified hosted reuse events across all traffic; not external-adoption reuse'
+    },
     facts: Number(row.facts || 0),
     recent_observations: Number(row.recent_observations || 0),
     active_hive_leases_5m: Number(row.active_hive_leases_5m || 0),
