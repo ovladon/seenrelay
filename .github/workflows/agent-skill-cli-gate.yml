@@ -30,7 +30,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          EXPECTED='3a0206d871b6b8e961bde6e064f01272be47e44dec50931046ade4e1e3b343ea'
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { agentSkillMarkdown } from './shared/agent-skill.mjs';
+
+          const canonical = fs.readFileSync('./skills/seenrelay/SKILL.md', 'utf8');
+          if (canonical !== agentSkillMarkdown()) {
+            console.error('skills/seenrelay/SKILL.md diverges from shared/agent-skill.mjs');
+            process.exit(1);
+          }
+          NODE
+
+          EXPECTED="$(sha256sum "$GITHUB_WORKSPACE/skills/seenrelay/SKILL.md" | awk '{print $1}')"
           TMP="$(mktemp -d)"
           cd "$TMP"
           npm init -y >/dev/null
