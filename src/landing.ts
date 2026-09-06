@@ -85,7 +85,7 @@ export function publicLandingPage(origin: string): string {
       <span>caller-owned private L1</span>
       <span>no account</span>
       <span>no API key</span>
-      <span>${esc(f.install.runtime_dependencies)} runtime dependencies</span>
+      <span>${esc(f.install.runtime_dependencies)} required base runtime dependencies</span>
       <span>CHECK + OBSERVE</span>
     </div>
   </div>
