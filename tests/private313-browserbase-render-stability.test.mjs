@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { blockedReport, classifyMeasurement, validateAggregateReport } from '../scripts/private313-browserbase-render-stability.mjs';
+import { blockedReport, classifyMeasurement, retryDelayMs, validateAggregateReport } from '../scripts/private313-browserbase-render-stability.mjs';
 
 const A = 'a'.repeat(64);
 const B = 'b'.repeat(64);
@@ -92,17 +92,34 @@ test('partial provider run exposes no partial stability result', () => {
   assert.equal(report.exact_modal_recurrence_percent, null);
 });
 
+test('PRIVATE315 integer Retry-After uses frozen clamp', () => {
+  assert.equal(retryDelayMs(0, '48'), 48_000);
+  assert.equal(retryDelayMs(0, '0'), 1_000);
+  assert.equal(retryDelayMs(0, '91'), 60_000);
+});
+
+test('PRIVATE315 unparseable Retry-After uses frozen exponential fallback', () => {
+  assert.equal(retryDelayMs(0, 'not-a-number'), 2_000);
+  assert.equal(retryDelayMs(1, null), 4_000);
+  assert.equal(retryDelayMs(2, ''), 8_000);
+  assert.equal(retryDelayMs(3, undefined), 16_000);
+  assert.equal(retryDelayMs(4, 'Wed, 21 Oct 2026 07:28:00 GMT'), 32_000);
+});
+
 test('aggregate report does not retain synthetic secret values', () => {
   const syntheticSecret = 'bb_private313_synthetic_secret_value';
   const encoded = JSON.stringify(blockedReport());
   assert.equal(encoded.includes(syntheticSecret), false);
 });
 
-test('harness freezes current selector and contains no SeenRelay operation or fuzzy rescue', () => {
+test('harness freezes render contract and PRIVATE315 retries only 429 at max five retries', () => {
   const source = fs.readFileSync(new URL('../scripts/private313-browserbase-render-stability.mjs', import.meta.url), 'utf8');
   assert.match(source, /TARGET_SELECTOR = '\.rv-mechanism'/);
   assert.match(source, /REQUIRED_CAPTURES = 20/);
   assert.match(source, /REQUIRED_DEPLOYMENT_SHA = '2cc216207044f55b27aced00aa0baa5af738ba62'/);
+  assert.match(source, /createAttempt <= 5/);
+  assert.match(source, /response\.status !== 429 \|\| createAttempt === 5/);
+  assert.match(source, /response\.headers\.get\('retry-after'\)/);
   assert.doesNotMatch(source, /\/v1\/check|\/v1\/observe/i);
   assert.doesNotMatch(source, /pixelmatch|perceptual|pHash|embedding|cosine|levenshtein/i);
 });
