@@ -75,7 +75,7 @@ function renderQuickstartSummary(facts) {
     facts.install.pypi_command,
     '```',
     '',
-    `Client v${facts.install.client_version} was clean-install verified from both public registries on ${facts.install.registry_install_verified_at.slice(0, 10)}. JavaScript/TypeScript ${facts.install.client_version} supports provider-independent local-first Zero-State; Python remains shadow-first in this release. Reuse remains caller policy.`,
+    `Client v${facts.install.client_version} was clean-install verified from both public registries on ${facts.install.registry_install_verified_at.slice(0, 10)}. JavaScript/TypeScript and Python ${facts.install.client_version} support provider-independent local-first Zero-State. Reuse remains caller policy.`,
   ].join('\n');
 }
 function renderVerifiedResults(facts) {
