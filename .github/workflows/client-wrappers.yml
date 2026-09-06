@@ -31,13 +31,13 @@ jobs:
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: '22'
-      - name: Run wrapper suite with fleet shadow measurement
+      - name: Run wrapper suite through natural fleet eligibility firewall
         env:
           SEENRELAY_FLEET_ROLE: client-wrappers
           SEENRELAY_FLEET_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           SEENRELAY_FLEET_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
           FLEET_SHADOW_PREFIX: fleet-wrapper-v2-shadow-client-wrappers
-        run: node scripts/fleet-wrapper-shadow.mjs
+        run: node scripts/run-fleet-wrapper-natural.mjs
       - name: Upload fleet wrapper shadow evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
