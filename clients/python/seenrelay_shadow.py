@@ -90,6 +90,21 @@ def _network_timing_delta(before: Any, after: Any, prefix: str) -> tuple[float, 
     return max(0.0, latency), True
 
 
+def _call_scope_unambiguous(before: Any, after: Any) -> bool:
+    expected = {
+        "guard_calls": 1,
+        "check_calls": 1,
+        "validation_calls": 1,
+        "observe_attempts": 1,
+    }
+    for field, expected_delta in expected.items():
+        if not hasattr(before, field) or not hasattr(after, field):
+            continue
+        if int(getattr(after, field)) - int(getattr(before, field)) != expected_delta:
+            return False
+    return True
+
+
 def _decision_parts(decision: Any) -> tuple[bool, Any]:
     if isinstance(decision, ReuseDecision):
         return bool(decision.reuse), decision.value
@@ -316,7 +331,7 @@ class SeenRelayShadowProof:
                     validation_ms=validation_ms,
                     check_ms=check_ms,
                     observe_ms=observe_ms,
-                    timings_unambiguous=check_ok and observe_ok,
+                    timings_unambiguous=check_ok and observe_ok and _call_scope_unambiguous(before, after),
                 )
         return result.value
 
@@ -338,7 +353,6 @@ class SeenRelayShadowProof:
         same = int(proof["statuses"]["SAME_OBSERVED"])
         observed_same_rate = same / calls if calls else 0.0
         prospective_observe_requests = max(0, int(relay.observe_network_requests) - same)
-
         gross_potential_savings = same * avoided
         prospective_relay_request_cost = int(relay.check_network_requests) * check_cost + prospective_observe_requests * observe_cost
         net_potential_savings = gross_potential_savings - prospective_relay_request_cost
