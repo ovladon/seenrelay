@@ -1,0 +1,60 @@
+{
+  "schema": "seenrelay-private301-swechat-full-source-candidate-v1",
+  "status": "source_metadata_lock_only_before_any_webfetch_measurement",
+  "purpose": "Lock the exact public metadata revision and relevant file identities for the full SALT-NLP/SWE-chat dataset before any WebFetch content or overlap statistic is inspected.",
+  "source": {
+    "dataset": "SALT-NLP/SWE-chat",
+    "requested_revision": "main",
+    "expected_license_from_public_dataset_card": "odc-by",
+    "dataset_is_gated": true,
+    "content_access_is_not_authorized_by_this_pr": true
+  },
+  "metadata_only": {
+    "allowed": [
+      "resolved repository revision",
+      "repository gating state",
+      "dataset card metadata fields exposed by Hub API",
+      "file path",
+      "logical size",
+      "git blob id",
+      "LFS/Xet metadata exposed without downloading file content"
+    ],
+    "forbidden": [
+      "download README content",
+      "download parquet content",
+      "download transcript content",
+      "read WebFetch rows",
+      "count WebFetch rows",
+      "inspect tool_input_json",
+      "compute operation identity",
+      "compute overlap"
+    ]
+  },
+  "relevant_files": [
+    "README.md",
+    "conversations.parquet",
+    "sessions.parquet",
+    "session_logs.parquet"
+  ],
+  "measurement_contract_if_later_commissioned": {
+    "native_session_coordinate_required": "session_id",
+    "tool_rows_only": "turn_type == tool_use",
+    "tool_name_required": "WebFetch",
+    "operation_identity": "canonical URL + canonical prompt only",
+    "semantic_or_fuzzy_matching_forbidden": true,
+    "thresholds_frozen": {
+      "eligible_floor": 100,
+      "low_below_percent": 5,
+      "weak_below_percent": 20,
+      "strong_at_or_above_percent": 20
+    },
+    "url_only_overlap_is_diagnostic_only": true
+  },
+  "interpretation": {
+    "source_lock_is_not_measurement": true,
+    "source_lock_is_not_reuse_evidence": true,
+    "source_lock_cannot_pass_PRIVATE285": true,
+    "production_change_authorized": false,
+    "public_prevalence_claim_authorized": false
+  }
+}
