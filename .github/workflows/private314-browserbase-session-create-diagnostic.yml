@@ -1,0 +1,90 @@
+name: PRIVATE314 Browserbase Session Create Diagnostic
+
+on:
+  push:
+    branches:
+      - research/browserbase-session-create-diagnostic-v1
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PRIVATE314_OUTPUT: private314-browserbase-session-create-diagnostic.json
+      BROWSERBASE_API_KEY: ${{ secrets.BROWSERBASE_API_KEY }}
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Require exact research branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'research/browserbase-session-create-diagnostic-v1'
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+
+      - name: Validate preregistration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('preregistration/PRIVATE314_BROWSERBASE_SESSION_CREATE_DIAGNOSTIC_V1.json','utf8'));
+          if (p.experiment_id !== 'PRIVATE314') process.exit(1);
+          if (p.parent_exact_head !== 'fe114669bcf5e5c29e2ba10e5ffad96af9e6fdec') process.exit(1);
+          if (p.diagnostic_contract?.max_sequential_cycles !== 8) process.exit(1);
+          if (p.precommitted_interpretation?.RATE_LIMIT_429?.frozen_retry_policy?.retry_only_http_status !== 429) process.exit(1);
+          if (p.precommitted_interpretation?.RATE_LIMIT_429?.frozen_retry_policy?.maximum_retries_per_capture !== 5) process.exit(1);
+          NODE
+
+      - name: Run hostile synthetic tests
+        run: node --test tests/private314-browserbase-session-create-diagnostic.test.mjs
+
+      - name: Install frozen browser client only
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts playwright-core@1.63.0
+
+      - name: Run aggregate-only transport diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/private314-browserbase-session-create-diagnostic.mjs > "$RUNNER_TEMP/private314-summary.json"
+
+      - name: Validate aggregate artifact contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          import { validateAggregateReport } from './scripts/private314-browserbase-session-create-diagnostic.mjs';
+          const raw = fs.readFileSync(process.env.PRIVATE314_OUTPUT, 'utf8');
+          if (Buffer.byteLength(raw, 'utf8') > 8192) process.exit(1);
+          const report = JSON.parse(raw);
+          validateAggregateReport(report);
+          if (report.measurement_performed !== false) process.exit(1);
+          NODE
+
+      - name: Remove transient dependencies and caches
+        if: always()
+        shell: bash
+        run: |
+          rm -rf node_modules
+          git checkout -- package-lock.json 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/private314-summary.json" 2>/dev/null || true
+
+      - name: Upload validated aggregate only
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: private314-browserbase-session-create-diagnostic-${{ github.run_id }}
+          path: private314-browserbase-session-create-diagnostic.json
+          if-no-files-found: error
+          retention-days: 14
