@@ -68,7 +68,7 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.match(quickstart, /seenrelay\/mcp-auto/);
   assert.match(quickstart, /local-first bind-once path/i);
   assert.match(quickstart, /original validation remains the fallback/i);
-  assert.match(adoption, /## Preferred JavaScript \/ TypeScript order/);
+  assert.match(adoption, /## Preferred Zero-State order/);
   assert.match(adoption, /Shared CHECK is off by default/i);
   assert.match(integrations, /seenrelay\/mcp-auto/);
   assert.match(integrations, /Shared CHECK (?:is off|is not enabled) by default/i);
