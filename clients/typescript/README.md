@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Client 0.2.10 includes the multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit alongside the Ambient framework integrations, local integration catalog, Firecrawl shadow helpers, and existing local-first surfaces. Shared evidence never authorizes reuse by itself. The 0.2.10 JavaScript / TypeScript package changes the release version only; the new Zero-State implementation in this release is Python-side parity.
+Client 0.2.10 includes the multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit alongside the Ambient framework integrations, local integration catalog, Firecrawl shadow helpers, and existing local-first surfaces. It also hardens Zero-State freshness so a negative-age entry caused by clock skew cannot authorize local/private reuse or retained-validator use. Otherwise the JavaScript / TypeScript behavior is unchanged; the new Zero-State implementation in this release is Python-side. Shared evidence never authorizes reuse by itself.
 
 ## Shared CHECK assurance
 
