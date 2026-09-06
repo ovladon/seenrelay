@@ -1,0 +1,49 @@
+{
+  "schema": "seenrelay-private293-pre-result-output-gate-correction-v1",
+  "status": "frozen_before_any_private293_numeric_result_was_observed",
+  "pull_request": 177,
+  "detection": {
+    "workflow_run_id": 33991740892,
+    "workflow_run_status_at_detection": "in_progress",
+    "active_step_at_detection": "Execute preregistered Phase A and conditional Phase B",
+    "aggregate_report_step_status_at_detection": "pending",
+    "artifact_upload_step_status_at_detection": "pending",
+    "private293_numeric_result_observed": false,
+    "private293_aggregate_report_observed": false
+  },
+  "defect": {
+    "scope": "aggregate-only output validator only",
+    "description": "The validator searched the serialized report for sensitive-field substrings such as raw_url. Legitimate privacy declaration keys such as raw_urls_retained therefore matched the forbidden substring and would make the aggregate-only gate fail even when all retained flags were false.",
+    "measurement_semantics_affected": false,
+    "numeric_result_affected": false,
+    "privacy_boundary_weakened": false
+  },
+  "correction": {
+    "rule": "Reject exact forbidden raw-data field names recursively, while allowing explicit aggregate privacy declaration keys whose values are false.",
+    "forbidden_exact_keys": [
+      "raw_url",
+      "raw_prompt",
+      "tool_use_id",
+      "assistant_uuid",
+      "native_session_id",
+      "physical_call_key"
+    ],
+    "privacy_flags_must_remain_false": true
+  },
+  "unchanged": {
+    "source_revision": "524f2910f2893b04ccfbb76e56116fe0af3c5bf7",
+    "trace_manifest_sha256": "113b9ac82efdb8bb6c56171d4dca0671b293cf8eac69667afa6278ca29560af8",
+    "phase_a_file_count": 400,
+    "phase_b_trigger": "only if phase_a eligible_http_webfetch_calls after physical-call deduplication is below 100",
+    "operation_identity_changed": false,
+    "physical_dedup_changed": false,
+    "canonicalization_changed": false,
+    "selection_changed": false,
+    "classification_changed": false,
+    "thresholds_changed": false
+  },
+  "validity": {
+    "workflow_run_33991740892_must_not_be_used_as_private293_result": true,
+    "only_a_fresh_run_from_a_commit_containing_this_output_gate_fix_may_be_used": true
+  }
+}
