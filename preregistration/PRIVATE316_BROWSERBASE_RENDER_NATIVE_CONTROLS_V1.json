@@ -1,0 +1,81 @@
+{
+  "schema": "seenrelay-preregistration-v1",
+  "experiment_id": "PRIVATE316",
+  "title": "Native HTTP control gate for the PRIVATE315 rendered-state workload",
+  "parent_experiment": "PRIVATE315",
+  "parent_exact_head": "1f73812fffc4931e3a2d26116d16738d14df655b",
+  "parent_result": {
+    "status": "MEASURED",
+    "decision": "EXACT_RENDER_STABLE_CANDIDATE_V2",
+    "completed_captures": 20,
+    "modal_digest_count": 20,
+    "exact_modal_recurrence_percent": 100,
+    "artifact_id": 9987157289,
+    "artifact_digest": "sha256:9e12a4a6425904cc7bc3a54aaf66941b9f96396e0e68d76ad3cb910e93112be8"
+  },
+  "purpose": "Measure the strongest cheap source-native revalidation surface before any SeenRelay-vs-Browserbase economics claim. This experiment does not assume HTTP source validators are semantically identical to a Browserbase PNG render; it establishes whether they are a material competing shortcut that any later fit claim must defeat or distinguish from.",
+  "frozen_source_contract": {
+    "production_sha": "2cc216207044f55b27aced00aa0baa5af738ba62",
+    "health_url": "https://seenrelay.com/healthz",
+    "resources": [
+      "https://seenrelay.com/",
+      "https://seenrelay.com/revamp.css",
+      "https://seenrelay.com/revamp-factual.css",
+      "https://seenrelay.com/revamp.js"
+    ],
+    "rounds": 20,
+    "requests_per_round": 4,
+    "round_execution": "four resource validations in parallel",
+    "validator_preference": ["ETag/If-None-Match", "Last-Modified/If-Modified-Since", "full GET + SHA-256 fallback"],
+    "initial_resource_bytes_and_sha256": "measured transiently; only aggregate byte counts are retained",
+    "deployment_sha_must_match_before_and_after": true,
+    "initial_and_final_unconditional_resource_hashes_must_match": true
+  },
+  "allowed_aggregate_output": [
+    "resource_count",
+    "round_count",
+    "etag_resource_count",
+    "last_modified_resource_count",
+    "conditional_capable_resource_count",
+    "conditional_request_count",
+    "conditional_304_count",
+    "fallback_full_get_count",
+    "fallback_hash_match_count",
+    "initial_total_resource_bytes",
+    "median_parallel_bundle_ms",
+    "p95_parallel_bundle_ms",
+    "deployment_before_matches_required",
+    "deployment_after_matches_required",
+    "resource_hashes_changed",
+    "decision"
+  ],
+  "forbidden_output": [
+    "ETag values",
+    "Last-Modified values",
+    "resource SHA-256 values",
+    "resource bodies",
+    "request or response headers",
+    "cookies",
+    "IP addresses",
+    "Browserbase identifiers",
+    "SeenRelay lease/fact identifiers"
+  ],
+  "decision_rule": {
+    "NATIVE_CONDITIONAL_SHORTCUT_STRONG": "All 4 resources expose a usable conditional validator and all 80 conditional validations return HTTP 304 while source/deployment controls remain invariant.",
+    "NATIVE_FULL_HASH_SHORTCUT_PRESENT": "At least one resource lacks a conditional validator, but every one of the 80 validations is authoritative via either 304 or a full-body SHA-256 match while source/deployment controls remain invariant.",
+    "NATIVE_CONTROL_NOT_CLEAN": "Any validation fails, any fallback hash mismatches, or source/deployment invariance fails. No economics conclusion."
+  },
+  "post_result_interpretation": {
+    "NATIVE_CONDITIONAL_SHORTCUT_STRONG": "A later economics experiment must treat this as a first-class competing shortcut. SeenRelay fit cannot be called good merely because it avoids Browserbase sessions; it must either prove materially different semantics that require renderer/environment evidence or beat the native path under the same user-relevant semantics.",
+    "NATIVE_FULL_HASH_SHORTCUT_PRESENT": "A later economics experiment must include full-source retrieval/hash as a competing baseline and account for its bytes/latency.",
+    "NATIVE_CONTROL_NOT_CLEAN": "Do not infer SeenRelay fit. Diagnose the failed native control separately if useful."
+  },
+  "non_authorizations": [
+    "No claim that HTTP source validators are automatically equivalent to exact rendered pixels.",
+    "No SeenRelay CHECK or OBSERVE.",
+    "No Browserbase session.",
+    "No economics or savings claim.",
+    "No production change.",
+    "No external-adoption or generalization claim."
+  ]
+}
