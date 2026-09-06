@@ -1,0 +1,137 @@
+{
+  "schema": "seenrelay-private311-browserbase-rendered-state-stability-v1",
+  "experiment_id": "PRIVATE311",
+  "status": "preregistered_before_provider_measurement",
+  "base_head": "bc49ef82b808e7e6db356d0b3d27bbdcad60cc33",
+  "purpose": "Test whether one fixed browser-rendered visual state is exactly reproducible enough for SeenRelay exact-value semantics before any shared CHECK/OBSERVE or economics experiment is authorized.",
+  "provider": {
+    "name": "Browserbase",
+    "create_session_endpoint": "https://api.browserbase.com/v1/sessions",
+    "region": "eu-central-1",
+    "proxy_enabled": false,
+    "captcha_solving_required": false,
+    "session_count": 20,
+    "sessions_are_independent": true,
+    "playwright_core_version": "1.63.0"
+  },
+  "target": {
+    "url": "https://seenrelay.com/",
+    "ownership_scope": "first_party_controlled_public_page",
+    "selector": ".hero-shell",
+    "third_party_site_data": false,
+    "authenticated_target": false
+  },
+  "render_contract": {
+    "viewport": { "width": 1440, "height": 1000 },
+    "navigation_wait_until": "domcontentloaded",
+    "document_fonts_ready_required": true,
+    "post_fonts_settle_ms": 500,
+    "media_reduced_motion": "reduce",
+    "screenshot_type": "png",
+    "screenshot_animations": "disabled",
+    "screenshot_caret": "hide",
+    "screenshot_scale": "css",
+    "full_page": false,
+    "capture_scope": "exact_selector_only"
+  },
+  "source_invariance": {
+    "pre_and_post_fetches": [
+      "https://seenrelay.com/",
+      "https://seenrelay.com/site.css"
+    ],
+    "cache_control": "no-cache",
+    "comparison": "sha256_exact_bytes",
+    "browser_version_must_be_constant_across_sessions": true,
+    "raw_source_bytes_retained": false,
+    "source_hash_values_retained_in_artifact": false
+  },
+  "measurement": {
+    "capture_digest": "sha256_exact_png_bytes",
+    "required_completed_captures": 20,
+    "screenshot_bytes_retained": false,
+    "individual_digest_values_retained_in_artifact": false,
+    "session_identifiers_retained_in_artifact": false,
+    "aggregate_fields": [
+      "status",
+      "measurement_performed",
+      "completed_captures",
+      "required_captures",
+      "unique_exact_render_digests",
+      "modal_digest_count",
+      "exact_modal_recurrence_percent",
+      "browser_version_count",
+      "source_html_changed",
+      "source_css_changed",
+      "decision"
+    ]
+  },
+  "decision_tree": [
+    {
+      "if": "BROWSERBASE_API_KEY absent",
+      "status": "ACCESS_BLOCKED_NO_BROWSERBASE_API_KEY",
+      "measurement_performed": false,
+      "decision": "NO_STABILITY_VERDICT"
+    },
+    {
+      "if": "provider/session/capture/source-control execution does not complete",
+      "status": "INCOMPLETE_PROVIDER_OR_CAPTURE_FAILURE",
+      "measurement_performed": false,
+      "decision": "NO_STABILITY_VERDICT"
+    },
+    {
+      "if": "pre/post homepage or site.css bytes differ",
+      "status": "INADMISSIBLE_SOURCE_CHANGED_DURING_RUN",
+      "measurement_performed": false,
+      "decision": "NO_STABILITY_VERDICT"
+    },
+    {
+      "if": "more than one browser version is observed across the 20 sessions",
+      "status": "INADMISSIBLE_PROVIDER_ENVIRONMENT_CHANGED",
+      "measurement_performed": false,
+      "decision": "NO_STABILITY_VERDICT"
+    },
+    {
+      "if": "20 captures complete, source controls are unchanged, one browser version is used, and all 20 PNG digests are exactly identical",
+      "status": "MEASURED",
+      "measurement_performed": true,
+      "decision": "EXACT_RENDER_STABLE_CANDIDATE"
+    },
+    {
+      "if": "20 captures complete, source controls are unchanged, one browser version is used, and fewer than 20 PNG digests equal the modal digest",
+      "status": "MEASURED",
+      "measurement_performed": true,
+      "decision": "KILL_EXACT_VISUAL_DIGEST_V1"
+    }
+  ],
+  "thresholds": {
+    "exact_stability_pass_numerator": 20,
+    "exact_stability_pass_denominator": 20,
+    "fuzzy_or_perceptual_matching_allowed": false,
+    "post_result_threshold_changes_allowed": false
+  },
+  "rerun_policy": {
+    "first_admissible_MEASURED_aggregate_is_canonical": true,
+    "blocked_or_incomplete_run_does_not_consume_numeric_experiment_if_no_individual_digest_or_uniqueness_result_is_emitted": true,
+    "same_exact_head_may_be_rerun_after_credential_configuration_or non_measurement_provider_failure": true,
+    "successful_MEASURED_run_must_not_be_rerun_to_improve_result": true
+  },
+  "privacy_and_security": {
+    "browserbase_api_key_logged": false,
+    "connect_url_logged": false,
+    "session_id_logged_or_artifacted": false,
+    "screenshots_uploaded": false,
+    "raw_html_or_css_uploaded": false,
+    "aggregate_only_artifact": true
+  },
+  "non_authorization": {
+    "seenrelay_check_calls": false,
+    "seenrelay_observe_calls": false,
+    "reuse_authorized": false,
+    "economics_claim_authorized": false,
+    "production_change_authorized": false,
+    "external_adoption_claim_authorized": false,
+    "generalization_authorized": false
+  },
+  "next_step_if_pass": "A separate preregistered experiment may test Browserbase rendered-state economics and same-outcome safety against the best non-shared path. PRIVATE311 alone cannot authorize reuse.",
+  "next_step_if_kill": "Stop the exact visual-digest hypothesis. Do not introduce perceptual, fuzzy, semantic, embedding, or LLM matching as a post-result rescue under this experiment."
+}
