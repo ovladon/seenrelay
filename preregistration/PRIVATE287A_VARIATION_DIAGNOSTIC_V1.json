@@ -1,0 +1,52 @@
+{
+  "schema": "seenrelay-private287a-contract-variation-diagnostic-v1",
+  "status": "frozen_after_private287_result_before_diagnostic",
+  "purpose": "Explain why PRIVATE287 had zero eligible cross-policy cross-request pairs without evaluating evidence identity or changing PRIVATE287 criteria.",
+  "parent_result": {
+    "private287_classification": "INSUFFICIENT_CONTROLLED_SAMPLE",
+    "records_seen": 4096,
+    "eligible_contracts": 4096,
+    "base_tasks": 768,
+    "eligible_cross_policy_cross_request_pairs": 0
+  },
+  "source": {
+    "dataset": "WebRider/WebRider",
+    "revision": "6848308895f11b37c610ecbf4951fa5e53421437",
+    "file": "tasks.json",
+    "tasks_sha256": "e84e18ad9abb872cd0d806d5cbfdaba8d1db6883c5a737af5f8346333f8a55c2",
+    "tasks_bytes": 14098420
+  },
+  "allowed_diagnostics": [
+    "base_tasks_with_multiple_contracts",
+    "base_tasks_with_multiple_persona_policies",
+    "base_tasks_with_multiple_surface_requests",
+    "base_tasks_with_both_policy_and_surface_variation",
+    "same_base_different_task_pairs",
+    "same_base_different_policy_pairs",
+    "same_base_different_surface_request_pairs",
+    "same_base_different_policy_and_surface_request_pairs"
+  ],
+  "forbidden_diagnostics": [
+    "evidence_identity",
+    "evidence_similarity",
+    "evidence_key_frequency",
+    "semantic_similarity",
+    "LLM_matching",
+    "embedding_matching",
+    "raw_policy_output",
+    "raw_surface_request_output",
+    "raw_task_or_base_task_ids"
+  ],
+  "interpretation": {
+    "posthoc_explanatory_only": true,
+    "cannot_reclassify_private287": true,
+    "cannot_authorize_private285_pass": true,
+    "cannot_authorize_seenrelay_reuse": true,
+    "can_inform_a_new_separately_preregistered_test": true
+  },
+  "privacy": {
+    "aggregate_counts_only": true,
+    "raw_contract_content_output": false,
+    "identifiers_output": false
+  }
+}

@@ -1,0 +1,89 @@
+name: WebRider source lock
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  source-lock:
+    if: startsWith(github.head_ref, 'research/browser-portability-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      WEBRIDER_REVISION: 6848308895f11b37c610ecbf4951fa5e53421437
+      WEBRIDER_TASKS_SHA256: e84e18ad9abb872cd0d806d5cbfdaba8d1db6883c5a737af5f8346333f8a55c2
+      WEBRIDER_TASKS_BYTES: '14098420'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify locked dataset source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import urllib.request
+
+          repo = 'WebRider/WebRider'
+          revision = os.environ['WEBRIDER_REVISION']
+          expected_sha = os.environ['WEBRIDER_TASKS_SHA256']
+          expected_bytes = int(os.environ['WEBRIDER_TASKS_BYTES'])
+          headers = {'User-Agent': 'seenrelay-private287-source-verify/1.0'}
+          url = f'https://huggingface.co/datasets/{repo}/resolve/{revision}/tasks.json?download=true'
+          request = urllib.request.Request(url, headers=headers)
+          digest = hashlib.sha256()
+          size = 0
+          with urllib.request.urlopen(request, timeout=60) as response:
+              while True:
+                  chunk = response.read(1024 * 1024)
+                  if not chunk:
+                      break
+                  digest.update(chunk)
+                  size += len(chunk)
+
+          actual_sha = digest.hexdigest()
+          if actual_sha != expected_sha or size != expected_bytes:
+              raise SystemExit(f'Locked tasks.json mismatch: sha={actual_sha} bytes={size}')
+
+          result = {
+              'schema': 'seenrelay-private287-source-lock-v1',
+              'dataset': repo,
+              'revision': revision,
+              'file': 'tasks.json',
+              'sha256': actual_sha,
+              'bytes': size,
+              'analysis_performed': False,
+              'locked_source_verified': True,
+          }
+          with open('private287-source-lock.json', 'w', encoding='utf-8') as handle:
+              json.dump(result, handle, indent=2, sort_keys=True)
+              handle.write('\n')
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+
+      - name: Enforce source-lock-only boundary
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const lock = JSON.parse(fs.readFileSync('private287-source-lock.json', 'utf8'));
+          if (lock.schema !== 'seenrelay-private287-source-lock-v1') process.exit(1);
+          if (lock.dataset !== 'WebRider/WebRider') process.exit(1);
+          if (lock.file !== 'tasks.json') process.exit(1);
+          if (lock.revision !== process.env.WEBRIDER_REVISION) process.exit(1);
+          if (lock.sha256 !== process.env.WEBRIDER_TASKS_SHA256) process.exit(1);
+          if (lock.bytes !== Number(process.env.WEBRIDER_TASKS_BYTES)) process.exit(1);
+          if (lock.analysis_performed !== false) process.exit(1);
+          if (lock.locked_source_verified !== true) process.exit(1);
+          NODE
+
+      - name: Upload source verification only
+        uses: actions/upload-artifact@v4
+        with:
+          name: private287-webrider-source-lock
+          path: private287-source-lock.json
+          if-no-files-found: error
+          retention-days: 14

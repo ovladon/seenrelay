@@ -1,0 +1,88 @@
+{
+  "schema": "seenrelay-private288-cross-policy-evidence-portability-v1",
+  "status": "frozen_before_evidence_identity_result",
+  "purpose": "Controlled test of whether explicit evidence obligations remain structurally identical when the same underlying browser task and same surface request are executed under different persona policies.",
+  "production_authorized": false,
+  "public_claim_authorized": false,
+  "natural_hit_rate_claim_authorized": false,
+  "private285_class_pass_authorized": false,
+  "source": {
+    "dataset": "WebRider/WebRider",
+    "revision": "6848308895f11b37c610ecbf4951fa5e53421437",
+    "file": "tasks.json",
+    "tasks_sha256": "e84e18ad9abb872cd0d806d5cbfdaba8d1db6883c5a737af5f8346333f8a55c2",
+    "tasks_bytes": 14098420
+  },
+  "pre_result_geometry_from_private287a": {
+    "base_tasks": 768,
+    "base_tasks_with_multiple_persona_policies": 768,
+    "base_tasks_with_multiple_surface_requests": 0,
+    "same_base_different_policy_pairs": 8960,
+    "evidence_identity_was_evaluated_in_private287a": false
+  },
+  "eligibility": {
+    "require_nonempty_task_id": true,
+    "require_nonempty_base_task_id": true,
+    "require_nonempty_persona_policy": true,
+    "require_nonempty_surface_request": true,
+    "require_parseable_nonempty_evidence_json": true,
+    "pair_requires_same_base_task_id": true,
+    "pair_requires_different_task_id": true,
+    "pair_requires_different_persona_policy": true,
+    "pair_requires_same_surface_request": true
+  },
+  "canonicalization": {
+    "surface_request": "trim leading/trailing whitespace and normalize CRLF/CR to LF only; no case folding or semantic normalization",
+    "evidence": "parse JSON, recursively sort object keys, preserve array order and scalar values exactly, serialize stable JSON",
+    "evidence_key": "sha256(stable_json(parsed_evidence))",
+    "no_llm_semantic_matching": true,
+    "no_embedding_matching": true,
+    "no_fuzzy_text_matching": true
+  },
+  "metrics": {
+    "eligible_cross_policy_pairs": "unordered eligible contract pairs",
+    "identical_evidence_pairs": "eligible pairs whose canonical evidence keys are identical",
+    "identical_evidence_pair_percent": "identical_evidence_pairs / eligible_cross_policy_pairs",
+    "base_tasks_with_cross_policy_portable_evidence": "base_task_ids containing at least one identical-evidence eligible pair",
+    "base_task_cross_policy_portability_percent": "base_tasks_with_cross_policy_portable_evidence / base_task_ids having at least one eligible pair",
+    "contract_reuse_opportunities": "after deterministic lexical ordering by task_id within each base_task_id, eligible contracts whose evidence key was previously seen under a different persona_policy with the same surface_request",
+    "contract_reuse_opportunity_percent": "contract_reuse_opportunities / eligible_contracts_with_prior_cross_policy_candidate"
+  },
+  "classification": {
+    "insufficient_pairs_below": 100,
+    "low_portability_below_percent": 5,
+    "material_portability_at_or_above_percent": 20,
+    "rules": {
+      "eligible_pairs_below_100": "INSUFFICIENT_CONTROLLED_SAMPLE",
+      "identical_evidence_pair_percent_below_5": "LOW_CROSS_POLICY_PORTABILITY",
+      "identical_evidence_pair_percent_5_to_below_20": "LIMITED_CROSS_POLICY_PORTABILITY",
+      "identical_evidence_pair_percent_at_or_above_20": "MATERIAL_CROSS_POLICY_PORTABILITY"
+    }
+  },
+  "interpretation": {
+    "benchmark_policy_variation_is_constructed": true,
+    "surface_request_is_constant_within_base_task": true,
+    "result_is_not_natural_prevalence": true,
+    "result_is_not_market_size": true,
+    "result_is_not_adoption_evidence": true,
+    "identical_evidence_is_only_a_shareability_precondition": true,
+    "same_evidence_does_not_prove_same_live_value": true,
+    "same_evidence_does_not_prove_safe_seenrelay_reuse": true,
+    "positive_result_supports_policy_context_portability_only": true,
+    "positive_result_does_not_establish_advantage_over_surface_request_only_cache": true,
+    "future_native_or_request_cache_comparator_still_required": true,
+    "negative_result_is_retained": true
+  },
+  "privacy_and_rights": {
+    "download_tasks_metadata_only": true,
+    "download_screenshots": false,
+    "download_rollout_parquet": false,
+    "output_surface_requests": false,
+    "output_evidence_text": false,
+    "output_persona_profiles": false,
+    "output_task_ids": false,
+    "output_base_task_ids": false,
+    "output_per_key_hashes": false,
+    "aggregate_counts_only": true
+  }
+}
