@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
-import { chromium } from 'playwright-core';
 
 const EXPERIMENT_ID = 'PRIVATE311';
 const REQUIRED_CAPTURES = 20;
@@ -189,6 +188,7 @@ async function createBrowserbaseSession(apiKey) {
 }
 
 async function captureOne(apiKey) {
+  const { chromium } = await import('playwright-core');
   const connectUrl = await createBrowserbaseSession(apiKey);
   let browser;
   try {
