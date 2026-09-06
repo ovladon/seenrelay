@@ -1,0 +1,77 @@
+name: PRIVATE312 Browserbase Provider Diagnostic
+
+on:
+  push:
+    branches:
+      - research/browserbase-provider-diagnostic-v1
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    env:
+      PRIVATE312_OUTPUT: private312-browserbase-provider-diagnostic.json
+      BROWSERBASE_API_KEY: ${{ secrets.BROWSERBASE_API_KEY }}
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Require exact research branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'research/browserbase-provider-diagnostic-v1'
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+
+      - name: Validate preregistration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('preregistration/PRIVATE312_BROWSERBASE_PROVIDER_DIAGNOSTIC_V1.json','utf8')); if(p.experiment_id!=='PRIVATE312'||p.stop_rules?.do_not_retry_session_create_with_project_id_in_private312!==true||p.measurement_status_before_private312?.private311_numeric_result_observed!==false) process.exit(1)"
+
+      - name: Run hostile synthetic tests
+        run: node --test tests/private312-browserbase-provider-diagnostic.test.mjs
+
+      - name: Install frozen browser client only
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts playwright-core@1.63.0
+
+      - name: Run aggregate-only provider diagnostic
+        run: node scripts/private312-browserbase-provider-diagnostic.mjs
+
+      - name: Validate aggregate artifact contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          import { validateAggregateReport } from './scripts/private312-browserbase-provider-diagnostic.mjs';
+          const raw = fs.readFileSync(process.env.PRIVATE312_OUTPUT, 'utf8');
+          if (Buffer.byteLength(raw, 'utf8') > 8192) process.exit(1);
+          const report = JSON.parse(raw);
+          validateAggregateReport(report);
+          if (report.measurement_performed !== false) process.exit(1);
+          NODE
+
+      - name: Remove transient dependencies and npm cache references
+        if: always()
+        shell: bash
+        run: |
+          rm -rf node_modules
+          rm -f package-lock.json.npm-install-backup 2>/dev/null || true
+
+      - name: Upload validated aggregate only
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: private312-browserbase-provider-diagnostic-${{ github.run_id }}
+          path: private312-browserbase-provider-diagnostic.json
+          if-no-files-found: error
+          retention-days: 14

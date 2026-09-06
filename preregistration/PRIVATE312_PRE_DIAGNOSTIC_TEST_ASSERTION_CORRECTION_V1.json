@@ -1,0 +1,19 @@
+{
+  "schema": "seenrelay-pre-result-correction-v1",
+  "experiment_id": "PRIVATE312",
+  "correction_id": "PRIVATE312_PRE_DIAGNOSTIC_TEST_ASSERTION_CORRECTION_V1",
+  "superseded_run_id": 34024992203,
+  "superseded_head": "8d115b8d2ac678ffe7124d4154789cf5aefe1881",
+  "provider_access_attempted": false,
+  "browserbase_request_performed": false,
+  "diagnostic_result_observed": false,
+  "private311_stability_result_observed": false,
+  "failure": "The hostile synthetic test rejected the literal vocabulary pattern api[_ -]?key, which appears legitimately inside the aggregate schema key browserbase_api_key_retained=false. The failure occurred before dependency installation and before the diagnostic step.",
+  "authorized_correction": "Replace the literal schema-vocabulary assertion with a synthetic secret-value sentinel assertion. Do not modify the diagnostic script, provider request sequence, stop rules, privacy contract, or PRIVATE311 stability contract.",
+  "non_authorizations": [
+    "No provider request change.",
+    "No project selection change.",
+    "No render/stability threshold change.",
+    "No measurement rerun authorization beyond completing the already-preregistered PRIVATE312 diagnostic."
+  ]
+}
