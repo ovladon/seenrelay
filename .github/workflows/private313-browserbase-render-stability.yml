@@ -1,0 +1,92 @@
+name: PRIVATE313 Browserbase Render Stability v2
+
+on:
+  push:
+    branches:
+      - research/browserbase-rendered-state-stability-v2
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PRIVATE313_OUTPUT: private313-browserbase-render-stability.json
+      BROWSERBASE_API_KEY: ${{ secrets.BROWSERBASE_API_KEY }}
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Require exact research branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = 'research/browserbase-rendered-state-stability-v2'
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+
+      - name: Validate preregistration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('preregistration/PRIVATE313_BROWSERBASE_RENDERED_STATE_STABILITY_V2.json','utf8'));
+          if (p.experiment_id !== 'PRIVATE313') process.exit(1);
+          if (p.production_source_commit !== '2cc216207044f55b27aced00aa0baa5af738ba62') process.exit(1);
+          if (p.frozen_target_contract?.selector !== '.rv-mechanism') process.exit(1);
+          if (p.thresholds?.exact_stability_pass_numerator !== 20 || p.thresholds?.exact_stability_pass_denominator !== 20) process.exit(1);
+          if (p.thresholds?.fuzzy_or_perceptual_matching_allowed !== false) process.exit(1);
+          if (p.selection_provenance?.screenshots_observed_before_freeze !== false || p.selection_provenance?.render_digests_observed_before_freeze !== false) process.exit(1);
+          NODE
+
+      - name: Run hostile synthetic tests
+        run: node --test tests/private313-browserbase-render-stability.test.mjs
+
+      - name: Install frozen browser client only
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-save --ignore-scripts playwright-core@1.63.0
+
+      - name: Run aggregate-only stability gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/private313-browserbase-render-stability.mjs > "$RUNNER_TEMP/private313-run-summary.json"
+
+      - name: Validate aggregate artifact contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          import { validateAggregateReport } from './scripts/private313-browserbase-render-stability.mjs';
+          const raw = fs.readFileSync(process.env.PRIVATE313_OUTPUT, 'utf8');
+          if (Buffer.byteLength(raw, 'utf8') > 8192) process.exit(1);
+          const report = JSON.parse(raw);
+          validateAggregateReport(report);
+          if (report.status === 'MEASURED' && report.completed_captures !== 20) process.exit(1);
+          if (report.status !== 'MEASURED' && report.measurement_performed !== false) process.exit(1);
+          NODE
+
+      - name: Remove transient dependencies and caches
+        if: always()
+        shell: bash
+        run: |
+          rm -rf node_modules
+          git checkout -- package-lock.json 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/private313-run-summary.json" 2>/dev/null || true
+
+      - name: Upload validated aggregate only
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: private313-browserbase-render-stability-${{ github.run_id }}
+          path: private313-browserbase-render-stability.json
+          if-no-files-found: error
+          retention-days: 14
