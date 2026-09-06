@@ -15,7 +15,7 @@ export function llmsText(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   return `# SeenRelay
 
-SeenRelay is a provider-independent validation reuse layer for agent fleets and applications that repeatedly perform expensive read-only validation. It puts caller-owned local/private reuse and stronger source-native confirmation ahead of optional shared evidence; when no eligible cheaper path is sufficient, the original validation runs normally.
+SeenRelay is a provider-independent validation reuse layer for agent fleets and applications that repeatedly perform expensive read-only validation. SeenRelay is a reuse layer for repeated read-only validation: it puts caller-owned local/private reuse and stronger source-native confirmation ahead of optional shared evidence; when no eligible cheaper path is sufficient, the original validation runs normally.
 
 The strongest current product fit is a fleet of workers or agents that repeatedly validates the same deterministic state while browser sessions, scraping/extraction, model work, paid search, rate-limited capacity or multi-step validation is materially expensive. SeenRelay should stay out of cheap one-off paths and paths already solved by an equivalent authoritative cache.
 
