@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "seenrelay"
-version = "0.2.9"
+version = "0.2.10"
 description = "Measure and avoid redundant expensive validation with SeenRelay CHECK/OBSERVE."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,10 +14,13 @@ keywords = ["ai-agents", "validation", "freshness", "cache", "mcp", "langchain",
 classifiers = ["Programming Language :: Python :: 3", "Operating System :: OS Independent"]
 dependencies = []
 
+[project.optional-dependencies]
+crypto = ["cryptography>=42"]
+
 [project.urls]
 Homepage = "https://seenrelay.com/clients"
 Repository = "https://github.com/ovladon/seenrelay"
 Issues = "https://github.com/ovladon/seenrelay/issues"
 
 [tool.setuptools]
-py-modules = ["seenrelay", "seenrelay_shadow", "seenrelay_easy", "seenrelay_ambient", "seenrelay_assurance", "seenrelay_coordinates"]
+py-modules = ["seenrelay", "seenrelay_shadow", "seenrelay_easy", "seenrelay_ambient", "seenrelay_assurance", "seenrelay_coordinates", "seenrelay_zero_state"]

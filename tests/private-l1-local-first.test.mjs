@@ -181,3 +181,41 @@ test('tampered private ciphertext fails open to validation', async () => {
   assert.equal(validations, 1);
   assert.equal(edge.getTelemetry().privateReadFailures, 1);
 });
+
+test('private L1 clock skew fails closed instead of treating future entries as fresh or conditionally valid', async () => {
+  const store = memoryStore();
+  const codec = createAesGcmPrivateCodec(randomBytes(32));
+  const first = new SeenRelayZeroState({
+    privateStore: store,
+    privateCodec: codec,
+    privateMaxAgeMs: 60_000,
+    privateValidatorRetentionMs: 60_000,
+    now: () => 2_000
+  });
+  await first.guard({
+    coordinate,
+    validate: async () => freshResult({ price: 9 }, { etag: '"v9"' })
+  });
+
+  let validations = 0;
+  const second = new SeenRelayZeroState({
+    privateStore: store,
+    privateCodec: codec,
+    privateMaxAgeMs: 60_000,
+    privateValidatorRetentionMs: 60_000,
+    now: () => 1_000
+  });
+  const outcome = await second.guard({
+    coordinate,
+    validate: async ({ conditionalHeaders }) => {
+      validations += 1;
+      assert.deepEqual(conditionalHeaders, {});
+      return { price: 10 };
+    }
+  });
+  assert.equal(outcome.path, 'validated');
+  assert.deepEqual(outcome.value, { price: 10 });
+  assert.equal(validations, 1);
+  assert.equal(second.getTelemetry().privateFreshHits, 0);
+  assert.equal(second.getTelemetry().sourceConditionalAttempts, 0);
+});

@@ -290,7 +290,8 @@ export class SeenRelayZeroState {
     if (maxAgeMs <= 0) return null;
     const entry = this.cache.get(key);
     if (!entry) return null;
-    if (this.now() - entry.confirmedAtMs > maxAgeMs) return null;
+    const ageMs = this.now() - entry.confirmedAtMs;
+    if (ageMs < 0 || ageMs > maxAgeMs) return null;
     const clone = cloneForCache(entry.value);
     if (!clone.ok) return null;
     this.cache.delete(key);
@@ -301,7 +302,8 @@ export class SeenRelayZeroState {
   #retainedEntry(key) {
     const entry = this.cache.get(key);
     if (!entry) return null;
-    return this.now() - entry.confirmedAtMs <= this.validatorRetentionMs ? entry : null;
+    const ageMs = this.now() - entry.confirmedAtMs;
+    return ageMs >= 0 && ageMs <= this.validatorRetentionMs ? entry : null;
   }
 
   #remember(key, value, validator, maxAgeMs, confirmedAtMs = this.now()) {
@@ -518,13 +520,14 @@ export class SeenRelayZeroState {
 
     const localRetained = this.#retainedEntry(key);
     const privateEntry = await this.#readPrivate(key);
-    if (privateEntry && privateMaxAgeMs > 0 && this.now() - privateEntry.confirmedAtMs <= privateMaxAgeMs) {
+    const privateAgeMs = privateEntry ? this.now() - privateEntry.confirmedAtMs : null;
+    if (privateEntry && privateMaxAgeMs > 0 && privateAgeMs >= 0 && privateAgeMs <= privateMaxAgeMs) {
       this.metrics.privateFreshHits += 1;
       this.#remember(key, privateEntry.value, privateEntry.sourceValidator, maxAgeMs);
       return { value: privateEntry.value, path: 'private_reuse', relay: { check: null }, source: { conditional: false, notModified: false } };
     }
 
-    const privateCandidate = privateEntry && this.now() - privateEntry.confirmedAtMs <= this.privateValidatorRetentionMs
+    const privateCandidate = privateEntry && privateAgeMs >= 0 && privateAgeMs <= this.privateValidatorRetentionMs
       ? privateEntry
       : null;
     const retainedCandidate = newestEntry(localRetained, privateCandidate);

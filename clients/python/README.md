@@ -2,9 +2,9 @@
 
 **Measure and avoid redundant expensive validation.**
 
-Deterministic, standard-library-only client that places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default.
+The base package is standard-library-only. It places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default, and it also provides a network-free Zero-State path for eligible caller-owned reuse.
 
-Client 0.2.9 includes the multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit alongside Ambient integrations for LangChain and PydanticAI and the local machine-readable integration catalog. Python remains conservative and shadow-first by default. The direct Firecrawl SDK shadow adapter is JavaScript / TypeScript-only; Python parity is not claimed.
+Client 0.2.10 adds provider-independent Zero-State for explicit read-only validation: in-flight/local reuse, caller-owned private L1, and source-native conditional validation before the authoritative fallback. Ambient framework adapters remain shadow-only by default, and the hosted CHECK/OBSERVE protocol is unchanged. The direct Firecrawl SDK shadow adapter remains JavaScript / TypeScript-only.
 
 ## Shared CHECK assurance
 
@@ -51,6 +51,47 @@ fact = json_pointer_fact(
 
 MCP/OpenAPI coordinates are local repetition keys only. Shared fact builders require a stable source-native locator. Prefer fragmentation to guessed semantic convergence.
 
+## Python Zero-State for fleet-local reuse
+
+`seenrelay_zero_state` adds no hosted operation and performs no SeenRelay network call by itself. It is for applications that control an eligible read-only validation path and want the cheapest caller-owned path first.
+
+```python
+from seenrelay_zero_state import SeenRelayZeroState, fresh_result
+
+edge = SeenRelayZeroState(local_max_age_ms=5_000)
+
+value = await edge.guard(
+    coordinate={"tool": "catalog.read", "arguments": {"id": 42}},
+    validate=lambda conditional_headers: fetch_catalog(42, conditional_headers),
+)
+```
+
+The authoritative validator remains the fallback. A positive local/private freshness window is explicit caller policy; the default completed-result TTL is zero. A retained ETag or Last-Modified value may still be used for conditional source confirmation when completed-result reuse is disabled.
+
+For caller-owned private L1 across workers or restarts, supply both a store and a codec. The backing store receives only an opaque SHA-256 coordinate key and a sealed payload.
+
+```bash
+pip install 'seenrelay[crypto]'
+```
+
+```python
+import os
+from seenrelay_zero_state import SeenRelayZeroState, create_aes_gcm_private_codec
+
+# Provision this as a 64-hex-character secret in your own secret manager.
+key_bytes = bytes.fromhex(os.environ["SEENRELAY_L1_KEY_HEX"])
+
+edge = SeenRelayZeroState(
+    private_store=fleet_store,  # sync/async get(key) + set(key, sealed_value)
+    private_codec=create_aes_gcm_private_codec(key_bytes),
+    private_max_age_ms=30_000,
+)
+```
+
+The built-in codec requires exactly 32 key bytes and uses AES-256-GCM. Store/codec/decrypt failures fail open to normal validation. A private L1 hit is never relabeled as an independent OBSERVE. The base `seenrelay` install remains dependency-free; only the built-in AES helper needs the optional `crypto` extra.
+
+Coordinate fingerprints match the JavaScript Zero-State contract for interoperable JSON values. Python rejects integers that cannot be represented exactly by JavaScript numbers instead of silently changing the coordinate. The built-in encrypted payload formats intentionally do **not** claim mixed-language ciphertext interoperability. A mixed Python/JavaScript fleet that shares one private store must provide one caller-owned codec format understood by both languages.
+
 ## Ambient MCP
 
 Python can start in local-only shadow mode with no SeenRelay network call and no result suppression:
@@ -72,7 +113,7 @@ server = ambient_openai_agents_mcp_server(raw_mcp_server)
 # pass `server` to the Agent exactly as before
 ```
 
-The report stores aggregate metrics plus SHA-256 fingerprints only. It identifies exact repetition worth reviewing; it does not claim savings. Active Ambient reuse is intentionally unavailable in the Python client until its local-first semantics match the TypeScript implementation.
+The report stores aggregate metrics plus SHA-256 fingerprints only. It identifies exact repetition worth reviewing; it does not claim savings. Active Ambient reuse is intentionally unavailable in the Python client; Zero-State must be configured explicitly around a caller-controlled read-only validation path.
 
 ## Install
 

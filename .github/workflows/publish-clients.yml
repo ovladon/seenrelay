@@ -242,24 +242,46 @@ jobs:
           python -m build
           python -m twine check dist/*
 
-      - name: Install Python wheel in a clean virtual environment
+      - name: Install base Python wheel in a clean virtual environment
         shell: bash
         run: |
           set -euo pipefail
           python -m venv /tmp/seenrelay-release-test
-          /tmp/seenrelay-release-test/bin/python -m pip install --disable-pip-version-check clients/python/dist/*.whl
+          WHEEL="$(find "$GITHUB_WORKSPACE/clients/python/dist" -maxdepth 1 -type f -name 'seenrelay-*.whl' -print -quit)"
+          test -n "$WHEEL"
+          /tmp/seenrelay-release-test/bin/python -m pip install --disable-pip-version-check "$WHEEL"
           /tmp/seenrelay-release-test/bin/python - <<'PY'
           from seenrelay import SeenRelayClient
           from seenrelay_shadow import SeenRelayShadowProof
           from seenrelay_easy import protect_validation
           from seenrelay_assurance import assess_shared_check_evidence, multi_signal_retained_reuse_policy
           from seenrelay_coordinates import json_pointer_fact, element_id_fact, source_key_fact, mcp_tool_coordinate, openapi_operation_coordinate
+          from seenrelay_zero_state import SeenRelayZeroState, fresh_result, sha256_json_fingerprint
           client = SeenRelayClient(transport=lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('not called during import test')))
           proof = SeenRelayShadowProof(client)
+          edge = SeenRelayZeroState()
           assert client is not None and proof is not None and callable(protect_validation)
           assert callable(assess_shared_check_evidence) and callable(multi_signal_retained_reuse_policy)
           assert callable(json_pointer_fact) and callable(element_id_fact) and callable(source_key_fact)
           assert callable(mcp_tool_coordinate) and callable(openapi_operation_coordinate)
+          assert callable(edge.guard) and callable(fresh_result)
+          assert sha256_json_fingerprint({"id": 1}).startswith("sha256:")
+          PY
+
+      - name: Verify optional crypto extra from release wheel metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          WHEEL="$(find "$GITHUB_WORKSPACE/clients/python/dist" -maxdepth 1 -type f -name 'seenrelay-*.whl' -print -quit)"
+          test -n "$WHEEL"
+          /tmp/seenrelay-release-test/bin/python -m pip install --disable-pip-version-check "${WHEEL}[crypto]"
+          /tmp/seenrelay-release-test/bin/python - <<'PY'
+          from seenrelay_zero_state import create_aes_gcm_private_codec
+          codec = create_aes_gcm_private_codec(b"x" * 32)
+          key = "sha256:" + "0" * 64
+          entry = {"value":{"ok":True},"confirmed_at_ms":1,"source_validator":None,"observed_at_ms":None,"independently_obtained":True}
+          sealed = codec.seal(entry, key)
+          assert codec.open(sealed, key)["value"] == {"ok": True}
           PY
 
       - name: Upload PyPI release artifacts

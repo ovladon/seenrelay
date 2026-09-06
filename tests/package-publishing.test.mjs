@@ -38,7 +38,7 @@ test('release builds verify the requested version against both package manifests
   assert.match(workflow, /clients\/python\/pyproject\.toml/);
   assert.match(workflow, /test \"\$EXPECTED\" = \"\$ACTUAL\"/);
   assert.match(workflow, /Install npm tarball in a clean project/);
-  assert.match(workflow, /Install Python wheel in a clean virtual environment/);
+  assert.match(workflow, /Install base Python wheel in a clean virtual environment/);
 });
 
 test('registry release retries are idempotent for npm and PyPI', () => {
