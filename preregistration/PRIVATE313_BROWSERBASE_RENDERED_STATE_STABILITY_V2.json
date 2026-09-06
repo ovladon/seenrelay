@@ -1,0 +1,99 @@
+{
+  "schema": "seenrelay-preregistration-v1",
+  "experiment_id": "PRIVATE313",
+  "title": "Browserbase exact rendered-state stability v2",
+  "parent_context": ["PRIVATE311", "PRIVATE312"],
+  "production_source_commit": "2cc216207044f55b27aced00aa0baa5af738ba62",
+  "selection_provenance": {
+    "selector": ".rv-mechanism",
+    "selection_basis": "Production source structure only, before any PRIVATE313 Browserbase capture or render digest.",
+    "source_file": "src/landing.ts",
+    "source_reason": "Unique semantic aside representing SeenRelay placement; subtree text is static and contains no publicProductFacts interpolation, version, counter, timestamp, benchmark value or user-controlled content.",
+    "script_mutation_check": "public/revamp.js does not target or mutate .rv-mechanism or its subtree.",
+    "animation_check": "public/revamp-factual.css applies static .rv-mechanism and .rv-flow-list rules; no animation is attached to the target subtree. Screenshot animations are additionally disabled.",
+    "private311_selector_reuse": false,
+    "screenshots_observed_before_freeze": false,
+    "render_digests_observed_before_freeze": false
+  },
+  "frozen_target_contract": {
+    "url": "https://seenrelay.com/",
+    "selector": ".rv-mechanism",
+    "selector_cardinality_required": 1,
+    "deployment_sha_required": "2cc216207044f55b27aced00aa0baa5af738ba62",
+    "deployment_health_endpoint": "https://seenrelay.com/healthz",
+    "resource_urls": [
+      "https://seenrelay.com/",
+      "https://seenrelay.com/revamp.css",
+      "https://seenrelay.com/revamp-factual.css",
+      "https://seenrelay.com/revamp.js"
+    ],
+    "resource_byte_hash_algorithm": "sha256",
+    "resource_hashes_must_match_before_vs_after": true,
+    "viewport": {"width": 1440, "height": 1000},
+    "reduced_motion": "reduce",
+    "color_scheme": "dark",
+    "navigation_wait_until": "domcontentloaded",
+    "fonts_ready_required": true,
+    "post_fonts_fixed_wait_ms": 500,
+    "screenshot": {
+      "type": "png",
+      "animations": "disabled",
+      "caret": "hide",
+      "scale": "css"
+    }
+  },
+  "provider_contract": {
+    "provider": "Browserbase",
+    "sessions_endpoint": "POST https://api.browserbase.com/v1/sessions",
+    "auth_header": "X-BB-API-Key",
+    "region": "eu-central-1",
+    "project_id_supplied": false,
+    "session_create_without_project_id_prevalidated_by_private312": true,
+    "session_release": "best-effort REQUEST_RELEASE using returned session projectId after CDP close",
+    "browser_client": "playwright-core@1.63.0",
+    "independent_sessions": 20
+  },
+  "measurement": {
+    "required_captures": 20,
+    "digest_algorithm": "sha256 over exact locator PNG bytes",
+    "individual_digest_values_retained": false,
+    "screenshots_retained": false,
+    "session_ids_retained": false,
+    "connect_urls_retained": false,
+    "raw_resource_bytes_retained": false,
+    "browser_version_values_retained": false,
+    "one_browser_version_required_across_all_captures": true,
+    "aggregate_only_artifact": true
+  },
+  "thresholds": {
+    "exact_stability_pass_numerator": 20,
+    "exact_stability_pass_denominator": 20,
+    "any_admissible_exact_mismatch_kills_v2": true,
+    "fuzzy_or_perceptual_matching_allowed": false,
+    "semantic_embedding_or_llm_rescue_allowed": false
+  },
+  "invalidation_rules": {
+    "deployment_sha_mismatch_before_or_after": "INADMISSIBLE_DEPLOYMENT_CHANGED",
+    "resource_hash_change_before_vs_after": "INADMISSIBLE_SOURCE_CHANGED_DURING_RUN",
+    "selector_cardinality_not_exactly_one_in_any_session": "INCOMPLETE_SELECTOR_CONTRACT",
+    "provider_or_capture_failure_before_20": "INCOMPLETE_PROVIDER_OR_CAPTURE_FAILURE",
+    "more_than_one_browser_version": "INADMISSIBLE_PROVIDER_ENVIRONMENT_CHANGED",
+    "no_partial_stability_result_on_incomplete_or_inadmissible_run": true
+  },
+  "decision_rule": {
+    "20_of_20_same_exact_digest": "EXACT_RENDER_STABLE_CANDIDATE_V2",
+    "otherwise_after_complete_admissible_20": "KILL_EXACT_VISUAL_DIGEST_V2"
+  },
+  "post_result_authorization": {
+    "EXACT_RENDER_STABLE_CANDIDATE_V2": "Authorizes only a separate preregistered Browserbase economics/safety experiment using the same exact rendered-state identity. Does not establish natural overlap or adoption.",
+    "KILL_EXACT_VISUAL_DIGEST_V2": "Stop exact PNG rendered-state identity for this target. No fuzzy/perceptual rescue within this track.",
+    "incomplete_or_inadmissible": "No stability conclusion; only exact-stage transport/source correction may be separately preregistered. Render identity and 20/20 threshold remain frozen."
+  },
+  "non_authorizations": [
+    "No SeenRelay CHECK or OBSERVE in PRIVATE313.",
+    "No reuse-rate or economics conclusion.",
+    "No production change.",
+    "No external-adoption claim.",
+    "No generalization beyond this exact target/provider/render contract."
+  ]
+}
