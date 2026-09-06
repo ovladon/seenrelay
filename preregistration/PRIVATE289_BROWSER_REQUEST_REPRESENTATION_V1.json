@@ -1,0 +1,90 @@
+{
+  "schema": "seenrelay-private289-browser-request-representation-v1",
+  "status": "geometry_frozen_before_representation_comparator",
+  "purpose": "Controlled feasibility test of representation portability for browser retrieval tasks: compare a natural-language request surface with an independently available structured task representation without using evaluator answers to construct identity.",
+  "production_authorized": false,
+  "public_claim_authorized": false,
+  "natural_hit_rate_claim_authorized": false,
+  "private285_class_pass_authorized": false,
+  "source": {
+    "repository": "ServiceNow/webarena-verified",
+    "revision": "6473f72db5dcefc97b5725b59e734504edc28a21",
+    "dataset_file": "assets/dataset/webarena-verified.json",
+    "dataset_git_blob_sha": "eb73812e5352e8a26c8f8b4afa612fbc5225bf19",
+    "dataset_sha256": "d65275660814663375028e9017e1f929e3c38321041b125795e2713b52243d30",
+    "dataset_bytes": 927596,
+    "license": "Apache-2.0",
+    "license_file": "LICENSE",
+    "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "license_bytes": 11357,
+    "source_lock_analysis_performed": false
+  },
+  "identity_boundary": {
+    "must_not_use_eval_expected_to_construct_identity": true,
+    "must_not_use_retrieved_data_to_construct_identity": true,
+    "must_not_use_llm": true,
+    "must_not_use_embeddings": true,
+    "must_not_use_fuzzy_matching": true,
+    "input_identity_fields_only": [
+      "sites",
+      "intent_template_id",
+      "intent_template",
+      "instantiation_dict"
+    ],
+    "task_id_is_audit_join_only_not_identity": true
+  },
+  "two_surfaces": {
+    "surface_a": "original intent string after CRLF/CR to LF and trim only",
+    "surface_b": "stable JSON object containing sites, intent_template_id, intent_template, and instantiation_dict; object keys recursively sorted; arrays preserved",
+    "surface_b_is_not_generated_from_eval_answer": true,
+    "surface_b_is_not_a_paraphrase": true,
+    "surface_difference_required": true
+  },
+  "eligibility_for_later_comparator": {
+    "task_must_parse": true,
+    "nonempty_sites": true,
+    "nonempty_intent": true,
+    "integer_intent_template_id": true,
+    "nonempty_intent_template": true,
+    "instantiation_dict_must_be_object": true,
+    "retrieval_status_must_be_deterministically_identifiable_from_evaluator_metadata": true,
+    "do_not_require_or_inspect_retrieved_data_contents_during_geometry_diagnostic": true
+  },
+  "phase_order": [
+    "source_lock_only",
+    "freeze_source_hashes",
+    "geometry_diagnostic_without_retrieved_data_contents",
+    "freeze_eligible_denominator_and_comparator_metrics",
+    "only_then_run_representation_comparator"
+  ],
+  "geometry_result": {
+    "workflow_run_id": 33986201098,
+    "artifact_id": 9975222093,
+    "artifact_digest": "sha256:1875bda80fe883c030efd926b2381ebe4222fb40ae09875589da66071679763e",
+    "records_seen": 812,
+    "parseable_records": 812,
+    "retrieval_tasks": 297,
+    "retrieval_tasks_with_required_input_identity_fields": 297,
+    "retrieval_tasks_with_distinct_surface_a_and_surface_b": 297,
+    "retrieved_data_property_read": false,
+    "retrieved_data_contents_inspected": false,
+    "locked_comparator_denominator": 297
+  },
+  "interpretation": {
+    "positive_result_is_controlled_representation_feasibility_only": true,
+    "positive_result_is_not_natural_prevalence": true,
+    "positive_result_is_not_market_size": true,
+    "positive_result_is_not_adoption_evidence": true,
+    "positive_result_does_not_prove_agents_will_converge_on_same_structured_identity": true,
+    "positive_result_does_not_prove_advantage_over_all_possible_semantic_caches": true,
+    "negative_or_insufficient_result_is_retained": true
+  },
+  "privacy_and_rights": {
+    "source_is_public_apache_2_0_dataset": true,
+    "raw_dataset_not_committed_to_seenrelay": true,
+    "raw_intents_not_output_in_artifacts": true,
+    "retrieved_data_not_output_in_artifacts": true,
+    "task_ids_not_output_in_artifacts": true,
+    "aggregate_counts_and_source_hashes_only": true
+  }
+}
