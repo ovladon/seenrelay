@@ -5,7 +5,7 @@ SeenRelay is a reuse layer for repeated read-only validation.
 It sits in front of validation work an AI agent or application already performs. For an exact eligible repeat, it can use caller-owned local/private reuse, source-native freshness confirmation, or optional shared CHECK evidence. If none of those paths is sufficient, the original validation runs normally.
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.10 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.11 · currently free · no account/API key.
 
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
