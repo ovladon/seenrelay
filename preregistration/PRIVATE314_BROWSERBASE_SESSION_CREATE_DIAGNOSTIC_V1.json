@@ -1,0 +1,88 @@
+{
+  "schema": "seenrelay-preregistration-v1",
+  "experiment_id": "PRIVATE314",
+  "title": "Browserbase sequential session-create transport diagnostic v1",
+  "parent_experiment": "PRIVATE313",
+  "parent_exact_head": "fe114669bcf5e5c29e2ba10e5ffad96af9e6fdec",
+  "reason": "PRIVATE313 completed five valid captures and cleanup attempts, then stopped at failure_stage=SESSION_CREATE with measurement_performed=false and no stability aggregates. The HTTP status was intentionally not retained by the parent harness, so the create boundary must be diagnosed before any transport amendment.",
+  "parent_result": {
+    "completed_captures": 5,
+    "sessions_created": 5,
+    "session_release_attempts": 5,
+    "failure_stage": "SESSION_CREATE",
+    "stability_result_observed": false
+  },
+  "diagnostic_contract": {
+    "provider": "Browserbase",
+    "api_key_secret": "BROWSERBASE_API_KEY",
+    "session_create_endpoint": "POST https://api.browserbase.com/v1/sessions",
+    "region": "eu-central-1",
+    "project_id_supplied": false,
+    "max_sequential_cycles": 8,
+    "cycle": [
+      "create session",
+      "if created, connect over CDP",
+      "close CDP browser",
+      "best-effort REQUEST_RELEASE",
+      "immediately start next cycle"
+    ],
+    "no_navigation": true,
+    "no_screenshot": true,
+    "no_render_digest": true,
+    "stop_on_first_session_create_failure": true,
+    "stop_if_cdp_lifecycle_cannot_be_reproduced": true
+  },
+  "allowed_aggregate_output": {
+    "attempted_create_count": "integer 0..8",
+    "successful_create_count": "integer 0..8",
+    "cdp_connect_success_count": "integer 0..8",
+    "release_attempt_count": "integer 0..8",
+    "first_create_failure_http_status": "integer-or-null",
+    "first_create_failure_class": "NONE|RATE_LIMIT_429|AUTH_401|PAYMENT_402|OTHER_4XX|SERVER_5XX|NETWORK_FAILURE",
+    "retry_after_present": "boolean-or-null",
+    "retry_after_seconds": "integer-or-null, parsed only when a simple integer Retry-After is supplied",
+    "rate_limit_remaining": "integer-or-null",
+    "diagnostic_status": "allowlisted status label"
+  },
+  "forbidden_output": [
+    "API key",
+    "session IDs",
+    "project IDs",
+    "connect URLs",
+    "provider response body",
+    "request headers",
+    "screenshots",
+    "render digests",
+    "page source",
+    "SeenRelay fact values"
+  ],
+  "precommitted_interpretation": {
+    "RATE_LIMIT_429": {
+      "authorization": "Authorize PRIVATE315 transport amendment only.",
+      "frozen_retry_policy": {
+        "retry_only_http_status": 429,
+        "maximum_retries_per_capture": 5,
+        "when_integer_retry_after_present": "wait clamp(Retry-After seconds, 1, 60)",
+        "when_retry_after_absent_or_unparseable": "wait 2^(retry_index+1) seconds, yielding 2,4,8,16,32",
+        "non_429_retry_allowed": false,
+        "render_identity_change_allowed": false,
+        "threshold_change_allowed": false,
+        "source_contract_change_allowed": false
+      }
+    },
+    "AUTH_401": "Credential blocker only; do not amend PRIVATE313 transport.",
+    "PAYMENT_402": "Plan/usage blocker only; do not purchase or upgrade automatically and do not amend PRIVATE313 transport.",
+    "OTHER_4XX": "No automatic amendment; diagnose exact provider contract separately.",
+    "SERVER_5XX": "No automatic amendment from PRIVATE314; provider transient policy would require separate preregistration.",
+    "NETWORK_FAILURE": "No automatic amendment from PRIVATE314; network transient policy would require separate preregistration.",
+    "NONE": "If all eight cycles succeed, the parent failure is not reproduced; do not introduce retry logic from this diagnostic alone."
+  },
+  "non_authorizations": [
+    "No stability conclusion.",
+    "No access to PRIVATE313 partial digest recurrence.",
+    "No SeenRelay CHECK or OBSERVE.",
+    "No production change.",
+    "No Browserbase plan upgrade or purchase.",
+    "No fuzzy/perceptual/semantic rescue."
+  ]
+}
