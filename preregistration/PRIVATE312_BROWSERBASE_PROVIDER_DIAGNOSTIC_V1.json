@@ -1,0 +1,84 @@
+{
+  "schema": "seenrelay-preregistration-v1",
+  "experiment_id": "PRIVATE312",
+  "title": "Browserbase provider/capture stage diagnostic v1",
+  "parent_experiment": "PRIVATE311",
+  "parent_exact_head": "041aa9dee22e8ddf32dce5c097023813f2264b4d",
+  "reason": "PRIVATE311 first credentialed exact-head rerun produced INCOMPLETE_PROVIDER_OR_CAPTURE_FAILURE with 0/20 captures and no numeric stability result. The parent harness intentionally suppresses provider/capture exception details, so the failure stage must be isolated before any amendment or rerun.",
+  "measurement_status_before_private312": {
+    "private311_numeric_result_observed": false,
+    "private311_measurement_performed": false,
+    "private311_completed_captures": 0,
+    "private311_canonical_measured_result_consumed": false
+  },
+  "frozen_provider_contract": {
+    "provider": "Browserbase",
+    "projects_endpoint": "GET https://api.browserbase.com/v1/projects",
+    "session_create_endpoint": "POST https://api.browserbase.com/v1/sessions",
+    "auth_header": "X-BB-API-Key",
+    "session_create_body_exactly_matches_private311": {
+      "region": "eu-central-1",
+      "userMetadata": {
+        "experiment": "PRIVATE311",
+        "workload": "rendered-state-stability-v1"
+      }
+    },
+    "target_url": "https://seenrelay.com/",
+    "target_selector": ".hero-shell",
+    "viewport": {"width": 1440, "height": 1000},
+    "reduced_motion": "reduce",
+    "color_scheme": "dark"
+  },
+  "diagnostic_sequence": [
+    "projects_auth",
+    "session_create_without_project_id",
+    "cdp_connect_if_session_created",
+    "navigation_if_connected",
+    "selector_cardinality_if_navigated",
+    "single_screenshot_if_selector_valid"
+  ],
+  "stop_rules": {
+    "stop_after_first_failed_stage": true,
+    "do_not_retry_session_create_with_project_id_in_private312": true,
+    "do_not_run_private311_twenty_capture_measurement": true,
+    "do_not_call_seenrelay_check_or_observe": true,
+    "do_not_compute_or_retain_render_digest": true
+  },
+  "allowed_aggregate_output": {
+    "projects_http_status": "integer-or-null",
+    "project_count": "integer-or-null",
+    "session_create_http_status": "integer-or-null",
+    "create_error_mentions_project_id": "boolean-or-null",
+    "highest_stage": "allowlisted stage label only",
+    "target_navigation_http_status": "integer-or-null",
+    "selector_count": "integer-or-null",
+    "screenshot_succeeded": "boolean",
+    "session_release_attempted": "boolean"
+  },
+  "forbidden_output": [
+    "api key",
+    "project IDs or names",
+    "session IDs",
+    "connect URLs",
+    "provider response body text",
+    "screenshot bytes",
+    "render digests",
+    "page source",
+    "request headers",
+    "SeenRelay fact values"
+  ],
+  "precommitted_interpretation": {
+    "projects_auth_failure": "Access/configuration blocker only; no PRIVATE311 amendment authorized.",
+    "session_create_fails_and_mentions_project_id_and_project_count_is_1": "Authorize a separate preregistered PRIVATE313 transport amendment that obtains the single project ID transiently from GET /v1/projects and supplies it to session creation. No stability threshold or render contract change is authorized.",
+    "session_create_fails_and_project_count_is_not_1": "Do not choose a project automatically. External project selection/configuration is required before another measurement attempt.",
+    "session_create_succeeds_but_later_stage_fails": "Authorize only a separate preregistered correction targeted to the exact failing transport/capture stage. No stability threshold or render identity change is authorized.",
+    "all_stages_succeed": "PRIVATE311 transport/capture path is operational in a single-session diagnostic. A same-contract PRIVATE311 rerun may be considered only after documenting why the parent failure was transient; no rerun may be used to improve a measured stability result because none exists yet."
+  },
+  "non_authorizations": [
+    "No exact-render stability conclusion.",
+    "No SeenRelay reuse or economics conclusion.",
+    "No production change.",
+    "No fuzzy/perceptual/semantic rescue.",
+    "No external-adoption claim."
+  ]
+}
