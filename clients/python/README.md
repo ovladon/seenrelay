@@ -4,7 +4,7 @@
 
 The base package is standard-library-only. It places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default, and it also provides a network-free Zero-State path for eligible caller-owned reuse.
 
-Client 0.2.10 adds provider-independent Zero-State for explicit read-only validation: in-flight/local reuse, caller-owned private L1, and source-native conditional validation before the authoritative fallback. Ambient framework adapters remain shadow-only by default, and the hosted CHECK/OBSERVE protocol is unchanged. The direct Firecrawl SDK shadow adapter remains JavaScript / TypeScript-only.
+Client 0.2.11 adds local natural-workload evidence parity: Python Shadow Proof can retain a bounded sanitized cohort and export the same schema-v2 hostile-benchmark input used by JavaScript / TypeScript, while `seenrelay_economics` evaluates that cohort against the best measured non-shared path. It keeps authoritative validation enabled, exports no fact identity/source/raw value/per-call timestamp, and never enables reuse. Provider-independent Zero-State, Ambient adapters, and the hosted CHECK/OBSERVE protocol are otherwise unchanged. The direct Firecrawl SDK shadow adapter remains JavaScript / TypeScript-only.
 
 ## Shared CHECK assurance
 
@@ -184,7 +184,48 @@ print(proof.report(
 ))
 ```
 
-Python Shadow Proof keeps the original validation. It measures CHECK status distribution, validation time and SeenRelay request latency locally. Potential savings count only `SAME_OBSERVED` calls and subtract caller-supplied request costs. Savings from conditional ETag / Last-Modified requests are deliberately excluded unless measured separately by the application.
+Python Shadow Proof keeps the original validation. It measures CHECK status distribution, validation time and SeenRelay request latency locally. For `SAME_OBSERVED`, it also compares the caller-known deterministic JSON value with the authoritative validation result and reports safety as pass/fail/incomplete/no-opportunities without retaining compared raw values. Potential savings count only `SAME_OBSERVED` calls and subtract caller-supplied request costs. Savings from conditional ETag / Last-Modified requests are deliberately excluded unless measured separately by the application.
+
+## Collect sanitized natural-workload evidence
+
+Natural-workload collection is explicit and local. The simulated reuse policy runs only after authoritative validation and cannot suppress it.
+
+```python
+from seenrelay import SeenRelayClient, reuse_known_on_same_observed
+from seenrelay_shadow import SeenRelayShadowProof
+from seenrelay_economics import evaluate_hostile_benchmark
+
+proof = SeenRelayShadowProof(
+    SeenRelayClient(),
+    benchmark_record_limit=10_000,
+)
+
+value = proof.guard(
+    fact=fact,
+    known_value=known_value,
+    validate=lambda ctx: expensive_validation(ctx.conditional_headers),
+    benchmark={
+        "reuse": reuse_known_on_same_observed,
+        "baseline_cost": 5,
+        "check_cost": 0,
+        "observe_cost": 0,
+        "observe_after_baseline": True,
+    },
+)
+
+benchmark_input = proof.hostile_benchmark_input(
+    workload_id="opaque-run-id",
+    controls={
+        "local_cache": {"available": True, "measured": True},
+        "source_native_conditional": {"available": True, "measured": True},
+        "provider_native_cache": {"available": True, "measured": True},
+    },
+)
+
+result = evaluate_hostile_benchmark(benchmark_input)
+```
+
+Each retained record contains only CHECK outcome, simulated-policy decision, comparison result, per-path timings and caller-supplied cost units. The export omits the fact descriptor, source, known value, validated value and per-call timestamp. CHECK-unavailable calls remain in schema v2. A native control declared available but not measured makes evaluation fail closed. If concurrent relay traffic makes one call's CHECK/OBSERVE telemetry timing impossible to attribute unambiguously, Python invalidates the benchmark export instead of guessing. The evaluator always reports `automatic_reuse_enabled_by_evaluator = False`.
 
 Use SeenRelay around repeated validation that is materially more expensive than the preflight: paid search, scraping/proxy work, browser or extraction calls, rate-limited APIs, model-assisted parsing, or multi-step validation. It is generally a poor fit for a cheap one-off GET.
 
