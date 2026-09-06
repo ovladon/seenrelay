@@ -25,7 +25,7 @@ test('homepage answers the four adoption questions in order', () => {
   const install = landing.indexOf('INSTALL AND USE');
   const tests = landing.indexOf('TESTS WE HAVE RUN');
   assert.ok(what >= 0 && does > what && install > does && tests > install);
-  assert.match(landing, /original validation runs normally/i);
+  assert.match(landing, /fall through to the original validation/i);
   assert.match(landing, /First run: measure repetition without changing application behavior/);
 });
 
@@ -42,10 +42,10 @@ test('homepage derives verified package and benchmark facts', () => {
 });
 
 test('homepage explains the actual validation placement rather than a slogan', () => {
-  for (const expected of ['Existing request', 'Exact identity + freshness policy', 'Cheaper eligible path', 'Original validation when needed', 'OBSERVE after fresh validation']) {
+  for (const expected of ['Existing worker request', 'Exact identity + freshness policy', 'Cheaper eligible path', 'Original validation when needed', 'OBSERVE after fresh validation']) {
     assert.match(landing, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  assert.match(landing, /Local\/private reuse → source-native confirmation → optional shared CHECK/);
+  assert.match(landing, /Local\/private(?: fleet)? reuse → source-native confirmation → optional shared CHECK/);
 });
 
 test('agent onboarding uses well-known Agent Skill discovery from the SeenRelay origin', () => {
@@ -58,8 +58,8 @@ test('first integration is behavior-preserving, zero-config and produces a local
   assert.match(landing, /ambientMcpClient\(rawMcpClient\)/);
   assert.doesNotMatch(landing, /ambientMcpClient\(rawMcpClient,\s*\{/);
   assert.match(landing, /seenRelayAmbient\.getReport\(\)/);
-  assert.match(landing, /measurement first/i);
-  assert.match(landing, /Reuse remains a caller decision/);
+  assert.match(landing, /Measure first/i);
+  assert.match(landing, /If the report shows no meaningful repeat work, leave the path alone/i);
 });
 
 test('homepage presents readable evidence and its limits together', () => {
@@ -71,7 +71,7 @@ test('homepage presents readable evidence and its limits together', () => {
   assert.match(landing, /What they do not establish/);
   assert.match(landing, /How to test your own workload/);
   assert.match(landing, /do not establish a universal hit rate, guaranteed savings/i);
-  assert.match(landing, /controlled synthetic facts to measure provider-path mechanics/i);
+  assert.match(landing, /first-party smoke tests, not a universal ROI claim/i);
   assert.match(landing, /natural-workload suitability is evaluated separately/i);
   assert.doesNotMatch(landing, /fit:\s*poor|poor-fit examples/i);
   assert.match(landing, /\/product-facts\.json/);
@@ -80,13 +80,13 @@ test('homepage presents readable evidence and its limits together', () => {
 
 test('quickstart is factual, agent-compatible and behavior-preserving', () => {
   assert.match(quickstartSource, /INTEGRATION QUICKSTART/);
-  assert.match(quickstartSource, /Install\. Wrap once\. Run normally\. Read the report\./);
+  assert.match(quickstartSource, /Measure first\. Reuse only where the fleet earns it\./);
   assert.match(quickstartSource, /CODING-AGENT INTEGRATION/);
   assert.match(quickstartSource, /MANUAL INTEGRATION/);
   assert.match(quickstartSource, /ambientMcpClient\(rawMcpClient\)/);
   assert.match(quickstartSource, /ambient_mcp_client\(raw_mcp_client\)/);
   assert.match(quickstartSource, /original operation still runs/i);
-  assert.match(quickstartSource, /Read the local report before enabling reuse/);
+  assert.match(quickstartSource, /The report is local; the wrapper does not authorize automatic reuse/i);
 });
 
 test('integration chooser makes measurement the primary path and hosted protocol connection separate', () => {

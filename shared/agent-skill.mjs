@@ -1,4 +1,4 @@
-export const SEENRELAY_SKILL_DESCRIPTION = "Integrate SeenRelay conservatively into repeated read-only validation and MCP/tool paths. Detect the project framework, prefer its supported Ambient adapter, start local-shadow-only, and preserve stronger local/source-native mechanisms.";
+export const SEENRELAY_SKILL_DESCRIPTION = "Integrate SeenRelay into repeated expensive read-only validation across agent fleets. Start in shadow mode, preserve stronger local/source-native controls, and prefer caller-owned private reuse before optional shared evidence.";
 
 export function agentSkillMarkdown(){
 return `---
