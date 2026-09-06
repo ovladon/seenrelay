@@ -86,7 +86,7 @@ const edge = new SeenRelayZeroState({
 </section>
 
 <section class="rv-shell rv-section">
-  <div class="rv-section-head"><div class="rv-eyebrow">BOUNDARIES</div><h2>Fleet reuse is not a hosted tenant claim.</h2><p>Private L1 is caller-owned storage. SeenRelay does not claim that the public relay is a private tenant store. Hosted CHECK and OBSERVE remain optional shared-evidence operations with their existing public protocol semantics.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">BOUNDARIES</div><h2>Fleet reuse is not a hosted tenant claim.</h2><p>Private L1 is caller-owned storage. SeenRelay does not claim that the public relay is a private tenant store. CHECK and OBSERVE remain the only hosted domain operations; they remain optional shared-evidence operations with their existing public protocol semantics.</p></div>
   <div class="rv-contract-list">
     <article><b>No truth verdict</b><span>SeenRelay reports compatible recent observations; it does not decide reality.</span></article>
     <article><b>No mutation suppression</b><span>Mutating or destructive operations are outside the reuse target.</span></article>
