@@ -1,6 +1,6 @@
 ---
 name: seenrelay
-description: Integrate SeenRelay conservatively into repeated read-only validation and MCP/tool paths. Detect the project framework, prefer its supported Ambient adapter, start local-shadow-only, and preserve stronger local/source-native mechanisms.
+description: Integrate SeenRelay into repeated expensive read-only validation across agent fleets. Start in shadow mode, preserve stronger local/source-native controls, and prefer caller-owned private reuse before optional shared evidence.
 license: SEE LICENSE IN REPOSITORY
 compatibility: Requires a project that can call HTTP/MCP or use the SeenRelay TypeScript/Python client; never use this skill to suppress mutating or destructive operations.
 metadata:
