@@ -7,7 +7,7 @@ export function robotsText(origin: string): string {
 }
 
 export function sitemapXml(origin: string): string {
-  const urls = ['/', '/fleet', '/economics', '/quickstart', '/clients', '/trust', '/data-practices'];
+  const urls = ['/', '/fleet', '/readiness', '/economics', '/quickstart', '/clients', '/trust', '/data-practices'];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((path) => `  <url><loc>${origin}${path}</loc></url>`).join('\n')}\n</urlset>\n`;
 }
 
@@ -16,6 +16,8 @@ export function llmsText(origin: string): string {
   return `# SeenRelay
 
 SeenRelay helps an agent or application determine whether repeated expensive read-only validation is worth reusing before any reuse is enabled. Start with the free shadow audit: keep every authoritative validation on, measure exact recurrence and stronger local/source/provider-native controls, compare hypothetical reuse with the authoritative outcome, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.
+
+Site and API owners can also use ${origin}/readiness for a free native-first quick audit of one public HTTPS root response. That surface checks bounded HTTP freshness/validator evidence and recommends native fixes first; it cannot determine SeenRelay workload fit from a surface scan.
 
 SeenRelay is currently free and requires no SeenRelay account or API key. The strongest current product fit is a fleet of workers or agents that repeatedly validates the same deterministic state while browser sessions, scraping/extraction, model work, paid search, rate-limited capacity or multi-step validation is materially expensive. SeenRelay should stay out of cheap one-off paths and paths already solved by an equivalent authoritative cache.
 
@@ -100,6 +102,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 
 - Website: ${origin}/
 - Free shadow audit: https://github.com/ovladon/seenrelay/blob/main/docs/SHADOW_AUDIT.md
+- Site/API owner quick readiness audit: ${origin}/readiness
 - Fleet deployment: ${origin}/fleet
 - Quickstart: ${origin}/quickstart
 - Client integrations: ${origin}/clients
