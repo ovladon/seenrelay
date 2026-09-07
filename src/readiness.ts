@@ -6,7 +6,7 @@ import { privacyScopedHash } from './identity.js';
 
 const MAX_ROOT_BYTES = 131_072;
 const ROOT_TIMEOUT_MS = 5_000;
-const USER_AGENT = 'SeenRelayReadiness/1.0 (+https://seenrelay.com/readiness)';
+const USER_AGENT = 'SeenRelayVisitEfficiency/1.0 (+https://seenrelay.com/readiness)';
 const READINESS_GLOBAL_AUDITS_PER_MINUTE = 30;
 const READINESS_TARGET_AUDITS_PER_MINUTE = 4;
 
@@ -28,7 +28,7 @@ export type RootEvidence = {
 };
 
 export type ReadinessReport = {
-  schema: 'seenrelay-agent-readiness-quick-audit-v1';
+  schema: 'seenrelay-ai-visit-efficiency-quick-audit-v1';
   scope: 'single-root-response';
   target_origin: string;
   verdict: ReadinessVerdict;
@@ -292,7 +292,7 @@ export function classifyRootAudit(origin: string, raw: RawRootResult): Readiness
   nextSteps.push('Only run a SeenRelay workload audit if independent agents repeatedly perform expensive validation that stronger native controls do not already solve.');
 
   return {
-    schema: 'seenrelay-agent-readiness-quick-audit-v1',
+    schema: 'seenrelay-ai-visit-efficiency-quick-audit-v1',
     scope: 'single-root-response',
     target_origin: origin,
     verdict,
@@ -342,15 +342,15 @@ function esc(value: unknown): string {
 }
 
 export function readinessPage(origin: string): string {
-  const fullAuditPrompt = `Audit this site's AI-agent readiness from the owner's environment. Check robots.txt and sitemap discovery, HTTP caching and validators, Markdown/content negotiation, machine-readable API/tool/auth discovery, and repeated agent validation. Prefer standards-native fixes first. Do not install or recommend SeenRelay unless a real repeated expensive validation workload remains after equivalent native controls are tested. Return NATIVE_READY / NATIVE_FIX_RECOMMENDED / NEEDS_WORKLOAD_EVIDENCE for each surface and a separate workload-fit verdict only if measured evidence exists.`;
+  const fullAuditPrompt = `Audit this site's agent-facing accessibility and validation efficiency from the owner's environment. Check robots.txt and sitemap discovery, HTTP caching and validators, Markdown/content negotiation, machine-readable API/tool/auth discovery, and repeated agent validation. Prefer standards-native fixes first. Do not install or recommend SeenRelay unless a real repeated expensive validation workload remains after equivalent native controls are tested. Return NATIVE_READY / NATIVE_FIX_RECOMMENDED / NEEDS_WORKLOAD_EVIDENCE for each surface and a separate workload-fit verdict only if measured evidence exists.`;
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="A free native-first quick audit for AI-agent website readiness. Check the root HTTP freshness surface, get native fixes first, and require workload evidence before SeenRelay is considered.">
+<meta name="description" content="A free native-first AI visit efficiency audit. Check one public root HTTP freshness surface, get native fixes first, and require workload evidence before SeenRelay is considered.">
 <link rel="canonical" href="${esc(origin)}/readiness">
-<title>AI Agent Readiness — native-first quick audit | SeenRelay</title>
+<title>AI Visit Efficiency — native-first quick audit | SeenRelay</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/readiness.css">
 <script src="/readiness.js" defer></script>
@@ -363,9 +363,9 @@ export function readinessPage(origin: string): string {
 </header>
 <main>
 <section class="rv-shell rv-page-hero readiness-hero">
-  <div class="rv-kicker"><i></i><span>FREE · NATIVE-FIRST · NO ACCOUNT</span></div>
-  <h1>How ready is your site for AI agents?</h1>
-  <p>This quick audit focuses on a narrow question most readiness scores blur together: <strong>can agents consume the public root without doing avoidable revalidation work?</strong> It checks one bounded HTTPS response, recommends native HTTP fixes first, and never labels a site a SeenRelay candidate from a surface scan alone.</p>
+  <div class="rv-kicker"><i></i><span>AI VISIT EFFICIENCY · FREE · NATIVE-FIRST</span></div>
+  <h1>How efficiently can AI agents revisit your site?</h1>
+  <p>This quick audit focuses on one narrow question: <strong>can agents consume the public root without doing avoidable revalidation work?</strong> It checks one bounded HTTPS response, recommends native HTTP fixes first, and never labels a site a SeenRelay candidate from a surface scan alone.</p>
 </section>
 <section class="rv-shell rv-section" id="scan">
   <div class="readiness-layout">
@@ -393,7 +393,7 @@ export function readinessPage(origin: string): string {
   </div>
 </section>
 <section class="rv-shell rv-section" id="scope">
-  <div class="rv-section-head"><div class="rv-eyebrow">WHAT THIS VERSION PROVES</div><h2>Fast evidence without pretending one request can certify an agent-ready site.</h2><p>Cloudflare and other tools already cover broad agent readiness. This audit is deliberately narrower: it separates public-surface readiness from the much harder question of whether repeated validation is worth sharing.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">WHAT THIS VERSION PROVES</div><h2>Fast evidence without pretending one request can certify an agent-ready site.</h2><p>This audit is deliberately narrow: it measures the root HTTP validation surface and keeps broader discoverability, authentication, content-format and capability checks separate.</p></div>
   <div class="rv-grid-3">
     <article class="rv-card"><span class="rv-number">01</span><h3>Native freshness</h3><p>Detects an explicit positive Cache-Control max-age/s-maxage window. When it solves the same semantics, that native mechanism wins.</p></article>
     <article class="rv-card"><span class="rv-number">02</span><h3>Conditional validation</h3><p>Detects ETag or Last-Modified on the root response. A real workload should test conditional requests before adding another reuse layer; presence alone is not treated as proof of an effective 304 path.</p></article>
