@@ -1,11 +1,11 @@
 {
   "name": "seenrelay",
   "version": "0.3.10",
-  "description": "Avoid redundant expensive validation. CHECK recent evidence; OBSERVE fresh independent results.",
+  "description": "Measure repeated expensive read-only validation across AI agent fleets before policy-gated reuse.",
   "mcpServers": {
     "seenrelay": {
       "httpUrl": "https://seenrelay.com/mcp",
-      "description": "Avoid redundant expensive validation with recent source-backed evidence.",
+      "description": "Measure repeated expensive read-only validation across AI agent fleets before policy-gated reuse.",
       "includeTools": [
         "check_fact",
         "observe_fact"

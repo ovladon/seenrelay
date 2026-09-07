@@ -2,14 +2,17 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "seenrelay",
   "version": "0.3.10",
-  "description": "Avoid redundant expensive validation. CHECK recent evidence; OBSERVE fresh independent results.",
+  "description": "Measure repeated expensive read-only validation across AI agent fleets before policy-gated reuse.",
   "homepage": "https://seenrelay.com",
   "repository": "https://github.com/ovladon/seenrelay",
   "keywords": [
     "mcp",
     "ai-agents",
+    "agent-fleets",
     "freshness",
     "validation",
+    "revalidation",
+    "agent-skills",
     "agent-infrastructure"
   ]
 }
