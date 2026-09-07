@@ -19,9 +19,9 @@ SeenRelay helps an agent or application determine whether repeated expensive rea
 
 SeenRelay is currently free and requires no SeenRelay account or API key. The strongest current product fit is a fleet of workers or agents that repeatedly validates the same deterministic state while browser sessions, scraping/extraction, model work, paid search, rate-limited capacity or multi-step validation is materially expensive. SeenRelay should stay out of cheap one-off paths and paths already solved by an equivalent authoritative cache.
 
-SeenRelay is a provider-independent validation reuse layer. It reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
+SeenRelay is a provider-independent validation reuse layer. SeenRelay is a reuse layer for repeated read-only validation. It reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
 
-## Free shadow audit: measure before enabling reuse
+## First proof: measure without changing application behavior
 
 For a compatible coding agent, install the published SeenRelay skill directly from the canonical domain:
 
