@@ -1,7 +1,11 @@
 import { neon } from '@neondatabase/serverless';
 import { privacyScopedHash } from './identity.js';
 import { getMcpDiscoverySnapshot } from './discovery.js';
-import { standardsShadowFactKeys } from './internal-benchmark-classification.js';
+import {
+  legacyStandardsShadowFactKeys,
+  standardsShadowFactKeys,
+  STANDARDS_SHADOW_LEGACY_CUTOFF
+} from './internal-benchmark-classification.js';
 
 export type RuntimeMode = 'NORMAL' | 'SHIELD' | 'READ_ONLY' | 'FREEZE';
 export interface RuntimeControls {
@@ -102,21 +106,35 @@ export async function getAdminSnapshotData() {
  */
 export async function getAdminAdoptionData() {
   const q = sql();
-  const [firstPartyObserverKey, standardsShadowKeys] = await Promise.all([
+  const [firstPartyObserverKey, standardsShadowKeys, legacyStandardsShadowKeys] = await Promise.all([
     referenceObserverKey(),
-    standardsShadowFactKeys()
+    standardsShadowFactKeys(),
+    legacyStandardsShadowFactKeys()
   ]);
-  const benchmarkKeyPlaceholders = standardsShadowKeys.map((_, index) => `$${index + 2}`).join(',');
-  const adoptionParams = [firstPartyObserverKey, ...standardsShadowKeys];
-  const knownStandardsShadowFact = `f.fact_key IN (${benchmarkKeyPlaceholders})`;
-  const knownStandardsShadowLease = `h.last_fact_key IN (${benchmarkKeyPlaceholders})`;
-  const internalBenchmarkFact = `(f.source_url ~ '[?&]seenrelay_(json_)?benchmark=' OR f.source_url ~ '[?&]seenrelay_internal_benchmark=' OR ${knownStandardsShadowFact})`;
+  const currentKeyStart = 2;
+  const legacyKeyStart = currentKeyStart + standardsShadowKeys.length;
+  const cutoffParam = legacyKeyStart + legacyStandardsShadowKeys.length;
+  const currentKeyPlaceholders = standardsShadowKeys.map((_, index) => `$${currentKeyStart + index}`).join(',');
+  const legacyKeyPlaceholders = legacyStandardsShadowKeys.map((_, index) => `$${legacyKeyStart + index}`).join(',');
+  const adoptionParams = [firstPartyObserverKey, ...standardsShadowKeys, ...legacyStandardsShadowKeys, STANDARDS_SHADOW_LEGACY_CUTOFF];
+  const currentStandardsShadowFact = `f.fact_key IN (${currentKeyPlaceholders})`;
+  const currentStandardsShadowLease = `h.last_fact_key IN (${currentKeyPlaceholders})`;
+  const historicalLegacyStandardsShadowLease = `(
+    h.issued_at <= $${cutoffParam}::timestamptz
+    AND h.observe_count = 0
+    AND h.check_count BETWEEN 1 AND 4
+    AND h.last_operation = 'CHECK'
+    AND h.last_outcome = 'UNKNOWN'
+    AND h.last_fact_key IN (${legacyKeyPlaceholders})
+  )`;
+  const internalBenchmarkFact = `(f.source_url ~ '[?&]seenrelay_(json_)?benchmark=' OR f.source_url ~ '[?&]seenrelay_internal_benchmark=' OR ${currentStandardsShadowFact})`;
   const verifiedInternalLease = `h.client_key LIKE 'internal:%'`;
   const firstPartyLease = `(${verifiedInternalLease} OR EXISTS (
     SELECT 1 FROM observations_recent fp WHERE fp.lease_id = h.lease_id AND fp.observer_key = $1
   ))`;
   const internalBenchmarkLease = `(
-    ${knownStandardsShadowLease}
+    ${currentStandardsShadowLease}
+    OR ${historicalLegacyStandardsShadowLease}
     OR EXISTS (SELECT 1 FROM observations_recent ibo JOIN facts f ON f.fact_key=ibo.fact_key WHERE ibo.lease_id=h.lease_id AND ${internalBenchmarkFact})
     OR EXISTS (SELECT 1 FROM facts f WHERE f.fact_key=h.last_fact_key AND ${internalBenchmarkFact})
   )`;
