@@ -23,6 +23,7 @@ import { productFactsForOrigin } from './public-facts-view.js';
 import type { CheckRequest, ObserveRequest } from './types.js';
 import { maintenanceCron } from './maintenance.js';
 import { agentSkillMarkdown, agentSkillIndex } from '../shared/agent-skill.mjs';
+import { auditPublicRoot, readinessPage } from './readiness.js';
 
 const app = new Hono();
 
@@ -96,6 +97,26 @@ app.get('/clients', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(clientsPage(new URL(c.req.url).origin));
+});
+app.get('/readiness', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(readinessPage(new URL(c.req.url).origin));
+});
+app.post('/readiness/audit', async (c) => {
+  const bounded = await boundedRequest(c.req.raw, 2048);
+  if ('response' in bounded) return bounded.response;
+  const body = await readJsonBody<{ site?: unknown }>(bounded.request, 2048);
+  if (typeof body.site !== 'string') return c.json({ error: { code: 'INVALID_SITE', detail: 'Provide a site hostname or HTTPS origin.' } }, 400);
+  try {
+    return c.json(await auditPublicRoot(body.site));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '';
+    const safeDetail = /^(Enter|Only|Credentials|Local|The hostname|DNS returned|No supported)/.test(message)
+      ? message
+      : 'The site could not be safely reached for this bounded quick audit.';
+    return c.json({ error: { code: 'AUDIT_UNAVAILABLE', detail: safeDetail } }, 422);
+  }
 });
 app.get('/robots.txt', (c) => {
   c.header('content-type', 'text/plain; charset=utf-8');
