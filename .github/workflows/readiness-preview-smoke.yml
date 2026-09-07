@@ -54,14 +54,14 @@ jobs:
           common=(-H "x-vercel-protection-bypass: $BYPASS_SECRET")
 
           page="$(curl --fail --silent --show-error --location --retry 4 --retry-all-errors "${common[@]}" "$PREVIEW_URL/readiness")"
-          grep -Fq 'How ready is your site for AI agents?' <<<"$page"
+          grep -Fq 'How efficiently can AI agents revisit your site?' <<<"$page"
           grep -Fq 'exactly one read-only HTTPS GET' <<<"$page"
           grep -Fq 'never labels a site a SeenRelay candidate' <<<"$page"
 
           benign="$(curl --fail --silent --show-error --retry 2 "${common[@]}" \
             -H 'content-type: application/json' -H 'accept: application/json' \
             --data '{"site":"example.com"}' "$PREVIEW_URL/readiness/audit")"
-          jq -e '.schema == "seenrelay-agent-readiness-quick-audit-v1"' <<<"$benign" >/dev/null
+          jq -e '.schema == "seenrelay-ai-visit-efficiency-quick-audit-v1"' <<<"$benign" >/dev/null
           jq -e '.scope == "single-root-response"' <<<"$benign" >/dev/null
           jq -e '.seenrelay_candidate == false' <<<"$benign" >/dev/null
           jq -e '.seenrelay_recommendation == "NOT_DETERMINED_BY_SURFACE_SCAN"' <<<"$benign" >/dev/null
