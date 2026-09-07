@@ -6,6 +6,8 @@ SeenRelay starts with a free shadow audit. Run the workload you already have whi
 
 Currently free · no account · no SeenRelay API key required.
 
+SeenRelay itself requires no account or API key. A third-party client, directory, gateway, or assistant may require its own account to use that third-party service; that is not a SeenRelay access requirement. The canonical direct MCP endpoint is `https://seenrelay.com/mcp`.
+
 ## Fastest start: give the audit to your coding agent
 
 ```bash
