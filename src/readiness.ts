@@ -1,10 +1,14 @@
 import { lookup } from 'node:dns/promises';
 import https from 'node:https';
 import { isIP } from 'node:net';
+import { consumeHiveNetworkBudget } from './hive-admission-db.js';
+import { privacyScopedHash } from './identity.js';
 
 const MAX_ROOT_BYTES = 131_072;
 const ROOT_TIMEOUT_MS = 5_000;
 const USER_AGENT = 'SeenRelayReadiness/1.0 (+https://seenrelay.com/readiness)';
+const READINESS_GLOBAL_AUDITS_PER_MINUTE = 30;
+const READINESS_TARGET_AUDITS_PER_MINUTE = 4;
 
 export type ReadinessVerdict = 'NATIVE_READY' | 'NATIVE_FIX_RECOMMENDED' | 'NEEDS_WORKLOAD_EVIDENCE';
 
@@ -111,6 +115,20 @@ export function normalizeAuditTarget(input: string): URL {
   }
   if (isIP(hostname)) throw new Error('Enter a public DNS hostname, not an IP address.');
   return new URL(`https://${hostname}/`);
+}
+
+async function admitReadinessAudit(hostname: string): Promise<void> {
+  const nowIso = new Date().toISOString();
+  const globalKey = `readiness-global:${await privacyScopedHash('readiness-admission-global', 'v1')}`;
+  const globalBudget = await consumeHiveNetworkBudget(globalKey, nowIso, READINESS_GLOBAL_AUDITS_PER_MINUTE);
+  if (!globalBudget.allowed) {
+    throw new Error('Only a limited number of readiness audits can start each minute; retry shortly.');
+  }
+  const targetKey = `readiness-target:${await privacyScopedHash('readiness-admission-target', hostname)}`;
+  const targetBudget = await consumeHiveNetworkBudget(targetKey, nowIso, READINESS_TARGET_AUDITS_PER_MINUTE);
+  if (!targetBudget.allowed) {
+    throw new Error('Only a limited number of readiness audits can target the same hostname each minute; retry shortly.');
+  }
 }
 
 async function resolvePinnedPublicAddress(hostname: string): Promise<PinnedAddress> {
@@ -245,7 +263,7 @@ export function classifyRootAudit(origin: string, raw: RawRootResult): Readiness
     },
     {
       id: 'conditional_validator',
-      status: nativeValidator ? 'INFO' : 'INFO',
+      status: 'INFO',
       label: 'Conditional validator',
       detail: nativeValidator ? `A source-native ${etag ? 'ETag' : 'Last-Modified'} validator is advertised; this one-request scan does not prove conditional 304 behavior.` : 'No ETag or Last-Modified validator was detected on this response.'
     },
@@ -309,6 +327,7 @@ export function classifyRootAudit(origin: string, raw: RawRootResult): Readiness
 
 export async function auditPublicRoot(input: string): Promise<ReadinessReport> {
   const target = normalizeAuditTarget(input);
+  await admitReadinessAudit(target.hostname);
   const pinned = await resolvePinnedPublicAddress(target.hostname);
   const raw = await rootRequest(target, pinned);
   return classifyRootAudit(target.origin, raw);
