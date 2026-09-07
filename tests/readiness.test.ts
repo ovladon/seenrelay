@@ -46,6 +46,7 @@ test('positive native freshness is NATIVE_READY and never a SeenRelay candidate'
     'cache-control': 'public, max-age=300',
     'content-type': 'text/html; charset=utf-8'
   }));
+  assert.equal(report.schema, 'seenrelay-ai-visit-efficiency-quick-audit-v1');
   assert.equal(report.verdict, 'NATIVE_READY');
   assert.equal(report.seenrelay_candidate, false);
   assert.equal(report.seenrelay_recommendation, 'NOT_DETERMINED_BY_SURFACE_SCAN');
@@ -75,8 +76,11 @@ test('redirect remains evidence-limited because quick audit follows no redirect'
   assert.equal(report.seenrelay_candidate, false);
 });
 
-test('public page states single-request scope and no forced fit', () => {
+test('public page states single-request scope, distinct positioning, and no forced fit', () => {
   const html = readinessPage('https://seenrelay.com');
+  assert.match(html, /AI Visit Efficiency/i);
+  assert.match(html, /How efficiently can AI agents revisit your site\?/i);
+  assert.doesNotMatch(html, /Cloudflare/i);
   assert.match(html, /exactly one read-only HTTPS GET/i);
   assert.match(html, /never labels a site a SeenRelay candidate/i);
   assert.match(html, /presence alone is not treated as proof/i);
