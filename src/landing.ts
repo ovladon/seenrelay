@@ -206,7 +206,7 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
       <p>Strong candidates include browser/portal validation, metered scraping/extraction, model-assisted parsing, paid search, rate-limited APIs and multi-step validation chains. Cheap one-off or mutating operations are poor fits.</p>
     </div>
     <div class="rv-contract-list">
-      <article><b>Source authority is preserved</b><span>The original validation remains available whenever reuse is not justified.</span></article>
+      <article><b>Source authority is preserved</b><span>The original validation remains the fallback whenever reuse is not justified.</span></article>
       <article><b>Stronger native controls win</b><span>SeenRelay should stay out when an equivalent native path is cheaper or stronger.</span></article>
       <article><b>Machine-readable integration</b><span>OpenAPI, MCP, service JSON, llms.txt, Agent Skill discovery and client integration catalogs expose supported surfaces.</span></article>
     </div>
