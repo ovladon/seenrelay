@@ -1,8 +1,24 @@
 # SeenRelay
 
-SeenRelay is a reuse layer for repeated read-only validation.
+**Find out whether your agent fleet is wasting time or provider spend on repeated read-only validation — before enabling reuse.**
 
-It sits in front of validation work an AI agent or application already performs. For an exact eligible repeat, it can use caller-owned local/private reuse, source-native freshness confirmation, or optional shared CHECK evidence. If none of those paths is sufficient, the original validation runs normally.
+SeenRelay starts with a free shadow audit. Run the workload you already have while every authoritative validation stays enabled. Measure exact recurrence, stronger local/source/provider-native controls, safety equivalence and prospective economics. Keep SeenRelay only where the result is `USE`; accept `DO NOT USE` or `INSUFFICIENT EVIDENCE` everywhere else.
+
+Currently free · no account · no SeenRelay API key required.
+
+## Fastest start: give the audit to your coding agent
+
+```bash
+npx skills add https://seenrelay.com --skill seenrelay --yes
+```
+
+Then ask it:
+
+```text
+Run a SeenRelay shadow audit on this project. Find repeated expensive read-only validations, preserve every authoritative call, measure stronger local/source/provider-native controls first, do not enable reuse, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for each measured workload.
+```
+
+Or use the developer paths below. Full audit method: [`docs/SHADOW_AUDIT.md`](docs/SHADOW_AUDIT.md).
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
 **Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.11 · currently free · no account/API key.
@@ -10,7 +26,7 @@ It sits in front of validation work an AI agent or application already performs.
 **Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
-## First proof: measure without changing application behavior
+## Free shadow audit: measure without changing application behavior
 
 Ambient wraps an existing MCP-style client in local shadow mode. The authoritative call still runs; SeenRelay measures exact repetition and produces a local report.
 
@@ -42,17 +58,11 @@ client = ambient_mcp_client(raw_mcp_client)
 print(client.get_report())
 ```
 
-For a compatible coding agent, install the Agent Skill directly from the canonical domain:
-
-```bash
-npx skills add https://seenrelay.com --skill seenrelay --yes
-```
-
 Run the existing workload and inspect the report before enabling any bounded reuse. Shared CHECK remains optional and off by default in Zero-State.
 
-SeenRelay has exactly two hosted domain operations: `CHECK` and `OBSERVE`. It reports recent observations, not universal truth.
+SeenRelay is a provider-independent reuse layer for repeated read-only validation. It has exactly two hosted domain operations: `CHECK` and `OBSERVE`, and reports recent observations rather than universal truth.
 
-JavaScript/TypeScript and Python 0.2.10 include multi-signal shared-evidence assurance helpers, deterministic Fact Coordinate Kit v1 and provider-independent Zero-State. Python Zero-State now supports explicit read-only in-flight/local reuse, caller-owned private L1 and source-native conditional validation before authoritative fallback. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence is explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates are local repetition keys unless a stable source-native locator supports a shared fact descriptor. Provider-specific adapters are optional.
+Current JavaScript/TypeScript and Python clients include multi-signal shared-evidence assurance helpers, deterministic Fact Coordinate Kit v1 and provider-independent Zero-State. Python Zero-State supports explicit read-only in-flight/local reuse, caller-owned private L1 and source-native conditional validation before authoritative fallback. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence is explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates are local repetition keys unless a stable source-native locator supports a shared fact descriptor. Provider-specific adapters are optional.
 
 ## What it can avoid
 
@@ -69,6 +79,8 @@ Access is **currently free** and requires no account or API key.
 
 ## Start here
 
+- Free shadow audit: [`docs/SHADOW_AUDIT.md`](docs/SHADOW_AUDIT.md)
+- Coding-agent install: `npx skills add https://seenrelay.com --skill seenrelay --yes`
 - Public install: `npm install seenrelay` or `pip install seenrelay`
 - JavaScript / TypeScript Zero-State: [`clients/typescript/README.md`](clients/typescript/README.md)
 - Fleet economics and measured examples: `https://seenrelay.com/economics`
