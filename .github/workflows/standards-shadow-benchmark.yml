@@ -49,7 +49,7 @@ jobs:
             [ "$candidate" != "$GITHUB_RUN_ID" ] || continue
             rm -rf previous-standards-shadow/*
             if gh run download "$candidate" \
-              --name "standards-shadow-natural-v3-$candidate" \
+              --name "standards-shadow-natural-v4-$candidate" \
               --dir previous-standards-shadow >/dev/null 2>&1; then
               if [ -f previous-standards-shadow/standards-shadow-ledger.json ] && \
                  [ -f previous-standards-shadow/standards-shadow-state.json ]; then
@@ -66,10 +66,10 @@ jobs:
             --jq '.[].databaseId' 2>/dev/null || true)
           echo "parent_run=$parent_run" >> "$GITHUB_OUTPUT"
           if [ -n "$parent_run" ]; then
-            echo "Restored schedule-only natural evidence from run $parent_run"
+            echo "Restored schedule-only v4 natural evidence from run $parent_run"
           else
             rm -rf previous-standards-shadow/*
-            echo 'No schedule-only v3 parent found; starting a new natural collection epoch.'
+            echo 'No schedule-only v4 parent found; starting a new namespaced natural collection epoch.'
           fi
 
       - name: Run read-only workload measurement
@@ -102,7 +102,7 @@ jobs:
           if (input.sample_type !== expectedSampleType || input.workload_class !== 'structured_source_reads') process.exit(1);
           for (const doc of [input, summary, ledger, state]) {
             if (doc.provenance_schema_version !== 2) process.exit(1);
-            if (doc.collection_epoch !== 'schedule-only-v3') process.exit(1);
+            if (doc.collection_epoch !== 'schedule-only-v4') process.exit(1);
             if (doc.sample_type !== expectedSampleType) process.exit(1);
             if (doc.run_event !== process.env.GITHUB_EVENT_NAME) process.exit(1);
             if (doc.run_id !== process.env.GITHUB_RUN_ID) process.exit(1);
@@ -145,7 +145,7 @@ jobs:
         if: github.event_name == 'schedule'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: standards-shadow-natural-v3-${{ github.run_id }}
+          name: standards-shadow-natural-v4-${{ github.run_id }}
           path: |
             standards-shadow-benchmark.json
             standards-shadow-summary.json
@@ -159,7 +159,7 @@ jobs:
         if: github.event_name != 'schedule'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: standards-shadow-commissioning-v3-${{ github.run_id }}
+          name: standards-shadow-commissioning-v4-${{ github.run_id }}
           path: |
             standards-shadow-benchmark.json
             standards-shadow-summary.json
