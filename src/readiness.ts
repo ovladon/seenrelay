@@ -148,6 +148,7 @@ function rootRequest(url: URL, pinned: PinnedAddress): Promise<RawRootResult> {
       protocol: 'https:',
       hostname: url.hostname,
       port: 443,
+      family: pinned.family,
       path: '/',
       method: 'GET',
       servername: url.hostname,
@@ -213,9 +214,12 @@ export function classifyRootAudit(origin: string, raw: RawRootResult): Readiness
 
   let verdict: ReadinessVerdict;
   let headline: string;
-  if (successfulRepresentation && (nativeFreshness || nativeValidator)) {
+  if (successfulRepresentation && nativeFreshness) {
     verdict = 'NATIVE_READY';
-    headline = 'Native HTTP freshness controls are already present on the root response.';
+    headline = 'An explicit native HTTP freshness window is already present on the root response.';
+  } else if (successfulRepresentation && nativeValidator) {
+    verdict = 'NEEDS_WORKLOAD_EVIDENCE';
+    headline = 'A native conditional validator is advertised; verify that conditional requests actually avoid the full response before adding another reuse layer.';
   } else if (successfulRepresentation) {
     verdict = 'NATIVE_FIX_RECOMMENDED';
     headline = 'Fix the native HTTP freshness contract before considering another reuse layer.';
@@ -241,9 +245,9 @@ export function classifyRootAudit(origin: string, raw: RawRootResult): Readiness
     },
     {
       id: 'conditional_validator',
-      status: nativeValidator ? 'PASS' : 'INFO',
+      status: nativeValidator ? 'INFO' : 'INFO',
       label: 'Conditional validator',
-      detail: nativeValidator ? `A source-native ${etag ? 'ETag' : 'Last-Modified'} validator is present.` : 'No ETag or Last-Modified validator was detected on this response.'
+      detail: nativeValidator ? `A source-native ${etag ? 'ETag' : 'Last-Modified'} validator is advertised; this one-request scan does not prove conditional 304 behavior.` : 'No ETag or Last-Modified validator was detected on this response.'
     },
     {
       id: 'machine_content',
@@ -264,7 +268,7 @@ export function classifyRootAudit(origin: string, raw: RawRootResult): Readiness
   if (successfulRepresentation && !nativeFreshness && !nativeValidator) {
     nextSteps.push('Prefer a source-native fix first: add an appropriate Cache-Control freshness window, ETag/Last-Modified, or a narrower version/state endpoint when the semantics allow it.');
   }
-  if (nativeValidator) nextSteps.push('Use conditional requests before adding a separate validation-reuse layer when the validator answers the same question.');
+  if (nativeValidator) nextSteps.push('Test a conditional request against the same representation before adding a separate validation-reuse layer; validator presence alone is not proof that a 304 path works.');
   if (nativeFreshness) nextSteps.push('Honor the existing native freshness contract before adding another cache or relay.');
   nextSteps.push('For a complete owner-side readiness review, check robots.txt, sitemap discovery, Markdown/content negotiation, authentication/tool discovery, and actual agent traffic from your own environment.');
   nextSteps.push('Only run a SeenRelay workload audit if independent agents repeatedly perform expensive validation that stronger native controls do not already solve.');
@@ -293,6 +297,7 @@ export function classifyRootAudit(origin: string, raw: RawRootResult): Readiness
     next_steps: nextSteps,
     limitations: [
       'This quick audit makes exactly one bounded GET to the submitted HTTPS origin and does not crawl the site.',
+      'It does not send a conditional request, so ETag/Last-Modified presence is not treated as proof of effective 304 revalidation.',
       'It does not test robots.txt, sitemap.xml, Markdown negotiation, Web Bot Auth, OAuth, APIs, MCP, Agent Skills, rendering, authenticated paths, or real fleet repetition.',
       'A native header on the root page may not describe the expensive semantic validation performed elsewhere in your application.',
       'No passive surface scan can establish SeenRelay workload fit, safe outcome equivalence, reuse rate, or savings.'
@@ -372,7 +377,7 @@ export function readinessPage(origin: string): string {
   <div class="rv-section-head"><div class="rv-eyebrow">WHAT THIS VERSION PROVES</div><h2>Fast evidence without pretending one request can certify an agent-ready site.</h2><p>Cloudflare and other tools already cover broad agent readiness. This audit is deliberately narrower: it separates public-surface readiness from the much harder question of whether repeated validation is worth sharing.</p></div>
   <div class="rv-grid-3">
     <article class="rv-card"><span class="rv-number">01</span><h3>Native freshness</h3><p>Detects an explicit positive Cache-Control max-age/s-maxage window. When it solves the same semantics, that native mechanism wins.</p></article>
-    <article class="rv-card"><span class="rv-number">02</span><h3>Conditional validation</h3><p>Detects ETag or Last-Modified on the root response. A real workload should test conditional requests before adding another reuse layer.</p></article>
+    <article class="rv-card"><span class="rv-number">02</span><h3>Conditional validation</h3><p>Detects ETag or Last-Modified on the root response. A real workload should test conditional requests before adding another reuse layer; presence alone is not treated as proof of an effective 304 path.</p></article>
     <article class="rv-card"><span class="rv-number">03</span><h3>Machine surface</h3><p>Reports Content-Type, Vary: Accept and HTTP Link discovery evidence without claiming it tested the rest of the site.</p></article>
   </div>
 </section>
