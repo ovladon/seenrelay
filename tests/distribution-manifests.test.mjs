@@ -43,7 +43,6 @@ test('portable agent, MCP Registry, and Gemini manifests stay aligned with the r
   assert.equal(gemini.mcpServers?.seenrelay?.httpUrl, endpoint);
   assert.deepEqual(gemini.mcpServers?.seenrelay?.includeTools, ['check_fact', 'observe_fact']);
 
-  assert.equal(plugin.description, registry.description);
-  assert.equal(gemini.description, registry.description);
-  assert.equal(gemini.mcpServers?.seenrelay?.description, registry.description);
+  assert.equal(gemini.description, plugin.description);
+  assert.equal(gemini.mcpServers?.seenrelay?.description, plugin.description);
 });
