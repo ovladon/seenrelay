@@ -81,10 +81,6 @@ export function isGlobalPublicIp(address: string): boolean {
       const mapped = value.slice('::ffff:'.length);
       return isGlobalPublicIp(mapped);
     }
-    // Public IPv6 unicast is primarily 2000::/3. Restricting the scanner to
-    // that range intentionally rejects local, link-local, multicast and other
-    // special-purpose address spaces. Documentation prefix 2001:db8::/32 is
-    // explicitly excluded.
     const first = value[0];
     if (first !== '2' && first !== '3') return false;
     if (value.startsWith('2001:db8:') || value === '2001:db8::') return false;
@@ -161,7 +157,7 @@ function rootRequest(url: URL, pinned: PinnedAddress): Promise<RawRootResult> {
         'accept-encoding': 'identity',
         connection: 'close'
       },
-      lookup: (_hostname: string, _options: unknown, callback: (...args: unknown[]) => void) => {
+      lookup: (_hostname, _options, callback) => {
         callback(null, pinned.address, pinned.family);
       }
     }, (response) => {
