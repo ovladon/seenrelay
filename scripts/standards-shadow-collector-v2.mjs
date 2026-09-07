@@ -3,9 +3,12 @@ import { pathToFileURL } from 'node:url';
 
 import { runStandardsShadowBenchmark } from './standards-shadow-benchmark.mjs';
 
-export const STANDARDS_SHADOW_COLLECTION_EPOCH = 'schedule-only-v3';
+export const STANDARDS_SHADOW_COLLECTION_EPOCH = 'schedule-only-v4';
 export const STANDARDS_SHADOW_NATURAL_SAMPLE = 'natural_workload';
 export const STANDARDS_SHADOW_COMMISSIONING_SAMPLE = 'commissioning';
+export const STANDARDS_SHADOW_INTERNAL_QUALIFIER = Object.freeze({
+  seenrelay_internal_workload: 'standards-shadow-v1'
+});
 
 const WORKLOAD_ID = 'standards-watch-daily-v1';
 const SAFE_ID = /^[A-Za-z0-9._:-]{1,128}$/;
@@ -14,6 +17,62 @@ function safeId(value, name, { allowEmpty = false } = {}) {
   if (allowEmpty && (value === '' || value === null || value === undefined)) return '';
   if (typeof value !== 'string' || !SAFE_ID.test(value)) throw new TypeError(`${name} must be a bounded opaque id`);
   return value;
+}
+
+function requestUrl(input) {
+  if (typeof input === 'string' || input instanceof URL) return String(input);
+  if (typeof Request !== 'undefined' && input instanceof Request) return input.url;
+  return String(input);
+}
+
+function requestMethod(input, init) {
+  const method = init?.method || (typeof Request !== 'undefined' && input instanceof Request ? input.method : 'GET');
+  return String(method || 'GET').toUpperCase();
+}
+
+/**
+ * The scheduled benchmark is controlled first-party measurement, not external adoption. Give only
+ * its hosted CHECK calls a dedicated fact qualifier so future measurement cannot collide with or
+ * consume evidence from an external caller checking the same authoritative public source.
+ */
+export function withStandardsShadowInternalFactContext(fetchImpl = fetch) {
+  if (typeof fetchImpl !== 'function') throw new TypeError('fetchImpl must be a function');
+  return async (input, init = {}) => {
+    let target;
+    try { target = new URL(requestUrl(input)); }
+    catch { return fetchImpl(input, init); }
+    if (target.pathname !== '/v1/check' || requestMethod(input, init) !== 'POST') {
+      return fetchImpl(input, init);
+    }
+    if (typeof init?.body !== 'string') {
+      throw new TypeError('Standards Shadow CHECK body must be a JSON string');
+    }
+    let body;
+    try { body = JSON.parse(init.body); }
+    catch { throw new TypeError('Standards Shadow CHECK body must be valid JSON'); }
+    if (!body?.fact || typeof body.fact !== 'object' || Array.isArray(body.fact)) {
+      throw new TypeError('Standards Shadow CHECK fact is required');
+    }
+    const existing = body.fact.qualifiers;
+    if (existing !== undefined && (!existing || typeof existing !== 'object' || Array.isArray(existing))) {
+      throw new TypeError('Standards Shadow CHECK fact.qualifiers must be an object');
+    }
+    const existingWorkload = existing?.seenrelay_internal_workload;
+    if (existingWorkload !== undefined && existingWorkload !== STANDARDS_SHADOW_INTERNAL_QUALIFIER.seenrelay_internal_workload) {
+      throw new TypeError('Standards Shadow CHECK internal workload qualifier conflicts with caller input');
+    }
+    const nextBody = {
+      ...body,
+      fact: {
+        ...body.fact,
+        qualifiers: {
+          ...(existing || {}),
+          ...STANDARDS_SHADOW_INTERNAL_QUALIFIER
+        }
+      }
+    };
+    return fetchImpl(input, { ...init, body: JSON.stringify(nextBody) });
+  };
 }
 
 export function standardsShadowSamplingProvenance({ runEvent = 'local', runId = 'local', parentRunId = '' } = {}) {
@@ -112,6 +171,7 @@ export async function runStandardsShadowCollectorV2({
   validateStandardsShadowLineage({ previousState, previousLedger, provenance });
   const raw = await runBenchmark({
     ...benchmarkOptions,
+    fetchImpl: withStandardsShadowInternalFactContext(benchmarkOptions.fetchImpl ?? fetch),
     previousState,
     previousLedger,
     writeFiles: false

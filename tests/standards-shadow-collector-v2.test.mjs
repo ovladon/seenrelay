@@ -6,7 +6,9 @@ import {
   annotateStandardsShadowResult,
   runStandardsShadowCollectorV2,
   standardsShadowSamplingProvenance,
-  validateStandardsShadowLineage
+  validateStandardsShadowLineage,
+  withStandardsShadowInternalFactContext,
+  STANDARDS_SHADOW_INTERNAL_QUALIFIER
 } from '../scripts/standards-shadow-collector-v2.mjs';
 
 function rawResult({ records = 4, floor = false } = {}) {
@@ -37,7 +39,7 @@ test('only schedule events are classified as natural workload', () => {
   assert.throws(() => standardsShadowSamplingProvenance({ runEvent: 'push', runId: '4', parentRunId: '1' }), /cannot inherit/);
 });
 
-test('legacy or pre-v3 evidence cannot seed a natural lineage', () => {
+test('legacy or pre-v4 evidence cannot seed the namespaced natural lineage', () => {
   const provenance = standardsShadowSamplingProvenance({ runEvent: 'schedule', runId: '1002', parentRunId: '1001' });
   const legacyState = { schema_version: 1, workload_id: 'standards-watch-daily-v1', entries: {} };
   const legacyLedger = { schema_version: 1, workload_id: 'standards-watch-daily-v1', workload_class: 'structured_source_reads', records: [] };
@@ -104,17 +106,93 @@ test('valid schedule lineage reaches the engine and preserves parent provenance'
   assert.equal(result.input.sample_type, 'natural_workload');
   assert.equal(result.ledger.parent_run_id, '1001');
   assert.equal(result.ledger.run_id, '1002');
-  assert.equal(result.ledger.collection_epoch, 'schedule-only-v3');
+  assert.equal(result.ledger.collection_epoch, 'schedule-only-v4');
 });
 
-test('workflow filters parent lookup to schedule and separates v3 artifacts', async () => {
+test('Standards Shadow namespaces only hosted CHECK fact identity and preserves other fetches', async () => {
+  const calls = [];
+  const baseFetch = async (input, init = {}) => {
+    calls.push({ input: String(input), init });
+    return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+  const wrapped = withStandardsShadowInternalFactContext(baseFetch);
+  const fact = {
+    subject: 'Latest MCP specification revision',
+    predicate: 'version.latest',
+    source: 'https://api.github.com/repos/modelcontextprotocol/modelcontextprotocol/contents/docs/specification?ref=main',
+    locator: { scheme: 'source_key', value: 'latest-dated-specification-directory' },
+    qualifiers: { existing: 'preserved' }
+  };
+  await wrapped('https://relay.invalid/v1/check', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ fact, known_value: '2026-07-28', max_age_seconds: 60 })
+  });
+  await wrapped(fact.source, { headers: { accept: 'application/json' } });
+
+  assert.equal(calls.length, 2);
+  const checkBody = JSON.parse(calls[0].init.body);
+  assert.deepEqual(checkBody.fact.qualifiers, {
+    existing: 'preserved',
+    ...STANDARDS_SHADOW_INTERNAL_QUALIFIER
+  });
+  assert.equal(checkBody.fact.source, fact.source);
+  assert.equal(calls[1].input, fact.source);
+  assert.equal(calls[1].init.body, undefined);
+});
+
+test('Standards Shadow refuses a conflicting caller-supplied internal workload qualifier', async () => {
+  const wrapped = withStandardsShadowInternalFactContext(async () => new Response('{}'));
+  await assert.rejects(
+    wrapped('https://relay.invalid/v1/check', {
+      method: 'POST',
+      body: JSON.stringify({
+        fact: {
+          subject: 'x', predicate: 'version.latest', source: 'https://example.com',
+          qualifiers: { seenrelay_internal_workload: 'something-else' }
+        },
+        known_value: 'x', max_age_seconds: 60
+      })
+    }),
+    /internal workload qualifier conflicts/
+  );
+});
+
+test('collector supplies the namespaced CHECK fetch to the measurement engine', async () => {
+  const captured = [];
+  const baseFetch = async (input, init = {}) => {
+    captured.push({ input: String(input), init });
+    return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+  await runStandardsShadowCollectorV2({
+    runEvent: 'push',
+    runId: 'namespace-test',
+    fetchImpl: baseFetch,
+    runBenchmark: async ({ fetchImpl }) => {
+      await fetchImpl('https://relay.invalid/v1/check', {
+        method: 'POST',
+        body: JSON.stringify({
+          fact: { subject: 'x', predicate: 'version.latest', source: 'https://example.com' },
+          known_value: 'x', max_age_seconds: 60
+        })
+      });
+      return rawResult();
+    }
+  });
+  const body = JSON.parse(captured[0].init.body);
+  assert.deepEqual(body.fact.qualifiers, STANDARDS_SHADOW_INTERNAL_QUALIFIER);
+});
+
+test('workflow filters parent lookup to schedule and starts a distinct v4 artifact lineage', async () => {
   const workflow = await fs.readFile(new URL('../.github/workflows/standards-shadow-benchmark.yml', import.meta.url), 'utf8');
   assert.match(workflow, /--event schedule/);
   assert.match(workflow, /scripts\/standards-shadow-collector-v2\.mjs/);
-  assert.match(workflow, /standards-shadow-natural-v3-\$candidate/);
-  assert.match(workflow, /standards-shadow-natural-v3-\$\{\{ github\.run_id \}\}/);
-  assert.match(workflow, /standards-shadow-commissioning-v3-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /standards-shadow-natural-v4-\$candidate/);
+  assert.match(workflow, /standards-shadow-natural-v4-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /standards-shadow-commissioning-v4-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /collection_epoch !== 'schedule-only-v4'/);
   assert.match(workflow, /if: github\.event_name == 'schedule'/);
   assert.match(workflow, /if: github\.event_name != 'schedule'/);
+  assert.doesNotMatch(workflow, /standards-shadow-natural-v3-/);
   assert.doesNotMatch(workflow, /--status success --limit 1 --json databaseId/);
 });
