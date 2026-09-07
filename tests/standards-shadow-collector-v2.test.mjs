@@ -39,7 +39,7 @@ test('only schedule events are classified as natural workload', () => {
   assert.throws(() => standardsShadowSamplingProvenance({ runEvent: 'push', runId: '4', parentRunId: '1' }), /cannot inherit/);
 });
 
-test('legacy or pre-v3 evidence cannot seed a natural lineage', () => {
+test('legacy or pre-v4 evidence cannot seed the namespaced natural lineage', () => {
   const provenance = standardsShadowSamplingProvenance({ runEvent: 'schedule', runId: '1002', parentRunId: '1001' });
   const legacyState = { schema_version: 1, workload_id: 'standards-watch-daily-v1', entries: {} };
   const legacyLedger = { schema_version: 1, workload_id: 'standards-watch-daily-v1', workload_class: 'structured_source_reads', records: [] };
@@ -106,7 +106,7 @@ test('valid schedule lineage reaches the engine and preserves parent provenance'
   assert.equal(result.input.sample_type, 'natural_workload');
   assert.equal(result.ledger.parent_run_id, '1001');
   assert.equal(result.ledger.run_id, '1002');
-  assert.equal(result.ledger.collection_epoch, 'schedule-only-v3');
+  assert.equal(result.ledger.collection_epoch, 'schedule-only-v4');
 });
 
 test('Standards Shadow namespaces only hosted CHECK fact identity and preserves other fetches', async () => {
@@ -183,14 +183,16 @@ test('collector supplies the namespaced CHECK fetch to the measurement engine', 
   assert.deepEqual(body.fact.qualifiers, STANDARDS_SHADOW_INTERNAL_QUALIFIER);
 });
 
-test('workflow filters parent lookup to schedule and separates v3 artifacts', async () => {
+test('workflow filters parent lookup to schedule and starts a distinct v4 artifact lineage', async () => {
   const workflow = await fs.readFile(new URL('../.github/workflows/standards-shadow-benchmark.yml', import.meta.url), 'utf8');
   assert.match(workflow, /--event schedule/);
   assert.match(workflow, /scripts\/standards-shadow-collector-v2\.mjs/);
-  assert.match(workflow, /standards-shadow-natural-v3-\$candidate/);
-  assert.match(workflow, /standards-shadow-natural-v3-\$\{\{ github\.run_id \}\}/);
-  assert.match(workflow, /standards-shadow-commissioning-v3-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /standards-shadow-natural-v4-\$candidate/);
+  assert.match(workflow, /standards-shadow-natural-v4-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /standards-shadow-commissioning-v4-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /collection_epoch !== 'schedule-only-v4'/);
   assert.match(workflow, /if: github\.event_name == 'schedule'/);
   assert.match(workflow, /if: github\.event_name != 'schedule'/);
+  assert.doesNotMatch(workflow, /standards-shadow-natural-v3-/);
   assert.doesNotMatch(workflow, /--status success --limit 1 --json databaseId/);
 });
