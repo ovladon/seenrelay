@@ -82,3 +82,27 @@ jobs:
           probe_rejected '{"site":"https://example.com:8443"}'
           probe_rejected '{"site":"https://example.com/path"}'
           probe_rejected '{"site":"https://localhost"}'
+
+          # Exercise the per-target admission ceiling without sending HTTPS traffic to a real site.
+          # A unique .invalid hostname passes origin syntax, consumes the hashed target budget, then
+          # fails at DNS for the first four requests. The fifth must be rejected by admission first.
+          limit_host="readiness-${RELEASE_SHA:0:12}.invalid"
+          for attempt in 1 2 3 4; do
+            out="$RUNNER_TEMP/readiness-limit-${attempt}.json"
+            status="$(curl --silent --show-error --output "$out" --write-out '%{http_code}' "${common[@]}" \
+              -H 'content-type: application/json' -H 'accept: application/json' \
+              --data "{\"site\":\"$limit_host\"}" "$PREVIEW_URL/readiness/audit")"
+            test "$status" = '422'
+            jq -e '.error.code == "AUDIT_UNAVAILABLE"' "$out" >/dev/null
+            if jq -e '.error.detail | test("limited number of readiness audits can target")' "$out" >/dev/null; then
+              echo "target admission fired before attempt 5" >&2
+              exit 1
+            fi
+          done
+          limited="$RUNNER_TEMP/readiness-limit-5.json"
+          status="$(curl --silent --show-error --output "$limited" --write-out '%{http_code}' "${common[@]}" \
+            -H 'content-type: application/json' -H 'accept: application/json' \
+            --data "{\"site\":\"$limit_host\"}" "$PREVIEW_URL/readiness/audit")"
+          test "$status" = '422'
+          jq -e '.error.code == "AUDIT_UNAVAILABLE"' "$limited" >/dev/null
+          jq -e '.error.detail | test("limited number of readiness audits can target")' "$limited" >/dev/null
