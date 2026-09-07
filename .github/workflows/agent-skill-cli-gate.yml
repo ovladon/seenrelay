@@ -6,6 +6,7 @@ on:
     paths:
       - 'skills/**'
       - '.github/skills/**'
+      - '.agents/skills/**'
       - 'shared/agent-skill.mjs'
       - 'src/index.ts'
       - 'clients/**'
@@ -38,12 +39,17 @@ jobs:
 
           const canonical = fs.readFileSync('./skills/seenrelay/SKILL.md', 'utf8');
           const githubNative = fs.readFileSync('./.github/skills/seenrelay/SKILL.md', 'utf8');
+          const crossPlatform = fs.readFileSync('./.agents/skills/seenrelay/SKILL.md', 'utf8');
           if (canonical !== agentSkillMarkdown()) {
             console.error('skills/seenrelay/SKILL.md diverges from shared/agent-skill.mjs');
             process.exit(1);
           }
           if (githubNative !== canonical) {
             console.error('.github/skills/seenrelay/SKILL.md diverges from canonical SeenRelay skill');
+            process.exit(1);
+          }
+          if (crossPlatform !== canonical) {
+            console.error('.agents/skills/seenrelay/SKILL.md diverges from canonical SeenRelay skill');
             process.exit(1);
           }
           NODE
