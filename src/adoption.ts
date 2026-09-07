@@ -15,13 +15,23 @@ export function llmsText(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   return `# SeenRelay
 
-SeenRelay is a provider-independent validation reuse layer for agent fleets and applications that repeatedly perform expensive read-only validation. SeenRelay is a reuse layer for repeated read-only validation: it puts caller-owned local/private reuse and stronger source-native confirmation ahead of optional shared evidence; when no eligible cheaper path is sufficient, the original validation runs normally.
+SeenRelay helps an agent or application determine whether repeated expensive read-only validation is worth reusing before any reuse is enabled. Start with the free shadow audit: keep every authoritative validation on, measure exact recurrence and stronger local/source/provider-native controls, compare hypothetical reuse with the authoritative outcome, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.
 
-The strongest current product fit is a fleet of workers or agents that repeatedly validates the same deterministic state while browser sessions, scraping/extraction, model work, paid search, rate-limited capacity or multi-step validation is materially expensive. SeenRelay should stay out of cheap one-off paths and paths already solved by an equivalent authoritative cache.
+SeenRelay is currently free and requires no SeenRelay account or API key. The strongest current product fit is a fleet of workers or agents that repeatedly validates the same deterministic state while browser sessions, scraping/extraction, model work, paid search, rate-limited capacity or multi-step validation is materially expensive. SeenRelay should stay out of cheap one-off paths and paths already solved by an equivalent authoritative cache.
 
-SeenRelay reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
+SeenRelay is a provider-independent validation reuse layer for agent fleets. SeenRelay is a reuse layer for repeated read-only validation. It reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
 
 ## First proof: measure without changing application behavior
+
+## Add SeenRelay to Cursor or another Agent Skills client
+
+For a compatible coding agent, install the published SeenRelay skill directly from the canonical domain:
+
+\`npx skills add ${origin} --skill seenrelay --yes\`
+
+Then ask the agent:
+
+\`Run a SeenRelay shadow audit on this project. Find repeated expensive read-only validations, preserve every authoritative call, measure stronger local/source/provider-native controls first, do not enable reuse, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for each measured workload.\`
 
 JavaScript / TypeScript ${clientVersion}:
 
@@ -39,19 +49,13 @@ Python ${clientVersion}:
 \`client = ambient_mcp_client(raw_mcp_client)\`
 \`print(client.get_report())\`
 
-Both Ambient entry points are shadow-first: run the existing workload normally and inspect the local report before enabling bounded reuse.
+Both Ambient entry points are shadow-first: run the existing workload normally and inspect the local report before enabling bounded reuse. For full safety/economics evidence, use the current Shadow Proof and hostile-economics surfaces documented by the installed client. A native path that answers the same question more cheaply or more strongly wins.
+
+Audit method: https://github.com/ovladon/seenrelay/blob/main/docs/SHADOW_AUDIT.md
 
 ${machinePublicFactsText(origin)}
 
-## Add SeenRelay to Cursor or another Agent Skills client
-
-Install the published SeenRelay skill directly from the canonical domain:
-
-\`npx skills add ${origin} --skill seenrelay --yes\`
-
-For a fleet, ask the coding agent to find repeated expensive read-only validations across workers, start in shadow mode, preserve the authoritative call and stronger native controls, and evaluate caller-owned encrypted private L1 before optional shared CHECK when the workers already share an appropriate store.
-
-## Fleet path
+## Fleet path after a positive audit
 
 JavaScript / TypeScript and Python Zero-State private L1 are caller-owned storage paths for exact completed-result state across workers or process restarts. The store receives an opaque SHA-256 coordinate key and a sealed payload; the encryption key stays in the caller's secret-management boundary. This is not a claim that the public SeenRelay relay is a hosted private tenant store.
 
@@ -64,6 +68,7 @@ See ${origin}/fleet for the current deployment pattern.
 - exact in-flight / explicit-TTL local reuse;
 - optional encrypted caller-owned private L1 across workers/restarts;
 - source-native ETag / Last-Modified confirmation or a stronger authoritative mechanism;
+- provider-native cache when it solves the same semantics;
 - optional shared SeenRelay CHECK when share policy permits and it adds value;
 - original validation fallback;
 - OBSERVE only after fresh independent validation.
@@ -94,6 +99,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 ## Canonical interfaces
 
 - Website: ${origin}/
+- Free shadow audit: https://github.com/ovladon/seenrelay/blob/main/docs/SHADOW_AUDIT.md
 - Fleet deployment: ${origin}/fleet
 - Quickstart: ${origin}/quickstart
 - Client integrations: ${origin}/clients
