@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.ovladon/seenrelay",
   "title": "SeenRelay",
-  "description": "Avoid redundant expensive validation. CHECK recent evidence; OBSERVE fresh independent results.",
+  "description": "Measure repeated expensive read-only validation across AI agent fleets before policy-gated reuse.",
   "repository": {
     "url": "https://github.com/ovladon/seenrelay",
     "source": "github"
