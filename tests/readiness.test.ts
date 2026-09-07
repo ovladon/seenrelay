@@ -52,11 +52,13 @@ test('positive native freshness is NATIVE_READY and never a SeenRelay candidate'
   assert.match(report.next_steps.join('\n'), /Honor the existing native freshness contract/i);
 });
 
-test('ETag or Last-Modified is a native-ready signal', () => {
+test('ETag or Last-Modified alone requires conditional workload evidence', () => {
   const etag = classifyRootAudit('https://example.com', raw(200, { etag: '"abc"' }));
-  assert.equal(etag.verdict, 'NATIVE_READY');
+  assert.equal(etag.verdict, 'NEEDS_WORKLOAD_EVIDENCE');
+  assert.match(etag.headline, /conditional validator is advertised/i);
+  assert.match(etag.next_steps.join('\n'), /presence alone is not proof/i);
   const modified = classifyRootAudit('https://example.com', raw(200, { 'last-modified': 'Mon, 07 Sep 2026 10:00:00 GMT' }));
-  assert.equal(modified.verdict, 'NATIVE_READY');
+  assert.equal(modified.verdict, 'NEEDS_WORKLOAD_EVIDENCE');
 });
 
 test('successful root without native freshness gets native fix recommendation, not product recommendation', () => {
@@ -77,6 +79,7 @@ test('public page states single-request scope and no forced fit', () => {
   const html = readinessPage('https://seenrelay.com');
   assert.match(html, /exactly one read-only HTTPS GET/i);
   assert.match(html, /never labels a site a SeenRelay candidate/i);
+  assert.match(html, /presence alone is not treated as proof/i);
   assert.match(html, /A negative audit is useful/i);
   assert.match(html, /robots\.txt/i);
 });
