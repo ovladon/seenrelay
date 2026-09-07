@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { privacyScopedHash } from './identity.js';
 import { getMcpDiscoverySnapshot } from './discovery.js';
+import { standardsShadowFactKeys } from './internal-benchmark-classification.js';
 
 export type RuntimeMode = 'NORMAL' | 'SHIELD' | 'READ_ONLY' | 'FREEZE';
 export interface RuntimeControls {
@@ -101,14 +102,22 @@ export async function getAdminSnapshotData() {
  */
 export async function getAdminAdoptionData() {
   const q = sql();
-  const firstPartyObserverKey = await referenceObserverKey();
-  const internalBenchmarkFact = `(f.source_url ~ '[?&]seenrelay_(json_)?benchmark=' OR f.source_url ~ '[?&]seenrelay_internal_benchmark=')`;
+  const [firstPartyObserverKey, standardsShadowKeys] = await Promise.all([
+    referenceObserverKey(),
+    standardsShadowFactKeys()
+  ]);
+  const benchmarkKeyPlaceholders = standardsShadowKeys.map((_, index) => `$${index + 2}`).join(',');
+  const adoptionParams = [firstPartyObserverKey, ...standardsShadowKeys];
+  const knownStandardsShadowFact = `f.fact_key IN (${benchmarkKeyPlaceholders})`;
+  const knownStandardsShadowLease = `h.last_fact_key IN (${benchmarkKeyPlaceholders})`;
+  const internalBenchmarkFact = `(f.source_url ~ '[?&]seenrelay_(json_)?benchmark=' OR f.source_url ~ '[?&]seenrelay_internal_benchmark=' OR ${knownStandardsShadowFact})`;
   const verifiedInternalLease = `h.client_key LIKE 'internal:%'`;
   const firstPartyLease = `(${verifiedInternalLease} OR EXISTS (
     SELECT 1 FROM observations_recent fp WHERE fp.lease_id = h.lease_id AND fp.observer_key = $1
   ))`;
   const internalBenchmarkLease = `(
-    EXISTS (SELECT 1 FROM observations_recent ibo JOIN facts f ON f.fact_key=ibo.fact_key WHERE ibo.lease_id=h.lease_id AND ${internalBenchmarkFact})
+    ${knownStandardsShadowLease}
+    OR EXISTS (SELECT 1 FROM observations_recent ibo JOIN facts f ON f.fact_key=ibo.fact_key WHERE ibo.lease_id=h.lease_id AND ${internalBenchmarkFact})
     OR EXISTS (SELECT 1 FROM facts f WHERE f.fact_key=h.last_fact_key AND ${internalBenchmarkFact})
   )`;
   const externalLease = `NOT (${firstPartyLease}) AND NOT (${internalBenchmarkLease})`;
@@ -154,9 +163,9 @@ export async function getAdminAdoptionData() {
       (SELECT COUNT(*)::int FROM useful_reuse_events e WHERE EXISTS (SELECT 1 FROM hive_leases h WHERE h.lease_id=e.consumer_lease_id AND ${meaningfulExternalLease})) AS reuse_external_total,
       (SELECT MIN(h.issued_at)::text FROM hive_leases h WHERE ${meaningfulExternalLease}) AS first_external_activity_at,
       (SELECT MAX(h.last_seen_at)::text FROM hive_leases h WHERE ${meaningfulExternalLease}) AS last_external_activity_at,
-      (SELECT MAX(received_at)::text FROM observations_recent WHERE ${firstPartyObservation}) AS first_party_last_seen_at`, [firstPartyObserverKey]),
-    q.query(`SELECT substring(replace(e.contributor_lease_id,'-',''),1,12) AS contributor, substring(replace(e.consumer_lease_id,'-',''),1,12) AS consumer, e.created_at::text, e.utility_units::float8 FROM useful_reuse_events e WHERE EXISTS (SELECT 1 FROM hive_leases h WHERE h.lease_id=e.consumer_lease_id AND ${meaningfulExternalLease}) ORDER BY e.created_at DESC LIMIT 40`, [firstPartyObserverKey]),
-    q.query(`SELECT substring(replace(h.lease_id,'-',''),1,12) AS lease_ref, h.contribution_score::float8, h.useful_reuse_generated::int, h.check_count::int, h.observe_count::int, h.last_seen_at::text FROM hive_leases h WHERE ${meaningfulExternalLease} ORDER BY h.contribution_score DESC, h.useful_reuse_generated DESC, h.last_seen_at DESC LIMIT 20`, [firstPartyObserverKey])
+      (SELECT MAX(received_at)::text FROM observations_recent WHERE ${firstPartyObservation}) AS first_party_last_seen_at`, adoptionParams),
+    q.query(`SELECT substring(replace(e.contributor_lease_id,'-',''),1,12) AS contributor, substring(replace(e.consumer_lease_id,'-',''),1,12) AS consumer, e.created_at::text, e.utility_units::float8 FROM useful_reuse_events e WHERE EXISTS (SELECT 1 FROM hive_leases h WHERE h.lease_id=e.consumer_lease_id AND ${meaningfulExternalLease}) ORDER BY e.created_at DESC LIMIT 40`, adoptionParams),
+    q.query(`SELECT substring(replace(h.lease_id,'-',''),1,12) AS lease_ref, h.contribution_score::float8, h.useful_reuse_generated::int, h.check_count::int, h.observe_count::int, h.last_seen_at::text FROM hive_leases h WHERE ${meaningfulExternalLease} ORDER BY h.contribution_score DESC, h.useful_reuse_generated DESC, h.last_seen_at DESC LIMIT 20`, adoptionParams)
   ]);
 
   return {
