@@ -46,18 +46,20 @@ grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
-# The homepage contract is factual and ordered: what it is, what it does, install/use, measured evidence.
-grep -q 'SeenRelay is a reuse layer for repeated read-only validation.' /tmp/site.html
+# The homepage contract is activation-first: problem, safe audit, decision report, measured evidence.
+grep -q 'Find out where your agent fleet is wasting time or provider spend on repeated validation.' /tmp/site.html
 grep -q "CLIENT ${client_version}" /tmp/site.html
-grep -q 'WHAT IT DOES' /tmp/site.html
-grep -q 'INSTALL AND USE' /tmp/site.html
-grep -q 'First run: measure repetition without changing application behavior.' /tmp/site.html
-grep -q 'TESTS WE HAVE RUN' /tmp/site.html
-grep -q 'What the current measured tests show.' /tmp/site.html
+grep -q 'FREE SHADOW AUDIT' /tmp/site.html
+grep -q 'Run the free shadow audit' /tmp/site.html
+grep -q 'WHAT YOU GET' /tmp/site.html
+grep -q 'USE · DO NOT USE · INSUFFICIENT EVIDENCE' /tmp/site.html
+grep -q 'authoritative calls stay on' /tmp/site.html
+grep -q 'no account' /tmp/site.html
+grep -q 'no API key' /tmp/site.html
 grep -q 'provider calls avoided' /tmp/site.html
-grep -q 'What these tests establish' /tmp/site.html
-grep -q 'What they do not establish' /tmp/site.html
-grep -q 'How to test your own workload' /tmp/site.html
+grep -q 'What SeenRelay has demonstrated — and what it has not.' /tmp/site.html
+grep -q 'Not established' /tmp/site.html
+grep -q 'Your workload decides' /tmp/site.html
 grep -q 'Coding agent' /tmp/site.html
 grep -q 'npm install seenrelay' /tmp/site.html
 grep -q 'pip install seenrelay' /tmp/site.html

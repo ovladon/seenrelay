@@ -8,6 +8,7 @@ const fleet = read('src/fleet.ts');
 const landing = read('src/landing.ts');
 const quickstart = read('src/quickstart.ts');
 const adoption = read('src/adoption.ts');
+const auditGuide = read('docs/SHADOW_AUDIT.md');
 const index = read('src/index.ts');
 const skillSource = read('shared/agent-skill.mjs');
 const skill = read('skills/seenrelay/SKILL.md');
@@ -21,6 +22,19 @@ test('fleet page exposes only current caller-owned fleet capability', () => {
   assert.match(fleet, /optional shared CHECK/i);
   assert.match(fleet, /not a hosted tenant claim|does not claim[^.]*private tenant store/i);
   assert.match(fleet, /original validation remains the fallback/i);
+});
+
+test('homepage makes safe measurement the primary activation path', () => {
+  assert.match(landing, /Run the free shadow audit/i);
+  assert.match(landing, /wasting time or provider spend on repeated validation/i);
+  assert.match(landing, /authoritative calls stay on/i);
+  assert.match(landing, /USE · DO NOT USE · INSUFFICIENT EVIDENCE/i);
+  assert.match(landing, /Give it to your coding agent/i);
+  assert.match(landing, /npx skills add/);
+  assert.match(landing, /no account/i);
+  assert.match(landing, /no API key/i);
+  assert.match(auditGuide, /every authoritative validation stays enabled/i);
+  assert.match(auditGuide, /active SeenRelay reuse stays disabled/i);
 });
 
 test('primary public and machine surfaces are fleet-first without universal claims', () => {

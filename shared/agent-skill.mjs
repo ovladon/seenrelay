@@ -1,4 +1,4 @@
-export const SEENRELAY_SKILL_DESCRIPTION = "Integrate SeenRelay into repeated expensive read-only validation across agent fleets. Start in shadow mode, preserve stronger local/source-native controls, and prefer caller-owned private reuse before optional shared evidence.";
+export const SEENRELAY_SKILL_DESCRIPTION = "Measure repeated expensive read-only validation across agent fleets before enabling reuse. Start in shadow mode, preserve authoritative and stronger native controls, and prefer caller-owned private reuse before optional shared evidence.";
 
 export function agentSkillMarkdown(){
 return `---
@@ -14,7 +14,7 @@ metadata:
 
 # SeenRelay integration skill
 
-Use this skill to add SeenRelay as one small distributed-observation primitive. Do not redesign an application around SeenRelay and do not replace a stronger native validator.
+Use this skill first to determine whether SeenRelay belongs on a repeated expensive read-only validation path. Start with measurement, preserve every authoritative call and stronger native validator, and do not enable reuse merely because exact repeats exist.
 
 ## Start from current machine facts
 
