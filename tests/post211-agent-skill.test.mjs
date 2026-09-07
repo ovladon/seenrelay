@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import crypto from 'node:crypto';import {agentSkillMarkdown,agentSkillIndex} from '../shared/agent-skill.mjs';
 test('repo Agent Skill equals canonical generated skill byte-for-byte',()=>assert.equal(fs.readFileSync(new URL('../skills/seenrelay/SKILL.md',import.meta.url),'utf8'),agentSkillMarkdown()));
+test('GitHub-native project skill equals canonical generated skill byte-for-byte',()=>assert.equal(fs.readFileSync(new URL('../.github/skills/seenrelay/SKILL.md',import.meta.url),'utf8'),agentSkillMarkdown()));
 test('Agent Skill keeps hosted surface at CHECK and OBSERVE only',()=>{const s=agentSkillMarkdown();assert.match(s,/operations: CHECK,OBSERVE/);assert.doesNotMatch(s,/third SeenRelay domain operation[^\n]*allow/i);});
 test('Agent Skill tells agent to prefer stronger native path',()=>assert.match(agentSkillMarkdown(),/stronger native validator|stronger local\/source-native/i));
 test('Agent Skill contains current readiness planner names without hard-coded SDK version',()=>{const s=agentSkillMarkdown();assert.match(s,/assessIntegrationReadiness/);assert.match(s,/assess_integration_readiness/);assert.doesNotMatch(s,/client v?0\.2\.5|version: 0\.2\.5/);});

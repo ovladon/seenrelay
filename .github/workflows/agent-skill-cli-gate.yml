@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'skills/**'
+      - '.github/skills/**'
       - 'shared/agent-skill.mjs'
       - 'src/index.ts'
       - 'clients/**'
@@ -36,8 +37,13 @@ jobs:
           import { agentSkillMarkdown } from './shared/agent-skill.mjs';
 
           const canonical = fs.readFileSync('./skills/seenrelay/SKILL.md', 'utf8');
+          const githubNative = fs.readFileSync('./.github/skills/seenrelay/SKILL.md', 'utf8');
           if (canonical !== agentSkillMarkdown()) {
             console.error('skills/seenrelay/SKILL.md diverges from shared/agent-skill.mjs');
+            process.exit(1);
+          }
+          if (githubNative !== canonical) {
+            console.error('.github/skills/seenrelay/SKILL.md diverges from canonical SeenRelay skill');
             process.exit(1);
           }
           NODE
