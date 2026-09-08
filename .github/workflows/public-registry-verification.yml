@@ -4,9 +4,6 @@ on:
   pull_request:
     paths:
       - 'public/product-facts.json'
-      - 'clients/RELEASE_VERSION'
-      - 'clients/typescript/package.json'
-      - 'clients/python/pyproject.toml'
       - '.github/workflows/public-registry-verification.yml'
   workflow_dispatch:
 
