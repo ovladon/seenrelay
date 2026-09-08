@@ -10,6 +10,7 @@
   const next = document.getElementById('readiness-next');
   const limitations = document.getElementById('readiness-limitations');
   const button = form.querySelector('button[type="submit"]');
+  const v2Choice = document.getElementById('readiness-use-v2');
 
   function clear(node) {
     while (node.firstChild) node.removeChild(node.firstChild);
@@ -31,7 +32,33 @@
     clear(checks); clear(next); clear(limitations);
   }
 
-  function render(report) {
+  function dimensionLabel(id) {
+    return String(id || '')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/^./, (value) => value.toUpperCase());
+  }
+
+  function normalizeReport(payload) {
+    if (payload?.protocol === 'seenrelay-site-audit-execution-v2' && payload.evidence?.report) {
+      const report = payload.evidence.report;
+      return {
+        verdict: report.verdict,
+        headline: `Extended machine-surface audit completed for ${report.targetOrigin || 'the submitted origin'}.`,
+        checks: Object.entries(report.dimensions || {}).map(([id, item]) => ({
+          id,
+          status: item?.status || 'INFO',
+          label: dimensionLabel(id),
+          detail: item?.detail || ''
+        })),
+        next_steps: report.nextSteps || [],
+        limitations: report.limitations || []
+      };
+    }
+    return payload || {};
+  }
+
+  function render(payload) {
+    const report = normalizeReport(payload);
     empty.hidden = true;
     output.hidden = false;
     verdict.className = `readiness-verdict ${String(report.verdict || '').toLowerCase()}`;
@@ -42,7 +69,10 @@
     for (const item of report.checks || []) {
       const card = document.createElement('div');
       card.className = 'readiness-check';
-      card.appendChild(textElement('span', `readiness-status ${String(item.status || '').toLowerCase()}`, item.status || 'INFO'));
+      const rawStatus = String(item.status || 'INFO');
+      const visualStatus = rawStatus === 'NOT_APPLICABLE' ? 'INFO' : rawStatus;
+      const labelStatus = rawStatus === 'NOT_APPLICABLE' ? 'N/A' : rawStatus;
+      card.appendChild(textElement('span', `readiness-status ${visualStatus.toLowerCase()}`, labelStatus));
       const copy = document.createElement('div');
       copy.appendChild(textElement('b', '', item.label || 'Check'));
       copy.appendChild(textElement('p', '', item.detail || ''));
@@ -53,6 +83,12 @@
     for (const item of report.limitations || []) limitations.appendChild(textElement('li', '', item));
   }
 
+  function selectedEndpoint() {
+    const v2Enabled = form.dataset.v2Enabled === 'true';
+    if (v2Enabled && v2Choice?.checked) return form.dataset.v2Endpoint || '/readiness/audit/v2';
+    return form.dataset.quickEndpoint || '/readiness/audit';
+  }
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const site = input.value.trim();
@@ -61,16 +97,17 @@
     const original = button.textContent;
     button.textContent = 'Checking…';
     try {
-      const response = await fetch('/readiness/audit', {
+      const endpoint = selectedEndpoint();
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'accept': 'application/json' },
         body: JSON.stringify({ site })
       });
       const body = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(body?.error?.detail || 'The quick audit could not be completed.');
+      if (!response.ok) throw new Error(body?.error?.detail || 'The audit could not be completed.');
       render(body);
     } catch (error) {
-      showError(error instanceof Error ? error.message : 'The quick audit could not be completed.');
+      showError(error instanceof Error ? error.message : 'The audit could not be completed.');
     } finally {
       button.disabled = false;
       button.textContent = original;

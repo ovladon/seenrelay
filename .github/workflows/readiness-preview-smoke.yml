@@ -58,10 +58,24 @@ jobs:
           set -euo pipefail
           common=(-H "x-vercel-protection-bypass: $BYPASS_SECRET")
 
-          page="$(curl --fail --silent --show-error --location --retry 4 --retry-all-errors "${common[@]}" "$PREVIEW_URL/readiness")"
+          page="$(curl --fail --silent --show-error --location --retry 4 --retry-all-errors "${common[@]}" -H 'accept: text/html' "$PREVIEW_URL/readiness")"
           grep -Fq 'How efficiently can AI agents revisit your site?' <<<"$page"
           grep -Fq 'exactly one read-only HTTPS GET' <<<"$page"
           grep -Fq 'never labels a site a SeenRelay candidate' <<<"$page"
+          grep -Fq 'data-v2-enabled="false"' <<<"$page"
+
+          machine="$(curl --fail --silent --show-error "${common[@]}" -H 'accept: application/json' "$PREVIEW_URL/readiness")"
+          jq -e '.schema == "seenrelay-readiness-presentation-v1"' <<<"$machine" >/dev/null
+          jq -e '.defaultBrowserAudit == "v1"' <<<"$machine" >/dev/null
+          jq -e '.audits.v1.enabled == true and .audits.v1.requestCount == 1' <<<"$machine" >/dev/null
+          jq -e '.audits.v2.enabled == false and .audits.v2.availability == "activation-gated"' <<<"$machine" >/dev/null
+          jq -e '.audits.v2.requestCount == 6 and .audits.v2.retries == 0 and .audits.v2.totalMaxBytes == 786432' <<<"$machine" >/dev/null
+          jq -e '.principles.surfaceScanEstablishesSeenRelayFit == false' <<<"$machine" >/dev/null
+          jq -e '.principles.coreMcpOperations == ["CHECK", "OBSERVE"]' <<<"$machine" >/dev/null
+
+          explicit_machine="$(curl --fail --silent --show-error "${common[@]}" "$PREVIEW_URL/readiness.json")"
+          jq -e '.schema == "seenrelay-readiness-presentation-v1"' <<<"$explicit_machine" >/dev/null
+          jq -e '.audits.v2.enabled == false' <<<"$explicit_machine" >/dev/null
 
           benign="$(curl --fail --silent --show-error --retry 2 "${common[@]}" \
             -H 'content-type: application/json' -H 'accept: application/json' \
