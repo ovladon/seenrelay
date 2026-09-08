@@ -174,6 +174,7 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
     <div class="rv-eyebrow">WHAT YOU GET</div>
     <h2>A decision report, not a sales claim.</h2>
     <p>The useful output is not “SeenRelay installed.” It is evidence about one exact workload under the semantics you actually need.</p>
+    <p><b>Verdict vocabulary:</b> USE · DO NOT USE · INSUFFICIENT EVIDENCE.</p>
   </div>
   <div class="rv-grid-3">
     <article class="rv-card"><span class="rv-number">01</span><h3>Waste map</h3><p>Protected-call count, exact recurrence and the expensive work being repeated across the measured workload.</p></article>
