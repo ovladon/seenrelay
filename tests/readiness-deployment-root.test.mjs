@@ -7,14 +7,18 @@ const coreVercel = JSON.parse(fs.readFileSync(new URL('../vercel.json', import.m
 const readinessPackage = JSON.parse(fs.readFileSync(new URL('../deploy/readiness/package.json', import.meta.url), 'utf8'));
 const readinessEntry = fs.readFileSync(new URL('../deploy/readiness/src/index.ts', import.meta.url), 'utf8');
 
+
 test('readiness deployment root is cron-free while core maintenance schedule stays unchanged', () => {
   assert.equal(Object.hasOwn(readinessVercel, 'crons'), false);
   assert.deepEqual(coreVercel.crons, [{ path: '/internal/maintenance', schedule: '23 3 * * *' }]);
 });
 
-test('readiness deployment root exports the dedicated service directly', () => {
-  assert.match(readinessEntry, /^export \{ default \} from '\.\.\/\.\.\/\.\.\/src\/readiness-service\.js';\s*$/);
-  assert.doesNotMatch(readinessEntry, /src\/index|SEENRELAY_DEPLOYMENT_ROLE/);
+test('readiness deployment root exports the dedicated service and forces isolated admission', () => {
+  assert.match(readinessEntry, /import readinessServiceApp from '\.\.\/\.\.\/\.\.\/src\/readiness-service\.js';/);
+  assert.match(readinessEntry, /import \{ requireIsolatedReadinessAdmission \} from '\.\.\/\.\.\/\.\.\/src\/readiness-admission-db\.js';/);
+  assert.match(readinessEntry, /requireIsolatedReadinessAdmission\(\);/);
+  assert.match(readinessEntry, /export default readinessServiceApp;/);
+  assert.doesNotMatch(readinessEntry, /src\/index/);
 });
 
 test('readiness deployment build uses the canonical root lockfile and copies only required public assets', () => {

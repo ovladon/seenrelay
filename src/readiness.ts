@@ -1,5 +1,4 @@
-import { consumeHiveNetworkBudget } from './hive-admission-db.js';
-import { privacyScopedHash } from './identity.js';
+import { consumeReadinessNetworkBudget, readinessPrivacyScopedHash } from './readiness-admission-db.js';
 import { boundedPinnedGet, normalizeAuditTarget, resolvePinnedPublicAddress, type BoundedGetResult, type PinnedAddress } from './readiness-network.js';
 
 export { isGlobalPublicIp, normalizeAuditTarget } from './readiness-network.js';
@@ -45,13 +44,13 @@ type RawRootResult = BoundedGetResult;
 
 async function admitReadinessAudit(hostname: string): Promise<void> {
   const nowIso = new Date().toISOString();
-  const globalKey = `readiness-global:${await privacyScopedHash('readiness-admission-global', 'v1')}`;
-  const globalBudget = await consumeHiveNetworkBudget(globalKey, nowIso, READINESS_GLOBAL_AUDITS_PER_MINUTE);
+  const globalKey = `readiness-global:${await readinessPrivacyScopedHash('readiness-admission-global', 'v1')}`;
+  const globalBudget = await consumeReadinessNetworkBudget(globalKey, nowIso, READINESS_GLOBAL_AUDITS_PER_MINUTE);
   if (!globalBudget.allowed) {
     throw new Error('Only a limited number of readiness audits can start each minute; retry shortly.');
   }
-  const targetKey = `readiness-target:${await privacyScopedHash('readiness-admission-target', hostname)}`;
-  const targetBudget = await consumeHiveNetworkBudget(targetKey, nowIso, READINESS_TARGET_AUDITS_PER_MINUTE);
+  const targetKey = `readiness-target:${await readinessPrivacyScopedHash('readiness-admission-target', hostname)}`;
+  const targetBudget = await consumeReadinessNetworkBudget(targetKey, nowIso, READINESS_TARGET_AUDITS_PER_MINUTE);
   if (!targetBudget.allowed) {
     throw new Error('Only a limited number of readiness audits can target the same hostname each minute; retry shortly.');
   }
