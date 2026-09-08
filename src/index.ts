@@ -23,8 +23,9 @@ import { productFactsForOrigin } from './public-facts-view.js';
 import type { CheckRequest, ObserveRequest } from './types.js';
 import { maintenanceCron } from './maintenance.js';
 import { agentSkillMarkdown, agentSkillIndex } from '../shared/agent-skill.mjs';
-import { auditPublicRoot, readinessPage } from './readiness.js';
-import { ReadinessV2ActivationError, runActivatedReadinessV2 } from './readiness-v2-activation.js';
+import { auditPublicRoot } from './readiness.js';
+import { readinessPresentationPage, readinessSurfaceDescriptor } from './readiness-presentation.js';
+import { ReadinessV2ActivationError, readinessV2ActivationState, runActivatedReadinessV2 } from './readiness-v2-activation.js';
 
 const app = new Hono();
 
@@ -100,9 +101,18 @@ app.get('/clients', (c) => {
   return c.html(clientsPage(new URL(c.req.url).origin));
 });
 app.get('/readiness', (c) => {
+  const origin = new URL(c.req.url).origin;
+  const v2Enabled = readinessV2ActivationState().enabled;
+  const accept = c.req.header('accept') || '';
+  c.header('vary', 'Accept');
+  c.header('cache-control', 'public, max-age=60');
+  if (!accept.includes('text/html')) return c.json(readinessSurfaceDescriptor(origin, v2Enabled));
   c.header('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
-  c.header('cache-control', 'public, max-age=300');
-  return c.html(readinessPage(new URL(c.req.url).origin));
+  return c.html(readinessPresentationPage(origin, v2Enabled));
+});
+app.get('/readiness.json', (c) => {
+  c.header('cache-control', 'public, max-age=60');
+  return c.json(readinessSurfaceDescriptor(new URL(c.req.url).origin, readinessV2ActivationState().enabled));
 });
 app.post('/readiness/audit', async (c) => {
   const bounded = await boundedRequest(c.req.raw, 2048);
