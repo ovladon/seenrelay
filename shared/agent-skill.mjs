@@ -40,6 +40,14 @@ Do not invent an integration for Google ADK, Microsoft Agent Framework, CrewAI o
 
 Ambient starts as measurement, not authorization. Keep the original authoritative call enabled. Do not turn candidate tools into active reuse merely because exact repeats were observed.
 
+## Choose the measurement lane explicitly
+
+Use **local/Ambient shadow** first when the goal is to find exact repetition and stronger local or source-native controls. This lane can remain entirely local and may produce no hosted SeenRelay activity; that is expected and must not be treated as failed integration.
+
+Use **shared-evidence shadow** only when the candidate has a stable source-native fact descriptor, the value is eligible to share under caller policy, and measuring shared evidence is actually relevant. Use the classic client without a \`reuse\` policy, or \`SeenRelayShadowProof\` / the Python equivalent. In this lane SeenRelay may CHECK the caller-known value, but the original authoritative validation still runs. Only after a genuinely fresh independent result may the client OBSERVE it best-effort. A CHECK result never authorizes skipping validation in shadow mode.
+
+Do not manufacture a shared fact identity merely to exercise the relay. If the workload cannot support a deterministic shareable fact descriptor, stay on local/Ambient measurement. If shared-evidence shadow produces too little eligible repetition or no economic advantage over stronger existing controls, report that result and leave shared reuse disabled.
+
 ## Assess readiness before modifying code
 
 Use the SDK's local readiness planner when available:
