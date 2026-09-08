@@ -51,5 +51,3 @@ if (missing.length) {
   for (const item of missing) console.error(`- ${item}`);
   process.exit(1);
 }
-
-console.log(`Validated ${targets.length} npm package entry targets in ${packageJsonPath}`);
