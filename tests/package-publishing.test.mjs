@@ -27,7 +27,7 @@ test('client package publishing is Git-audited and uses scoped OIDC without long
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|PYPI_TOKEN|TWINE_PASSWORD|password:\s*\$\{\{\s*secrets\./);
 });
 
-test('release builds verify the requested version against both package manifests', () => {
+test('release builds verify versions and self-contained npm package integrity before publishing', () => {
   assert.match(releaseVersion, /^\d+\.\d+\.\d+$/);
   assert.equal(npmManifest.version, releaseVersion);
   assert.equal(pyVersion, releaseVersion);
@@ -37,7 +37,16 @@ test('release builds verify the requested version against both package manifests
   assert.match(workflow, /clients\/typescript\/package\.json/);
   assert.match(workflow, /clients\/python\/pyproject\.toml/);
   assert.match(workflow, /test \"\$EXPECTED\" = \"\$ACTUAL\"/);
-  assert.match(workflow, /Install npm tarball in a clean project/);
+
+  assert.match(workflow, /Verify every declared npm entry target exists/);
+  assert.match(workflow, /clients\/typescript\/scripts\/assert-export-targets\.mjs clients\/typescript/);
+  assert.match(workflow, /Install, import every export and repack npm tarball in a clean project/);
+  assert.match(workflow, /Object\.keys\(packageJson\.exports \|\| \{\}\)/);
+  assert.match(workflow, /await import\(specifier\)/);
+  assert.match(workflow, /cd \"\$TMP\/node_modules\/seenrelay\"/);
+  assert.match(workflow, /REPACK=\"\$\(npm pack --silent\)\"/);
+  assert.match(workflow, /test -f \"\$REPACK\"/);
+
   assert.match(workflow, /Install base Python wheel in a clean virtual environment/);
 });
 
