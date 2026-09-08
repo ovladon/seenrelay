@@ -1,5 +1,6 @@
 import { consumeHiveMonthlyBudget } from './hive-admission-db.js';
 import { privacyScopedHash } from './identity.js';
+import { normalizeAuditTarget } from './readiness-network.js';
 import { auditPublicAiReadinessV2, type ReadinessV2Audit } from './readiness-v2.js';
 
 export const READINESS_V2_FREE_MONTHLY_HARD_CAP = 1_000;
@@ -26,6 +27,10 @@ export async function runActivatedReadinessV2(site: string): Promise<ReadinessV2
   if (!state.enabled) {
     throw new ReadinessV2ActivationError('READINESS_V2_DISABLED', 'Extended readiness audit is not enabled in this deployment.');
   }
+
+  // Reject syntactically unsafe targets before consuming scarce monthly capacity.
+  normalizeAuditTarget(site);
+
   const nowIso = new Date().toISOString();
   const budgetKey = `readiness-v2-free-month:${await privacyScopedHash('readiness-v2-free-month', 'v1')}`;
   const monthly = await consumeHiveMonthlyBudget(budgetKey, nowIso, READINESS_V2_FREE_MONTHLY_HARD_CAP);
