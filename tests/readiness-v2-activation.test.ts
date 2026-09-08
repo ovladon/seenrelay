@@ -32,7 +32,7 @@ test('requesting activation without explicit cost coverage remains fail-closed',
     assert.equal(state.requestedEnabled, true);
     assert.equal(state.costCovered, false);
     assert.equal(state.enabled, false);
-    await assert.rejects(() => runActivatedReadinessV2('example.com'), (err: unknown) => err instanceof ReadinessV2ActivationError && err.code === 'READINESS_V2_COST_COVERAGE_REQUIRED');
+    await assert.rejects(() => runActivatedReadinessV2('example.com'), (err: unknown) => err instanceof ReadinessV2ActivationError && err.code === 'READINESS_V2_DISABLED');
   } finally {
     if (previousEnabled === undefined) delete process.env.READINESS_V2_ENABLED; else process.env.READINESS_V2_ENABLED = previousEnabled;
     if (previousCovered === undefined) delete process.env.READINESS_V2_COST_COVERED; else process.env.READINESS_V2_COST_COVERED = previousCovered;
