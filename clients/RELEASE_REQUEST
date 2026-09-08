@@ -1,2 +1,2 @@
-version=0.2.12
-request=npm-export-integrity-1
+version=0.2.13
+request=self-contained-prepack-1
