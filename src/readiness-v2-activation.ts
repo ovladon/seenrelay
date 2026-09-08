@@ -6,7 +6,7 @@ import { auditPublicAiReadinessV2, type ReadinessV2Audit } from './readiness-v2.
 export const READINESS_V2_FREE_MONTHLY_HARD_CAP = 1_000;
 
 export class ReadinessV2ActivationError extends Error {
-  constructor(public readonly code: 'READINESS_V2_DISABLED' | 'READINESS_V2_COST_COVERAGE_REQUIRED' | 'READINESS_V2_MONTHLY_CAP', message: string) {
+  constructor(public readonly code: 'READINESS_V2_DISABLED' | 'READINESS_V2_MONTHLY_CAP', message: string) {
     super(message);
     this.name = 'ReadinessV2ActivationError';
   }
@@ -32,7 +32,7 @@ export async function runActivatedReadinessV2(site: string): Promise<ReadinessV2
     throw new ReadinessV2ActivationError('READINESS_V2_DISABLED', 'Extended readiness audit is not enabled in this deployment.');
   }
   if (!state.costCovered) {
-    throw new ReadinessV2ActivationError('READINESS_V2_COST_COVERAGE_REQUIRED', 'Extended readiness audit cannot run until its operating cost is explicitly covered.');
+    throw new ReadinessV2ActivationError('READINESS_V2_DISABLED', 'Extended readiness audit remains disabled until its operating cost is explicitly covered.');
   }
 
   // Reject syntactically unsafe targets before consuming scarce monthly capacity.
