@@ -53,15 +53,46 @@ const ObserveRequest = z.object({
   }).optional().describe('Optional source-validator metadata from the independent validation. The caller decides whether a returned hint is sufficient for source confirmation.'),
   idempotency_key: z.string().min(1).max(128).optional().describe('Caller-chosen retry key for the same OBSERVE operation. Reusing it deduplicates an idempotent retry.')
 });
+
+const ToolErrorOutput = z.object({
+  code: z.string().describe('Stable machine-readable service/admission error code.'),
+  detail: z.string().describe('Human-readable error detail. A tool error is not evidence that the source value is unchanged.')
+}).passthrough();
+
+const CheckOutput = z.object({
+  status: z.enum(['SAME_OBSERVED', 'CHANGED_OBSERVED', 'CONTESTED', 'STALE', 'UNKNOWN']).optional().describe('Decision status when CHECK succeeds. Only SAME_OBSERVED can be considered for reuse, and only under caller policy. CHANGED_OBSERVED, CONTESTED, STALE and UNKNOWN require normal authoritative validation before any OBSERVE.'),
+  fact_key: z.string().optional().describe('Canonical SeenRelay fact identity for this coordinate.'),
+  next_step: z.literal('VALIDATE_THEN_OBSERVE').optional().describe('Explicit cold/stale-path instruction: validate the authoritative source normally, then OBSERVE the independently obtained result.'),
+  error: ToolErrorOutput.optional().describe('Present instead of a decision status when CHECK cannot be admitted or is controlled.'),
+  hive: JsonValue.optional().describe('Current bounded Hive admission/lease state.'),
+  useful_reuse_awards: z.number().int().min(0).optional().describe('Qualified reuse awards attributable to this CHECK under SeenRelay telemetry rules; not a truth or independence score.')
+}).passthrough().describe('CHECK result. Exactly one of a decision status or an error is expected; additional evidence fields may be present.');
+
+const ObserveOutput = z.object({
+  accepted: z.boolean().optional().describe('True when a new independently obtained observation was stored. Omitted when OBSERVE cannot be admitted.'),
+  deduplicated: z.boolean().optional().describe('True when an idempotent/recent duplicate was recognized and no new observation row was needed.'),
+  fact_key: z.string().optional().describe('Canonical SeenRelay fact identity for this coordinate.'),
+  future_check_eligible: z.boolean().optional().describe('Whether the accepted or deduplicated observation is eligible to support later CHECKs under normal freshness rules.'),
+  reason: z.string().optional().describe('Deduplication reason when accepted=false and deduplicated=true.'),
+  error: ToolErrorOutput.optional().describe('Present when OBSERVE cannot be admitted or is controlled. This is not a statement about source truth.'),
+  hive: JsonValue.optional().describe('Current bounded Hive admission/lease state.')
+}).passthrough().describe('OBSERVE result. accepted=true means a new observation was stored; deduplicated=true means the retry/recent duplicate was recognized.');
+
 function textResult(value: unknown) { return { content: [{ type: 'text' as const, text: JSON.stringify(value) }], structuredContent: value }; }
 
 const handler = createMcpHandler(() => {
   const cfg = config();
-  const server = new McpServer({ name: 'seenrelay', version: cfg.version });
+  const server = new McpServer(
+    { name: 'seenrelay', version: cfg.version },
+    {
+      instructions: 'Use check_fact only before repeating a paid or slow read-only source-backed validation when the caller already has a known value. SAME_OBSERVED is recent shared evidence, not universal truth, and may be reused only if caller policy permits. CHANGED_OBSERVED, CONTESTED, STALE, UNKNOWN, or any CHECK error require normal authoritative validation. After independently validating the source, use observe_fact with the obtained value. Never turn hearsay or another SeenRelay result into an independent OBSERVE.'
+    }
+  );
   server.registerTool('check_fact', {
     title: 'Check Fact Freshness',
-    description: 'Cost preflight before repeated paid or slow source-backed validation, especially across an agent fleet. Use before paid web search, metered scraping, browser/extraction, rate-limited APIs or multi-step validation when the caller already has a known value. If evidence is not reusable under caller policy, validate normally and OBSERVE for later runs. SeenRelay never browses or verifies externally.',
+    description: 'Cost preflight before repeated paid or slow source-backed validation, especially across an agent fleet. Returns SAME_OBSERVED, CHANGED_OBSERVED, CONTESTED, STALE or UNKNOWN. Only SAME_OBSERVED can be considered for caller-policy-gated reuse; every other status requires normal authoritative validation before OBSERVE. SeenRelay never browses or verifies externally.',
     inputSchema: CheckRequest,
+    outputSchema: CheckOutput,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
   }, async (args, ctx) => {
     // Keep MCP security/order semantics identical to REST: reject invalid/credential-bearing
@@ -84,8 +115,9 @@ const handler = createMcpHandler(() => {
 
   server.registerTool('observe_fact', {
     title: 'Contribute Fact Observation',
-    description: 'After the caller independently performs a source-backed validation, deposit the observed result so later runs or agents can avoid repeating the same paid or slow work when their policy permits. Never OBSERVE hearsay. Optional Ed25519 proof establishes key possession and continuity, not truth or real-world independence.',
+    description: 'After independently performing a source-backed validation, deposit the observed result for later CHECKs. Returns accepted=true when a new observation is stored or deduplicated=true for a recognized retry/recent duplicate. Never OBSERVE hearsay. Optional Ed25519 proof establishes key possession and continuity, not truth or real-world independence.',
     inputSchema: ObserveRequest,
+    outputSchema: ObserveOutput,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
   }, async (args, ctx) => {
     canonicalFact(args.fact);
