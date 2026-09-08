@@ -122,9 +122,16 @@ export function boundedPinnedGet(url: URL, pinned: PinnedAddress, options: Bound
     let size = 0;
     let truncated = false;
     let settled = false;
+    let absoluteDeadline: ReturnType<typeof setTimeout> | undefined;
+    const clearAbsoluteDeadline = () => {
+      if (!absoluteDeadline) return;
+      clearTimeout(absoluteDeadline);
+      absoluteDeadline = undefined;
+    };
     const finish = (result: BoundedGetResult) => {
       if (settled) return;
       settled = true;
+      clearAbsoluteDeadline();
       resolve(result);
     };
 
@@ -177,10 +184,13 @@ export function boundedPinnedGet(url: URL, pinned: PinnedAddress, options: Bound
         });
       });
     });
+    absoluteDeadline = setTimeout(() => req.destroy(new Error('The site did not respond within the audit timeout.')), options.timeoutMs);
+    absoluteDeadline.unref?.();
     req.setTimeout(options.timeoutMs, () => req.destroy(new Error('The site did not respond within the audit timeout.')));
     req.on('error', (error) => {
       if (settled) return;
       settled = true;
+      clearAbsoluteDeadline();
       reject(error);
     });
     req.end();
