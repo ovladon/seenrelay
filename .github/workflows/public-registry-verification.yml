@@ -18,7 +18,7 @@ jobs:
       - name: Checkout exact commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - name: Read declared public client version
+      - name: Read promoted public client version
         id: version
         shell: bash
         run: |
@@ -28,7 +28,7 @@ jobs:
           node -e "const v=process.argv[1]; if (!/^\\d+\\.\\d+\\.\\d+$/.test(v)) process.exit(1)" "$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Verify exact npm registry install
+      - name: Verify exact npm registry install, exports and self-contained repack
         shell: bash
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -40,16 +40,33 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund "seenrelay@$VERSION" >/dev/null
           INSTALLED="$(node -p "require('./node_modules/seenrelay/package.json').version")"
           test "$INSTALLED" = "$VERSION"
+
           node --input-type=module - <<'NODE'
-          import { SeenRelayClient } from 'seenrelay';
-          import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
-          import { createFirecrawlSdkShadowPilot } from 'seenrelay/firecrawl-sdk-shadow';
-          if (
-            typeof SeenRelayClient !== 'function' ||
-            typeof SeenRelayShadowProof !== 'function' ||
-            typeof createFirecrawlSdkShadowPilot !== 'function'
-          ) process.exit(1);
+          import fs from 'node:fs';
+          const packageJson = JSON.parse(fs.readFileSync('./node_modules/seenrelay/package.json', 'utf8'));
+          const exportsMap = packageJson.exports || {};
+          const forbidden = [
+            './capabilities',
+            './profiles',
+            './catalog',
+            './readiness',
+            './vantage-assurance',
+            './declarative-profile'
+          ];
+          for (const key of forbidden) {
+            if (Object.hasOwn(exportsMap, key)) throw new Error(`obsolete dangling export remains public: ${key}`);
+          }
+          for (const key of Object.keys(exportsMap)) {
+            const specifier = key === '.' ? packageJson.name : `${packageJson.name}/${key.slice(2)}`;
+            await import(specifier);
+          }
           NODE
+
+          cd "$TMP/node_modules/seenrelay"
+          node ./scripts/assert-export-targets.mjs .
+          npm pack --dry-run --json >/dev/null
+          REPACK="$(npm pack --silent)"
+          test -f "$REPACK"
 
       - name: Verify exact PyPI registry install
         shell: bash
@@ -68,5 +85,14 @@ jobs:
           /tmp/seenrelay-public-registry-verify/bin/python - <<'PY'
           from seenrelay import SeenRelayClient
           from seenrelay_shadow import SeenRelayShadowProof
+          from seenrelay_easy import protect_validation
+          from seenrelay_assurance import assess_shared_check_evidence, multi_signal_retained_reuse_policy
+          from seenrelay_coordinates import json_pointer_fact, element_id_fact, source_key_fact, mcp_tool_coordinate, openapi_operation_coordinate
+          from seenrelay_zero_state import SeenRelayZeroState, fresh_result
           assert SeenRelayClient is not None and SeenRelayShadowProof is not None
+          assert callable(protect_validation)
+          assert callable(assess_shared_check_evidence) and callable(multi_signal_retained_reuse_policy)
+          assert callable(json_pointer_fact) and callable(element_id_fact) and callable(source_key_fact)
+          assert callable(mcp_tool_coordinate) and callable(openapi_operation_coordinate)
+          assert callable(SeenRelayZeroState) and callable(fresh_result)
           PY
