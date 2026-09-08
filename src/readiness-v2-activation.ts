@@ -1,6 +1,6 @@
 import { consumeHiveMonthlyBudget } from './hive-admission-db.js';
 import { privacyScopedHash } from './identity.js';
-import { auditPublicAiReadinessV2, type ReadinessV2Report } from './readiness-v2.js';
+import { auditPublicAiReadinessV2, type ReadinessV2Audit } from './readiness-v2.js';
 
 export const READINESS_V2_FREE_MONTHLY_HARD_CAP = 1_000;
 
@@ -21,7 +21,7 @@ export function readinessV2ActivationState() {
   };
 }
 
-export async function runActivatedReadinessV2(site: string): Promise<ReadinessV2Report> {
+export async function runActivatedReadinessV2(site: string): Promise<ReadinessV2Audit> {
   const state = readinessV2ActivationState();
   if (!state.enabled) {
     throw new ReadinessV2ActivationError('READINESS_V2_DISABLED', 'Extended readiness audit is not enabled in this deployment.');
