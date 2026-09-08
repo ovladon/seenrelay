@@ -10,4 +10,4 @@ A valid OpenAPI or A2A surface is evidence of a machine contract, not proof that
 
 Surface evidence cannot establish SeenRelay workload fit. SeenRelay remains a candidate only after owner-side evidence shows repeated expensive read-only validation that stronger native controls do not already solve.
 
-The existing `/readiness/audit` v1 contract remains separate and backward compatible. Readiness v2 remains activation-gated until its public endpoint and release gates are complete.
+The existing `/readiness/audit` v1 contract remains separate and backward compatible. The versioned `/readiness/audit/v2` route is activation-gated: requesting activation alone is insufficient, explicit operating-cost coverage is also required, and a compile-time monthly hard ceiling remains in force.
