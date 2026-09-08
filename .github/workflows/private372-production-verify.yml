@@ -1,0 +1,41 @@
+name: PRIVATE372 Production Verify
+
+on:
+  push:
+    branches:
+      - verify/private372-production
+    paths:
+      - .github/workflows/private372-production-verify.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verify exact production SHA and core boundary
+        shell: bash
+        env:
+          EXPECTED_SHA: a4acaa3d4d549d98bf861b3986786870f55a4772
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            code=$(curl -sS --max-time 10 -o /tmp/health.json -w '%{http_code}' https://seenrelay.com/healthz || true)
+            if [ "$code" = 200 ] \
+              && grep -q '"environment":"production"' /tmp/health.json \
+              && grep -q "\"deployment_sha\":\"${EXPECTED_SHA}\"" /tmp/health.json; then
+              cat /tmp/health.json
+              break
+            fi
+            if [ "$i" = 30 ]; then
+              echo "Production did not serve expected SHA" >&2
+              cat /tmp/health.json >&2 || true
+              exit 1
+            fi
+            sleep 2
+          done
+          code=$(curl -sS --max-time 10 -o /tmp/check.json -w '%{http_code}' -X POST https://seenrelay.com/v1/check -H 'content-type: application/json' --data '{}')
+          test "$code" != 404
+          code=$(curl -sS --max-time 10 -o /tmp/observe.json -w '%{http_code}' -X POST https://seenrelay.com/v1/observe -H 'content-type: application/json' --data '{}')
+          test "$code" != 404
