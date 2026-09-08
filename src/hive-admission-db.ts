@@ -37,6 +37,33 @@ export async function consumeHiveNetworkBudget(
 }
 
 /**
+ * Atomically consumes one slot from a fixed calendar-month budget using the same admission table.
+ * This is a hard cost/abuse ceiling for bounded optional workloads, not a billing meter or identity signal.
+ */
+export async function consumeHiveMonthlyBudget(
+  budgetKey: string,
+  nowIso: string,
+  maxPerMonth: number
+): Promise<HiveNetworkAdmission> {
+  const rows = await sql().query(`WITH bucket AS (
+      SELECT date_trunc('month', $2::timestamptz) AS window_start
+    ), admitted AS (
+      INSERT INTO hive_admission_windows (admission_key, window_start, admissions, updated_at)
+      SELECT $1, window_start, 1, $2::timestamptz FROM bucket
+      ON CONFLICT (admission_key, window_start) DO UPDATE SET
+        admissions = hive_admission_windows.admissions + 1,
+        updated_at = EXCLUDED.updated_at
+      WHERE hive_admission_windows.admissions < $3::int
+      RETURNING admissions
+    )
+    SELECT
+      EXISTS(SELECT 1 FROM admitted) AS allowed,
+      GREATEST(1, CEIL(EXTRACT(EPOCH FROM ((SELECT window_start FROM bucket) + interval '1 month' - $2::timestamptz))))::int AS retry_after_seconds`,
+    [budgetKey, nowIso, maxPerMonth]) as HiveNetworkAdmission[];
+  return rows[0] || { allowed: false, retry_after_seconds: 2_678_400 };
+}
+
+/**
  * Separate flood brake for creation of NEW leases. Existing leases do not call this wrapper.
  */
 export async function consumeHiveNewLeaseAdmission(
