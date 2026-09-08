@@ -6,10 +6,15 @@ on:
       - main
     paths:
       - 'src/readiness.ts'
+      - 'src/readiness-network.ts'
+      - 'src/readiness-v2.ts'
+      - 'src/readiness-v2-activation.ts'
+      - 'src/openapi.ts'
       - 'src/index.ts'
       - 'public/readiness.js'
       - 'public/readiness.css'
-      - 'tests/readiness.test.ts'
+      - 'tests/readiness*.test.ts'
+      - 'tests/openapi-readiness*.test.ts'
       - '.github/workflows/readiness-preview-smoke.yml'
 
 permissions:
@@ -67,6 +72,19 @@ jobs:
           jq -e '.seenrelay_recommendation == "NOT_DETERMINED_BY_SURFACE_SCAN"' <<<"$benign" >/dev/null
           jq -e '.verdict == "NATIVE_READY" or .verdict == "NATIVE_FIX_RECOMMENDED" or .verdict == "NEEDS_WORKLOAD_EVIDENCE"' <<<"$benign" >/dev/null
 
+          # V2 is routed and machine-discoverable but must not perform external work until explicitly enabled.
+          v2_out="$RUNNER_TEMP/readiness-v2-disabled.json"
+          v2_status="$(curl --silent --show-error --output "$v2_out" --write-out '%{http_code}' "${common[@]}" \
+            -H 'content-type: application/json' -H 'accept: application/json' \
+            --data '{"site":"example.com"}' "$PREVIEW_URL/readiness/audit/v2")"
+          test "$v2_status" = '503'
+          jq -e '.error.code == "READINESS_V2_DISABLED"' "$v2_out" >/dev/null
+
+          openapi="$(curl --fail --silent --show-error "${common[@]}" "$PREVIEW_URL/openapi.json")"
+          jq -e '.paths["/readiness/audit/v2"].post["x-seenrelay-availability"] == "activation-gated"' <<<"$openapi" >/dev/null
+          jq -e '.components.schemas.ReadinessV2Audit.properties.requestCount.const == 6' <<<"$openapi" >/dev/null
+          jq -e '.components.schemas.ReadinessV2Report.properties.seenrelayCandidate.const == false' <<<"$openapi" >/dev/null
+
           probe_rejected() {
             local payload="$1"
             local output="$RUNNER_TEMP/readiness-reject.json"
@@ -83,9 +101,7 @@ jobs:
           probe_rejected '{"site":"https://example.com/path"}'
           probe_rejected '{"site":"https://localhost"}'
 
-          # Exercise the per-target admission ceiling without sending HTTPS traffic to a real site.
-          # A unique .invalid hostname passes origin syntax, consumes the hashed target budget, then
-          # fails at DNS for the first four requests. The fifth must be rejected by admission first.
+          # Exercise the v1 per-target admission ceiling without sending HTTPS traffic to a real site.
           limit_host="readiness-${RELEASE_SHA:0:12}.invalid"
           for attempt in 1 2 3 4; do
             out="$RUNNER_TEMP/readiness-limit-${attempt}.json"
