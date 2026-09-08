@@ -136,6 +136,13 @@ export function publicLandingPage(origin: string): string {
     <p>No signup and no synthetic hit-rate promise. Start with measurement; every original call remains authoritative. A negative result is useful because it tells you not to add another layer.</p>
   </div>
 
+  <div class="rv-flow-list" aria-label="Shadow audit sequence">
+    <div><span>1</span><p><b>Run normally</b><small>Keep the workload and every authoritative validation unchanged.</small></p></div>
+    <div><span>2</span><p><b>Measure what repeats</b><small>Identify deterministic read-only validation that recurs often enough to matter.</small></p></div>
+    <div><span>3</span><p><b>Check safety</b><small>Compare outcomes and stronger local, source-native and provider-native controls before giving SeenRelay credit.</small></p></div>
+    <div><span>4</span><p><b>Get a verdict</b><small>Return USE, DO NOT USE or INSUFFICIENT EVIDENCE for the measured workload.</small></p></div>
+  </div>
+
   <div class="rv-adopt">
     <div class="rv-mode-card">
       <div class="rv-segment" role="tablist" aria-label="Audit installation mode">
@@ -162,7 +169,7 @@ console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" t
       </div>
       <div class="rv-install-view" data-install-view="agent" id="agent-audit">
         <div class="rv-step"><span>1</span><div><h4>Install the SeenRelay Agent Skill</h4><div class="rv-code"><pre id="skill-install">${esc(skillCommand)}</pre><button class="rv-copy" type="button" data-copy-target="skill-install">Copy</button></div></div></div>
-        <div class="rv-step"><span>2</span><div><h4>Give the agent one task</h4><div class="rv-code"><pre id="agent-prompt">${esc(auditPrompt)}</pre><button class="rv-copy" type="button" data-copy-target="agent-prompt">Copy</button></div></div></div>
+        <div class="rv-step"><span>2</span><div><h4>Give it to your coding agent</h4><div class="rv-code"><pre id="agent-prompt">${esc(auditPrompt)}</pre><button class="rv-copy" type="button" data-copy-target="agent-prompt">Copy</button></div></div></div>
         <div class="rv-step"><span>3</span><div><h4>Accept a negative verdict</h4><p>The skill must leave unsupported paths unchanged and should return DO NOT USE when native controls or sparse recurrence make SeenRelay uneconomic.</p></div></div></div>
       </div>
     </div>
