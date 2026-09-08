@@ -90,7 +90,7 @@ const handler = createMcpHandler(() => {
   );
   server.registerTool('check_fact', {
     title: 'Check Fact Freshness',
-    description: 'Cost preflight before repeated paid or slow source-backed validation, especially across an agent fleet. Returns SAME_OBSERVED, CHANGED_OBSERVED, CONTESTED, STALE or UNKNOWN. Only SAME_OBSERVED can be considered for caller-policy-gated reuse; every other status requires normal authoritative validation before OBSERVE. SeenRelay never browses or verifies externally.',
+    description: 'Cost preflight before repeated paid or slow source-backed validation, especially across an agent fleet. Use before paid web search, metered scraping, browser/extraction, rate-limited APIs or multi-step validation when the caller already has a known value. Returns SAME_OBSERVED, CHANGED_OBSERVED, CONTESTED, STALE or UNKNOWN. Only SAME_OBSERVED can be considered for caller-policy-gated reuse; every other status requires normal authoritative validation before OBSERVE. SeenRelay never browses or verifies externally.',
     inputSchema: CheckRequest,
     outputSchema: CheckOutput,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
