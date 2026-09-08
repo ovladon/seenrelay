@@ -26,6 +26,7 @@ import { agentSkillMarkdown, agentSkillIndex } from '../shared/agent-skill.mjs';
 import { auditPublicRoot } from './readiness.js';
 import { readinessPresentationPage, readinessSurfaceDescriptor } from './readiness-presentation.js';
 import { ReadinessV2ActivationError, readinessV2ActivationState, runActivatedReadinessV2 } from './readiness-v2-activation.js';
+import readinessServiceApp from './readiness-service.js';
 
 const app = new Hono();
 
@@ -276,4 +277,4 @@ app.post('/v1/observe', async (c) => {
 app.all('/v1/billing/*', (c) => c.json({ error: { code: 'BILLING_DISABLED', detail: 'Billing is not available in this deployment.' } }, 404));
 app.notFound((c) => c.json({ error: { code: 'NOT_FOUND', detail: 'No such endpoint.' } }, 404));
 
-export default app;
+export default process.env.SEENRELAY_DEPLOYMENT_ROLE === 'readiness' ? readinessServiceApp : app;
