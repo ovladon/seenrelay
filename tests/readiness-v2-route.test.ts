@@ -25,7 +25,7 @@ test('readiness v2 route is 503 when activation is not requested', async () => {
   }
 });
 
-test('readiness v2 route is 503 when activation is requested without cost coverage', async () => {
+test('readiness v2 route stays 503 when activation is requested without cost coverage', async () => {
   const previousEnabled = process.env.READINESS_V2_ENABLED;
   const previousCovered = process.env.READINESS_V2_COST_COVERED;
   process.env.READINESS_V2_ENABLED = 'true';
@@ -33,7 +33,9 @@ test('readiness v2 route is 503 when activation is requested without cost covera
   try {
     const response = await postV2();
     assert.equal(response.status, 503);
-    assert.equal((await response.json() as any).error.code, 'READINESS_V2_COST_COVERAGE_REQUIRED');
+    const payload = await response.json() as any;
+    assert.equal(payload.error.code, 'READINESS_V2_DISABLED');
+    assert.match(payload.error.detail, /operating cost is explicitly covered/);
   } finally {
     if (previousEnabled === undefined) delete process.env.READINESS_V2_ENABLED; else process.env.READINESS_V2_ENABLED = previousEnabled;
     if (previousCovered === undefined) delete process.env.READINESS_V2_COST_COVERED; else process.env.READINESS_V2_COST_COVERED = previousCovered;
