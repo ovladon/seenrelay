@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "hono",
+  "regions": ["pdx1"],
+  "installCommand": "cd ../.. && npm ci && mkdir -p deploy/readiness/public && cp public/revamp.css public/readiness.css public/readiness.js deploy/readiness/public/"
+}
