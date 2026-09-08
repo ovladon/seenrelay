@@ -1,12 +1,12 @@
 {
   "name": "seenrelay",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "Avoid redundant expensive validation with local-first SeenRelay clients.",
   "type": "module",
   "main": "./dist/seenrelay.js",
   "types": "./dist/seenrelay.d.ts",
   "scripts": {
-    "prepack": "node ../../scripts/assert-npm-export-targets.mjs ."
+    "prepack": "node ./scripts/assert-export-targets.mjs ."
   },
   "exports": {
     ".": {
@@ -60,6 +60,7 @@
   },
   "files": [
     "dist/",
+    "scripts/",
     "LICENSE",
     "README.md"
   ],
