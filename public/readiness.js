@@ -23,6 +23,49 @@
     return node;
   }
 
+  function ensureHandoff() {
+    let handoff = document.getElementById('readiness-handoff');
+    if (handoff) return handoff;
+    handoff = document.createElement('div');
+    handoff.id = 'readiness-handoff';
+    handoff.className = 'readiness-check readiness-handoff';
+    output.appendChild(handoff);
+    return handoff;
+  }
+
+  function renderHandoff(report) {
+    const handoff = ensureHandoff();
+    handoff.hidden = false;
+    clear(handoff);
+
+    const copy = document.createElement('div');
+    const action = document.createElement('a');
+    action.className = 'rv-button';
+
+    if (report.verdict === 'NATIVE_READY') {
+      handoff.appendChild(textElement('span', 'readiness-status pass', 'NATIVE FIRST'));
+      copy.appendChild(textElement('b', '', 'Use the native freshness contract first.'));
+      copy.appendChild(textElement('p', '', 'This surface result is not a SeenRelay recommendation. Honor the native mechanism; only measure a separate workload if agents still perform expensive repeated validation elsewhere.'));
+      action.href = '#full';
+      action.textContent = 'Review the full owner audit';
+    } else if (report.verdict === 'NATIVE_FIX_RECOMMENDED') {
+      handoff.appendChild(textElement('span', 'readiness-status fix', 'FIX NATIVE'));
+      copy.appendChild(textElement('b', '', 'Fix the native surface before adding another reuse layer.'));
+      copy.appendChild(textElement('p', '', 'Improve the authoritative HTTP or machine-facing contract first. Re-scan after the native fix; do not add SeenRelay just because this quick audit found a gap.'));
+      action.href = '#full';
+      action.textContent = 'See the owner-side checklist';
+    } else {
+      handoff.appendChild(textElement('span', 'readiness-status info', 'MEASURE NEXT'));
+      copy.appendChild(textElement('b', '', 'A surface scan cannot decide SeenRelay workload fit.'));
+      copy.appendChild(textElement('p', '', 'If agents repeatedly perform expensive read-only validation after equivalent native controls are tested, measure that real workload next with every authoritative call still enabled.'));
+      action.href = '/#audit';
+      action.textContent = 'Audit a real workload';
+    }
+
+    copy.appendChild(action);
+    handoff.appendChild(copy);
+  }
+
   function showError(message) {
     empty.hidden = true;
     output.hidden = false;
@@ -30,6 +73,8 @@
     verdict.textContent = 'AUDIT NOT COMPLETED';
     headline.textContent = message;
     clear(checks); clear(next); clear(limitations);
+    const handoff = document.getElementById('readiness-handoff');
+    if (handoff) handoff.hidden = true;
   }
 
   function dimensionLabel(id) {
@@ -81,6 +126,7 @@
     }
     for (const item of report.next_steps || []) next.appendChild(textElement('li', '', item));
     for (const item of report.limitations || []) limitations.appendChild(textElement('li', '', item));
+    renderHandoff(report);
   }
 
   function selectedEndpoint() {
