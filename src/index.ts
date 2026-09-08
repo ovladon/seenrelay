@@ -24,6 +24,7 @@ import type { CheckRequest, ObserveRequest } from './types.js';
 import { maintenanceCron } from './maintenance.js';
 import { agentSkillMarkdown, agentSkillIndex } from '../shared/agent-skill.mjs';
 import { auditPublicRoot, readinessPage } from './readiness.js';
+import { ReadinessV2ActivationError, runActivatedReadinessV2 } from './readiness-v2-activation.js';
 
 const app = new Hono();
 
@@ -116,6 +117,25 @@ app.post('/readiness/audit', async (c) => {
       ? message
       : 'The site could not be safely reached for this bounded quick audit.';
     return c.json({ error: { code: 'AUDIT_UNAVAILABLE', detail: safeDetail } }, 422);
+  }
+});
+app.post('/readiness/audit/v2', async (c) => {
+  const bounded = await boundedRequest(c.req.raw, 2048);
+  if ('response' in bounded) return bounded.response;
+  const body = await readJsonBody<{ site?: unknown }>(bounded.request, 2048);
+  if (typeof body.site !== 'string') return c.json({ error: { code: 'INVALID_SITE', detail: 'Provide a site hostname or HTTPS origin.' } }, 400);
+  try {
+    return c.json(await runActivatedReadinessV2(body.site));
+  } catch (err) {
+    if (err instanceof ReadinessV2ActivationError) {
+      if (err.code === 'READINESS_V2_DISABLED') return c.json({ error: { code: err.code, detail: err.message } }, 503);
+      return c.json({ error: { code: err.code, detail: err.message } }, 429);
+    }
+    const message = err instanceof Error ? err.message : '';
+    const safeDetail = /^(Enter|Only|Credentials|Local|The hostname|DNS returned|No supported)/.test(message)
+      ? message
+      : 'The site could not be safely reached for this bounded extended audit.';
+    return c.json({ error: { code: 'AUDIT_V2_UNAVAILABLE', detail: safeDetail } }, 422);
   }
 });
 app.get('/robots.txt', (c) => {
