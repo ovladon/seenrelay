@@ -21,14 +21,14 @@ const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', '
 
 type ProbeId = typeof PROBES[number]['id'];
 type DimensionStatus = 'PASS' | 'FIX' | 'INFO' | 'NOT_APPLICABLE';
-type ProbeResult = {
+export type ReadinessV2ProbeResult = {
   id: ProbeId;
-  url: string;
+  url?: string;
   status: number;
   headers: Record<string, string | string[] | undefined>;
   body: Buffer;
   truncated: boolean;
-  elapsedMs: number;
+  elapsedMs?: number;
   error?: 'PROBE_FAILED';
 };
 
@@ -45,32 +45,34 @@ export type ReadinessV2Report = {
   seenrelayRecommendation: 'REQUIRES_OWNER_WORKLOAD_EVIDENCE';
 };
 
+export type ReadinessV2ProbeEvidence = {
+  root: { success: boolean; machineLinkPresent: boolean; positiveFreshness: boolean; etagPresent: boolean; lastModifiedPresent: boolean };
+  robots: { present: boolean };
+  sitemap: { present: boolean };
+  llmsTxt: { present: boolean };
+  openapi: { valid: boolean; operationCount: number; linkedFromRoot: boolean };
+  a2aAgentCard: { valid: boolean; interfaceCount: number };
+  mcp: { advertised: boolean };
+  agentSkills: { advertised: boolean };
+  agentPayment: { advertised: boolean };
+};
+
 export type ReadinessV2Evidence = {
   protocol: 'seenrelay-site-audit-interpreted-evidence-v2';
   origin: string;
-  probes: {
-    root: { success: boolean; machineLinkPresent: boolean; positiveFreshness: boolean; etagPresent: boolean; lastModifiedPresent: boolean };
-    robots: { present: boolean };
-    sitemap: { present: boolean };
-    llmsTxt: { present: boolean };
-    openapi: { valid: boolean; operationCount: number; linkedFromRoot: boolean };
-    a2aAgentCard: { valid: boolean; interfaceCount: number };
-    mcp: { advertised: boolean };
-    agentSkills: { advertised: boolean };
-    agentPayment: { advertised: boolean };
-  };
+  probes: ReadinessV2ProbeEvidence;
   report: ReadinessV2Report;
 };
 
 export type ReadinessV2Audit = {
   protocol: 'seenrelay-site-audit-execution-v2';
-  requestCount: number;
+  requestCount: 6;
   retries: 0;
-  totalMaxBytes: number;
+  totalMaxBytes: 786432;
   evidence: ReadinessV2Evidence;
 };
 
-function headerValue(headers: Record<string, string | string[] | undefined>, name: string): string {
+function headerValue(headers: ReadinessV2ProbeResult['headers'], name: string): string {
   const value = headers[name.toLowerCase()];
   if (Array.isArray(value)) return value.join(', ');
   return typeof value === 'string' ? value : '';
@@ -113,34 +115,55 @@ function validA2aCard(doc: unknown): doc is Record<string, unknown> & { supporte
   return value.skills.every((skill) => {
     if (!skill || typeof skill !== 'object' || Array.isArray(skill)) return false;
     const item = skill as Record<string, unknown>;
-    return typeof item.id === 'string' && Boolean(item.id) && typeof item.name === 'string' && Boolean(item.name) && typeof item.description === 'string' && Boolean(item.description) && Array.isArray(item.tags);
+    return typeof item.id === 'string' && Boolean(item.id)
+      && typeof item.name === 'string' && Boolean(item.name)
+      && typeof item.description === 'string' && Boolean(item.description)
+      && Array.isArray(item.tags);
   });
 }
 function machineLink(link: string): boolean { return /openapi|agent-card|\/mcp(?:[>;\s]|$)|agent-skills|application\/(?:json|a2a\+json)/i.test(link); }
 function dimension(status: DimensionStatus, evidence: boolean, detail: string) { return { status, evidence, detail }; }
 
-export function classifyReadinessV2(origin: string, results: Partial<Record<ProbeId, ProbeResult>>): ReadinessV2Evidence {
+function interpretProbeResults(results: Partial<Record<ProbeId, ReadinessV2ProbeResult>>): ReadinessV2ProbeEvidence {
   const root = results.root;
-  const rootOk = Boolean(root && success(root.status));
-  const rootCache = root ? headerValue(root.headers, 'cache-control') : '';
-  const rootLink = root ? headerValue(root.headers, 'link') : '';
-  const etag = Boolean(root && headerValue(root.headers, 'etag'));
-  const lastModified = Boolean(root && headerValue(root.headers, 'last-modified'));
-  const nativeFreshness = positiveFreshness(rootCache);
+  const rootHeaders = root?.headers || {};
+  const rootLink = headerValue(rootHeaders, 'link');
+  const openApiDocument = results.openapi && success(results.openapi.status) && !results.openapi.truncated ? parseJson(results.openapi.body) : null;
+  const openApiOperations = countOpenApiOperations(openApiDocument);
+  const a2aDocument = results.a2aAgentCard && success(results.a2aAgentCard.status) && !results.a2aAgentCard.truncated ? parseJson(results.a2aAgentCard.body) : null;
+  const a2aValid = validA2aCard(a2aDocument);
+  return {
+    root: {
+      success: Boolean(root && success(root.status)),
+      machineLinkPresent: machineLink(rootLink),
+      positiveFreshness: positiveFreshness(headerValue(rootHeaders, 'cache-control')),
+      etagPresent: Boolean(headerValue(rootHeaders, 'etag')),
+      lastModifiedPresent: Boolean(headerValue(rootHeaders, 'last-modified'))
+    },
+    robots: { present: Boolean(results.robots && success(results.robots.status)) },
+    sitemap: { present: Boolean(results.sitemap && success(results.sitemap.status)) },
+    llmsTxt: { present: Boolean(results.llmsTxt && success(results.llmsTxt.status)) },
+    openapi: { valid: openApiOperations > 0, operationCount: openApiOperations, linkedFromRoot: /openapi/i.test(rootLink) },
+    a2aAgentCard: { valid: a2aValid, interfaceCount: a2aValid ? a2aDocument.supportedInterfaces.length : 0 },
+    mcp: { advertised: /\/mcp(?:[>;\s]|$)|modelcontextprotocol/i.test(rootLink) },
+    agentSkills: { advertised: /agent-skills|SKILL\.md/i.test(rootLink) },
+    agentPayment: { advertised: /\bx402\b|payment-required/i.test(rootLink) }
+  };
+}
 
-  const openapi = results.openapi && success(results.openapi.status) && !results.openapi.truncated ? parseJson(results.openapi.body) : null;
-  const openApiOperations = countOpenApiOperations(openapi);
-  const openApiValid = openApiOperations > 0;
-  const a2a = results.a2aAgentCard && success(results.a2aAgentCard.status) && !results.a2aAgentCard.truncated ? parseJson(results.a2aAgentCard.body) : null;
-  const a2aValid = validA2aCard(a2a);
-  const a2aInterfaceCount = a2aValid ? a2a.supportedInterfaces.length : 0;
-  const explicitDiscovery = machineLink(rootLink) || a2aValid || (openApiValid && /openapi/i.test(rootLink));
+export function classifyReadinessV2FromEvidence(origin: string, probes: ReadinessV2ProbeEvidence): ReadinessV2Report {
+  const rootOk = probes.root.success;
+  const openApiValid = probes.openapi.valid && probes.openapi.operationCount > 0;
+  const a2aValid = probes.a2aAgentCard.valid && probes.a2aAgentCard.interfaceCount > 0;
   const verifiedMachineContract = openApiValid || a2aValid;
-  const crawlHints = Boolean((results.robots && success(results.robots.status)) || (results.sitemap && success(results.sitemap.status)));
-  const llmsHint = Boolean(results.llmsTxt && success(results.llmsTxt.status));
-  const advertisedMcp = /\/mcp(?:[>;\s]|$)|modelcontextprotocol/i.test(rootLink);
-  const skillHint = /agent-skills|SKILL\.md/i.test(rootLink);
-  const paymentHint = /\bx402\b|payment-required/i.test(rootLink);
+  const explicitDiscovery = probes.root.machineLinkPresent || a2aValid || probes.openapi.linkedFromRoot;
+  const nativeFreshness = probes.root.positiveFreshness;
+  const nativeValidator = probes.root.etagPresent || probes.root.lastModifiedPresent;
+  const crawlHints = probes.robots.present || probes.sitemap.present;
+  const llmsHint = probes.llmsTxt.present;
+  const advertisedMcp = probes.mcp.advertised;
+  const skillHint = probes.agentSkills.advertised;
+  const paymentHint = probes.agentPayment.advertised;
 
   let verdict: ReadinessV2Report['verdict'];
   if (!rootOk) verdict = 'INCONCLUSIVE';
@@ -148,12 +171,11 @@ export function classifyReadinessV2(origin: string, results: Partial<Record<Prob
   else if (verifiedMachineContract || explicitDiscovery || advertisedMcp || skillHint || crawlHints || llmsHint) verdict = 'PARTIAL_MACHINE_READY';
   else verdict = 'NATIVE_FIX_RECOMMENDED';
 
-  const nativeValidator = etag || lastModified;
   const dimensions = {
     publicHttpsRepresentation: dimension(rootOk ? 'PASS' : 'INFO', rootOk, rootOk ? 'A public root representation was observed.' : 'No successful public root representation was established.'),
     machineDiscovery: dimension(explicitDiscovery ? 'PASS' : (rootOk ? 'FIX' : 'INFO'), explicitDiscovery, explicitDiscovery ? 'At least one machine surface is explicitly discoverable.' : 'No verified explicit machine-discovery path was established.'),
     machineContract: dimension(verifiedMachineContract ? 'PASS' : (rootOk ? 'FIX' : 'INFO'), verifiedMachineContract, verifiedMachineContract ? 'At least one structured machine contract was verified.' : 'No valid OpenAPI or A2A contract was established by the bounded probes.'),
-    a2aDelegation: dimension(a2aValid ? 'PASS' : 'INFO', a2aValid, a2aValid ? `A valid A2A Agent Card with ${a2aInterfaceCount} interface(s) was observed.` : 'A2A is optional; no valid A2A Agent Card was established.'),
+    a2aDelegation: dimension(a2aValid ? 'PASS' : 'INFO', a2aValid, a2aValid ? `A valid A2A Agent Card with ${probes.a2aAgentCard.interfaceCount} interface(s) was observed.` : 'A2A is optional; no valid A2A Agent Card was established.'),
     mcpDiscovery: dimension(advertisedMcp ? 'INFO' : 'NOT_APPLICABLE', advertisedMcp, advertisedMcp ? 'An MCP surface was advertised; capability correctness requires protocol introspection.' : 'MCP is optional and absence is not a readiness failure.'),
     nativeFreshness: dimension(nativeFreshness ? 'PASS' : (nativeValidator ? 'INFO' : 'FIX'), nativeFreshness || nativeValidator, nativeFreshness ? 'The root advertises a positive native freshness window.' : nativeValidator ? 'A native conditional validator is present; effective 304 behavior still requires testing.' : 'No positive freshness window or conditional validator was established on the root response.'),
     crawlHints: dimension(crawlHints ? 'PASS' : 'INFO', crawlHints, crawlHints ? 'robots.txt and/or sitemap discovery was observed.' : 'Crawl/index hints are optional and were not established.'),
@@ -169,19 +191,7 @@ export function classifyReadinessV2(origin: string, results: Partial<Record<Prob
   if (advertisedMcp) nextSteps.push('Introspect the advertised MCP endpoint and verify tools, schemas, side-effect semantics and protocol compatibility before treating it as operational.');
   nextSteps.push('Use owner-side workload evidence to test whether agents actually repeat expensive validation before considering shared validation reuse.');
 
-  const probes: ReadinessV2Evidence['probes'] = {
-    root: { success: rootOk, machineLinkPresent: machineLink(rootLink), positiveFreshness: nativeFreshness, etagPresent: etag, lastModifiedPresent: lastModified },
-    robots: { present: Boolean(results.robots && success(results.robots.status)) },
-    sitemap: { present: Boolean(results.sitemap && success(results.sitemap.status)) },
-    llmsTxt: { present: Boolean(results.llmsTxt && success(results.llmsTxt.status)) },
-    openapi: { valid: openApiValid, operationCount: openApiOperations, linkedFromRoot: /openapi/i.test(rootLink) },
-    a2aAgentCard: { valid: a2aValid, interfaceCount: a2aInterfaceCount },
-    mcp: { advertised: advertisedMcp },
-    agentSkills: { advertised: skillHint },
-    agentPayment: { advertised: paymentHint }
-  };
-
-  const report: ReadinessV2Report = {
+  return {
     protocol: 'seenrelay-ai-site-readiness-v2',
     scope: 'bounded_machine_surface_classification',
     targetOrigin: origin,
@@ -198,8 +208,15 @@ export function classifyReadinessV2(origin: string, results: Partial<Record<Prob
     seenrelayCandidate: false,
     seenrelayRecommendation: 'REQUIRES_OWNER_WORKLOAD_EVIDENCE'
   };
+}
 
-  return { protocol: 'seenrelay-site-audit-interpreted-evidence-v2', origin, probes, report };
+export function classifyReadinessV2(origin: string, results: Partial<Record<ProbeId, ReadinessV2ProbeResult>>): ReadinessV2Report {
+  return classifyReadinessV2FromEvidence(origin, interpretProbeResults(results));
+}
+
+export function interpretReadinessV2(origin: string, results: Partial<Record<ProbeId, ReadinessV2ProbeResult>>): ReadinessV2Evidence {
+  const probes = interpretProbeResults(results);
+  return { protocol: 'seenrelay-site-audit-interpreted-evidence-v2', origin, probes, report: classifyReadinessV2FromEvidence(origin, probes) };
 }
 
 async function admitReadinessV2(hostname: string): Promise<void> {
@@ -212,19 +229,19 @@ async function admitReadinessV2(hostname: string): Promise<void> {
   if (!targetBudget.allowed) throw new Error('Only one extended readiness audit can target the same hostname each minute; retry shortly.');
 }
 
-function fromRaw(id: ProbeId, url: string, raw: BoundedGetResult): ProbeResult { return { id, url, ...raw }; }
+function fromRaw(id: ProbeId, url: string, raw: BoundedGetResult): ReadinessV2ProbeResult { return { id, url, ...raw }; }
 
 export function readinessV2ProbePlan(input: string) {
   const target = normalizeAuditTarget(input);
   return {
     protocol: 'seenrelay-site-audit-probe-plan-v2' as const,
     origin: target.origin,
-    redirectPolicy: 'NO_CROSS_ORIGIN_REDIRECTS' as const,
+    redirectPolicy: 'NO_REDIRECT_FOLLOWING' as const,
     requestPolicy: 'GET_ONLY_NO_AUTH_NO_COOKIES' as const,
-    probeCount: PROBES.length,
-    totalMaxBytes: TOTAL_MAX_BYTES,
+    probeCount: 6 as const,
+    totalMaxBytes: 786432 as const,
     probes: PROBES.map((probe) => ({ ...probe, url: `${target.origin}${probe.path}` })),
-    invariants: { httpsOnly: true, sameOriginOnly: true, userSuppliedPaths: false, authentication: false, crawl: false, mutation: false }
+    invariants: { httpsOnly: true, sameOriginOnly: true, userSuppliedPaths: false, authentication: false, crawl: false, mutation: false, retries: 0 as const }
   };
 }
 
@@ -232,7 +249,7 @@ export async function auditPublicAiReadinessV2(input: string): Promise<Readiness
   const target = normalizeAuditTarget(input);
   await admitReadinessV2(target.hostname);
   const pinned = await resolvePinnedPublicAddress(target.hostname);
-  const results: Partial<Record<ProbeId, ProbeResult>> = {};
+  const results: Partial<Record<ProbeId, ReadinessV2ProbeResult>> = {};
 
   for (const probe of PROBES) {
     const url = `${target.origin}${probe.path}`;
@@ -252,9 +269,9 @@ export async function auditPublicAiReadinessV2(input: string): Promise<Readiness
 
   return {
     protocol: 'seenrelay-site-audit-execution-v2',
-    requestCount: PROBES.length,
+    requestCount: 6,
     retries: 0,
-    totalMaxBytes: TOTAL_MAX_BYTES,
-    evidence: classifyReadinessV2(target.origin, results)
+    totalMaxBytes: 786432,
+    evidence: interpretReadinessV2(target.origin, results)
   };
 }
