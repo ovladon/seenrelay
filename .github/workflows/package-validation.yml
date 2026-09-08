@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'clients/**'
+      - 'scripts/assert-npm-export-targets.mjs'
       - '.github/workflows/package-validation.yml'
       - '.github/workflows/publish-clients.yml'
   push:
     branches: [main]
     paths:
       - 'clients/**'
+      - 'scripts/assert-npm-export-targets.mjs'
       - '.github/workflows/package-validation.yml'
       - '.github/workflows/publish-clients.yml'
 
@@ -24,6 +26,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify every declared npm entry target exists
+        run: node scripts/assert-npm-export-targets.mjs clients/typescript
       - name: Inspect npm package contents
         working-directory: clients/typescript
         run: npm pack --dry-run --json
@@ -44,6 +48,7 @@ jobs:
           npm init -y >/dev/null
           npm install "$GITHUB_WORKSPACE/clients/typescript/${{ steps.npm-pack.outputs.tarball }}" >/dev/null
           node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
           import { SeenRelayClient } from 'seenrelay';
           import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
           import { SeenRelayZeroState, freshResult } from 'seenrelay/zero-state';
@@ -52,6 +57,12 @@ jobs:
           import { SeenRelayAuto, exactToolAdapter } from 'seenrelay/auto';
           import { protectMcpClient } from 'seenrelay/mcp-auto';
           import { firecrawlScrapePolicy } from 'seenrelay/firecrawl';
+
+          const packageJson = JSON.parse(fs.readFileSync('./node_modules/seenrelay/package.json', 'utf8'));
+          for (const key of Object.keys(packageJson.exports || {})) {
+            const specifier = key === '.' ? packageJson.name : `${packageJson.name}/${key.slice(2)}`;
+            await import(specifier);
+          }
 
           const client = new SeenRelayClient({ fetchImpl: async () => { throw new Error('not called during import test'); } });
           const proof = new SeenRelayShadowProof(client);
