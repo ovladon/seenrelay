@@ -1,5 +1,4 @@
-import { consumeHiveMonthlyBudget } from './hive-admission-db.js';
-import { privacyScopedHash } from './identity.js';
+import { consumeReadinessMonthlyBudget, readinessPrivacyScopedHash } from './readiness-admission-db.js';
 import { normalizeAuditTarget } from './readiness-network.js';
 import { auditPublicAiReadinessV2, type ReadinessV2Audit } from './readiness-v2.js';
 
@@ -72,8 +71,8 @@ export async function runActivatedReadinessV2(site: string): Promise<ReadinessV2
   normalizeAuditTarget(site);
 
   const nowIso = new Date().toISOString();
-  const budgetKey = `readiness-v2-free-month:${await privacyScopedHash('readiness-v2-free-month', 'v1')}`;
-  const monthly = await consumeHiveMonthlyBudget(budgetKey, nowIso, READINESS_V2_FREE_MONTHLY_HARD_CAP);
+  const budgetKey = `readiness-v2-free-month:${await readinessPrivacyScopedHash('readiness-v2-free-month', 'v1')}`;
+  const monthly = await consumeReadinessMonthlyBudget(budgetKey, nowIso, READINESS_V2_FREE_MONTHLY_HARD_CAP);
   if (!monthly.allowed) {
     throw new ReadinessV2ActivationError('READINESS_V2_MONTHLY_CAP', 'Extended readiness audit monthly capacity is exhausted.');
   }
