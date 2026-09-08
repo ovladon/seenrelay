@@ -18,12 +18,12 @@ jobs:
       - name: Checkout exact commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - name: Read declared public client version
+      - name: Read staged client release version
         id: version
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$(node -p "require('./public/product-facts.json').install.client_version")"
+          VERSION="$(tr -d '[:space:]' < clients/RELEASE_VERSION)"
           test -n "$VERSION"
           node -e "const v=process.argv[1]; if (!/^\\d+\\.\\d+\\.\\d+$/.test(v)) process.exit(1)" "$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -41,14 +41,22 @@ jobs:
           INSTALLED="$(node -p "require('./node_modules/seenrelay/package.json').version")"
           test "$INSTALLED" = "$VERSION"
           node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
           import { SeenRelayClient } from 'seenrelay';
           import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
           import { createFirecrawlSdkShadowPilot } from 'seenrelay/firecrawl-sdk-shadow';
+          const packageJson = JSON.parse(fs.readFileSync('./node_modules/seenrelay/package.json', 'utf8'));
+          for (const key of Object.keys(packageJson.exports || {})) {
+            const specifier = key === '.' ? packageJson.name : `${packageJson.name}/${key.slice(2)}`;
+            await import(specifier);
+          }
           if (
             typeof SeenRelayClient !== 'function' ||
             typeof SeenRelayShadowProof !== 'function' ||
             typeof createFirecrawlSdkShadowPilot !== 'function'
           ) process.exit(1);
+          const forbidden = ['./capabilities','./profiles','./catalog','./readiness','./vantage-assurance','./declarative-profile'];
+          for (const key of forbidden) if (Object.hasOwn(packageJson.exports || {}, key)) process.exit(1);
           NODE
 
       - name: Verify exact PyPI registry install
