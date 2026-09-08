@@ -1,34 +1,37 @@
-import { lookup } from 'node:dns/promises';
-import https from 'node:https';
 import { consumeHiveNetworkBudget } from './hive-admission-db.js';
 import { privacyScopedHash } from './identity.js';
-import { isGlobalPublicIp, normalizeAuditTarget } from './readiness.js';
+import { boundedPinnedGet, normalizeAuditTarget, resolvePinnedPublicAddress, type BoundedGetResult } from './readiness-network.js';
 
 const READINESS_V2_GLOBAL_AUDITS_PER_MINUTE = 3;
 const READINESS_V2_TARGET_AUDITS_PER_MINUTE = 1;
-const PROBE_TIMEOUT_MS = 3_000;
-const USER_AGENT = 'SeenRelayAIReadiness/2.0 (+https://seenrelay.com/readiness)';
+const READINESS_V2_TIMEOUT_MS = 1_500;
+const READINESS_V2_USER_AGENT = 'SeenRelayAIReadiness/2.0 (+https://seenrelay.com/readiness)';
 
 const PROBES = Object.freeze([
-  { id: 'root', path: '/', maxBytes: 131_072 },
-  { id: 'robots', path: '/robots.txt', maxBytes: 65_536 },
-  { id: 'sitemap', path: '/sitemap.xml', maxBytes: 131_072 },
-  { id: 'llmsTxt', path: '/llms.txt', maxBytes: 65_536 },
-  { id: 'a2aAgentCard', path: '/.well-known/agent-card.json', maxBytes: 131_072 },
-  { id: 'openapi', path: '/openapi.json', maxBytes: 262_144 }
+  { id: 'root', path: '/', maxBytes: 131_072, role: 'REQUIRED_ROOT' },
+  { id: 'robots', path: '/robots.txt', maxBytes: 65_536, role: 'OPTIONAL_CRAWL_HINT' },
+  { id: 'sitemap', path: '/sitemap.xml', maxBytes: 131_072, role: 'OPTIONAL_CRAWL_HINT' },
+  { id: 'llmsTxt', path: '/llms.txt', maxBytes: 65_536, role: 'OPTIONAL_AGENT_HINT' },
+  { id: 'a2aAgentCard', path: '/.well-known/agent-card.json', maxBytes: 131_072, role: 'STANDARD_A2A_DISCOVERY' },
+  { id: 'openapi', path: '/openapi.json', maxBytes: 262_144, role: 'OPTIONAL_COMMON_OPENAPI_PATH' }
 ] as const);
 
+const TOTAL_MAX_BYTES = PROBES.reduce((sum, probe) => sum + probe.maxBytes, 0);
+const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']);
+
 type ProbeId = typeof PROBES[number]['id'];
-type PinnedAddress = { address: string; family: 4 | 6 };
+type DimensionStatus = 'PASS' | 'FIX' | 'INFO' | 'NOT_APPLICABLE';
 type ProbeResult = {
   id: ProbeId;
+  url: string;
   status: number;
   headers: Record<string, string | string[] | undefined>;
   body: Buffer;
   truncated: boolean;
+  elapsedMs: number;
+  error?: 'PROBE_FAILED';
 };
 
-type DimensionStatus = 'PASS' | 'FIX' | 'INFO' | 'NOT_APPLICABLE';
 export type ReadinessV2Report = {
   protocol: 'seenrelay-ai-site-readiness-v2';
   scope: 'bounded_machine_surface_classification';
@@ -42,89 +45,41 @@ export type ReadinessV2Report = {
   seenrelayRecommendation: 'REQUIRES_OWNER_WORKLOAD_EVIDENCE';
 };
 
-async function admitReadinessV2(hostname: string): Promise<void> {
-  const nowIso = new Date().toISOString();
-  const globalKey = `readiness-v2-global:${await privacyScopedHash('readiness-v2-admission-global', 'v1')}`;
-  const globalBudget = await consumeHiveNetworkBudget(globalKey, nowIso, READINESS_V2_GLOBAL_AUDITS_PER_MINUTE);
-  if (!globalBudget.allowed) throw new Error('Only a limited number of extended readiness audits can start each minute; retry shortly.');
-  const targetKey = `readiness-v2-target:${await privacyScopedHash('readiness-v2-admission-target', hostname)}`;
-  const targetBudget = await consumeHiveNetworkBudget(targetKey, nowIso, READINESS_V2_TARGET_AUDITS_PER_MINUTE);
-  if (!targetBudget.allowed) throw new Error('Only one extended readiness audit can target the same hostname each minute; retry shortly.');
-}
+export type ReadinessV2Evidence = {
+  protocol: 'seenrelay-site-audit-interpreted-evidence-v2';
+  origin: string;
+  probes: {
+    root: { success: boolean; machineLinkPresent: boolean; positiveFreshness: boolean; etagPresent: boolean; lastModifiedPresent: boolean };
+    robots: { present: boolean };
+    sitemap: { present: boolean };
+    llmsTxt: { present: boolean };
+    openapi: { valid: boolean; operationCount: number; linkedFromRoot: boolean };
+    a2aAgentCard: { valid: boolean; interfaceCount: number };
+    mcp: { advertised: boolean };
+    agentSkills: { advertised: boolean };
+    agentPayment: { advertised: boolean };
+  };
+  report: ReadinessV2Report;
+};
 
-async function resolvePinnedPublicAddress(hostname: string): Promise<PinnedAddress> {
-  const answers = await lookup(hostname, { all: true, verbatim: true });
-  if (!answers.length) throw new Error('DNS returned no addresses for this hostname.');
-  for (const answer of answers) {
-    if (!isGlobalPublicIp(answer.address)) throw new Error('The hostname resolves to a non-public or special-purpose address.');
-  }
-  const preferred = answers.find((answer) => answer.family === 4) || answers.find((answer) => answer.family === 6);
-  if (!preferred || (preferred.family !== 4 && preferred.family !== 6)) throw new Error('No supported public address was returned.');
-  return { address: preferred.address, family: preferred.family };
-}
+export type ReadinessV2Audit = {
+  protocol: 'seenrelay-site-audit-execution-v2';
+  requestCount: number;
+  retries: 0;
+  totalMaxBytes: number;
+  evidence: ReadinessV2Evidence;
+};
 
-function probeRequest(url: URL, pinned: PinnedAddress, probe: typeof PROBES[number]): Promise<ProbeResult> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    let size = 0;
-    let truncated = false;
-    let settled = false;
-    const finish = (status: number, headers: ProbeResult['headers']) => {
-      if (settled) return;
-      settled = true;
-      resolve({ id: probe.id, status, headers, body: Buffer.concat(chunks), truncated });
-    };
-    const req = https.request({
-      protocol: 'https:',
-      hostname: url.hostname,
-      port: 443,
-      family: pinned.family,
-      path: probe.path,
-      method: 'GET',
-      servername: url.hostname,
-      headers: {
-        'user-agent': USER_AGENT,
-        accept: 'application/json,text/plain,text/html,application/xml;q=0.8,*/*;q=0.2',
-        'accept-encoding': 'identity',
-        connection: 'close'
-      },
-      lookup: (_hostname, _options, callback) => callback(null, pinned.address, pinned.family)
-    }, (response) => {
-      response.on('data', (chunk: Buffer | string) => {
-        if (truncated) return;
-        const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-        const remaining = probe.maxBytes - size;
-        if (buffer.length > remaining) {
-          if (remaining > 0) chunks.push(buffer.subarray(0, remaining));
-          size = probe.maxBytes;
-          truncated = true;
-          response.destroy();
-          return;
-        }
-        chunks.push(buffer);
-        size += buffer.length;
-      });
-      response.on('end', () => finish(response.statusCode || 0, response.headers));
-      response.on('close', () => {
-        if (truncated) finish(response.statusCode || 0, response.headers);
-      });
-    });
-    req.setTimeout(PROBE_TIMEOUT_MS, () => req.destroy(new Error('The site did not respond within the extended audit timeout.')));
-    req.on('error', reject);
-    req.end();
-  });
-}
-
-function headerValue(headers: ProbeResult['headers'], name: string): string | null {
+function headerValue(headers: Record<string, string | string[] | undefined>, name: string): string {
   const value = headers[name.toLowerCase()];
   if (Array.isArray(value)) return value.join(', ');
-  return typeof value === 'string' ? value : null;
+  return typeof value === 'string' ? value : '';
 }
 
 function success(status: number): boolean { return status >= 200 && status < 300; }
 function parseJson(body: Buffer): unknown { try { return JSON.parse(body.toString('utf8')); } catch { return null; } }
-function positiveFreshness(cacheControl: string | null): boolean {
-  if (!cacheControl || /\bno-store\b/i.test(cacheControl)) return false;
+function positiveFreshness(cacheControl: string): boolean {
+  if (/\bno-store\b/i.test(cacheControl)) return false;
   const match = cacheControl.match(/(?:^|,)\s*(?:s-maxage|max-age)\s*=\s*"?(\d+)/i);
   return Boolean(match && Number(match[1]) > 0);
 }
@@ -136,50 +91,49 @@ function countOpenApiOperations(doc: unknown): number {
   if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return 0;
   const value = doc as Record<string, unknown>;
   if (!/^3(?:\.|$)/.test(String(value.openapi || '')) || !value.paths || typeof value.paths !== 'object' || Array.isArray(value.paths)) return 0;
-  const methods = new Set(['get','post','put','patch','delete','head','options','trace']);
   let count = 0;
   for (const item of Object.values(value.paths as Record<string, unknown>)) {
     if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
-    for (const key of Object.keys(item as Record<string, unknown>)) if (methods.has(key.toLowerCase())) count += 1;
+    for (const key of Object.keys(item as Record<string, unknown>)) if (HTTP_METHODS.has(key.toLowerCase())) count += 1;
   }
   return count;
 }
-function validA2aCard(doc: unknown): boolean {
+function validA2aCard(doc: unknown): doc is Record<string, unknown> & { supportedInterfaces: unknown[] } {
   if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return false;
   const value = doc as Record<string, unknown>;
-  for (const key of ['name','description','version']) if (typeof value[key] !== 'string' || !value[key]) return false;
+  for (const key of ['name', 'description', 'version']) if (typeof value[key] !== 'string' || !value[key]) return false;
   if (!Array.isArray(value.supportedInterfaces) || value.supportedInterfaces.length === 0) return false;
   if (!value.supportedInterfaces.every((entry) => {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
-    const x = entry as Record<string, unknown>;
-    return validHttpsUrl(x.url) && typeof x.protocolBinding === 'string' && Boolean(x.protocolBinding) && typeof x.protocolVersion === 'string' && Boolean(x.protocolVersion);
+    const item = entry as Record<string, unknown>;
+    return validHttpsUrl(item.url) && typeof item.protocolBinding === 'string' && Boolean(item.protocolBinding) && typeof item.protocolVersion === 'string' && Boolean(item.protocolVersion);
   })) return false;
   if (!value.capabilities || typeof value.capabilities !== 'object' || Array.isArray(value.capabilities)) return false;
   if (!Array.isArray(value.defaultInputModes) || !Array.isArray(value.defaultOutputModes) || !Array.isArray(value.skills)) return false;
   return value.skills.every((skill) => {
     if (!skill || typeof skill !== 'object' || Array.isArray(skill)) return false;
-    const x = skill as Record<string, unknown>;
-    return typeof x.id === 'string' && Boolean(x.id) && typeof x.name === 'string' && Boolean(x.name) && typeof x.description === 'string' && Boolean(x.description) && Array.isArray(x.tags);
+    const item = skill as Record<string, unknown>;
+    return typeof item.id === 'string' && Boolean(item.id) && typeof item.name === 'string' && Boolean(item.name) && typeof item.description === 'string' && Boolean(item.description) && Array.isArray(item.tags);
   });
 }
 function machineLink(link: string): boolean { return /openapi|agent-card|\/mcp(?:[>;\s]|$)|agent-skills|application\/(?:json|a2a\+json)/i.test(link); }
 function dimension(status: DimensionStatus, evidence: boolean, detail: string) { return { status, evidence, detail }; }
 
-export function classifyReadinessV2(origin: string, results: Partial<Record<ProbeId, ProbeResult>>): ReadinessV2Report {
+export function classifyReadinessV2(origin: string, results: Partial<Record<ProbeId, ProbeResult>>): ReadinessV2Evidence {
   const root = results.root;
   const rootOk = Boolean(root && success(root.status));
-  const rootCache = root ? headerValue(root.headers, 'cache-control') : null;
-  const rootLink = root ? (headerValue(root.headers, 'link') || '') : '';
+  const rootCache = root ? headerValue(root.headers, 'cache-control') : '';
+  const rootLink = root ? headerValue(root.headers, 'link') : '';
   const etag = Boolean(root && headerValue(root.headers, 'etag'));
   const lastModified = Boolean(root && headerValue(root.headers, 'last-modified'));
   const nativeFreshness = positiveFreshness(rootCache);
 
-  const openapi = results.openapi && success(results.openapi.status) ? parseJson(results.openapi.body) : null;
+  const openapi = results.openapi && success(results.openapi.status) && !results.openapi.truncated ? parseJson(results.openapi.body) : null;
   const openApiOperations = countOpenApiOperations(openapi);
   const openApiValid = openApiOperations > 0;
-  const a2a = results.a2aAgentCard && success(results.a2aAgentCard.status) ? parseJson(results.a2aAgentCard.body) : null;
+  const a2a = results.a2aAgentCard && success(results.a2aAgentCard.status) && !results.a2aAgentCard.truncated ? parseJson(results.a2aAgentCard.body) : null;
   const a2aValid = validA2aCard(a2a);
-  const a2aInterfaceCount = a2aValid ? ((a2a as Record<string, unknown>).supportedInterfaces as unknown[]).length : 0;
+  const a2aInterfaceCount = a2aValid ? a2a.supportedInterfaces.length : 0;
   const explicitDiscovery = machineLink(rootLink) || a2aValid || (openApiValid && /openapi/i.test(rootLink));
   const verifiedMachineContract = openApiValid || a2aValid;
   const crawlHints = Boolean((results.robots && success(results.robots.status)) || (results.sitemap && success(results.sitemap.status)));
@@ -215,7 +169,19 @@ export function classifyReadinessV2(origin: string, results: Partial<Record<Prob
   if (advertisedMcp) nextSteps.push('Introspect the advertised MCP endpoint and verify tools, schemas, side-effect semantics and protocol compatibility before treating it as operational.');
   nextSteps.push('Use owner-side workload evidence to test whether agents actually repeat expensive validation before considering shared validation reuse.');
 
-  return {
+  const probes: ReadinessV2Evidence['probes'] = {
+    root: { success: rootOk, machineLinkPresent: machineLink(rootLink), positiveFreshness: nativeFreshness, etagPresent: etag, lastModifiedPresent: lastModified },
+    robots: { present: Boolean(results.robots && success(results.robots.status)) },
+    sitemap: { present: Boolean(results.sitemap && success(results.sitemap.status)) },
+    llmsTxt: { present: Boolean(results.llmsTxt && success(results.llmsTxt.status)) },
+    openapi: { valid: openApiValid, operationCount: openApiOperations, linkedFromRoot: /openapi/i.test(rootLink) },
+    a2aAgentCard: { valid: a2aValid, interfaceCount: a2aInterfaceCount },
+    mcp: { advertised: advertisedMcp },
+    agentSkills: { advertised: skillHint },
+    agentPayment: { advertised: paymentHint }
+  };
+
+  const report: ReadinessV2Report = {
     protocol: 'seenrelay-ai-site-readiness-v2',
     scope: 'bounded_machine_surface_classification',
     targetOrigin: origin,
@@ -232,21 +198,63 @@ export function classifyReadinessV2(origin: string, results: Partial<Record<Prob
     seenrelayCandidate: false,
     seenrelayRecommendation: 'REQUIRES_OWNER_WORKLOAD_EVIDENCE'
   };
+
+  return { protocol: 'seenrelay-site-audit-interpreted-evidence-v2', origin, probes, report };
 }
 
-export async function auditPublicAiReadinessV2(input: string): Promise<ReadinessV2Report> {
+async function admitReadinessV2(hostname: string): Promise<void> {
+  const nowIso = new Date().toISOString();
+  const globalKey = `readiness-v2-global:${await privacyScopedHash('readiness-v2-admission-global', 'v2')}`;
+  const globalBudget = await consumeHiveNetworkBudget(globalKey, nowIso, READINESS_V2_GLOBAL_AUDITS_PER_MINUTE);
+  if (!globalBudget.allowed) throw new Error('Only a limited number of extended readiness audits can start each minute; retry shortly.');
+  const targetKey = `readiness-v2-target:${await privacyScopedHash('readiness-v2-admission-target', hostname)}`;
+  const targetBudget = await consumeHiveNetworkBudget(targetKey, nowIso, READINESS_V2_TARGET_AUDITS_PER_MINUTE);
+  if (!targetBudget.allowed) throw new Error('Only one extended readiness audit can target the same hostname each minute; retry shortly.');
+}
+
+function fromRaw(id: ProbeId, url: string, raw: BoundedGetResult): ProbeResult { return { id, url, ...raw }; }
+
+export function readinessV2ProbePlan(input: string) {
+  const target = normalizeAuditTarget(input);
+  return {
+    protocol: 'seenrelay-site-audit-probe-plan-v2' as const,
+    origin: target.origin,
+    redirectPolicy: 'NO_CROSS_ORIGIN_REDIRECTS' as const,
+    requestPolicy: 'GET_ONLY_NO_AUTH_NO_COOKIES' as const,
+    probeCount: PROBES.length,
+    totalMaxBytes: TOTAL_MAX_BYTES,
+    probes: PROBES.map((probe) => ({ ...probe, url: `${target.origin}${probe.path}` })),
+    invariants: { httpsOnly: true, sameOriginOnly: true, userSuppliedPaths: false, authentication: false, crawl: false, mutation: false }
+  };
+}
+
+export async function auditPublicAiReadinessV2(input: string): Promise<ReadinessV2Audit> {
   const target = normalizeAuditTarget(input);
   await admitReadinessV2(target.hostname);
   const pinned = await resolvePinnedPublicAddress(target.hostname);
   const results: Partial<Record<ProbeId, ProbeResult>> = {};
-  const rootProbe = PROBES[0];
-  results.root = await probeRequest(target, pinned, rootProbe);
-  if (!success(results.root.status)) return classifyReadinessV2(target.origin.slice(0, -1), results);
 
-  const remaining = await Promise.all(PROBES.slice(1).map(async (probe) => {
-    try { return await probeRequest(target, pinned, probe); }
-    catch { return { id: probe.id, status: 0, headers: {}, body: Buffer.alloc(0), truncated: false } as ProbeResult; }
-  }));
-  for (const result of remaining) results[result.id] = result;
-  return classifyReadinessV2(target.origin.slice(0, -1), results);
+  for (const probe of PROBES) {
+    const url = `${target.origin}${probe.path}`;
+    try {
+      const raw = await boundedPinnedGet(target, pinned, {
+        path: probe.path,
+        maxBytes: probe.maxBytes,
+        timeoutMs: READINESS_V2_TIMEOUT_MS,
+        userAgent: READINESS_V2_USER_AGENT,
+        accept: 'application/json,text/plain,text/html,application/xml;q=0.8,*/*;q=0.2'
+      });
+      results[probe.id] = fromRaw(probe.id, url, raw);
+    } catch {
+      results[probe.id] = { id: probe.id, url, status: 0, headers: {}, body: Buffer.alloc(0), truncated: false, elapsedMs: 0, error: 'PROBE_FAILED' };
+    }
+  }
+
+  return {
+    protocol: 'seenrelay-site-audit-execution-v2',
+    requestCount: PROBES.length,
+    retries: 0,
+    totalMaxBytes: TOTAL_MAX_BYTES,
+    evidence: classifyReadinessV2(target.origin, results)
+  };
 }
