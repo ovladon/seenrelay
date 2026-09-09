@@ -1,0 +1,40 @@
+name: Fix readiness OpenAPI syntax
+
+on:
+  push:
+    branches:
+      - readiness/remote-cutover
+    paths:
+      - .github/workflows/fix-readiness-openapi-temp.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: readiness/remote-cutover
+      - name: Fix requestBody braces
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/readiness-service.ts')
+          s = p.read_text()
+          old = "requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } } },"
+          new = "requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } } } },"
+          count = s.count(old)
+          assert count == 2, count
+          p.write_text(s.replace(old, new))
+          PY
+      - name: Commit fix and remove helper
+        run: |
+          git config user.name 'Vlad Belciug'
+          git config user.email '83345843+ovladon@users.noreply.github.com'
+          git add src/readiness-service.ts
+          git commit -m 'Fix readiness OpenAPI request schema syntax'
+          git rm .github/workflows/fix-readiness-openapi-temp.yml
+          git commit -m 'Remove OpenAPI syntax helper'
+          git push origin HEAD:readiness/remote-cutover
