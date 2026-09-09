@@ -6,9 +6,19 @@ export function robotsText(origin: string): string {
   return `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /admin/\nDisallow: /internal\nDisallow: /internal/\nSitemap: ${origin}/sitemap.xml\n`;
 }
 
+const SITEMAP_PAGES = [
+  { path: '/', lastmod: '2026-09-09' },
+  { path: '/fleet', lastmod: '2026-09-08' },
+  { path: '/readiness', lastmod: '2026-09-09' },
+  { path: '/economics', lastmod: '2026-09-01' },
+  { path: '/quickstart', lastmod: '2026-09-08' },
+  { path: '/clients', lastmod: '2026-09-08' },
+  { path: '/trust', lastmod: '2026-09-08' },
+  { path: '/data-practices', lastmod: '2026-08-30' },
+] as const;
+
 export function sitemapXml(origin: string): string {
-  const urls = ['/', '/fleet', '/readiness', '/economics', '/quickstart', '/clients', '/trust', '/data-practices'];
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((path) => `  <url><loc>${origin}${path}</loc></url>`).join('\n')}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${SITEMAP_PAGES.map(({ path, lastmod }) => `  <url><loc>${origin}${path}</loc><lastmod>${lastmod}</lastmod></url>`).join('\n')}\n</urlset>\n`;
 }
 
 export function llmsText(origin: string): string {
