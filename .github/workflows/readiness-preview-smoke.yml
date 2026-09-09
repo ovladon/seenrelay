@@ -58,6 +58,24 @@ jobs:
           set -euo pipefail
           common=(-H "x-vercel-protection-bypass: $BYPASS_SECRET")
 
+          # The branch alias may briefly serve the prior deployment after a push.
+          # Do not probe application behavior until this exact PR head is live.
+          exact_preview=false
+          for _ in $(seq 1 60); do
+            health_status="$(curl --silent --show-error --output "$RUNNER_TEMP/readiness-health.json" --write-out '%{http_code}' "${common[@]}" "$PREVIEW_URL/healthz" || true)"
+            if [ "$health_status" = '200' ] \
+              && jq -e --arg sha "$RELEASE_SHA" '.ok == true and .environment == "preview" and .deployment_sha == $sha' "$RUNNER_TEMP/readiness-health.json" >/dev/null; then
+              exact_preview=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "$exact_preview" != true ]; then
+            cat "$RUNNER_TEMP/readiness-health.json" >&2 || true
+            echo "exact Preview deployment did not become ready" >&2
+            exit 1
+          fi
+
           page="$(curl --fail --silent --show-error --location --retry 4 --retry-all-errors "${common[@]}" -H 'accept: text/html' "$PREVIEW_URL/readiness")"
           grep -Fq 'How efficiently can AI agents revisit your site?' <<<"$page"
           grep -Fq 'exactly one read-only HTTPS GET' <<<"$page"
@@ -116,7 +134,8 @@ jobs:
           probe_rejected '{"site":"https://localhost"}'
 
           # Exercise the v1 per-target admission ceiling without sending HTTPS traffic to a real site.
-          limit_host="readiness-${RELEASE_SHA:0:12}.invalid"
+          # Admission state is persistent, so every Actions attempt needs a fresh target bucket.
+          limit_host="readiness-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.invalid"
           for attempt in 1 2 3 4; do
             out="$RUNNER_TEMP/readiness-limit-${attempt}.json"
             status="$(curl --silent --show-error --output "$out" --write-out '%{http_code}' "${common[@]}" \

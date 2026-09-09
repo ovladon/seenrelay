@@ -16,6 +16,7 @@ export function economicsPage(origin: string): string {
 <meta property="og:url" content="${origin}/economics">
 <title>SeenRelay — Fleet economics</title>
 <link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/legacy-readable.css">
 </head>
 <body>
 <header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/">Home</a><a href="/quickstart">Quickstart</a><a href="/clients">Clients</a><a href="/service.json">Machine JSON</a></nav></header>

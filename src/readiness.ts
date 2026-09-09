@@ -213,18 +213,24 @@ export function readinessPage(origin: string): string {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="A free native-first AI visit efficiency audit. Check one public root HTTP freshness surface, get native fixes first, and require workload evidence before SeenRelay is considered.">
 <link rel="canonical" href="${esc(origin)}/readiness">
+<meta name="theme-color" content="#080a0e">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <title>AI Visit Efficiency — native-first quick audit | SeenRelay</title>
 <link rel="stylesheet" href="/revamp.css">
+<link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/readiness.css">
 <script src="/readiness.js" defer></script>
 </head>
 <body class="revamp">
+<a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/" aria-label="SeenRelay home"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
   <nav class="rv-nav-links" aria-label="Primary navigation"><a href="#scan">Quick audit</a><a href="#scope">What it checks</a><a href="#full">Full owner audit</a><a href="/quickstart">Docs</a></nav>
+  <details class="rv-mobile-nav"><summary>Menu</summary><nav aria-label="Mobile navigation"><a href="#scan">Quick audit</a><a href="#scope">What it checks</a><a href="#full">Full owner audit</a><a href="/quickstart">Docs</a><a href="/readiness.json">Readiness JSON</a><a href="/service.json">Service JSON</a></nav></details>
   <div class="rv-nav-actions"><a class="rv-chip" href="/service.json">Machine JSON</a><a class="rv-button" href="#scan">Check a site</a></div>
 </header>
-<main>
+<main id="main-content">
 <section class="rv-shell rv-page-hero readiness-hero">
   <div class="rv-kicker"><i></i><span>AI VISIT EFFICIENCY · FREE · NATIVE-FIRST</span></div>
   <h1>How efficiently can AI agents revisit your site?</h1>
@@ -265,7 +271,7 @@ export function readinessPage(origin: string): string {
 </section>
 <section class="rv-shell rv-section" id="full">
   <div class="rv-section-head"><div class="rv-eyebrow">FULL OWNER-SIDE AUDIT</div><h2>Use your own agent or CI for the checks that require more than one public request.</h2><p>A complete review should include robots.txt, sitemap discovery, Markdown/content negotiation, authentication/tool discovery, and actual repeated agent traffic. Those checks belong in the site owner's environment, where rate limits, auth and intended semantics are known.</p></div>
-  <div class="rv-console"><div class="rv-console-top"><span>coding-agent prompt</span><span>native fixes first</span></div><div class="rv-install-view active"><div class="rv-step"><span>1</span><div><h4>Give your coding agent this audit task</h4><div class="rv-code"><pre id="readiness-agent-prompt">${esc(fullAuditPrompt)}</pre><button class="rv-copy readiness-copy" type="button" data-copy-target="readiness-agent-prompt">Copy</button></div></div></div><div class="rv-step"><span>2</span><div><h4>Accept a native answer</h4><p>If ETag, Last-Modified, HTTP caching, a version endpoint, provider cache, push or another standard solves the same problem, SeenRelay should stay out.</p></div></div></div><div class="rv-step"><span>3</span><div><h4>Measure the residual workload</h4><p>Only repeated expensive read-only validation with deterministic identity, safe outcome equivalence and positive economics can justify a SeenRelay workload-fit test.</p></div></div></div></div></div>
+  <div class="rv-console"><div class="rv-console-top"><span>coding-agent prompt</span><span>native fixes first</span></div><div class="rv-install-view active"><div class="rv-step"><span>1</span><div><h3>Give your coding agent this audit task</h3><div class="rv-code"><pre id="readiness-agent-prompt">${esc(fullAuditPrompt)}</pre><button class="rv-copy readiness-copy" type="button" data-copy-target="readiness-agent-prompt">Copy</button></div></div></div><div class="rv-step"><span>2</span><div><h3>Accept a native answer</h3><p>If ETag, Last-Modified, HTTP caching, a version endpoint, provider cache, push or another standard solves the same problem, SeenRelay should stay out.</p></div></div></div><div class="rv-step"><span>3</span><div><h3>Measure the residual workload</h3><p>Only repeated expensive read-only validation with deterministic identity, safe outcome equivalence and positive economics can justify a SeenRelay workload-fit test.</p></div></div></div></div></div>
 </section>
 <section class="rv-shell rv-final"><div><div class="rv-eyebrow">NO FORCED FIT</div><h2>A negative audit is useful.</h2><p>If your native controls are already strong, the correct SeenRelay recommendation is to leave them alone.</p></div><div class="rv-actions"><a class="rv-button primary" href="/">SeenRelay home</a><a class="rv-button" href="/trust">Verify SeenRelay</a></div></section>
 </main>

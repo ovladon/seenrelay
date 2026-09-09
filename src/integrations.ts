@@ -24,16 +24,26 @@ export function clientsPage(origin: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Supported SeenRelay integration surfaces for coding agents, MCP, JavaScript/TypeScript, Python and framework adapters.">
+<link rel="canonical" href="${origin}/clients">
+<meta name="theme-color" content="#080a0e">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <title>SeenRelay — Integrations</title>
 <link rel="stylesheet" href="/revamp.css">
+<link rel="stylesheet" href="/sota.css">
 </head>
 <body class="revamp">
+<a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links"><a href="/">Home</a><a href="/quickstart">Quickstart</a><a href="/economics">Tests</a><a href="/trust">Trust</a><a href="/openapi.json">OpenAPI</a></nav>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/quickstart">Quickstart</a><a href="/economics">Tests</a><a href="/trust">Trust</a><a href="/openapi.json">OpenAPI</a></nav>
+  <details class="rv-mobile-nav">
+    <summary>Menu</summary>
+    <nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/quickstart">Quickstart</a><a href="/economics">Evidence</a><a href="/trust">Trust</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>
+  </details>
   <div class="rv-nav-actions"><a class="rv-chip" href="/.well-known/agent-skills/seenrelay/SKILL.md">Agent Skill</a><a class="rv-button" href="/quickstart">Quickstart</a></div>
 </header>
-<main>
+<main id="main-content">
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">SUPPORTED INTEGRATIONS · CLIENT ${version}</div>
   <h1>Put SeenRelay around the validation path you already have.</h1>
