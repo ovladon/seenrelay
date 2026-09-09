@@ -1,0 +1,37 @@
+name: Repair site revamp helper
+on:
+  push:
+    branches: [site/sota-2027-clarity]
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: site/sota-2027-clarity
+      - name: Repair reserved Actions expression literal
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/apply-site-sota-2027.yml')
+          s=p.read_text()
+          token='$'+'{{origin}}'
+          bad=("if f'<link rel=\"canonical\" href=\""+token+"{route}\">' not in s:\n"
+               "                          out.append(f'<link rel=\"canonical\" href=\""+token+"{route}\">')")
+          good=("canonical = '<link rel=\"canonical\" href=\"${origin}' + route + '\">'\n"
+                "                      if canonical not in s:\n"
+                "                          out.append(canonical)")
+          if bad not in s:
+              raise SystemExit('reserved-expression marker not found')
+          p.write_text(s.replace(bad,good,1))
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/repair-site-sota-helper.yml
+          git add .github/workflows/apply-site-sota-2027.yml
+          git commit -m 'Repair site revamp helper syntax'
+          git push origin HEAD:site/sota-2027-clarity
