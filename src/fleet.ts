@@ -19,18 +19,27 @@ export function fleetPage(origin: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Use SeenRelay as a caller-owned validation reuse layer across agent workers while preserving source-native validation and the authoritative fallback.">
+<meta name="theme-color" content="#080a0e">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <link rel="canonical" href="${origin}/fleet">
 <title>SeenRelay — Validation reuse for agent fleets</title>
 <link rel="stylesheet" href="/revamp.css">
+<link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
 </head>
 <body class="revamp">
+<a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/quickstart">Quickstart</a><a href="/clients">Integrations</a><a href="/trust">Trust</a></nav>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/quickstart">Quickstart</a><a href="/clients">Integrations</a><a href="/trust">Trust</a></nav>
+  <details class="rv-mobile-nav">
+    <summary>Menu</summary>
+    <nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/quickstart">Quickstart</a><a href="/clients">Integrations</a><a href="/trust">Trust</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>
+  </details>
   <div class="rv-nav-actions"><a class="rv-chip" href="/service.json">Machine JSON</a><a class="rv-button" href="/quickstart">Measure first</a></div>
 </header>
-<main>
+<main id="main-content">
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">AGENT-FLEET VALIDATION REUSE · CLIENT ${version}</div>
   <h1>Reuse expensive read-only validation across your agent fleet.</h1>

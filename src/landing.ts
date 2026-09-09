@@ -43,9 +43,14 @@ export function publicLandingPage(origin: string): string {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Check how efficiently AI agents can revisit your site, or measure repeated expensive validation in your agent fleet. Native fixes first; SeenRelay only where measured evidence justifies it.">
 <link rel="canonical" href="${origin}/">
-<link rel="alternate" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
-<link rel="alternate" type="application/json" href="${origin}/product-facts.json" title="SeenRelay verified product facts">
+<link rel="service-desc" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
+<link rel="service-desc" type="application/json" href="${origin}/openapi.json" title="SeenRelay OpenAPI description">
+<link rel="service-meta" type="application/json" href="${origin}/product-facts.json" title="SeenRelay verified product facts">
+<link rel="service-doc" href="${origin}/quickstart" title="SeenRelay integration documentation">
 <link rel="alternate" type="application/json" href="${origin}/.well-known/agent-skills/index.json" title="SeenRelay Agent Skill discovery">
+<meta name="theme-color" content="#080a0e">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SeenRelay — AI visit readiness and validation reuse">
 <meta property="og:description" content="Start with evidence: check a public site surface or audit a real agent workload. Prefer native controls first and use SeenRelay only when the measured workload earns it.">
@@ -53,11 +58,13 @@ export function publicLandingPage(origin: string): string {
 <meta name="twitter:card" content="summary">
 <title>SeenRelay — AI visit readiness and validation reuse</title>
 <link rel="stylesheet" href="/revamp.css">
+<link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
 <link rel="stylesheet" href="/funnel.css">
 <script src="/revamp.js" defer></script>
 </head>
 <body class="revamp">
+<a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/" aria-label="SeenRelay home"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
   <nav class="rv-nav-links" aria-label="Primary navigation">
@@ -67,18 +74,22 @@ export function publicLandingPage(origin: string): string {
     <a href="#tests">Evidence</a>
     <a href="/quickstart">Docs</a>
   </nav>
+  <details class="rv-mobile-nav">
+    <summary>Menu</summary>
+    <nav aria-label="Mobile navigation"><a href="/readiness">Check a site</a><a href="#audit">Audit a workload</a><a href="/fleet">Fleet reuse</a><a href="#tests">Evidence</a><a href="/quickstart">Docs</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>
+  </details>
   <div class="rv-nav-actions">
     <a class="rv-chip" href="/service.json">For machines</a>
     <a class="rv-button" href="/readiness">Check AI readiness</a>
   </div>
 </header>
 
-<main>
+<main id="main-content">
 <section class="rv-shell rv-hero rv-hero-factual rv-funnel-hero" id="what">
   <div>
     <div class="rv-kicker"><i></i><span>AI-READY SURFACES + VALIDATION REUSE · CLIENT ${version}</span></div>
-    <h1>Make repeated AI visits cheaper before you add another layer.</h1>
-    <p class="rv-lead">SeenRelay gives you two evidence-first starting points. Site and API owners can check whether public AI visits already have efficient native freshness and discovery. Agent builders can measure whether a real fleet is repeating expensive read-only validation. Native controls win whenever they solve the same problem better.</p>
+    <h1>Reduce repeated AI validation without weakening the authoritative source.</h1>
+    <p class="rv-lead">Start with evidence, not installation. If you own a site or API, check whether native HTTP and machine-readable signals already make repeat visits efficient. If you run agents, measure real repeated read-only validation with every authoritative call still enabled. Native controls win whenever they solve the same problem better.</p>
     <div class="rv-actions rv-actions-spaced">
       <a class="rv-button primary" href="/readiness">I own a site or API</a>
       <a class="rv-button" href="#audit">I run agents or a fleet</a>
@@ -90,16 +101,17 @@ export function publicLandingPage(origin: string): string {
       <span>no API key</span>
       <span>native-first</span>
       <span>authoritative calls stay on</span>
+      <span>no truth verdict</span>
       <span>npm + PyPI verified</span>
     </div>
   </div>
 
   <aside class="rv-demo rv-mechanism" aria-label="Evidence-first path">
-    <div class="rv-demo-head"><span>start here</span><b>choose the evidence you need</b></div>
+    <div class="rv-demo-head"><span>evidence before integration</span><b>three bounded outcomes</b></div>
     <div class="rv-flow-list">
-      <div><span>1</span><p><b>Own a public site?</b><small>Check the native HTTP and machine-facing surface first. Fix standards-native gaps before considering another reuse layer.</small></p></div>
-      <div><span>2</span><p><b>Run an agent workload?</b><small>Keep the real workload unchanged and measure exact repeated validation, stronger controls and prospective economics.</small></p></div>
-      <div><span>3</span><p><b>Only connect the paths when justified</b><small>A surface scan never establishes SeenRelay workload fit. A workload audit can recommend USE, DO NOT USE or INSUFFICIENT EVIDENCE.</small></p></div>
+      <div><span>1</span><p><b>Public surface</b><small>Determine whether native HTTP and machine discovery are already sufficient, need a native fix, or require workload evidence.</small></p></div>
+      <div><span>2</span><p><b>Real workload</b><small>Measure recurrence and stronger controls, then return USE, DO NOT USE or INSUFFICIENT EVIDENCE.</small></p></div>
+      <div><span>3</span><p><b>Narrow integration only</b><small>A surface scan never establishes SeenRelay workload fit. Integrate only the measured eligible path; leave everything else unchanged.</small></p></div>
     </div>
   </aside>
 </section>

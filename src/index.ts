@@ -31,6 +31,15 @@ import { readinessAuditOrigin, readinessConnectSrc, readinessRemoteEndpoint, rea
 
 const app = new Hono();
 
+function publicDiscoveryLinks(origin: string): string {
+  return [
+    `<${origin}/service.json>; rel="service-desc"; type="application/json"`,
+    `<${origin}/openapi.json>; rel="service-desc"; type="application/json"`,
+    `<${origin}/product-facts.json>; rel="service-meta"; type="application/json"`,
+    `<${origin}/quickstart>; rel="service-doc"; type="text/html"`
+  ].join(', ');
+}
+
 app.use('*', async (c, next) => {
   const rid = requestId(c.req.raw);
   c.header('x-request-id', rid);
@@ -57,6 +66,8 @@ app.get('/', (c) => {
   const origin = new URL(c.req.url).origin;
   const accept = c.req.header('accept') || '';
   c.header('vary', 'Accept');
+  c.header('link', publicDiscoveryLinks(origin));
+  c.header('content-language', 'en');
   if (accept.includes('text/html')) {
     c.header('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
     c.header('cache-control', 'public, max-age=60');
@@ -66,25 +77,28 @@ app.get('/', (c) => {
 });
 
 app.get('/service.json', (c) => {
+  const origin = new URL(c.req.url).origin;
   c.header('cache-control', 'public, max-age=300');
-  return c.json(serviceDescriptor(new URL(c.req.url).origin));
+  c.header('link', publicDiscoveryLinks(origin));
+  c.header('content-language', 'en');
+  return c.json(serviceDescriptor(origin));
 });
 app.get('/product-facts.json', (c) => {
   c.header('cache-control', 'public, max-age=300');
   return c.json(productFactsForOrigin(new URL(c.req.url).origin));
 });
 app.get('/quickstart', (c) => {
-  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(quickstartPage(new URL(c.req.url).origin));
 });
 app.get('/fleet', (c) => {
-  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(fleetPage(new URL(c.req.url).origin));
 });
 app.get('/trust', (c) => {
-  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(trustPage(new URL(c.req.url).origin));
 });
@@ -93,12 +107,12 @@ app.get('/trust.json', (c) => {
   return c.json(trustDescriptor(new URL(c.req.url).origin));
 });
 app.get('/economics', (c) => {
-  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(economicsPage(new URL(c.req.url).origin));
 });
 app.get('/clients', (c) => {
-  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(clientsPage(new URL(c.req.url).origin));
 });
@@ -110,7 +124,7 @@ app.get('/readiness', (c) => {
   c.header('vary', 'Accept');
   c.header('cache-control', 'public, max-age=60');
   if (!accept.includes('text/html')) return c.json(readinessSurfaceDescriptor(origin, v2Enabled, auditOrigin));
-  c.header('content-security-policy', `default-src 'self'; script-src 'self'; style-src 'self'; connect-src ${readinessConnectSrc(origin)}; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'`);
+  c.header('content-security-policy', `default-src 'self'; script-src 'self'; style-src 'self'; connect-src ${readinessConnectSrc(origin)}; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'`);
   return c.html(readinessPresentationPage(origin, v2Enabled, auditOrigin));
 });
 app.get('/readiness.json', (c) => {
@@ -160,6 +174,7 @@ app.post('/readiness/audit/v2', async (c) => {
     return c.json({ error: { code: 'AUDIT_V2_UNAVAILABLE', detail: safeDetail } }, 422);
   }
 });
+app.get('/favicon.ico', (c) => c.redirect('/seenrelay-logo.svg', 308));
 app.get('/robots.txt', (c) => {
   c.header('content-type', 'text/plain; charset=utf-8');
   c.header('cache-control', 'public, max-age=3600');
