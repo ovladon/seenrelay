@@ -1,0 +1,55 @@
+name: Verify public site Lighthouse baseline
+on:
+  push:
+    branches: [verify/site-lighthouse]
+permissions:
+  contents: write
+jobs:
+  lighthouse:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: verify/site-lighthouse
+      - name: Run Lighthouse
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit
+          npx -y lighthouse@latest https://seenrelay.com/ \
+            --output=json --output-path=audit/lighthouse-home.json \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags='--headless --no-sandbox --disable-gpu' \
+            --quiet
+          npx -y lighthouse@latest https://seenrelay.com/readiness \
+            --output=json --output-path=audit/lighthouse-readiness.json \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags='--headless --no-sandbox --disable-gpu' \
+            --quiet
+          node <<'NODE'
+          const fs=require('fs');
+          for (const name of ['home','readiness']) {
+            const x=JSON.parse(fs.readFileSync(`audit/lighthouse-${name}.json`,'utf8'));
+            const scores=Object.fromEntries(Object.entries(x.categories).map(([k,v])=>[k,Math.round((v.score||0)*100)]));
+            console.log(name, scores);
+            fs.writeFileSync(`audit/${name}-scores.json`,JSON.stringify(scores,null,2));
+            const failed=Object.values(x.audits).filter(a=>a.score!==null && a.score<1 && ['binary','numeric'].includes(a.scoreDisplayMode)).map(a=>({id:a.id,title:a.title,score:a.score,displayValue:a.displayValue||null}));
+            fs.writeFileSync(`audit/${name}-failed.json`,JSON.stringify(failed,null,2));
+          }
+          NODE
+      - name: Upload Lighthouse artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-lighthouse-baseline
+          path: audit/
+          retention-days: 7
+      - name: Remove temporary workflow
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/verify-site-lighthouse.yml
+          git commit -m 'Remove temporary Lighthouse verification workflow'
+          git push origin HEAD:verify/site-lighthouse
