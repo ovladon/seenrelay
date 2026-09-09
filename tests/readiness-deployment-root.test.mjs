@@ -13,11 +13,14 @@ test('readiness deployment root is cron-free while core maintenance schedule sta
   assert.deepEqual(coreVercel.crons, [{ path: '/internal/maintenance', schedule: '23 3 * * *' }]);
 });
 
-test('readiness deployment root exports the dedicated service and forces isolated admission', () => {
+test('readiness deployment root is an explicit Hono entrypoint for the isolated service', () => {
+  assert.match(readinessEntry, /import \{ Hono \} from 'hono';/);
   assert.match(readinessEntry, /import readinessServiceApp from '\.\.\/\.\.\/\.\.\/src\/readiness-service\.js';/);
   assert.match(readinessEntry, /import \{ requireIsolatedReadinessAdmission \} from '\.\.\/\.\.\/\.\.\/src\/readiness-admission-db\.js';/);
   assert.match(readinessEntry, /requireIsolatedReadinessAdmission\(\);/);
-  assert.match(readinessEntry, /export default readinessServiceApp;/);
+  assert.match(readinessEntry, /const app = new Hono\(\);/);
+  assert.match(readinessEntry, /app\.route\('\/', readinessServiceApp\);/);
+  assert.match(readinessEntry, /export default app;/);
   assert.doesNotMatch(readinessEntry, /src\/index/);
 });
 
