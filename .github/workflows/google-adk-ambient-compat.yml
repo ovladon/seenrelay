@@ -1,0 +1,26 @@
+name: Google ADK Ambient Compatibility
+
+on:
+  pull_request:
+    paths:
+      - 'clients/python/integrations/google_adk/**'
+      - '.github/workflows/google-adk-ambient-compat.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.13'
+      - name: Install exact SeenRelay Python client
+        working-directory: clients/python
+        run: python -m pip install --disable-pip-version-check -e .
+      - name: Install pinned Google ADK source
+        run: python -m pip install --disable-pip-version-check 'google-adk @ git+https://github.com/google/adk-python.git@6de43b05a07f8ca89909664b3a21049646d7336c'
+      - name: Run ADK plugin-manager compatibility tests
+        run: python -m unittest -v clients/python/integrations/google_adk/test_seenrelay_ambient_plugin.py
