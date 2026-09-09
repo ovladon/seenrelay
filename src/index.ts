@@ -27,6 +27,7 @@ import { auditPublicRoot } from './readiness.js';
 import { readinessPresentationPage, readinessSurfaceDescriptor } from './readiness-presentation.js';
 import { ReadinessV2ActivationError, readinessV2ActivationState, runActivatedReadinessV2 } from './readiness-v2-activation.js';
 import readinessServiceApp from './readiness-service.js';
+import { readinessAuditOrigin, readinessConnectSrc, readinessRemoteEndpoint, readinessV2EnabledForPresentation } from './readiness-routing.js';
 
 const app = new Hono();
 
@@ -103,19 +104,26 @@ app.get('/clients', (c) => {
 });
 app.get('/readiness', (c) => {
   const origin = new URL(c.req.url).origin;
-  const v2Enabled = readinessV2ActivationState().enabled;
+  const auditOrigin = readinessAuditOrigin(origin);
+  const v2Enabled = readinessV2EnabledForPresentation(readinessV2ActivationState().enabled, origin);
   const accept = c.req.header('accept') || '';
   c.header('vary', 'Accept');
   c.header('cache-control', 'public, max-age=60');
-  if (!accept.includes('text/html')) return c.json(readinessSurfaceDescriptor(origin, v2Enabled));
-  c.header('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
-  return c.html(readinessPresentationPage(origin, v2Enabled));
+  if (!accept.includes('text/html')) return c.json(readinessSurfaceDescriptor(origin, v2Enabled, auditOrigin));
+  c.header('content-security-policy', `default-src 'self'; script-src 'self'; style-src 'self'; connect-src ${readinessConnectSrc(origin)}; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'`);
+  return c.html(readinessPresentationPage(origin, v2Enabled, auditOrigin));
 });
 app.get('/readiness.json', (c) => {
+  const origin = new URL(c.req.url).origin;
+  const auditOrigin = readinessAuditOrigin(origin);
+  const v2Enabled = readinessV2EnabledForPresentation(readinessV2ActivationState().enabled, origin);
   c.header('cache-control', 'public, max-age=60');
-  return c.json(readinessSurfaceDescriptor(new URL(c.req.url).origin, readinessV2ActivationState().enabled));
+  return c.json(readinessSurfaceDescriptor(origin, v2Enabled, auditOrigin));
 });
 app.post('/readiness/audit', async (c) => {
+  const origin = new URL(c.req.url).origin;
+  const remote = readinessRemoteEndpoint(origin, '/readiness/audit');
+  if (remote) return c.redirect(remote, 307);
   const bounded = await boundedRequest(c.req.raw, 2048);
   if ('response' in bounded) return bounded.response;
   const body = await readJsonBody<{ site?: unknown }>(bounded.request, 2048);
@@ -131,6 +139,9 @@ app.post('/readiness/audit', async (c) => {
   }
 });
 app.post('/readiness/audit/v2', async (c) => {
+  const origin = new URL(c.req.url).origin;
+  const remote = readinessRemoteEndpoint(origin, '/readiness/audit/v2');
+  if (remote) return c.redirect(remote, 307);
   const bounded = await boundedRequest(c.req.raw, 2048);
   if ('response' in bounded) return bounded.response;
   const body = await readJsonBody<{ site?: unknown }>(bounded.request, 2048);
