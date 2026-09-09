@@ -5,6 +5,39 @@ import { readinessPresentationPage, readinessSurfaceDescriptor } from './readine
 import { ReadinessV2ActivationError, readinessV2ActivationState, runActivatedReadinessV2 } from './readiness-v2-activation.js';
 import { SERVICE_RELEASE } from './version.js';
 
+function normalizeBrowserOrigin(value: string, name: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${name} must be an absolute HTTPS origin.`);
+  }
+  if (
+    url.protocol !== 'https:'
+    || url.username
+    || url.password
+    || url.search
+    || url.hash
+    || (url.pathname !== '/' && url.pathname !== '')
+  ) {
+    throw new Error(`${name} must be an absolute HTTPS origin with no credentials, path, query or fragment.`);
+  }
+  return url.origin;
+}
+
+function configuredBrowserOrigin(): string {
+  const raw = (process.env.READINESS_ALLOWED_ORIGIN || '').trim() || 'https://seenrelay.com';
+  return normalizeBrowserOrigin(raw, 'READINESS_ALLOWED_ORIGIN');
+}
+
+function browserOriginPolicy(request: Request): { present: boolean; allowed: boolean; origin: string | null } {
+  const origin = request.headers.get('origin');
+  if (!origin) return { present: false, allowed: true, origin: null };
+  const serviceOrigin = new URL(request.url).origin;
+  const allowed = origin === serviceOrigin || origin === configuredBrowserOrigin();
+  return { present: true, allowed, origin };
+}
+
 function readinessServiceDescriptor(origin: string) {
   const activation = readinessV2ActivationState();
   return {
@@ -35,14 +68,14 @@ function readinessOpenApi(origin: string) {
         post: {
           summary: 'Run the bounded v1 root audit',
           requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } } },
-          responses: { '200': { description: 'v1 readiness report' }, '400': { description: 'Invalid request' }, '422': { description: 'Audit unavailable' } }
+          responses: { '200': { description: 'v1 readiness report' }, '400': { description: 'Invalid request' }, '403': { description: 'Browser origin not allowed' }, '422': { description: 'Audit unavailable' } }
         }
       },
       '/readiness/audit/v2': {
         post: {
           summary: 'Run the activation-gated bounded v2 audit',
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } } },
-          responses: { '200': { description: 'v2 readiness report' }, '400': { description: 'Invalid request' }, '429': { description: 'Capacity exhausted' }, '503': { description: 'v2 disabled' } }
+          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } },
+          responses: { '200': { description: 'v2 readiness report' }, '400': { description: 'Invalid request' }, '403': { description: 'Browser origin not allowed' }, '429': { description: 'Capacity exhausted' }, '503': { description: 'v2 disabled' } }
         }
       },
       '/healthz': { get: { summary: 'Readiness service health', responses: { '200': { description: 'Service health' } } } }
@@ -67,6 +100,11 @@ export function createReadinessServiceApp() {
     c.header('permissions-policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
     c.header('cache-control', 'no-store');
     if (process.env.VERCEL_ENV === 'production') c.header('strict-transport-security', 'max-age=31536000; includeSubDomains');
+    const browser = browserOriginPolicy(c.req.raw);
+    if (browser.allowed && browser.origin) {
+      c.header('access-control-allow-origin', browser.origin);
+      c.header('vary', 'Origin');
+    }
     await next();
   });
 
@@ -74,6 +112,24 @@ export function createReadinessServiceApp() {
     const rid = c.res.headers.get('x-request-id') || c.req.header('x-vercel-id') || 'unknown';
     console.error(JSON.stringify({ event: 'readiness_error', request_id: rid, path: c.req.path, error: err instanceof Error ? err.message : 'unknown' }));
     return c.json({ error: { code: 'INTERNAL_ERROR', detail: 'Request could not be completed.' } }, 500);
+  });
+
+  app.options('/readiness/audit', (c) => {
+    const browser = browserOriginPolicy(c.req.raw);
+    if (!browser.present || !browser.allowed) return c.json({ error: { code: 'ORIGIN_NOT_ALLOWED', detail: 'Browser origin is not allowed for this readiness endpoint.' } }, 403);
+    c.header('access-control-allow-methods', 'POST, OPTIONS');
+    c.header('access-control-allow-headers', 'content-type, accept');
+    c.header('access-control-max-age', '600');
+    return c.body(null, 204);
+  });
+
+  app.options('/readiness/audit/v2', (c) => {
+    const browser = browserOriginPolicy(c.req.raw);
+    if (!browser.present || !browser.allowed) return c.json({ error: { code: 'ORIGIN_NOT_ALLOWED', detail: 'Browser origin is not allowed for this readiness endpoint.' } }, 403);
+    c.header('access-control-allow-methods', 'POST, OPTIONS');
+    c.header('access-control-allow-headers', 'content-type, accept');
+    c.header('access-control-max-age', '600');
+    return c.body(null, 204);
   });
 
   app.get('/', (c) => {
@@ -106,6 +162,8 @@ export function createReadinessServiceApp() {
   });
 
   app.post('/readiness/audit', async (c) => {
+    const browser = browserOriginPolicy(c.req.raw);
+    if (browser.present && !browser.allowed) return c.json({ error: { code: 'ORIGIN_NOT_ALLOWED', detail: 'Browser origin is not allowed for this readiness endpoint.' } }, 403);
     const bounded = await boundedRequest(c.req.raw, 2048);
     if ('response' in bounded) return bounded.response;
     const body = await readJsonBody<{ site?: unknown }>(bounded.request, 2048);
@@ -118,6 +176,8 @@ export function createReadinessServiceApp() {
   });
 
   app.post('/readiness/audit/v2', async (c) => {
+    const browser = browserOriginPolicy(c.req.raw);
+    if (browser.present && !browser.allowed) return c.json({ error: { code: 'ORIGIN_NOT_ALLOWED', detail: 'Browser origin is not allowed for this readiness endpoint.' } }, 403);
     const bounded = await boundedRequest(c.req.raw, 2048);
     if ('response' in bounded) return bounded.response;
     const body = await readJsonBody<{ site?: unknown }>(bounded.request, 2048);
