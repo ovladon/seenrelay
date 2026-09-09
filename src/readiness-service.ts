@@ -74,7 +74,7 @@ function readinessOpenApi(origin: string) {
       '/readiness/audit/v2': {
         post: {
           summary: 'Run the activation-gated bounded v2 audit',
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } },
+          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } } },
           responses: { '200': { description: 'v2 readiness report' }, '400': { description: 'Invalid request' }, '403': { description: 'Browser origin not allowed' }, '429': { description: 'Capacity exhausted' }, '503': { description: 'v2 disabled' } }
         }
       },
