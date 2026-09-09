@@ -38,7 +38,7 @@ class SeenRelayAmbientPlugin(BasePlugin):
             else None
         )
         self._coordinates: OrderedDict[str, str] = OrderedDict()
-        self._started: dict[int, float] = {}
+        self._started: dict[tuple[str, str], float] = {}
         self._totals: dict[str, float | int] = {
             "calls": 0,
             "measured": 0,
@@ -55,6 +55,16 @@ class SeenRelayAmbientPlugin(BasePlugin):
 
     def _eligible(self, tool_name: str) -> bool:
         return self._include_tools is None or tool_name in self._include_tools
+
+    @staticmethod
+    def _call_key(tool: BaseTool, tool_context: ToolContext) -> tuple[str, str]:
+        function_call_id = getattr(tool_context, "function_call_id", None)
+        identity = (
+            f"function:{function_call_id}"
+            if isinstance(function_call_id, str) and function_call_id
+            else f"context:{id(tool_context)}"
+        )
+        return (tool.name, identity)
 
     def _metric(self, tool_name: str) -> dict[str, float | int]:
         return self._tools.setdefault(
@@ -91,7 +101,7 @@ class SeenRelayAmbientPlugin(BasePlugin):
             return None
         self._totals["calls"] += 1
         self._metric(tool.name)["calls"] += 1
-        self._started[id(tool_context)] = time.perf_counter()
+        self._started[self._call_key(tool, tool_context)] = time.perf_counter()
         return None
 
     async def after_tool_callback(
@@ -105,7 +115,7 @@ class SeenRelayAmbientPlugin(BasePlugin):
         if not self._eligible(tool.name):
             return None
 
-        started = self._started.pop(id(tool_context), None)
+        started = self._started.pop(self._call_key(tool, tool_context), None)
         elapsed_ms = (
             max(0.0, (time.perf_counter() - started) * 1000.0)
             if started is not None
@@ -162,7 +172,7 @@ class SeenRelayAmbientPlugin(BasePlugin):
         del tool_args, error
         if not self._eligible(tool.name):
             return None
-        self._started.pop(id(tool_context), None)
+        self._started.pop(self._call_key(tool, tool_context), None)
         self._totals["failures"] += 1
         self._metric(tool.name)["failures"] += 1
         return None
