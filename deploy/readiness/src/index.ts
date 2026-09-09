@@ -1,6 +1,10 @@
+import { Hono } from 'hono';
 import readinessServiceApp from '../../../src/readiness-service.js';
 import { requireIsolatedReadinessAdmission } from '../../../src/readiness-admission-db.js';
 
 requireIsolatedReadinessAdmission();
 
-export default readinessServiceApp;
+const app = new Hono();
+app.route('/', readinessServiceApp);
+
+export default app;
