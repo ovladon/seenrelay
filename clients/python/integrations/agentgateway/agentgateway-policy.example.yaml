@@ -1,0 +1,26 @@
+# Example only. Bind targetRefs/backendRef to your own agentgateway deployment.
+# The ExtMcp processor remains shadow-only and tools must also be explicitly
+# allowlisted in SEENRELAY_EXTMCP_TOOLS on the processor itself.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: seenrelay-shadow
+spec:
+  targetRefs:
+    - kind: Gateway
+      name: example
+      group: gateway.networking.k8s.io
+  backend:
+    mcp:
+      guardrails:
+        processors:
+          - remote:
+              backendRef:
+                name: seenrelay-extmcp
+                port: 50051
+              failureMode: FailOpen
+              metadata:
+                seenrelay_coordinate: 'mcpGuardrails.seenrelay_coordinate'
+                seenrelay_tool: 'mcpGuardrails.seenrelay_tool'
+            methods:
+              tools/call: Full
