@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: readiness/remote-cutover
-      - name: Fix requestBody braces
+      - name: Fix malformed requestBody braces
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -26,8 +26,11 @@ jobs:
           old = "requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } } },"
           new = "requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['site'], properties: { site: { type: 'string' } } } } } } },"
           count = s.count(old)
-          assert count == 2, count
-          p.write_text(s.replace(old, new))
+          assert count == 1, count
+          fixed = s.replace(old, new, 1)
+          assert fixed.count(old) == 0
+          assert fixed.count(new) == 2
+          p.write_text(fixed)
           PY
       - name: Commit fix and remove helper
         run: |
