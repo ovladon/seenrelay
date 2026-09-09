@@ -10,7 +10,12 @@ import {
   readinessV2EnabledForPresentation
 } from '../src/readiness-routing.js';
 
-const keys = ['READINESS_SERVICE_ORIGIN', 'READINESS_REMOTE_V2_ENABLED'] as const;
+const keys = [
+  'READINESS_SERVICE_ORIGIN',
+  'READINESS_REMOTE_V2_ENABLED',
+  'VERCEL_ENV',
+  'SEENRELAY_DEPLOYMENT_ROLE'
+] as const;
 
 async function withEnv(values: Partial<Record<(typeof keys)[number], string>>, fn: () => Promise<void> | void) {
   const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
@@ -27,7 +32,7 @@ async function withEnv(values: Partial<Record<(typeof keys)[number], string>>, f
   }
 }
 
-test('readiness stays local until a remote service origin is explicitly configured', async () => {
+test('readiness stays local outside core production when no remote origin is configured', async () => {
   await withEnv({}, () => {
     assert.equal(configuredReadinessServiceOrigin(), null);
     assert.equal(readinessAuditOrigin('https://seenrelay.test'), 'https://seenrelay.test');
@@ -38,14 +43,34 @@ test('readiness stays local until a remote service origin is explicitly configur
   });
 });
 
-test('remote readiness origin is HTTPS-only and v2 remains separately gated', async () => {
-  await withEnv({ READINESS_SERVICE_ORIGIN: 'https://readiness.seenrelay.com' }, () => {
+test('core production defaults to the isolated readiness service while readiness production stays local', async () => {
+  await withEnv({ VERCEL_ENV: 'production' }, () => {
     assert.equal(configuredReadinessServiceOrigin(), 'https://readiness.seenrelay.com');
     assert.equal(readinessAuditOrigin('https://seenrelay.com'), 'https://readiness.seenrelay.com');
     assert.equal(readinessUsesRemoteService('https://seenrelay.com'), true);
-    assert.equal(readinessRemoteEndpoint('https://seenrelay.com', '/readiness/audit/v2'), 'https://readiness.seenrelay.com/readiness/audit/v2');
+    assert.equal(readinessRemoteEndpoint('https://seenrelay.com', '/readiness/audit'), 'https://readiness.seenrelay.com/readiness/audit');
     assert.equal(readinessV2EnabledForPresentation(true, 'https://seenrelay.com'), false);
     assert.equal(readinessConnectSrc('https://seenrelay.com'), "'self' https://readiness.seenrelay.com");
+  });
+
+  await withEnv({ VERCEL_ENV: 'production', SEENRELAY_DEPLOYMENT_ROLE: 'readiness' }, () => {
+    assert.equal(configuredReadinessServiceOrigin(), null);
+    assert.equal(readinessAuditOrigin('https://readiness.seenrelay.com'), 'https://readiness.seenrelay.com');
+    assert.equal(readinessUsesRemoteService('https://readiness.seenrelay.com'), false);
+    assert.equal(readinessRemoteEndpoint('https://readiness.seenrelay.com', '/readiness/audit'), null);
+  });
+});
+
+test('explicit readiness origin overrides production default, is HTTPS-only, and preserves rollback', async () => {
+  await withEnv({ READINESS_SERVICE_ORIGIN: 'https://readiness.seenrelay.com' }, () => {
+    assert.equal(configuredReadinessServiceOrigin(), 'https://readiness.seenrelay.com');
+    assert.equal(readinessAuditOrigin('https://seenrelay.com'), 'https://readiness.seenrelay.com');
+  });
+
+  await withEnv({ VERCEL_ENV: 'production', READINESS_SERVICE_ORIGIN: 'https://seenrelay.com' }, () => {
+    assert.equal(configuredReadinessServiceOrigin(), 'https://seenrelay.com');
+    assert.equal(readinessUsesRemoteService('https://seenrelay.com'), false);
+    assert.equal(readinessRemoteEndpoint('https://seenrelay.com', '/readiness/audit'), null);
   });
 
   await withEnv({ READINESS_SERVICE_ORIGIN: 'https://readiness.seenrelay.com', READINESS_REMOTE_V2_ENABLED: 'true' }, () => {
@@ -57,8 +82,8 @@ test('remote readiness origin is HTTPS-only and v2 remains separately gated', as
   });
 });
 
-test('core presentation points directly at remote readiness and old audit routes stop executing locally', async () => {
-  await withEnv({ READINESS_SERVICE_ORIGIN: 'https://readiness.seenrelay.com' }, async () => {
+test('core production presentation points directly at remote readiness and old audit routes stop executing locally', async () => {
+  await withEnv({ VERCEL_ENV: 'production' }, async () => {
     const machine = await app.request('https://seenrelay.com/readiness', { headers: { accept: 'application/json' } });
     assert.equal(machine.status, 200);
     const descriptor = await machine.json() as any;
