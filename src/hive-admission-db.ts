@@ -1,9 +1,18 @@
 import { neon } from '@neondatabase/serverless';
 
+export function resolveAdmissionDatabaseUrl(env: NodeJS.ProcessEnv = process.env): string {
+  if (env.SEENRELAY_DEPLOYMENT_ROLE === 'readiness') {
+    const readinessUrl = env.READINESS_DATABASE_URL?.trim();
+    if (!readinessUrl) throw new Error('READINESS_DATABASE_URL is not configured for the readiness deployment');
+    return readinessUrl;
+  }
+  const coreUrl = env.DATABASE_URL?.trim();
+  if (!coreUrl) throw new Error('DATABASE_URL is not configured');
+  return coreUrl;
+}
+
 function sql() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('DATABASE_URL is not configured');
-  return neon(url);
+  return neon(resolveAdmissionDatabaseUrl());
 }
 
 export interface HiveNetworkAdmission { allowed: boolean; retry_after_seconds: number; }
