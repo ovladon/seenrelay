@@ -1,3 +1,5 @@
+const DEFAULT_PRODUCTION_READINESS_ORIGIN = 'https://readiness.seenrelay.com';
+
 function clean(name: string): string {
   return (process.env[name] || '').trim();
 }
@@ -22,9 +24,16 @@ function normalizeHttpsOrigin(value: string, name: string): string {
   return url.origin;
 }
 
+function productionCoreReadinessDefault(): string | null {
+  if (clean('VERCEL_ENV') !== 'production') return null;
+  if (clean('SEENRELAY_DEPLOYMENT_ROLE') === 'readiness') return null;
+  return DEFAULT_PRODUCTION_READINESS_ORIGIN;
+}
+
 export function configuredReadinessServiceOrigin(): string | null {
   const value = clean('READINESS_SERVICE_ORIGIN');
-  return value ? normalizeHttpsOrigin(value, 'READINESS_SERVICE_ORIGIN') : null;
+  if (value) return normalizeHttpsOrigin(value, 'READINESS_SERVICE_ORIGIN');
+  return productionCoreReadinessDefault();
 }
 
 export function readinessAuditOrigin(presentationOrigin: string): string {
