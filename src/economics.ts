@@ -1,5 +1,5 @@
 import { publicProductFacts } from './public-facts.generated.js';
-import { siteFooterHtml, verifiedBenchmarkHtml } from './public-facts-view.js';
+import { siteFooterHtml } from './public-facts-view.js';
 
 export function economicsPage(origin: string): string {
   const prices = publicProductFacts.pricing_snapshots;
@@ -54,13 +54,7 @@ Use SeenRelay only when:
 </section>
 
 <section class="section decision">
-<div class="section-head"><div><div class="eyebrow">CURRENT PUBLIC EVIDENCE</div><h2>The smoke tests prove mechanics, not product-market fit.</h2></div><p>The published Firecrawl tests show that an eligible bounded reuse path can avoid provider work. They are deliberately retained with their caveat: the exact facts tested had cheaper source-native solutions and are therefore poor-fit workloads.</p></div>
-${verifiedBenchmarkHtml()}
-<div class="trust-note"><b>Interpretation:</b> do not use the headline avoided calls or credits as a sales forecast. The commercial test is a customer's natural workload after stronger native controls and SeenRelay overhead are included.</div>
-</section>
-
-<section class="section decision">
-<div class="section-head"><div><div class="eyebrow">ILLUSTRATIVE LIST-PRICE INPUTS</div><h2>Use your invoice, not our example.</h2></div><p>Public provider prices below were checked ${prices.checked_at}. They are inputs for arithmetic, not evidence of your reuse rate.</p></div>
+<div class="section-head"><div><div class="eyebrow">ILLUSTRATIVE COST INPUTS</div><h2>Use your invoice, not a public benchmark.</h2></div><p>Public provider prices below were checked ${prices.checked_at}. They are merely arithmetic inputs. The only evidence that matters for deployment is the customer's own measured workload.</p></div>
 <div class="proof-grid"><article><b>OpenAI Web Search</b><span>$${prices.openai_web_search.price_usd_per_1000_calls} / 1,000 calls in the stored pricing snapshot. Search-content token effects are separate.</span></article><article><b>Firecrawl basic scrape</b><span>${prices.firecrawl.basic_scrape_credits_per_page} credit per page in the stored snapshot.</span></article><article><b>Firecrawl JSON extraction</b><span>${prices.firecrawl.json_extraction_total_credits_per_page} credits per full extraction in the stored snapshot.</span></article><article><b>Fixed-tier counterexample</b><span>Firecrawl Standard snapshot: $${prices.firecrawl.standard_plan_usd_per_month_billed_yearly}/month billed yearly for ${prices.firecrawl.standard_plan_credits_per_month.toLocaleString()} credits. Avoided usage changes an invoice only when it changes tier, overage or required capacity.</span></article></div>
 <div class="trust-note">Pricing can change and negotiated rates differ. Production economics should use the customer's actual provider bill and observed latency/capacity constraints.</div>
 </section>
