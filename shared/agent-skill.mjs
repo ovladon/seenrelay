@@ -24,15 +24,15 @@ Before changing code, read https://seenrelay.com/service.json and https://seenre
 
 Inspect the project's manifests, imports and existing tool boundary before editing code. Do not guess the framework from a directory name and do not replace its native tool lifecycle.
 
-After installing the current published SeenRelay client, prefer the package's local machine-readable integration catalog when exported (`getAmbientIntegrationCatalog()` in JavaScript/TypeScript or `ambient_integration_catalog()` in Python). It performs no discovery network call. Then inspect the actual Ambient exports and use the narrowest adapter that the installed package exposes:
-- generic JavaScript/TypeScript MCP client with `callTool(...)`: `ambientMcpClient(...)` from `seenrelay/ambient`;
-- OpenAI Agents JavaScript MCP server: `ambientOpenAIAgentsMcpServer(...)`;
-- Vercel AI SDK MCP tool set: `ambientAiSdkMcpTools(...)`;
-- LangChain JavaScript MCP hooks: `ambientLangChainMcpHooks(...)` when exported by the installed client;
-- generic Python MCP-style client with `call_tool(...)`: `ambient_mcp_client(...)` from `seenrelay_ambient`;
-- OpenAI Agents Python MCP server: `ambient_openai_agents_mcp_server(...)`;
-- LangChain Python `MultiServerMCPClient`: `ambient_langchain_mcp_client(...)` when exported by the installed client;
-- PydanticAI toolset/MCP toolset: `ambient_pydantic_ai_toolset(...)` when exported by the installed client.
+After installing the current published SeenRelay client, prefer the package's local machine-readable integration catalog when exported (\`getAmbientIntegrationCatalog()\` in JavaScript/TypeScript or \`ambient_integration_catalog()\` in Python). It performs no discovery network call. Then inspect the actual Ambient exports and use the narrowest adapter that the installed package exposes:
+- generic JavaScript/TypeScript MCP client with \`callTool(...)\`: \`ambientMcpClient(...)\` from \`seenrelay/ambient\`;
+- OpenAI Agents JavaScript MCP server: \`ambientOpenAIAgentsMcpServer(...)\`;
+- Vercel AI SDK MCP tool set: \`ambientAiSdkMcpTools(...)\`;
+- LangChain JavaScript MCP hooks: \`ambientLangChainMcpHooks(...)\` when exported by the installed client;
+- generic Python MCP-style client with \`call_tool(...)\`: \`ambient_mcp_client(...)\` from \`seenrelay_ambient\`;
+- OpenAI Agents Python MCP server: \`ambient_openai_agents_mcp_server(...)\`;
+- LangChain Python \`MultiServerMCPClient\`: \`ambient_langchain_mcp_client(...)\` when exported by the installed client;
+- PydanticAI toolset/MCP toolset: \`ambient_pydantic_ai_toolset(...)\` when exported by the installed client.
 
 If the matching framework adapter is not exported by the installed client, do not copy a private/example implementation, do not write a transport interceptor, and do not emulate another framework's adapter. Use a supported generic Ambient boundary only when its call signature and semantics genuinely match; otherwise leave the path unchanged.
 
@@ -44,23 +44,23 @@ Ambient starts as measurement, not authorization. Keep the original authoritativ
 
 Use **local/Ambient shadow** first when the goal is to find exact repetition and stronger local or source-native controls. This lane can remain entirely local and may produce no hosted SeenRelay activity; that is expected and must not be treated as failed integration.
 
-Use **shared-evidence shadow** only when the candidate has a stable source-native fact descriptor, the value is eligible to share under caller policy, and measuring shared evidence is actually relevant. Use the classic client without a `reuse` policy, or `SeenRelayShadowProof` / the Python equivalent. In this lane SeenRelay may CHECK the caller-known value, but the original authoritative validation still runs. Only after a genuinely fresh independent result may the client OBSERVE it best-effort. A CHECK result never authorizes skipping validation in shadow mode.
+Use **shared-evidence shadow** only when the candidate has a stable source-native fact descriptor, the value is eligible to share under caller policy, and measuring shared evidence is actually relevant. Use the classic client without a \`reuse\` policy, or \`SeenRelayShadowProof\` / the Python equivalent. In this lane SeenRelay may CHECK the caller-known value, but the original authoritative validation still runs. Only after a genuinely fresh independent result may the client OBSERVE it best-effort. A CHECK result never authorizes skipping validation in shadow mode.
 
 Do not manufacture a shared fact identity merely to exercise the relay. If the workload cannot support a deterministic shareable fact descriptor, stay on local/Ambient measurement. If shared-evidence shadow produces too little eligible repetition or no economic advantage over stronger existing controls, report that result and leave shared reuse disabled.
 
 ## Return a comparable first audit
 
-After measurement, always return a short human-readable decision plus a machine-readable object with `schema_version: "seenrelay-shadow-audit-v1"`. Use the fields defined by `docs/schemas/shadow-audit-report.schema.json` in the SeenRelay repository: workload identity, protected-call count, exact-repeat count, stronger native-control measurements, shared-CHECK outcomes when measured, hypothetical-reuse mismatches, baseline units, SeenRelay overhead/economics, safety state, reasons and verdict.
+After measurement, always return a short human-readable decision plus a machine-readable object with \`schema_version: "seenrelay-shadow-audit-v1"\`. Use the fields defined by \`docs/schemas/shadow-audit-report.schema.json\` in the SeenRelay repository: workload identity, protected-call count, exact-repeat count, stronger native-control measurements, shared-CHECK outcomes when measured, hypothetical-reuse mismatches, baseline units, SeenRelay overhead/economics, safety state, reasons and verdict.
 
 The only verdicts are **USE / DO NOT USE / INSUFFICIENT EVIDENCE**. A negative verdict is a successful audit when stronger native controls already win, repetition is too low, the operation is unsafe to suppress, equivalence fails or economics are negative.
 
-Do not invent data to make the report look complete. Use `null` for an unmeasured comparable quantity, zero only for a measured zero, and `INSUFFICIENT EVIDENCE` when the sample or comparison is inadequate. Keep raw values, credentials, private fact identities and source payloads out of the machine report. Return the JSON inline unless the caller explicitly requests a persistent `seenrelay-audit.json` artifact or the project already has a suitable generated-report convention.
+Do not invent data to make the report look complete. Use \`null\` for an unmeasured comparable quantity, zero only for a measured zero, and \`INSUFFICIENT EVIDENCE\` when the sample or comparison is inadequate. Keep raw values, credentials, private fact identities and source payloads out of the machine report. Return the JSON inline unless the caller explicitly requests a persistent \`seenrelay-audit.json\` artifact or the project already has a suitable generated-report convention.
 
 ## Assess readiness before modifying code
 
 Use the SDK's local readiness planner when available:
-- TypeScript/JavaScript: `assessIntegrationReadiness(...)`
-- Python: `assess_integration_readiness(...)`
+- TypeScript/JavaScript: \`assessIntegrationReadiness(...)\`
+- Python: \`assess_integration_readiness(...)\`
 
 Supply explicit facts about the call path: operation kind, authoritative fallback, deterministic fact identity, stronger native validator, share eligibility, retained caller value and whether a fresh independent observation exists. The planner is conservative and never authorizes reuse, sharing, truth, or suppression of mutations. Human/caller policy remains authoritative.
 
