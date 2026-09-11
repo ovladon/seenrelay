@@ -116,6 +116,7 @@ jobs:
           node --input-type=module - <<'NODE'
           await import('seenrelay');
           await import('seenrelay/ambient');
+          await import('seenrelay/economics');
           NODE
           echo "npm seenrelay@$VERSION clean-install passed."
 
@@ -135,7 +136,9 @@ jobs:
           "$RUNNER_TEMP/seenrelay-adoption-venv/bin/python" - <<'PY'
           from seenrelay import SeenRelayClient
           from seenrelay_ambient import ambient_mcp_client
+          from seenrelay_economics import classify_hostile_benchmark_verdict
           assert SeenRelayClient is not None and callable(ambient_mcp_client)
+          assert callable(classify_hostile_benchmark_verdict)
           PY
           echo "PyPI seenrelay==$VERSION clean-install passed."
 
@@ -164,5 +167,10 @@ jobs:
           grep -q 'SeenRelayShadowProof' "$RUNNER_TEMP/quickstart.html"
           grep -q 'evaluateHostileBenchmark' "$RUNNER_TEMP/quickstart.html"
           grep -q 'evaluate_hostile_benchmark' "$RUNNER_TEMP/quickstart.html"
-          grep -q 'The evaluator always leaves automatic reuse disabled' "$RUNNER_TEMP/quickstart.html"
-          echo 'Production exposes the contained first-use panel and a concrete Developer shadow-evaluation path.'
+          grep -q 'classifyHostileBenchmarkVerdict' "$RUNNER_TEMP/quickstart.html"
+          grep -q 'classify_hostile_benchmark_verdict' "$RUNNER_TEMP/quickstart.html"
+          grep -q '<h3>USE</h3>' "$RUNNER_TEMP/quickstart.html"
+          grep -q '<h3>DO NOT USE</h3>' "$RUNNER_TEMP/quickstart.html"
+          grep -q '<h3>INSUFFICIENT EVIDENCE</h3>' "$RUNNER_TEMP/quickstart.html"
+          grep -q 'Both the evaluator and verdict classifier leave automatic reuse disabled' "$RUNNER_TEMP/quickstart.html"
+          echo 'Production exposes the contained first-use panel and deterministic Developer shadow-audit verdict path.'
