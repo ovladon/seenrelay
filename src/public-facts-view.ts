@@ -70,6 +70,7 @@ export function verifiedWorkloadMapHtml(): string {
 <div class="trust-note"><a href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md" rel="noreferrer">Measurement rules, evidence and break-even logic →</a></div>
 </section>`;
 }
+
 export function siteFooterHtml(): string {
   const currentYear = new Date().getUTCFullYear();
   const copyrightYears = currentYear > 2026 ? `2026–${currentYear}` : '2026';
@@ -78,17 +79,9 @@ export function siteFooterHtml(): string {
 
 export function machinePublicFactsText(origin: string): string {
   const f = publicProductFacts;
-  const measured = f.verified_benchmarks
-    .filter((item) => 'matrix' in item)
-    .map((item) => {
-      if (!('matrix' in item)) return '';
-      const m = item.matrix;
-      return `- ${m.surface} / ${m.configuration}: n=${item.samples}; ${m.provider_calls_avoided}/${item.samples} equivalent provider calls avoided; ${m.provider_units_avoided} ${m.provider_unit_label} avoided; provider-path median ${m.baseline_median_ms} ms -> ${item.reuse_median_ms} ms bounded reuse; verified ${item.verified_at.slice(0, 10)}. Evidence: ${item.evidence_url}.`;
-    })
-    .filter(Boolean)
-    .join('\n');
-  return `## Public install\n\n- JavaScript / TypeScript: ${f.install.npm_command}\n- Python: ${f.install.pypi_command}\n- Client version: ${f.install.client_version}\n- Required base runtime dependencies: ${f.install.runtime_dependencies}\n- Account/API key required by SeenRelay: no\n- Third-party account requirement: a client, directory, gateway, or assistant may require its own account; that is not a SeenRelay access requirement\n- Canonical direct MCP endpoint: ${origin}/mcp\n- Current SeenRelay API fee: $0\n\n## Verified measured results\n\n${measured || '- No verified benchmark currently published.'}\n- These are controlled measurements, not promised natural-world reuse rates.\n- Canonical machine-readable product facts: ${origin}/product-facts.json\n- Full measured-result interpretation: https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md\n`;
+  return `## Public install\n\n- JavaScript / TypeScript: ${f.install.npm_command}\n- Python: ${f.install.pypi_command}\n- Client version: ${f.install.client_version}\n- Required base runtime dependencies: ${f.install.runtime_dependencies}\n- Account/API key required by SeenRelay: no\n- Current SeenRelay API fee: $0\n- Canonical direct MCP endpoint: ${origin}/mcp\n\n## Product decision rule\n\n- Start in shadow mode and preserve every authoritative validation.\n- Measure exact recurrence on the caller's real workload.\n- Keep stronger local, source-native and provider-native controls ahead of SeenRelay.\n- Return USE, DO NOT USE or INSUFFICIENT EVIDENCE for each measured workload.\n- Enable reuse only where safety equivalence and net economics are demonstrated.\n- SeenRelay remains free while utility and repeatable workload ROI are being established.\n\nCanonical machine-readable product facts: ${origin}/product-facts.json\nTechnical verification history: https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_RESULTS.md\n`;
 }
+
 export function productFactsForOrigin(origin: string) {
   return {
     ...publicProductFacts,
