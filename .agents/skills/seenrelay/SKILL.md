@@ -1,6 +1,6 @@
 ---
 name: seenrelay
-description: Find repeated expensive read-only checks across AI agent fleets and measure whether reuse is worthwhile. Start in shadow mode; preserve authoritative and stronger native controls.
+description: Find repeated expensive read-only checks across AI agent fleets and measure whether reuse is worthwhile. Start in shadow mode; preserve authoritative and stronger native controls, and prefer private reuse before optional shared evidence.
 license: SEE LICENSE IN REPOSITORY
 compatibility: Requires a project that can call HTTP/MCP or use the SeenRelay TypeScript/Python client; never use this skill to suppress mutating or destructive operations.
 metadata:
