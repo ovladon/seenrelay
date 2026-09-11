@@ -32,13 +32,14 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.equal(facts.pricing_snapshots.firecrawl.json_extraction_total_credits_per_page, 5);
   assert.ok(facts.verified_benchmarks.length >= 1, 'historical benchmark evidence remains available for technical verification');
 
-  assert.match(economics, /publicProductFacts\.pricing_snapshots/);
-  assert.match(economics, /Prove the savings before you enable reuse/);
+  assert.match(economics, /Prove the savings on your workload before you enable reuse/);
+  assert.match(economics, /Free until utility is demonstrated/);
   assert.match(economics, /NO NETWORK EFFECT REQUIRED/);
   assert.match(economics, /Use your invoice, not a public benchmark/);
-  assert.match(economics, /Fixed-tier counterexample/);
+  assert.match(economics, /Provider spend/);
+  assert.match(economics, /Operational overhead/);
   assert.match(economics, /Outside the target:/);
-  assert.doesNotMatch(economics, /verifiedBenchmarkHtml\(|MEASURED · FIRST-PARTY SMOKE BENCHMARK|Firecrawl JSON extraction/);
+  assert.doesNotMatch(economics, /verifiedBenchmarkHtml\(|MEASURED · FIRST-PARTY SMOKE BENCHMARK|Firecrawl|OpenAI Web Search|provider calls avoided/i);
   assert.doesNotMatch(landing, /verified_benchmarks|provider calls avoided|first-party smoke|Firecrawl/i);
 
   assert.match(publicView, /Provider-path smoke: SeenRelay skipped Firecrawl work/);
