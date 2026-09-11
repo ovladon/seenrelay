@@ -4,6 +4,7 @@ import fs from 'node:fs';
 
 const landing = fs.readFileSync(new URL('../src/landing.ts', import.meta.url), 'utf8');
 const readinessClient = fs.readFileSync(new URL('../public/readiness.js', import.meta.url), 'utf8');
+const revampClient = fs.readFileSync(new URL('../public/revamp.js', import.meta.url), 'utf8');
 const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.url), 'utf8');
 
 test('homepage keeps the runtime primary while routing site owners to the separate diagnostic tool', () => {
@@ -44,4 +45,12 @@ test('Try it audit steps stay inside one explicit console body in both modes', (
   assert.match(funnelCss, /\.rv-funnel-console\{[^}]*display:flex[^}]*flex-direction:column/);
   assert.match(funnelCss, /\.rv-console-body\{[^}]*display:grid[^}]*flex:1 1 auto/);
   assert.match(funnelCss, /\.rv-funnel-console \.rv-install-view\{[^}]*grid-area:1\/1[^}]*width:100%/);
+});
+
+test('Try it explanatory copy follows the selected installation mode', () => {
+  assert.match(revampClient, /modeContent=\{agent:/);
+  assert.match(revampClient, /human:\{title:'Integrate directly with the client\.'/);
+  assert.match(revampClient, /Install the npm or PyPI client/);
+  assert.match(revampClient, /title\.textContent=copy\.title/);
+  assert.match(revampClient, /body\.textContent=copy\.body/);
 });
