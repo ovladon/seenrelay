@@ -1,8 +1,6 @@
-import { publicProductFacts } from './public-facts.generated.js';
 import { siteFooterHtml } from './public-facts-view.js';
 
 export function economicsPage(origin: string): string {
-  const prices = publicProductFacts.pricing_snapshots;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -23,10 +21,10 @@ export function economicsPage(origin: string): string {
 <main>
 <section class="hero">
 <div class="eyebrow">MEASURED COST AVOIDANCE</div>
-<h1>Prove the savings before you enable reuse.</h1>
+<h1>Prove the savings on your workload before you enable reuse.</h1>
 <p class="lead">SeenRelay targets one narrow economic problem: agents repeatedly paying money, latency or constrained capacity to validate the same deterministic read-only state. Shadow mode keeps every authoritative call enabled while you measure whether a cheaper safe path exists.</p>
 <div class="cta"><a class="primary" href="/quickstart">Run the shadow audit</a><a class="secondary" href="/fleet">See the runtime</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Economics Lab</a></div>
-<div class="contract"><span>SeenRelay API fee today</span><b>$0</b><span>Do not enable reuse unless measured net economics are positive</span></div>
+<div class="contract"><span>Free until utility is demonstrated</span><b>$0</b><span>Do not enable reuse unless measured net economics are positive</span></div>
 </section>
 
 <section class="section split decision">
@@ -54,9 +52,9 @@ Use SeenRelay only when:
 </section>
 
 <section class="section decision">
-<div class="section-head"><div><div class="eyebrow">ILLUSTRATIVE COST INPUTS</div><h2>Use your invoice, not a public benchmark.</h2></div><p>Public provider prices below were checked ${prices.checked_at}. They are merely arithmetic inputs. The only evidence that matters for deployment is the customer's own measured workload.</p></div>
-<div class="proof-grid"><article><b>OpenAI Web Search</b><span>$${prices.openai_web_search.price_usd_per_1000_calls} / 1,000 calls in the stored pricing snapshot. Search-content token effects are separate.</span></article><article><b>Firecrawl basic scrape</b><span>${prices.firecrawl.basic_scrape_credits_per_page} credit per page in the stored snapshot.</span></article><article><b>Firecrawl JSON extraction</b><span>${prices.firecrawl.json_extraction_total_credits_per_page} credits per full extraction in the stored snapshot.</span></article><article><b>Fixed-tier counterexample</b><span>Firecrawl Standard snapshot: $${prices.firecrawl.standard_plan_usd_per_month_billed_yearly}/month billed yearly for ${prices.firecrawl.standard_plan_credits_per_month.toLocaleString()} credits. Avoided usage changes an invoice only when it changes tier, overage or required capacity.</span></article></div>
-<div class="trust-note">Pricing can change and negotiated rates differ. Production economics should use the customer's actual provider bill and observed latency/capacity constraints.</div>
+<div class="section-head"><div><div class="eyebrow">YOUR COST INPUTS</div><h2>Use your invoice, not a public benchmark.</h2></div><p>The only deployment evidence that matters is your own measured workload. Enter the costs and constraints you actually pay for, then compare them with the measured cheaper path.</p></div>
+<div class="proof-grid"><article><b>Provider spend</b><span>Use your real marginal cost per call, credit, page, query or request. If the bill is fixed, count savings only when usage changes tier, overage or required capacity.</span></article><article><b>Latency</b><span>Count wall-clock time only when it affects throughput, SLOs, user experience or scarce execution capacity.</span></article><article><b>Native controls</b><span>Credit existing caches, validators and provider-native shortcuts first. SeenRelay must beat the best equivalent path you already have.</span></article><article><b>Operational overhead</b><span>Include integration, runtime and maintenance cost. A technically reusable result is not commercially useful if the layer costs more than it avoids.</span></article></div>
+<div class="trust-note">The commercial decision is deliberately workload-specific. SeenRelay does not use a public benchmark to promise your savings.</div>
 </section>
 
 <section class="section split decision">
