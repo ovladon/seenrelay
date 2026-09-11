@@ -2,7 +2,7 @@ import unittest
 from types import SimpleNamespace
 
 from seenrelay import ReuseDecision
-from seenrelay_economics import evaluate_hostile_benchmark
+from seenrelay_economics import evaluate_hostile_benchmark, classify_hostile_benchmark_verdict
 from seenrelay_shadow import SeenRelayShadowProof
 
 
@@ -177,11 +177,11 @@ class PythonHostileEconomicsParityTests(unittest.TestCase):
         }
 
     @staticmethod
-    def input(records, controls=CONTROLS):
+    def input(records, controls=CONTROLS, sample_type="natural_workload"):
         return {
             "schema_version": 2,
             "workload_id": "parity-fixture",
-            "sample_type": "natural_workload",
+            "sample_type": sample_type,
             "baseline_definition": "best_existing_non_shared_path",
             "controls": controls,
             "observe_off_critical_path": False,
@@ -200,6 +200,30 @@ class PythonHostileEconomicsParityTests(unittest.TestCase):
         self.assertTrue(result["decision"]["beats_baseline_on_both"])
         self.assertFalse(result["decision"]["automatic_reuse_enabled_by_evaluator"])
 
+    def test_safe_positive_fixture_classifies_use_with_explicit_small_fixture_floor(self):
+        result = evaluate_hostile_benchmark(self.input([self.record(), self.record()]))
+        verdict = classify_hostile_benchmark_verdict(result, minimum_calls=2)
+        self.assertEqual(verdict["verdict"], "USE")
+        self.assertEqual(
+            tuple(verdict["reasons"]),
+            ("safe_candidate_beats_best_existing_path_on_cost_and_latency",),
+        )
+        self.assertTrue(verdict["sample_floor_met"])
+        self.assertFalse(verdict["automatic_reuse_enabled"])
+
+    def test_default_floor_keeps_small_fixture_insufficient(self):
+        result = evaluate_hostile_benchmark(self.input([self.record(), self.record()]))
+        verdict = classify_hostile_benchmark_verdict(result)
+        self.assertEqual(verdict["verdict"], "INSUFFICIENT EVIDENCE")
+        self.assertEqual(tuple(verdict["reasons"]), ("sample_below_minimum",))
+        self.assertEqual(verdict["minimum_calls"], 100)
+
+    def test_fixed_fact_smoke_is_never_deployment_evidence(self):
+        result = evaluate_hostile_benchmark(self.input([self.record(), self.record()], sample_type="fixed_fact_smoke"))
+        verdict = classify_hostile_benchmark_verdict(result, minimum_calls=2)
+        self.assertEqual(verdict["verdict"], "INSUFFICIENT EVIDENCE")
+        self.assertEqual(tuple(verdict["reasons"]), ("natural_workload_required",))
+
     def test_check_unavailable_stays_in_cohort_and_cannot_fake_safety(self):
         record = self.record(status=None, reuse=False, match=None)
         result = evaluate_hostile_benchmark(self.input([record]))
@@ -211,6 +235,24 @@ class PythonHostileEconomicsParityTests(unittest.TestCase):
         result = evaluate_hostile_benchmark(self.input([self.record(match=False)]))
         self.assertFalse(result["safety"]["pass"])
         self.assertFalse(result["decision"]["beats_baseline_on_both"])
+        verdict = classify_hostile_benchmark_verdict(result)
+        self.assertEqual(verdict["verdict"], "DO NOT USE")
+        self.assertEqual(tuple(verdict["reasons"]), ("unsafe_hypothetical_reuse",))
+
+    def test_zero_policy_opportunities_are_do_not_use_when_sample_floor_is_met(self):
+        records = [self.record(status="UNKNOWN", reuse=False, match=None) for _ in range(2)]
+        result = evaluate_hostile_benchmark(self.input(records))
+        verdict = classify_hostile_benchmark_verdict(result, minimum_calls=2)
+        self.assertEqual(verdict["verdict"], "DO NOT USE")
+        self.assertEqual(tuple(verdict["reasons"]), ("no_policy_accepted_reuse_opportunities",))
+
+    def test_complete_safe_negative_economics_is_do_not_use(self):
+        records = [self.record(check=150, check_cost=20) for _ in range(2)]
+        result = evaluate_hostile_benchmark(self.input(records))
+        verdict = classify_hostile_benchmark_verdict(result, minimum_calls=2)
+        self.assertEqual(verdict["verdict"], "DO NOT USE")
+        self.assertIn("latency_not_better_than_best_existing_path", verdict["reasons"])
+        self.assertIn("cost_not_better_than_best_existing_path", verdict["reasons"])
 
     def test_available_unmeasured_native_control_is_rejected(self):
         controls = {name: dict(value) for name, value in CONTROLS.items()}
