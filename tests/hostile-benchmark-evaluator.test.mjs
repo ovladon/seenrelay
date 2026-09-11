@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluateHostileBenchmark } from '../scripts/evaluate-hostile-benchmark.mjs';
+import { evaluateHostileBenchmark, classifyHostileBenchmarkVerdict } from '../scripts/evaluate-hostile-benchmark.mjs';
 
 const controls = {
   local_cache: { available: true, measured: true },
@@ -61,6 +61,32 @@ test('hostile benchmark compares shared CHECK to the best measured non-shared pa
   assert.equal(report.decision.automatic_reuse_enabled_by_evaluator, false);
 });
 
+test('single-workload classifier emits USE only for complete natural evidence that beats the baseline', () => {
+  const report = evaluateHostileBenchmark({ ...baseInput, schema_version: 2 });
+  const result = classifyHostileBenchmarkVerdict(report, { minimumCalls: 2 });
+  assert.equal(result.verdict, 'USE');
+  assert.deepEqual(result.reasons, ['safe_candidate_beats_best_existing_path_on_cost_and_latency']);
+  assert.equal(result.sample_floor_met, true);
+  assert.equal(result.comparison_complete, true);
+  assert.equal(result.controls_complete, true);
+  assert.equal(result.automatic_reuse_enabled, false);
+});
+
+test('single-workload classifier does not treat a mechanics-only smoke as deployment evidence', () => {
+  const report = evaluateHostileBenchmark({ ...baseInput, schema_version: 2, sample_type: 'fixed_fact_smoke' });
+  const result = classifyHostileBenchmarkVerdict(report, { minimumCalls: 2 });
+  assert.equal(result.verdict, 'INSUFFICIENT EVIDENCE');
+  assert.deepEqual(result.reasons, ['natural_workload_required']);
+});
+
+test('single-workload classifier requires the sample floor when there is no hard safety failure', () => {
+  const report = evaluateHostileBenchmark({ ...baseInput, schema_version: 2 });
+  const result = classifyHostileBenchmarkVerdict(report);
+  assert.equal(result.verdict, 'INSUFFICIENT EVIDENCE');
+  assert.deepEqual(result.reasons, ['sample_below_minimum']);
+  assert.equal(result.minimum_calls, 100);
+});
+
 test('fixed-fact smoke results remain mechanics-only evidence', () => {
   const report = evaluateHostileBenchmark({ ...baseInput, sample_type: 'fixed_fact_smoke' });
   assert.equal(report.evidence_scope, 'mechanics_only');
@@ -91,6 +117,17 @@ test('one unsafe hypothetical reuse fails the safety decision', () => {
   assert.equal(report.safety.state, 'fail');
   assert.equal(report.decision.safety_pass, false);
   assert.equal(report.decision.beats_baseline_on_both, false);
+});
+
+test('single-workload classifier treats one observed mismatch as a hard DO NOT USE even below the sample floor', () => {
+  const bad = structuredClone(baseInput);
+  bad.schema_version = 2;
+  bad.records[0].reuse_would_match_validation = false;
+  const report = evaluateHostileBenchmark(bad);
+  const result = classifyHostileBenchmarkVerdict(report);
+  assert.equal(result.verdict, 'DO NOT USE');
+  assert.deepEqual(result.reasons, ['unsafe_hypothetical_reuse']);
+  assert.equal(result.sample_floor_met, false);
 });
 
 test('provider-cache baseline can be modeled without falsely adding an OBSERVE', () => {
@@ -124,6 +161,9 @@ test('schema v2 marks an uncomparable hypothetical reuse incomplete instead of s
   assert.equal(report.decision.safety_pass, null);
   assert.equal(report.decision.evidence_ready, false);
   assert.equal(report.decision.beats_baseline_on_both, false);
+  const verdict = classifyHostileBenchmarkVerdict(report, { minimumCalls: 2 });
+  assert.equal(verdict.verdict, 'INSUFFICIENT EVIDENCE');
+  assert.deepEqual(verdict.reasons, ['reuse_comparison_incomplete']);
 });
 
 test('zero policy reuse opportunities are not labeled a safety pass', () => {
@@ -138,4 +178,21 @@ test('zero policy reuse opportunities are not labeled a safety pass', () => {
   assert.equal(report.safety.state, 'no_opportunities');
   assert.equal(report.decision.safety_pass, null);
   assert.equal(report.decision.evidence_ready, false);
+  const verdict = classifyHostileBenchmarkVerdict(report, { minimumCalls: 2 });
+  assert.equal(verdict.verdict, 'DO NOT USE');
+  assert.deepEqual(verdict.reasons, ['no_policy_accepted_reuse_opportunities']);
+});
+
+test('complete safe evidence that loses on economics is DO NOT USE', () => {
+  const costly = structuredClone(baseInput);
+  costly.schema_version = 2;
+  for (const record of costly.records) {
+    record.check_ms = 1500;
+    record.check_cost = 10;
+  }
+  const report = evaluateHostileBenchmark(costly);
+  const verdict = classifyHostileBenchmarkVerdict(report, { minimumCalls: 2 });
+  assert.equal(verdict.verdict, 'DO NOT USE');
+  assert.ok(verdict.reasons.includes('latency_not_better_than_best_existing_path'));
+  assert.ok(verdict.reasons.includes('cost_not_better_than_best_existing_path'));
 });
