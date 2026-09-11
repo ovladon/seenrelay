@@ -66,16 +66,22 @@ test('three-class workload gate keeps negative evidence and never enables reuse'
   assert.equal(report.positive_workloads, 1);
   assert.equal(report.shared_check_incremental_value_candidate, true);
   assert.equal(report.automatic_reuse_enabled_by_gate, false);
+  assert.equal(report.workloads[0].verdict, 'USE');
+  assert.equal(report.workloads[1].verdict, 'DO NOT USE');
+  assert.equal(report.workloads[2].verdict, 'DO NOT USE');
 
   const allNegative = evaluateNaturalWorkloadSet(completeSet({ allNegative: true }));
   assert.equal(allNegative.all_three_completed_negative, true);
   assert.equal(allNegative.shared_check_incremental_value_candidate, false);
+  assert.ok(allNegative.workloads.every((workloadResult) => workloadResult.verdict === 'DO NOT USE'));
 });
 
 test('unsafe hypothetical reuse blocks incremental-value admission', () => {
   const report = evaluateNaturalWorkloadSet(completeSet({ unsafe: true }));
   assert.equal(report.unsafe_workloads, 1);
   assert.equal(report.shared_check_incremental_value_candidate, false);
+  assert.equal(report.workloads[2].verdict, 'DO NOT USE');
+  assert.deepEqual(report.workloads[2].verdict_reasons, ['unsafe_hypothetical_reuse']);
 });
 
 test('gate rejects duplicate workload identities', () => {
