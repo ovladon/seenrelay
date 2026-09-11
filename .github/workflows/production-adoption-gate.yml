@@ -11,10 +11,17 @@ on:
       - 'shared/agent-skill.mjs'
       - 'src/index.ts'
       - 'src/landing.ts'
+      - 'src/public.ts'
+      - 'src/version.ts'
       - 'public/product-facts.json'
       - 'clients/**'
       - 'plugin.json'
       - 'mcp.json'
+      - 'gemini-extension.json'
+      - 'registry/**'
+      - 'docs/SHADOW_AUDIT.md'
+      - 'docs/schemas/**'
+      - 'examples/shadow-audit-report.example.json'
       - '.github/workflows/production-adoption-gate.yml'
   workflow_dispatch:
 
