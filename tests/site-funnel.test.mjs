@@ -37,3 +37,11 @@ test('homepage hero typography is bounded by both viewport width and height', ()
   assert.match(funnelCss, /@media\(max-height:700px\) and \(min-width:681px\)/);
   assert.match(funnelCss, /font-size:clamp\(32px,10vw,42px\)/);
 });
+
+test('Try it audit steps stay inside one explicit console body in both modes', () => {
+  assert.match(landing, /class="rv-console rv-funnel-console"[\s\S]*class="rv-console-body"[\s\S]*data-install-view="agent"[\s\S]*data-install-view="human"/);
+  assert.match(landing, /data-install-view="human" id="developer-audit"/);
+  assert.match(funnelCss, /\.rv-funnel-console\{[^}]*display:flex[^}]*flex-direction:column/);
+  assert.match(funnelCss, /\.rv-console-body\{[^}]*display:grid[^}]*flex:1 1 auto/);
+  assert.match(funnelCss, /\.rv-funnel-console \.rv-install-view\{[^}]*grid-area:1\/1[^}]*width:100%/);
+});
