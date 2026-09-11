@@ -42,6 +42,21 @@ Do not expose raw values, credentials, secrets, signed URLs, private fact identi
 
 The skill must use only supported adapters and must leave an unsupported framework/path unchanged rather than inventing an interceptor.
 
+## Deterministic audit output
+
+Every completed audit should return two layers:
+
+1. a short human-readable decision explaining the winning path and the evidence behind it;
+2. a machine-readable object with `schema_version: "seenrelay-shadow-audit-v1"` matching [`docs/schemas/shadow-audit-report.schema.json`](./schemas/shadow-audit-report.schema.json).
+
+The JSON contract makes the first useful result comparable across coding agents and projects. It records recurrence, stronger native controls, shared-CHECK outcomes when measured, hypothetical-reuse mismatches, baseline units, prospective SeenRelay overhead/economics, safety state and one of exactly three verdicts: `USE`, `DO NOT USE`, or `INSUFFICIENT EVIDENCE`.
+
+A reference negative result is available at [`examples/shadow-audit-report.example.json`](../examples/shadow-audit-report.example.json). It deliberately shows a case where repetition exists but a source-native validator wins, so the correct outcome is `DO NOT USE`.
+
+Do not invent measurements to fill the schema. Use `null`, zero only when zero was actually observed, or `INSUFFICIENT EVIDENCE` when a comparable quantity was not measured. The schema is an audit record, not a requirement to manufacture completeness.
+
+The report must keep all privacy flags false: no raw values, credentials, private fact identities or source payloads. A coding agent may return the JSON inline. It should only write `seenrelay-audit.json` into the audited project when the caller asks for a persistent artifact or the project already has a suitable generated-report convention.
+
 ## Existing MCP-style JavaScript / TypeScript client
 
 ```bash
