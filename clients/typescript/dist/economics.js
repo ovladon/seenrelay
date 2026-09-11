@@ -35,6 +35,118 @@ function safetySummary(opportunities, unsafe, unavailable) {
   return { state: 'pass', pass: true };
 }
 
+function validateEvaluation(evaluation) {
+  if (!evaluation || typeof evaluation !== 'object' || Array.isArray(evaluation)) {
+    throw new TypeError('evaluation must be an object returned by evaluateHostileBenchmark');
+  }
+  if (!Number.isInteger(evaluation.calls) || evaluation.calls < 1) {
+    throw new TypeError('evaluation.calls must be a positive integer');
+  }
+  if (!['natural_workload', 'fixed_fact_smoke'].includes(evaluation.sample_type)) {
+    throw new TypeError('evaluation.sample_type is invalid');
+  }
+  if (!evaluation.controls || typeof evaluation.controls !== 'object' || Array.isArray(evaluation.controls)) {
+    throw new TypeError('evaluation.controls must be an object');
+  }
+  for (const name of CONTROL_NAMES) {
+    const control = evaluation.controls[name];
+    if (!control || typeof control.available !== 'boolean' || typeof control.measured !== 'boolean') {
+      throw new TypeError(`evaluation.controls.${name} must declare available and measured booleans`);
+    }
+  }
+  if (!Number.isInteger(evaluation.unsafe_hypothetical_reuses) || evaluation.unsafe_hypothetical_reuses < 0) {
+    throw new TypeError('evaluation.unsafe_hypothetical_reuses must be a non-negative integer');
+  }
+  if (!Number.isInteger(evaluation.reuse_comparison_unavailable) || evaluation.reuse_comparison_unavailable < 0) {
+    throw new TypeError('evaluation.reuse_comparison_unavailable must be a non-negative integer');
+  }
+  if (!Number.isInteger(evaluation.policy_accepted_reuses) || evaluation.policy_accepted_reuses < 0) {
+    throw new TypeError('evaluation.policy_accepted_reuses must be a non-negative integer');
+  }
+  if (!evaluation.safety || typeof evaluation.safety !== 'object') {
+    throw new TypeError('evaluation.safety must be an object');
+  }
+  if (!evaluation.decision || typeof evaluation.decision !== 'object') {
+    throw new TypeError('evaluation.decision must be an object');
+  }
+  if (evaluation.decision.automatic_reuse_enabled_by_evaluator !== false) {
+    throw new TypeError('evaluation must preserve automatic_reuse_enabled_by_evaluator=false');
+  }
+}
+
+/**
+ * Convert one hostile benchmark evaluation into the public three-way audit verdict.
+ *
+ * This deliberately reuses the same conservative evidence rules as the natural-workload
+ * gate. An observed hypothetical-reuse mismatch is a hard negative even when the sample
+ * is still small. Otherwise a natural workload must meet the sample floor and comparison
+ * completeness before it can receive USE or a conclusive economics-based DO NOT USE.
+ * The classifier never enables reuse.
+ */
+export function classifyHostileBenchmarkVerdict(evaluation, { minimumCalls = 100 } = {}) {
+  validateEvaluation(evaluation);
+  if (!Number.isInteger(minimumCalls) || minimumCalls < 1) {
+    throw new TypeError('minimumCalls must be a positive integer');
+  }
+
+  const sampleFloorMet = evaluation.calls >= minimumCalls;
+  const comparisonComplete = evaluation.reuse_comparison_unavailable === 0;
+  const controlsComplete = CONTROL_NAMES.every((name) => {
+    const control = evaluation.controls[name];
+    return control.available === false || control.measured === true;
+  });
+  const naturalWorkload = evaluation.sample_type === 'natural_workload' && evaluation.evidence_scope === 'workload_evidence';
+  const unsafe = evaluation.unsafe_hypothetical_reuses > 0 || evaluation.safety.state === 'fail' || evaluation.safety.pass === false;
+  const reasons = [];
+  let verdict;
+
+  if (!naturalWorkload) {
+    verdict = 'INSUFFICIENT EVIDENCE';
+    reasons.push('natural_workload_required');
+  } else if (unsafe) {
+    verdict = 'DO NOT USE';
+    reasons.push('unsafe_hypothetical_reuse');
+  } else if (!controlsComplete) {
+    verdict = 'INSUFFICIENT EVIDENCE';
+    reasons.push('stronger_native_control_unmeasured');
+  } else if (!comparisonComplete || evaluation.safety.state === 'incomplete') {
+    verdict = 'INSUFFICIENT EVIDENCE';
+    reasons.push('reuse_comparison_incomplete');
+  } else if (!sampleFloorMet) {
+    verdict = 'INSUFFICIENT EVIDENCE';
+    reasons.push('sample_below_minimum');
+  } else if (evaluation.safety.state === 'no_opportunities' || evaluation.policy_accepted_reuses === 0) {
+    verdict = 'DO NOT USE';
+    reasons.push('no_policy_accepted_reuse_opportunities');
+  } else if (evaluation.decision.safety_pass !== true) {
+    verdict = 'INSUFFICIENT EVIDENCE';
+    reasons.push('safety_not_established');
+  } else if (evaluation.decision.beats_baseline_on_both === true) {
+    verdict = 'USE';
+    reasons.push('safe_candidate_beats_best_existing_path_on_cost_and_latency');
+  } else {
+    verdict = 'DO NOT USE';
+    if (evaluation.decision.positive_on_latency !== true) reasons.push('latency_not_better_than_best_existing_path');
+    if (evaluation.decision.positive_on_cost !== true) reasons.push('cost_not_better_than_best_existing_path');
+    if (reasons.length === 0) reasons.push('best_existing_path_not_beaten');
+  }
+
+  return Object.freeze({
+    verdict,
+    reasons: Object.freeze(reasons),
+    minimum_calls: minimumCalls,
+    calls: evaluation.calls,
+    sample_floor_met: sampleFloorMet,
+    comparison_complete: comparisonComplete,
+    controls_complete: controlsComplete,
+    safety_state: evaluation.safety.state,
+    policy_accepted_reuses: evaluation.policy_accepted_reuses,
+    latency_outcome: evaluation.latency?.outcome ?? null,
+    cost_outcome: evaluation.cost?.outcome ?? null,
+    automatic_reuse_enabled: false
+  });
+}
+
 /**
  * Evaluate natural-workload or mechanics-only evidence against the best measured
  * non-shared validation path. The evaluator never enables reuse.

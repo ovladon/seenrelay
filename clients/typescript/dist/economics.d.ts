@@ -1,6 +1,7 @@
 export type SeenRelayCheckStatus = 'SAME_OBSERVED' | 'CHANGED_OBSERVED' | 'CONTESTED' | 'STALE' | 'UNKNOWN';
 export type BenchmarkOutcome = 'better' | 'worse' | 'equal';
 export type BenchmarkSafetyState = 'no_opportunities' | 'fail' | 'incomplete' | 'pass';
+export type ShadowAuditVerdict = 'USE' | 'DO NOT USE' | 'INSUFFICIENT EVIDENCE';
 
 export interface BenchmarkControl {
   available: boolean;
@@ -86,5 +87,30 @@ export interface HostileBenchmarkEvaluation {
   };
 }
 
+export interface HostileBenchmarkVerdictOptions {
+  minimumCalls?: number;
+}
+
+export interface HostileBenchmarkVerdict {
+  readonly verdict: ShadowAuditVerdict;
+  readonly reasons: readonly string[];
+  readonly minimum_calls: number;
+  readonly calls: number;
+  readonly sample_floor_met: boolean;
+  readonly comparison_complete: boolean;
+  readonly controls_complete: boolean;
+  readonly safety_state: BenchmarkSafetyState;
+  readonly policy_accepted_reuses: number;
+  readonly latency_outcome: BenchmarkOutcome | null;
+  readonly cost_outcome: BenchmarkOutcome | null;
+  readonly automatic_reuse_enabled: false;
+}
+
 /** Evaluate benchmark evidence without enabling reuse. */
 export declare function evaluateHostileBenchmark(input: HostileBenchmarkInput): Readonly<HostileBenchmarkEvaluation>;
+
+/** Classify one natural-workload evaluation into the public three-way audit verdict without enabling reuse. */
+export declare function classifyHostileBenchmarkVerdict(
+  evaluation: HostileBenchmarkEvaluation,
+  options?: HostileBenchmarkVerdictOptions
+): Readonly<HostileBenchmarkVerdict>;

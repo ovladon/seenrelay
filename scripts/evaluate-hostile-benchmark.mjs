@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-export { evaluateHostileBenchmark } from '../clients/typescript/dist/economics.js';
+export { evaluateHostileBenchmark, classifyHostileBenchmarkVerdict } from '../clients/typescript/dist/economics.js';
 import { evaluateHostileBenchmark } from '../clients/typescript/dist/economics.js';
 
 function main() {
