@@ -8,54 +8,65 @@ export function economicsPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Measure when SeenRelay can avoid repeated paid or slow validation.">
+<meta name="description" content="Measure whether repeated read-only agent validation costs enough, repeats enough and stays stable enough for SeenRelay to produce net savings.">
 <link rel="canonical" href="${origin}/economics">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay economics — avoid repeated validation cost">
-<meta property="og:description" content="Measure whether CHECK can avoid repeated paid or slow validation.">
+<meta property="og:title" content="SeenRelay economics — prove savings on your workload">
+<meta property="og:description" content="Shadow the real workload first. Count recurrence, authoritative validation cost, stronger native controls and SeenRelay overhead before enabling reuse.">
 <meta property="og:url" content="${origin}/economics">
-<title>SeenRelay — Fleet economics</title>
+<title>SeenRelay — Workload economics</title>
 <link rel="stylesheet" href="/site.css">
 <link rel="stylesheet" href="/legacy-readable.css">
 </head>
 <body>
-<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/">Home</a><a href="/quickstart">Quickstart</a><a href="/clients">Clients</a><a href="/service.json">Machine JSON</a></nav></header>
+<header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/fleet">Product</a><a href="/quickstart">Quickstart</a><a href="/clients">Integrations</a><a href="/trust">Trust</a></nav></header>
 <main>
 <section class="hero">
-<div class="eyebrow">FLEET-LEVEL COST AVOIDANCE</div>
-<h1>Stop paying to revalidate the same fact.</h1>
-<p class="lead"><b>CHECK</b> before repeated paid or slow validation. Reuse qualifying recent evidence when policy allows. Otherwise run the original validation, then <b>OBSERVE</b> the fresh independent result.</p>
-<div class="cta"><a class="primary" href="/quickstart">Add it to a validation path</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Run Shadow Proof</a><a class="secondary" href="/clients">Client options</a></div>
-<div class="contract"><span>SeenRelay API fee</span><b>Currently $0</b><span>Measure first · reuse remains caller policy</span></div>
-</section>
-${verifiedBenchmarkHtml()}
-
-<section class="section decision">
-<div class="section-head"><div><div class="eyebrow">USE IT WHERE THE MATH CAN WIN</div><h2>Use it where validation has real cost.</h2></div><p>SeenRelay is a preflight, not a replacement for every fetch. The protected operation should cost meaningfully more than CHECK and should repeat across runs, workers or agents.</p></div>
-<div class="proof-grid"><article><b>Paid web search</b><span>Search tool calls that are billed per request and repeat the same fact validation.</span></article><article><b>Metered scraping</b><span>Commercial scrape, proxy or fetch credits spent re-reading the same source-backed fact.</span></article><article><b>Browser / extraction</b><span>Headless browser, render or extraction work that can be skipped when policy accepts recent evidence.</span></article><article><b>Multi-step validation</b><span>Fetch → render → parse → model or other chains where one reusable observation can prevent the full downstream path.</span></article></div>
-<div class="trust-note"><b>Outside the target:</b> a cheap one-off GET, a fact that almost never repeats, or a policy that requires authoritative live source confirmation on every call.</div>
-</section>
-
-<section class="section split">
-<div><div class="eyebrow">THE FLEET FORMULA</div><h2>Repeated validation is the opportunity.</h2><p>Let <b>N</b> be protected validations, <b>C</b> the marginal cost of one full validation and <b>r</b> the measured share of calls whose recent matching evidence your policy would actually reuse.</p><p>When the provider charge is purely usage-based and SeenRelay's current API fee is zero, the first-order direct provider-spend model is:</p></div>
-<div class="terminal"><pre>without SeenRelay ≈ N × C
-
-with reusable evidence ≈ N × (1 - r) × C
-
-gross provider spend avoided ≈ N × r × C
-
-Then subtract your own CHECK network/compute overhead
-and any fixed plan minimums.</pre></div>
-</section>
-
-<section class="section decision">
-<div class="section-head"><div><div class="eyebrow">CONCRETE LIST-PRICE ARITHMETIC</div><h2>100,000 repeated validations · 30% measured reusable.</h2></div><p>Illustrative arithmetic using public provider prices checked ${prices.checked_at}. That 30% is an illustration, not a promised hit rate. Shadow Proof must measure your workload first.</p></div>
-<div class="proof-grid"><article><b>OpenAI Web Search</b><span>$${prices.openai_web_search.price_usd_per_1000_calls} / 1,000 calls. Dollar savings remain illustrative until the caller measures its own reuse rate.</span></article><article><b>Firecrawl basic scrape</b><span>${prices.firecrawl.basic_scrape_credits_per_page} credit per page. The measured basic-scrape smoke test avoided provider credits but lost on latency versus Firecrawl's own cache.</span></article><article><b>Firecrawl JSON extraction</b><span>${prices.firecrawl.json_extraction_total_credits_per_page} credits per full extraction. In the measured n=3 smoke benchmark, 3 eligible reuses avoided 15 credits and cut median latency from 1.266 s fresh / 1.040 s provider-cached to 0.618 s.</span></article><article><b>Fixed-tier counterexample</b><span>Firecrawl Standard snapshot: $${prices.firecrawl.standard_plan_usd_per_month_billed_yearly}/month billed yearly for ${prices.firecrawl.standard_plan_credits_per_month.toLocaleString()} credits. Avoided credits lower the invoice only if they change tier, overage or required capacity.</span></article></div>
-<div class="trust-note">Price sources are stored with verification dates in <a href="/product-facts.json">product-facts.json</a>. Provider pricing can change; use your invoice for production decisions. Examples exclude SeenRelay network/compute overhead, taxes, fixed plan minimums and unmeasured conditional-request savings.</div>
+<div class="eyebrow">MEASURED COST AVOIDANCE</div>
+<h1>Prove the savings before you enable reuse.</h1>
+<p class="lead">SeenRelay targets one narrow economic problem: agents repeatedly paying money, latency or constrained capacity to validate the same deterministic read-only state. Shadow mode keeps every authoritative call enabled while you measure whether a cheaper safe path exists.</p>
+<div class="cta"><a class="primary" href="/quickstart">Run the shadow audit</a><a class="secondary" href="/fleet">See the runtime</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Economics Lab</a></div>
+<div class="contract"><span>SeenRelay API fee today</span><b>$0</b><span>Do not enable reuse unless measured net economics are positive</span></div>
 </section>
 
 <section class="section split decision">
-<div><div class="eyebrow">BIND ONCE</div><h2>Bind once. One line per revalidation.</h2><p>The deterministic clients bind SeenRelay around one existing fixed-fact validation. With no reuse policy they are automatically shadow mode: CHECK runs, your original validation still runs, and OBSERVE records the independent result.</p><p>After measurement, adding a caller-approved reuse policy can allow matching recent evidence to suppress the expensive validation.</p></div>
+<div><div class="eyebrow">THE DECISION EQUATION</div><h2>Reuse rate alone is not enough.</h2><p>Let <b>N</b> be protected validations, <b>C</b> the marginal cost of a full authoritative validation, <b>r</b> the measured fraction that policy can safely reuse, and <b>H</b> the per-call overhead of the cheaper path. Count provider spend, latency and constrained capacity only when they matter to the workload.</p></div>
+<div class="terminal"><pre>baseline cost ≈ N × C
+
+reuse-path cost ≈ N × H + N × (1 - r) × C
+
+net avoided cost ≈ N × r × C - N × H
+
+Use SeenRelay only when:
+  measured net avoided cost > integration + operating cost
+  AND outcome equivalence remains acceptable.</pre></div>
+</section>
+
+<section class="section decision">
+<div class="section-head"><div><div class="eyebrow">WHERE THE MATH CAN WIN</div><h2>Protect expensive repeated validation, not cheap requests.</h2></div><p>The best candidate is deterministic, read-only, recurrent and materially more expensive than the validation shortcut. Local, source-native and provider-native mechanisms get credit before SeenRelay.</p></div>
+<div class="proof-grid"><article><b>Browser / portal validation</b><span>Headless sessions, proxy time, rendering or multi-step navigation that repeatedly establishes the same bounded state.</span></article><article><b>Metered extraction</b><span>Commercial scraping, parsing or structured extraction where each repeated validation consumes credits or capacity.</span></article><article><b>Paid search / rate-limited APIs</b><span>Repeated source-backed checks with a real per-call or opportunity cost.</span></article><article><b>Multi-step validation</b><span>Fetch → render → parse → model chains where one safe reusable result can prevent downstream work.</span></article></div>
+<div class="trust-note"><b>Outside the target:</b> cheap one-off requests, mutations, low-repeat workloads, or any path already solved by an equivalent authoritative cache or source-native validator.</div>
+</section>
+
+<section class="section split decision">
+<div><div class="eyebrow">NO NETWORK EFFECT REQUIRED</div><h2>The first savings can stay entirely inside one customer's fleet.</h2><p>The current local-first order is exact in-flight reuse → caller-owned encrypted private L1 → source-native confirmation → optional shared CHECK → original validation. A customer does not need other SeenRelay users before local/private/source-native savings can exist.</p><p>The public relay is an optional evidence layer, not the economic foundation of the first deployment.</p></div>
+<div class="proof-grid"><article><b>Local / in-flight</b><span>Coalesce the same eligible work already happening at once.</span></article><article><b>Private L1</b><span>Reuse caller-owned encrypted state across workers or restarts under explicit freshness policy.</span></article><article><b>Source-native</b><span>Prefer ETag, Last-Modified or a stronger authoritative version mechanism when available.</span></article><article><b>Fallback</b><span>If evidence is insufficient, perform the original validation normally.</span></article></div>
+</section>
+
+<section class="section decision">
+<div class="section-head"><div><div class="eyebrow">CURRENT PUBLIC EVIDENCE</div><h2>The smoke tests prove mechanics, not product-market fit.</h2></div><p>The published Firecrawl tests show that an eligible bounded reuse path can avoid provider work. They are deliberately retained with their caveat: the exact facts tested had cheaper source-native solutions and are therefore poor-fit workloads.</p></div>
+${verifiedBenchmarkHtml()}
+<div class="trust-note"><b>Interpretation:</b> do not use the headline avoided calls or credits as a sales forecast. The commercial test is a customer's natural workload after stronger native controls and SeenRelay overhead are included.</div>
+</section>
+
+<section class="section decision">
+<div class="section-head"><div><div class="eyebrow">ILLUSTRATIVE LIST-PRICE INPUTS</div><h2>Use your invoice, not our example.</h2></div><p>Public provider prices below were checked ${prices.checked_at}. They are inputs for arithmetic, not evidence of your reuse rate.</p></div>
+<div class="proof-grid"><article><b>OpenAI Web Search</b><span>$${prices.openai_web_search.price_usd_per_1000_calls} / 1,000 calls in the stored pricing snapshot. Search-content token effects are separate.</span></article><article><b>Firecrawl basic scrape</b><span>${prices.firecrawl.basic_scrape_credits_per_page} credit per page in the stored snapshot.</span></article><article><b>Firecrawl JSON extraction</b><span>${prices.firecrawl.json_extraction_total_credits_per_page} credits per full extraction in the stored snapshot.</span></article><article><b>Fixed-tier counterexample</b><span>Firecrawl Standard snapshot: $${prices.firecrawl.standard_plan_usd_per_month_billed_yearly}/month billed yearly for ${prices.firecrawl.standard_plan_credits_per_month.toLocaleString()} credits. Avoided usage changes an invoice only when it changes tier, overage or required capacity.</span></article></div>
+<div class="trust-note">Pricing can change and negotiated rates differ. Production economics should use the customer's actual provider bill and observed latency/capacity constraints.</div>
+</section>
+
+<section class="section split decision">
+<div><div class="eyebrow">SHADOW FIRST</div><h2>Measure one validation path before touching policy.</h2><p>The deterministic clients can sit around an existing validation without suppressing it. During the measurement window, the original call remains authoritative and the report records recurrence and prospective economics.</p><p>Only an explicit caller policy can later authorize bounded reuse.</p></div>
 <div class="terminal"><div class="terminal-top"><span></span><span></span><span></span><b>JavaScript / TypeScript</b></div><pre>const validatePrice = relay.protectValidation({
   fact,
   validate: ({ conditionalHeaders }) =&gt;
@@ -65,26 +76,7 @@ and any fixed plan minimums.</pre></div>
 const value = await validatePrice(knownValue);</pre></div>
 </section>
 
-<section class="section split decision">
-<div><div class="eyebrow">PYTHON</div><h2>Same pattern in Python.</h2><p>The Python helper keeps the same semantics and uses only the standard library.</p></div>
-<div class="terminal"><pre>from seenrelay_easy import protect_validation
-
-validate_price = protect_validation(
-    relay,
-    fact=fact,
-    validate=lambda ctx:
-        expensive_validation(ctx.conditional_headers),
-)
-
-value = validate_price(known_value)</pre></div>
-</section>
-
-<section class="section split decision">
-<div><div class="eyebrow">FOR AGENT FLEETS</div><h2>One fresh validation can save the next one.</h2><p>A fleet does not need an external public network to start. The first run validates normally and OBSERVEs. Later runs in the same integration or fleet can CHECK that evidence. External observations expand coverage later.</p><p>The larger the fleet and the more duplicated the validation workload, the larger the aggregate opportunity — provided the measured reuse rate remains above your latency and cost break-even thresholds.</p></div>
-<div class="proof-grid"><article><b>Agent A</b><span>CHECK → UNKNOWN → paid validation → OBSERVE.</span></article><article><b>Agent B</b><span>Same fact soon after → CHECK sees recent matching evidence.</span></article><article><b>Policy accepts</b><span>Skip the paid validation and reuse the already-known value.</span></article><article><b>Policy rejects</b><span>Validate normally. SeenRelay fails open and does not weaken the source policy.</span></article></div>
-</section>
-
-<section class="section final"><div><div class="eyebrow">PROVE IT ON YOUR BILL</div><h2>Measure first. Keep SeenRelay only where it saves more than it costs.</h2></div><div class="cta"><a class="primary" href="/quickstart">Implement the preflight</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Economics Lab</a></div></section>
+<section class="section final"><div><div class="eyebrow">THE COMMERCIAL RULE</div><h2>If the workload does not save more than the layer costs, do not deploy the layer.</h2><p>The first useful outcome of SeenRelay can be a negative one: it prevents a team from adding complexity where native controls or sparse recurrence already make the economics bad.</p></div><div class="cta"><a class="primary" href="/quickstart">Measure a workload</a><a class="secondary" href="/fleet">Product details</a></div></section>
 </main>
 ${siteFooterHtml()}
 </body>
