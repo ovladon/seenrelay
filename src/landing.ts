@@ -18,11 +18,11 @@ function evidenceCards(): string {
       return `<article class="rv-evidence-card">
         <header><div><small>${esc(matrix.surface)}</small><b>${esc(matrix.configuration)}</b></div></header>
         <div class="rv-evidence-metrics">
-          <div><strong>${esc(matrix.provider_calls_avoided)}/${esc(item.samples)}</strong><span>provider calls avoided</span></div>
+          <div><strong>${esc(matrix.provider_calls_avoided)}/${esc(item.samples)}</strong><span>provider calls avoided in this smoke test</span></div>
           <div><strong>${esc(matrix.provider_units_avoided)}</strong><span>${esc(matrix.provider_unit_label)} avoided</span></div>
-          <div><strong>${esc(matrix.baseline_median_ms)} → ${esc(item.reuse_median_ms)} ms</strong><span>baseline → reuse median path latency</span></div>
+          <div><strong>${esc(matrix.baseline_median_ms)} → ${esc(item.reuse_median_ms)} ms</strong><span>measured baseline → reuse path</span></div>
         </div>
-        <footer><span>n=${esc(item.samples)}</span></footer>
+        <footer><span>mechanics evidence · not workload-fit evidence · n=${esc(item.samples)}</span></footer>
       </article>`;
     })
     .join('');
@@ -41,7 +41,7 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Check how efficiently AI agents can revisit your site, or measure repeated expensive validation in your agent fleet. Native fixes first; SeenRelay only where measured evidence justifies it.">
+<meta name="description" content="SeenRelay measures and reduces repeated expensive read-only validation in AI agent fleets while preserving source authority and authoritative fallback.">
 <link rel="canonical" href="${origin}/">
 <link rel="service-desc" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <link rel="service-desc" type="application/json" href="${origin}/openapi.json" title="SeenRelay OpenAPI description">
@@ -52,11 +52,11 @@ export function publicLandingPage(origin: string): string {
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — AI visit readiness and validation reuse">
-<meta property="og:description" content="Start with evidence: check a public site surface or audit a real agent workload. Prefer native controls first and use SeenRelay only when the measured workload earns it.">
+<meta property="og:title" content="SeenRelay — validation reuse for AI agent fleets">
+<meta property="og:description" content="Measure repeated expensive read-only validation first. Reuse only where the measured workload is safe and economic.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
-<title>SeenRelay — AI visit readiness and validation reuse</title>
+<title>SeenRelay — Validation reuse for AI agent fleets</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
@@ -68,200 +68,119 @@ export function publicLandingPage(origin: string): string {
 <header class="rv-nav">
   <a class="rv-brand" href="/" aria-label="SeenRelay home"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
   <nav class="rv-nav-links" aria-label="Primary navigation">
-    <a href="/readiness">Check a site</a>
-    <a href="#audit">Audit a workload</a>
-    <a href="/fleet">Fleet reuse</a>
-    <a href="#tests">Evidence</a>
+    <a href="/fleet">Product</a>
+    <a href="#audit">Measure savings</a>
+    <a href="/economics">Economics</a>
+    <a href="/clients">Integrations</a>
+    <a href="/trust">Trust</a>
     <a href="/quickstart">Docs</a>
   </nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
-    <nav aria-label="Mobile navigation"><a href="/readiness">Check a site</a><a href="#audit">Audit a workload</a><a href="/fleet">Fleet reuse</a><a href="#tests">Evidence</a><a href="/quickstart">Docs</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>
+    <nav aria-label="Mobile navigation"><a href="/fleet">Product</a><a href="#audit">Measure savings</a><a href="/economics">Economics</a><a href="/clients">Integrations</a><a href="/trust">Trust</a><a href="/readiness">Free site tool</a><a href="/quickstart">Docs</a><a href="/service.json">Machine JSON</a></nav>
   </details>
-  <div class="rv-nav-actions">
-    <a class="rv-chip" href="/service.json">For machines</a>
-    <a class="rv-button" href="/readiness">Check AI readiness</a>
-  </div>
+  <div class="rv-nav-actions"><a class="rv-chip" href="/readiness">Free site tool</a><a class="rv-button" href="#audit">Run shadow audit</a></div>
 </header>
 
 <main id="main-content">
 <section class="rv-shell rv-hero rv-hero-factual rv-funnel-hero" id="what">
   <div>
-    <div class="rv-kicker"><i></i><span>AI-READY SURFACES + VALIDATION REUSE · CLIENT ${version}</span></div>
-    <h1>Reduce repeated AI validation without weakening the authoritative source.</h1>
-    <p class="rv-lead">Start with evidence, not installation. If you own a site or API, check whether native HTTP and machine-readable signals already make repeat visits efficient. If you run agents, measure real repeated read-only validation with every authoritative call still enabled. Native controls win whenever they solve the same problem better.</p>
+    <div class="rv-kicker"><i></i><span>VALIDATION REUSE FOR AGENT FLEETS · CLIENT ${version}</span></div>
+    <h1>Stop repaying for the same expensive read-only validation.</h1>
+    <p class="rv-lead">SeenRelay sits around validation work your agents already perform. It measures exact repetition first, keeps stronger local and source-native controls ahead, and can reuse bounded results across workers only when your policy allows it. The original validation remains the authoritative fallback.</p>
     <div class="rv-actions rv-actions-spaced">
-      <a class="rv-button primary" href="/readiness">I own a site or API</a>
-      <a class="rv-button" href="#audit">I run agents or a fleet</a>
-      <a class="rv-button quiet" href="/service.json">Machine entrypoint →</a>
+      <a class="rv-button primary" href="#audit">Measure my workload</a>
+      <a class="rv-button" href="/fleet">See the fleet runtime</a>
+      <a class="rv-button quiet" href="/economics">See the economics →</a>
     </div>
     <div class="rv-proofline" aria-label="Current product facts">
-      <span>free</span>
-      <span>no account</span>
-      <span>no API key</span>
-      <span>native-first</span>
-      <span>authoritative calls stay on</span>
-      <span>no truth verdict</span>
-      <span>npm + PyPI verified</span>
+      <span>free today</span><span>no account</span><span>no API key</span><span>shadow-first</span><span>authoritative calls stay on</span><span>fail open</span><span>npm + PyPI verified</span>
     </div>
   </div>
-
-  <aside class="rv-demo rv-mechanism" aria-label="Evidence-first path">
-    <div class="rv-demo-head"><span>evidence before integration</span><b>three bounded outcomes</b></div>
+  <aside class="rv-demo rv-mechanism" aria-label="SeenRelay runtime order">
+    <div class="rv-demo-head"><span>runtime order</span><b>cheapest safe path first</b></div>
     <div class="rv-flow-list">
-      <div><span>1</span><p><b>Public surface</b><small>Determine whether native HTTP and machine discovery are already sufficient, need a native fix, or require workload evidence.</small></p></div>
-      <div><span>2</span><p><b>Real workload</b><small>Measure recurrence and stronger controls, then return USE, DO NOT USE or INSUFFICIENT EVIDENCE.</small></p></div>
-      <div><span>3</span><p><b>Narrow integration only</b><small>A surface scan never establishes SeenRelay workload fit. Integrate only the measured eligible path; leave everything else unchanged.</small></p></div>
+      <div><span>1</span><p><b>Local / in-flight</b><small>Coalesce exact duplicate work inside the process where policy permits.</small></p></div>
+      <div><span>2</span><p><b>Caller-owned private L1</b><small>Reuse encrypted state across workers or restarts under an explicit freshness policy.</small></p></div>
+      <div><span>3</span><p><b>Source / provider native</b><small>Prefer ETag, Last-Modified or another authoritative mechanism when it answers the same question better.</small></p></div>
+      <div><span>4</span><p><b>Optional shared CHECK → validate</b><small>Shared evidence is optional. Unknown or ineligible work falls through to the original validation.</small></p></div>
     </div>
   </aside>
 </section>
 
-<section class="rv-shell rv-section rv-compact-section" id="paths">
-  <div class="rv-section-head">
-    <div class="rv-eyebrow">CHOOSE YOUR STARTING POINT</div>
-    <h2>Get value before you install anything.</h2>
-    <p>The first question is not “How do I integrate SeenRelay?” It is “What kind of avoidable validation work do I actually have?”</p>
+<section class="rv-shell rv-section rv-compact-section" id="product">
+  <div class="rv-section-head"><div class="rv-eyebrow">ONE PRODUCT</div><h2>SeenRelay is a validation-reuse layer. The audit is how you decide whether to use it.</h2><p>It is not a browser, search engine, truth oracle or general agent memory. It targets repeated, deterministic, expensive, read-only validation. Native controls win whenever they solve the same problem better.</p></div>
+  <div class="rv-grid-3">
+    <article class="rv-card"><span class="rv-number">01</span><h3>Measure</h3><p>Shadow mode watches the validation path while every authoritative call still runs. It finds exact recurrence and the cost surface before any suppression is enabled.</p></article>
+    <article class="rv-card"><span class="rv-number">02</span><h3>Reuse safely</h3><p>Eligible work can use exact local/in-flight reuse, caller-owned private L1 and source-native confirmation before optional shared evidence.</p></article>
+    <article class="rv-card"><span class="rv-number">03</span><h3>Fail open</h3><p>If freshness, identity, policy or infrastructure is insufficient, the application performs the original validation normally.</p></article>
   </div>
-  <div class="rv-path-grid">
-    <article class="rv-path-card primary-path">
-      <span class="rv-number">01</span>
-      <div class="rv-eyebrow">SITE / API OWNER</div>
-      <h3>How efficiently can AI agents revisit your public surface?</h3>
-      <p>Run the free native-first readiness check. It looks for bounded HTTP freshness and machine-facing evidence, recommends native fixes first, and does not label your site a SeenRelay candidate from a surface scan.</p>
-      <div class="rv-actions"><a class="rv-button primary" href="/readiness">Check AI readiness</a></div>
-    </article>
-    <article class="rv-path-card">
-      <span class="rv-number">02</span>
-      <div class="rv-eyebrow">AGENT / FLEET DEVELOPER</div>
-      <h3>Find out where your agent fleet is wasting time or provider spend on repeated validation.</h3>
-      <p>Run a behavior-preserving shadow audit on the workload you already have. Every authoritative validation stays enabled while SeenRelay measures recurrence, stronger native/cache paths, safety equivalence and prospective economics.</p>
-      <div class="rv-actions"><a class="rv-button" href="#audit">Run the free shadow audit</a></div>
-    </article>
-  </div>
-  <p class="rv-path-bridge"><b>The handoff is conditional.</b> If the site audit says native HTTP already solves the problem, stop there. If expensive repeated validation remains elsewhere in the agent workload, measure that workload next.</p>
 </section>
 
 <section class="rv-shell rv-section" id="audit">
   <div class="rv-section-head">
     <div class="rv-eyebrow">FREE SHADOW AUDIT</div>
-    <h2>Run your real workload. Measure repeated validation without changing behavior.</h2>
-    <p>No signup and no synthetic hit-rate promise. Start with measurement; every original call remains authoritative. A negative result is useful because it tells you not to add another layer.</p>
+    <h2>Find out where your agent fleet is wasting time or provider spend on repeated validation.</h2>
+    <p>Run the free shadow audit on the workload you already have. Every original call remains authoritative. The report must return <b>USE · DO NOT USE · INSUFFICIENT EVIDENCE</b> rather than forcing an integration.</p>
   </div>
-
   <div class="rv-flow-list" aria-label="Shadow audit sequence">
     <div><span>1</span><p><b>Run normally</b><small>Keep the workload and every authoritative validation unchanged.</small></p></div>
-    <div><span>2</span><p><b>Measure what repeats</b><small>Identify deterministic read-only validation that recurs often enough to matter.</small></p></div>
-    <div><span>3</span><p><b>Check safety</b><small>Compare outcomes and stronger local, source-native and provider-native controls before giving SeenRelay credit.</small></p></div>
-    <div><span>4</span><p><b>Get a verdict</b><small>Return USE, DO NOT USE or INSUFFICIENT EVIDENCE for the measured workload.</small></p></div>
+    <div><span>2</span><p><b>Measure recurrence</b><small>Identify deterministic read-only work that repeats enough to matter.</small></p></div>
+    <div><span>3</span><p><b>Price the waste</b><small>Compare full validation cost and latency with stronger local/source/provider-native controls and SeenRelay overhead.</small></p></div>
+    <div><span>4</span><p><b>Promote narrowly</b><small>Enable reuse only on workloads that preserve outcomes and show positive economics.</small></p></div>
   </div>
-
   <div class="rv-adopt">
     <div class="rv-mode-card">
-      <div class="rv-segment" role="tablist" aria-label="Audit installation mode">
-        <button type="button" role="tab" aria-selected="true" data-mode-button="human">Developer</button>
-        <button type="button" role="tab" aria-selected="false" data-mode-button="agent">Coding agent</button>
-      </div>
-      <div class="rv-mode-copy">
-        <h3>Measure first. Optimize only the workload that earns it.</h3>
-        <p>The audit looks for repeated deterministic read-only work and compares SeenRelay with the strongest equivalent native path before recommending reuse.</p>
-        <div class="rv-mode-note">Shared CHECK is optional. Caller-owned local/private reuse and source/provider-native controls stay ahead whenever they are stronger or cheaper.</div>
-      </div>
+      <div class="rv-segment" role="tablist" aria-label="Audit installation mode"><button type="button" role="tab" aria-selected="true" data-mode-button="human">Developer</button><button type="button" role="tab" aria-selected="false" data-mode-button="agent">Coding agent</button></div>
+      <div class="rv-mode-copy"><h3>Install measurement, not faith.</h3><p>The first deployment does not suppress the authoritative operation. Shared CHECK is optional and caller-owned local/private or source-native controls stay ahead whenever they are stronger or cheaper.</p></div>
     </div>
-
     <div class="rv-console" aria-live="polite">
       <div class="rv-console-top"><span class="rv-dots"><i></i><i></i><i></i></span><span>free shadow audit</span></div>
       <div class="rv-install-view active" data-install-view="human">
         <div class="rv-step"><span>1</span><div><h4>Install</h4><div class="rv-code"><pre id="npm-install">${npmCommand}</pre><button class="rv-copy" type="button" data-copy-target="npm-install">Copy</button></div><div class="rv-code"><pre id="pip-install">${pipCommand}</pre><button class="rv-copy" type="button" data-copy-target="pip-install">Copy</button></div></div></div>
-        <div class="rv-step"><span>2</span><div><h4>Start with a supported shadow adapter</h4><div class="rv-code"><pre id="ambient-example">import { ambientMcpClient } from 'seenrelay/ambient';
-
-const client = ambientMcpClient(rawMcpClient);
-// run the existing workload normally
-console.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
-        <div class="rv-step"><span>3</span><div><h4>Review the report before enabling anything</h4><p>Measure recurrence and best-native controls. For full safety/economics evidence, use Shadow Proof / the hostile evaluator documented in the client package.</p></div></div></div>
+        <div class="rv-step"><span>2</span><div><h4>Wrap one existing MCP-style client</h4><div class="rv-code"><pre id="ambient-example">import { ambientMcpClient } from 'seenrelay/ambient';\n\nconst client = ambientMcpClient(rawMcpClient);\n// run the existing workload normally\nconsole.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
+        <div class="rv-step"><span>3</span><div><h4>Promote only a measured winner</h4><p>Use Shadow Proof / the hostile economics evaluator before enabling bounded reuse.</p></div></div></div>
       </div>
       <div class="rv-install-view" data-install-view="agent" id="agent-audit">
         <div class="rv-step"><span>1</span><div><h4>Install the SeenRelay Agent Skill</h4><div class="rv-code"><pre id="skill-install">${esc(skillCommand)}</pre><button class="rv-copy" type="button" data-copy-target="skill-install">Copy</button></div></div></div>
         <div class="rv-step"><span>2</span><div><h4>Give it to your coding agent</h4><div class="rv-code"><pre id="agent-prompt">${esc(auditPrompt)}</pre><button class="rv-copy" type="button" data-copy-target="agent-prompt">Copy</button></div></div></div>
-        <div class="rv-step"><span>3</span><div><h4>Accept a negative verdict</h4><p>The skill must leave unsupported paths unchanged and should return DO NOT USE when native controls or sparse recurrence make SeenRelay uneconomic.</p></div></div></div>
+        <div class="rv-step"><span>3</span><div><h4>Keep only measured value</h4><p>The skill must leave unsupported paths unchanged and should return DO NOT USE when native controls or sparse recurrence make SeenRelay uneconomic.</p></div></div></div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="rv-shell rv-section rv-compact-section" id="report">
-  <div class="rv-section-head">
-    <div class="rv-eyebrow">WHAT YOU GET</div>
-    <h2>A decision report, not a sales claim.</h2>
-    <p>The useful output is not “SeenRelay installed.” It is evidence about one exact workload under the semantics you actually need.</p>
-    <p><b>Verdict vocabulary:</b> USE · DO NOT USE · INSUFFICIENT EVIDENCE.</p>
-  </div>
-  <div class="rv-grid-3">
-    <article class="rv-card"><span class="rv-number">01</span><h3>Waste map</h3><p>Protected-call count, exact recurrence and the expensive work being repeated across the measured workload.</p></article>
-    <article class="rv-card"><span class="rv-number">02</span><h3>Native-control comparison</h3><p>In-flight/local reuse, caller-owned state, source-native validators and provider caches are measured before SeenRelay gets credit.</p></article>
-    <article class="rv-card"><span class="rv-number">03</span><h3>Fit verdict</h3><p>USE only with outcome equivalence and positive economics. Otherwise DO NOT USE or INSUFFICIENT EVIDENCE.</p></article>
-  </div>
-</section>
-
-<section class="rv-shell rv-section">
-  <div class="rv-section-head">
-    <div class="rv-eyebrow">ONLY AFTER A POSITIVE AUDIT</div>
-    <h2>Use the narrowest cheaper path that preserves the same outcome.</h2>
-    <p>Validation reuse for agent fleets can remain entirely caller-owned. The public relay is optional and does not need network coverage for local/private value to exist.</p>
-  </div>
-  <div class="rv-contract">
-    <div class="rv-contract-main">
-      <div class="rv-eyebrow">CURRENT PRODUCT PATH</div>
-      <h3>In-flight/local → caller-owned private L1 → source native → provider native → optional shared CHECK → validate.</h3>
-      <p>Caller-owned private L1 can share sealed state across workers or restarts. Store/codec/relay failures fail open to the application's normal validation path. The original validation remains the fallback whenever reuse is not justified.</p>
-    </div>
-    <div class="rv-contract-list">
-      <article><b>Caller-owned private L1</b><span>Encrypted private fleet reuse can create value without exposing private results to the public relay.</span></article>
-      <article><b>Explicit freshness</b><span>A completed result suppresses source validation only under an explicit caller policy.</span></article>
-      <article><b>Authoritative fallback</b><span>Unknown, stale, contested or ineligible work runs the original validation normally.</span></article>
-    </div>
-  </div>
-  <div class="rv-actions rv-actions-spaced"><a class="rv-button primary" href="/fleet">Open fleet deployment</a><a class="rv-button quiet" href="/data-practices">Data practices →</a></div>
-</section>
-
 <section class="rv-shell rv-section" id="tests">
-  <div class="rv-section-head">
-    <div class="rv-eyebrow">MEASURED MECHANICS</div>
-    <h2>What SeenRelay has demonstrated — and what it has not.</h2>
-    <p>These are first-party smoke tests, not a universal ROI claim. Workload fit still has to be measured on your real traffic.</p>
-  </div>
+  <div class="rv-section-head"><div class="rv-eyebrow">MECHANICS EVIDENCE — NOT SALES PROOF</div><h2>The current public smoke tests show that work can be skipped. They do not prove that those specific workloads should buy SeenRelay.</h2><p>All current Firecrawl examples are intentionally retained as first-party mechanics evidence. Their tested facts had cheaper source-native paths, so they are poor-fit workloads. This is not a universal ROI claim.</p></div>
   <div class="rv-evidence-cards" aria-label="SeenRelay benchmark results">${evidenceCards()}</div>
   <div class="rv-evidence-interpretation">
-    <article><b>Established</b><p>Bounded reuse can bypass equivalent provider work and reduce provider-unit consumption in the measured mechanics.</p></article>
-    <article><b>Not established</b><p>These tests do not establish a universal hit rate, guaranteed savings, or that SeenRelay should beat a cheaper authoritative/source-native mechanism.</p></article>
-    <article><b>Your workload decides</b><p>Run Shadow Proof while every authoritative validation still runs; measure native controls and prospective economics before admission.</p><a href="https://github.com/ovladon/seenrelay/blob/main/docs/SHADOW_AUDIT.md">Open the free audit guide →</a></article>
+    <article><b>Established</b><p>Bounded reuse can bypass equivalent provider work and can reduce provider units and latency in some measured paths.</p></article>
+    <article><b>Not established</b><p>These smoke tests do not establish a universal hit rate, guaranteed savings, or product-market fit.</p></article>
+    <article><b>Commercial proof</b><p>Your workload must show safe recurrence and positive net economics after stronger native controls and SeenRelay overhead are counted.</p><a href="/economics">See the economic test →</a></article>
   </div>
-  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/economics">Full benchmark details and caveats</a><a class="rv-button quiet" href="/product-facts.json">Machine-readable evidence →</a></div>
+</section>
+
+<section class="rv-shell rv-section rv-compact-section" id="resources">
+  <div class="rv-section-head"><div class="rv-eyebrow">FREE DIAGNOSTIC TOOL</div><h2>Own a site or API instead of an agent fleet?</h2><p>The AI Visit Efficiency checker is a separate free diagnostic. It inspects one bounded root response and recommends native HTTP fixes first. A surface scan never establishes SeenRelay workload fit.</p></div>
+  <div class="rv-path-grid">
+    <article class="rv-path-card"><span class="rv-number">A</span><div class="rv-eyebrow">I own a site or API</div><h3>Check the public HTTP surface.</h3><p>Use the free readiness tool for Cache-Control, validators and machine-facing evidence. It is not the SeenRelay runtime product.</p><div class="rv-actions"><a class="rv-button" href="/readiness">Open free site tool</a></div></article>
+    <article class="rv-path-card primary-path"><span class="rv-number">B</span><div class="rv-eyebrow">I run agents or a fleet</div><h3>Measure repeated expensive validation.</h3><p>This is the product path: audit the real workload, prove economics, then promote only eligible read-only validation.</p><div class="rv-actions"><a class="rv-button primary" href="#audit">Run the free shadow audit</a></div></article>
+  </div>
 </section>
 
 <section class="rv-shell rv-section">
-  <div class="rv-section-head">
-    <div class="rv-eyebrow">BOUNDARY</div>
-    <h2>SeenRelay is not a browser, truth oracle or generic cache.</h2>
-    <p>CHECK and OBSERVE remain the only hosted domain operations. CHECK asks about compatible recent evidence; OBSERVE contributes a freshly and independently obtained observation. SeenRelay does not independently browse or decide truth.</p>
+  <div class="rv-section-head"><div class="rv-eyebrow">BOUNDARY</div><h2>Validation reuse for agent fleets — not a replacement for the source.</h2><p>Hosted SeenRelay still exposes exactly CHECK and OBSERVE. It does not independently browse or decide truth. Caller-owned private L1 can create fleet value without public network coverage, and the original validation remains the fallback.</p></div>
+  <div class="rv-contract-list">
+    <article><b>Source authority preserved</b><span>Unknown, stale, contested or ineligible work runs the authoritative path.</span></article>
+    <article><b>Native-first</b><span>ETag, Last-Modified, provider caches and equivalent authoritative controls beat SeenRelay whenever they solve the same problem better.</span></article>
+    <article><b>Optional network</b><span>Shared CHECK can add evidence where permitted, but the product does not require external network coverage to start.</span></article>
   </div>
-  <div class="rv-contract">
-    <div class="rv-contract-main">
-      <div class="rv-eyebrow">WHEN IT FITS</div>
-      <h3>Repeated, deterministic, expensive read-only validation.</h3>
-      <p>Strong candidates include browser/portal validation, metered scraping/extraction, model-assisted parsing, paid search, rate-limited APIs and multi-step validation chains. Cheap one-off or mutating operations are poor fits.</p>
-    </div>
-    <div class="rv-contract-list">
-      <article><b>Source authority is preserved</b><span>The original validation remains the fallback whenever reuse is not justified.</span></article>
-      <article><b>Stronger native controls win</b><span>SeenRelay should stay out when an equivalent native path is cheaper or stronger.</span></article>
-      <article><b>Machine-readable integration</b><span>OpenAPI, MCP, service JSON, llms.txt, Agent Skill discovery and client integration catalogs expose supported surfaces.</span></article>
-    </div>
-  </div>
-  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/trust">Trust model</a><a class="rv-button" href="/quickstart">Quickstart</a><a class="rv-button quiet" href="https://github.com/ovladon/seenrelay">GitHub →</a></div>
+  <div class="rv-actions rv-actions-spaced"><a class="rv-button primary" href="/fleet">Product details</a><a class="rv-button" href="/clients">Integrations</a><a class="rv-button" href="/trust">Trust model</a></div>
 </section>
 
 <section class="rv-shell rv-final">
-  <div><div class="rv-eyebrow">START WITH EVIDENCE</div><h2>Check the surface or measure the workload — then stop if the evidence says stop.</h2><p>For sites, prefer native fixes first. For agent workloads, keep every original call. If the report shows material safe recurrence and positive economics, promote only that path. If it does not, leave it alone.</p></div>
-  <div class="rv-actions"><a class="rv-button primary" href="/readiness">Check a site</a><a class="rv-button" href="#audit">Run free audit</a></div>
+  <div><div class="rv-eyebrow">START WITH YOUR OWN COST</div><h2>Measure one expensive repeated validation. Keep SeenRelay only if the math wins.</h2><p>No network effect is required for the first value: exact local/in-flight reuse, caller-owned private L1 and source-native confirmation can already sit ahead of the original validation.</p></div>
+  <div class="rv-actions"><a class="rv-button primary" href="#audit">Measure my workload</a><a class="rv-button" href="/economics">See economics</a></div>
 </section>
 </main>
 ${siteFooterHtml()}
