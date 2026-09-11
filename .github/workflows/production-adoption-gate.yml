@@ -84,7 +84,8 @@ jobs:
           cd "$TMP/work"
           npm init -y >/dev/null
 
-          HOME="$TMP/home" npx -y skills@latest add https://seenrelay.com --skill seenrelay --yes
+          export npm_config_yes=true
+          HOME="$TMP/home" npx skills add https://seenrelay.com --skill seenrelay --yes
 
           INSTALLED="$(find "$TMP" -type f -path '*/seenrelay/SKILL.md' -print -quit)"
           if [ -z "$INSTALLED" ]; then
