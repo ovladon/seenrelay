@@ -24,8 +24,6 @@ Or use the developer paths below. Full audit method: [`docs/SHADOW_AUDIT.md`](do
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
 **Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.13 · currently free · no account/API key.
-
-**Measured first-party smoke result:** Firecrawl JSON extraction, n=3: 3/3 eligible provider calls avoided, 15 credits avoided, median 1265.68 ms fresh / 1039.5 ms provider-cached → 617.78 ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
 ## Free shadow audit: measure without changing application behavior
@@ -85,7 +83,7 @@ Access is **currently free** and requires no account or API key.
 - Coding-agent install: `npx skills add https://seenrelay.com --skill seenrelay --yes`
 - Public install: `npm install seenrelay` or `pip install seenrelay`
 - JavaScript / TypeScript Zero-State: [`clients/typescript/README.md`](clients/typescript/README.md)
-- Fleet economics and measured examples: `https://seenrelay.com/economics`
+- Fleet economics: `https://seenrelay.com/economics`
 - Client overview: [`clients/README.md`](clients/README.md)
 - Integration choices and MCP setup: [`docs/CLIENTS.md`](docs/CLIENTS.md)
 - Quickstart: [`docs/QUICKSTART.md`](docs/QUICKSTART.md)
