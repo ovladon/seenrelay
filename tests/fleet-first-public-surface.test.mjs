@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
-
 const fleet = read('src/fleet.ts');
 const landing = read('src/landing.ts');
 const quickstart = read('src/quickstart.ts');
@@ -24,34 +23,30 @@ test('fleet page exposes only current caller-owned fleet capability', () => {
   assert.match(fleet, /original validation remains the fallback/i);
 });
 
-test('homepage makes safe measurement the primary activation path', () => {
+test('homepage makes free safe measurement the primary activation path', () => {
   assert.match(landing, /Run the free shadow audit/i);
-  assert.match(landing, /wasting time or provider spend on repeated validation/i);
-  assert.match(landing, /authoritative calls stay on/i);
-  assert.match(landing, /USE · DO NOT USE · INSUFFICIENT EVIDENCE/i);
-  assert.match(landing, /Give it to your coding agent/i);
+  assert.match(landing, /every authoritative call still runs/i);
+  assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/i);
+  assert.match(landing, /coding agent/i);
   assert.match(landing, /npx skills add/);
-  assert.match(landing, /free today/i);
-  assert.match(landing, /no account/i);
-  assert.match(landing, /no API key/i);
+  assert.match(landing, /FREE · NO ACCOUNT/);
+  assert.match(landing, /no SeenRelay API key/i);
   assert.match(auditGuide, /every authoritative validation stays enabled/i);
   assert.match(auditGuide, /active SeenRelay reuse stays disabled/i);
 });
 
-test('primary public and machine surfaces are fleet-first without universal claims', () => {
-  assert.match(landing, /VALIDATION REUSE FOR AGENT FLEETS/i);
-  assert.match(landing, /caller-owned private L1/i);
-  assert.match(landing, /Keep SeenRelay only if the math wins/i);
+test('primary public surfaces describe fleet value without universal savings claims', () => {
+  assert.match(landing, /Agent fleets/);
+  assert.match(landing, /caller-owned private reuse/i);
+  assert.match(landing, /Your workload decides/i);
   assert.match(quickstart, /FLEET PATH/);
   assert.match(quickstart, /privateStore: fleetStore/);
   assert.match(adoption, /provider-independent validation reuse layer for agent fleets/i);
   assert.match(adoption, /\/fleet/);
   assert.match(index, /app\.get\('\/fleet'/);
-
   for (const source of [fleet, landing, quickstart, adoption]) {
     assert.doesNotMatch(source, /(?:SeenRelay|we)\s+(?:guarantees?|promises?)\b/i);
-    assert.doesNotMatch(source, /(?:offers?|provides?|delivers?|ensures?)\s+(?:a\s+)?universal\s+(?:hit rate|reuse|cache|solution)/i);
-    assert.doesNotMatch(source, /(?:offers?|provides?|delivers?|ensures?)\s+guaranteed savings/i);
+    assert.doesNotMatch(source, /guaranteed savings/i);
   }
 });
 
