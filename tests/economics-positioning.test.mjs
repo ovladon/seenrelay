@@ -30,25 +30,18 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.equal(facts.pricing_snapshots.checked_at, '2026-08-26');
   assert.equal(facts.pricing_snapshots.firecrawl.basic_scrape_credits_per_page, 1);
   assert.equal(facts.pricing_snapshots.firecrawl.json_extraction_total_credits_per_page, 5);
-  const jsonBenchmark = facts.verified_benchmarks.find((b) => b.id === 'firecrawl-json-extraction-2026-08-26');
-  assert.ok(jsonBenchmark);
-  assert.equal(jsonBenchmark.provider_credits_avoided, 15);
-  assert.equal(jsonBenchmark.reuse_provider_calls, 0);
-  assert.equal(jsonBenchmark.samples, 3);
-  const browserBenchmark = facts.verified_benchmarks.find((b) => b.id === 'firecrawl-browser-interaction-2026-08-26');
-  assert.ok(browserBenchmark);
-  assert.equal(browserBenchmark.provider_calls_avoided, 3);
-  assert.equal(browserBenchmark.provider_credits_avoided, 9);
-  assert.equal(browserBenchmark.reuse_provider_calls, 0);
-  assert.equal(browserBenchmark.samples, 3);
-  assert.equal(browserBenchmark.matrix.series_key, 'firecrawl-browser-interaction-code-v1');
-  assert.equal(jsonBenchmark.matrix.fit, 'poor');
-  assert.equal(browserBenchmark.matrix.fit, 'poor');
-  assert.equal(browserBenchmark.matrix.cost_outcome, 'better');
-  assert.equal(browserBenchmark.matrix.latency_outcome, 'better');
+  assert.ok(facts.verified_benchmarks.length >= 1, 'historical benchmark evidence remains available for technical verification');
 
-  assert.match(economics, /publicProductFacts\.pricing_snapshots/);
-  assert.match(economics, /verifiedBenchmarkHtml\(\)/);
+  assert.match(economics, /Prove the savings on your workload before you enable reuse/);
+  assert.match(economics, /Free until utility is demonstrated/);
+  assert.match(economics, /NO NETWORK EFFECT REQUIRED/);
+  assert.match(economics, /Use your invoice, not a public benchmark/);
+  assert.match(economics, /Provider spend/);
+  assert.match(economics, /Operational overhead/);
+  assert.match(economics, /Outside the target:/);
+  assert.doesNotMatch(economics, /verifiedBenchmarkHtml\(|MEASURED · FIRST-PARTY SMOKE BENCHMARK|Firecrawl|OpenAI Web Search|provider calls avoided/i);
+  assert.doesNotMatch(landing, /verified_benchmarks|provider calls avoided|first-party smoke|Firecrawl/i);
+
   assert.match(publicView, /Provider-path smoke: SeenRelay skipped Firecrawl work/);
   assert.match(publicView, /Path ordering matters/);
   assert.match(publicView, /VERIFIED WORKLOAD MATRIX/);
@@ -60,10 +53,6 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.doesNotMatch(publicView, /so new verified configurations can appear without hand-editing this page/);
   assert.doesNotMatch(publicView, /firecrawl-browser-interaction-2026-08-26/);
   assert.doesNotMatch(economics + publicSource + adoption + integrations, /Firecrawl Pay As You Go/);
-  assert.match(economics, /Fixed-tier counterexample/);
-  assert.match(economics, /Outside the target:/);
-  assert.doesNotMatch(landing, /fit:\s*\$\{esc\(fit\)\}/);
-  assert.doesNotMatch(publicView, /fit-badge|<th>Fit<\/th>|poor workload fit/);
 
   assert.match(quickstart, /seenrelay\/mcp-auto/);
   assert.match(quickstart, /local-first bind-once path/i);

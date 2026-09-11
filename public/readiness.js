@@ -58,7 +58,7 @@
       handoff.appendChild(textElement('span', 'readiness-status info', 'MEASURE NEXT'));
       copy.appendChild(textElement('b', '', 'A surface scan cannot decide SeenRelay workload fit.'));
       copy.appendChild(textElement('p', '', 'If agents repeatedly perform expensive read-only validation after equivalent native controls are tested, measure that real workload next with every authoritative call still enabled.'));
-      action.href = '/#audit';
+      action.href = '/#start';
       action.textContent = 'Audit a real workload';
     }
 

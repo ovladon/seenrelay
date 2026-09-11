@@ -6,13 +6,14 @@ const landing = fs.readFileSync(new URL('../src/landing.ts', import.meta.url), '
 const readinessClient = fs.readFileSync(new URL('../public/readiness.js', import.meta.url), 'utf8');
 const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.url), 'utf8');
 
-test('homepage routes site owners and agent builders to distinct evidence-first starts', () => {
-  assert.match(landing, /I own a site or API/);
-  assert.match(landing, /I run agents or a fleet/);
+test('homepage keeps the runtime primary while routing site owners to the separate diagnostic tool', () => {
+  assert.match(landing, /Run the free shadow audit/);
+  assert.match(landing, /The easiest path is to give SeenRelay to your coding agent/);
+  assert.match(landing, /SEPARATE FREE TOOL/);
+  assert.match(landing, /Own a site or API\?/);
   assert.match(landing, /href="\/readiness"/);
-  assert.match(landing, /href="#audit"/);
-  assert.match(landing, /A surface scan never establishes SeenRelay workload fit/i);
-  assert.match(landing, /Native controls win whenever they solve the same problem better/i);
+  assert.match(landing, /href="#start"/);
+  assert.match(landing, /It is separate from the SeenRelay runtime product/i);
 });
 
 test('readiness result handoff is conditional rather than a universal SeenRelay CTA', () => {
@@ -21,7 +22,7 @@ test('readiness result handoff is conditional rather than a universal SeenRelay 
   assert.match(readinessClient, /This surface result is not a SeenRelay recommendation/);
   assert.match(readinessClient, /do not add SeenRelay just because this quick audit found a gap/i);
   assert.match(readinessClient, /A surface scan cannot decide SeenRelay workload fit/);
-  assert.match(readinessClient, /action\.href = '\/#audit'/);
+  assert.match(readinessClient, /action\.href = '\/#start'/);
 });
 
 test('intent router is responsive without adding a UI dependency', () => {

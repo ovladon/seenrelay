@@ -56,12 +56,7 @@ function replaceOrInsert(text, name, body, anchor) {
   return text.slice(0, insertion) + `\n\n${block}` + text.slice(insertion);
 }
 function renderInstallSummary(facts) {
-  const b = facts.verified_benchmarks.find((x) => x.id === 'firecrawl-json-extraction-2026-08-26');
-  return [
-    `**Install:** \`${facts.install.npm_command}\` · \`${facts.install.pypi_command}\` · client v${facts.install.client_version} · currently free · no account/API key.`,
-    '',
-    `**Measured first-party smoke result:** Firecrawl JSON extraction, n=${b.samples}: ${b.provider_calls_avoided}/${b.samples} eligible provider calls avoided, ${b.provider_credits_avoided} credits avoided, median ${b.fresh_baseline_median_ms} ms fresh / ${b.provider_cached_baseline_median_ms} ms provider-cached → ${b.reuse_median_ms} ms SeenRelay bounded reuse. This is a small first-party benchmark, not a promised reuse rate.`,
-  ].join('\n');
+  return `**Install:** \`${facts.install.npm_command}\` · \`${facts.install.pypi_command}\` · client v${facts.install.client_version} · currently free · no account/API key.`;
 }
 function renderQuickstartSummary(facts) {
   return [
@@ -84,7 +79,7 @@ function renderVerifiedResults(facts) {
     if (!m) fail(`Benchmark ${b.id} is missing normalized matrix evidence`);
     return `| ${m.surface} · ${m.configuration} | ${m.evidence_level}, n=${b.samples} | ${m.fit} | ${m.cost_outcome} | ${m.latency_outcome} | ${m.provider_calls_avoided}/${b.samples} calls; ${m.provider_units_avoided} ${m.provider_unit_label} | ${m.baseline_median_ms} ms | ${b.reuse_median_ms} ms | ${b.freshness_window_seconds}s |`;
   }).join('\n');
-  return `# Verified results\n\nGenerated from public/product-facts.json. Do not edit measured claims here by hand.\n\n| Surface / configuration | Evidence | Fit | Cost | Latency | Provider work avoided | Baseline median | SeenRelay reuse median | Caller freshness window |\n| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: |\n${rows}\n\n## Interpretation\n\nRows are verification-gated measurements, not universal performance promises. A caller must measure its own workload in shadow mode and set its own freshness/reuse policy. The website shows the latest verified result per configuration while this document retains the published benchmark records.\n\nEvidence:\n${facts.verified_benchmarks.map((b) => `- ${b.id}: ${b.evidence_url} (${b.artifact_digest})\n  - ${b.caveat}`).join('\n')}\n`;
+  return `# Verified results\n\nGenerated from public/product-facts.json. Do not edit measured claims here by hand.\n\n| Surface / configuration | Evidence | Fit | Cost | Latency | Provider work avoided | Baseline median | SeenRelay reuse median | Caller freshness window |\n| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: |\n${rows}\n\n## Interpretation\n\nRows are verification-gated measurements, not universal performance promises. A caller must measure its own workload in shadow mode and set its own freshness/reuse policy. The website does not promote these benchmark records; this document retains them for technical verification.\n\nEvidence:\n${facts.verified_benchmarks.map((b) => `- ${b.id}: ${b.evidence_url} (${b.artifact_digest})\n  - ${b.caveat}`).join('\n')}\n`;
 }
 const sourceFacts = readJson('public/product-facts.json');
 const releaseVersion = read('clients/RELEASE_VERSION').trim();

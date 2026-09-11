@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root=path.join(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=(...p)=>fs.readFileSync(path.join(root,...p),'utf8');
 const facts=JSON.parse(read('public','product-facts.json'));
-test('canonical public facts drive install and measured-result surfaces',()=>{
+test('canonical public facts drive install surfaces while historical benchmarks stay technical',()=>{
   assert.equal(facts.install.npm_command,'npm install seenrelay');
   assert.equal(facts.install.pypi_command,'pip install seenrelay');
   assert.ok(facts.verified_benchmarks.some(b=>b.id==='firecrawl-json-extraction-2026-08-26'));
@@ -14,8 +14,10 @@ test('canonical public facts drive install and measured-result surfaces',()=>{
   for(const file of ['README.md','clients/README.md','docs/QUICKSTART.md']){
     const t=read(...file.split('/')); assert.match(t,/BEGIN GENERATED:/); assert.match(t,/npm install seenrelay/); assert.match(t,/pip install seenrelay/);
   }
+  assert.doesNotMatch(read('README.md'),/Measured first-party smoke result/);
+  assert.doesNotMatch(read('clients','README.md'),/Measured first-party smoke result/);
 });
-test('runtime consumes canonical facts and exposes machine facts',()=>{
+test('runtime consumes canonical facts and sales pages avoid benchmark promotion',()=>{
   const pub=read('src','public.ts'), ad=read('src','adoption.ts'), q=read('src','quickstart.ts'), landing=read('src','landing.ts'), integrations=read('src','integrations.ts'), e=read('src','economics.ts'), i=read('src','index.ts');
   assert.match(pub,/publicInstallHtml\(\)/); assert.match(pub,/verifiedBenchmarkHtml\(\)/); assert.match(pub,/verifiedWorkloadMapHtml\(\)/); assert.match(pub,/latestVerifiedHtml\(\)/);
   assert.match(ad,/machinePublicFactsText\(origin\)/);
@@ -23,7 +25,8 @@ test('runtime consumes canonical facts and exposes machine facts',()=>{
   assert.match(landing,/f\.install\.npm_command/); assert.match(landing,/f\.install\.pypi_command/);
   assert.match(integrations,/publicProductFacts\.install\.client_version/);
   assert.match(q,/siteFooterHtml\(\)/); assert.match(integrations,/siteFooterHtml\(\)/);
-  assert.match(e,/verifiedBenchmarkHtml\(\)/); assert.match(i,/\/product-facts\.json/);
+  assert.match(e,/Use your invoice, not a public benchmark/); assert.match(e,/Provider spend/); assert.doesNotMatch(e,/verifiedBenchmarkHtml\(|pricing_snapshots/); assert.match(i,/\/product-facts\.json/);
+  assert.doesNotMatch(landing+e,/first-party smoke|provider calls avoided|Firecrawl|OpenAI Web Search/i);
   assert.doesNotMatch(pub+ad+q+landing+integrations+e,/Firecrawl Pay As You Go/);
 });
 test('CI and daily monitor fail on drift or stale pricing',()=>{
