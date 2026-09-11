@@ -82,6 +82,14 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /billing_enabled == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
   assert.match(gate, /seenrelay==\$VERSION/);
+  for (const homepageAsset of ['public/revamp.js', 'public/revamp.css', 'public/revamp-factual.css', 'public/sota.css', 'public/funnel.css']) {
+    assert.match(gate, new RegExp(homepageAsset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(gate, /rv-console rv-funnel-console/);
+  assert.match(gate, /rv-console-body/);
+  assert.match(gate, /developer-audit/);
+  assert.match(gate, /Integrate directly with the client\./);
+  assert.match(gate, /Install the npm or PyPI client/);
 
   assert.match(radarWorkflow, /schedule:/);
   assert.match(radarWorkflow, /issues: write/);
