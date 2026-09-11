@@ -11,7 +11,7 @@ npm install seenrelay
 pip install seenrelay
 ```
 
-Client v0.2.13 was clean-install verified from both public registries on 2026-09-08. JavaScript/TypeScript and Python 0.2.13 support provider-independent local-first Zero-State. Reuse remains caller policy.
+Client v0.2.14 was clean-install verified from both public registries on 2026-09-11. JavaScript/TypeScript and Python 0.2.14 support provider-independent local-first Zero-State. Reuse remains caller policy.
 <!-- END GENERATED:PUBLIC-INSTALL -->
 
 SeenRelay reduces redundant source-backed validation while preserving the application's existing validation policy. It still has exactly two domain operations: **CHECK** and **OBSERVE**.
