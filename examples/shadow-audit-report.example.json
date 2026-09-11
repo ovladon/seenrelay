@@ -1,0 +1,76 @@
+{
+  "schema_version": "seenrelay-shadow-audit-v1",
+  "generated_at": "2026-09-11T00:00:00Z",
+  "mode": "shadow",
+  "verdict": "DO NOT USE",
+  "summary": "The workload repeats, but an equivalent source-native validator wins on cost and authority, so SeenRelay should stay out of this path.",
+  "workloads": [
+    {
+      "workload_id": "catalog-metadata-check",
+      "operation": "read-only metadata validation",
+      "read_only": true,
+      "protected_call_count": 120,
+      "exact_repeat_count": 71,
+      "native_controls": [
+        {
+          "kind": "source_native",
+          "available": true,
+          "measured": true,
+          "hits": 68,
+          "equivalent_semantics": true,
+          "winner": true
+        }
+      ],
+      "shared_check": {
+        "measured": false,
+        "checks": 0,
+        "same_observed": 0,
+        "unknown": 0,
+        "other": 0
+      },
+      "equivalence": {
+        "compared": 68,
+        "mismatches": 0
+      },
+      "baseline": {
+        "median_latency_ms": 210,
+        "cost_per_call": null,
+        "cost_unit": null,
+        "capacity_units_per_call": 1,
+        "capacity_unit_label": "request"
+      },
+      "seenrelay": {
+        "measured": false,
+        "median_overhead_ms": null,
+        "prospective_cost_per_check": null,
+        "cost_unit": null
+      },
+      "economics": {
+        "comparable": true,
+        "positive_net_value": false,
+        "net_value_per_1000_calls": null,
+        "unit": null,
+        "notes": [
+          "The source-native validator answers the same question more directly and already removes most repeated work."
+        ]
+      },
+      "safety": {
+        "authoritative_fallback_preserved": true,
+        "active_reuse_enabled": false,
+        "freshness_policy_defined": true,
+        "mutating_or_destructive": false
+      },
+      "verdict": "DO NOT USE",
+      "reasons": [
+        "Equivalent source-native validation is available and measured.",
+        "Adding shared CHECK would not improve the best measured path."
+      ]
+    }
+  ],
+  "privacy": {
+    "raw_values_included": false,
+    "credentials_included": false,
+    "private_fact_identities_included": false,
+    "source_payloads_included": false
+  }
+}
