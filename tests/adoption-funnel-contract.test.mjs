@@ -71,20 +71,36 @@ test('Agent Skill first-use contract is synchronized and does not authorize reus
   assert.match(canonical, /active reuse/i);
 });
 
-test('Developer path advances from Ambient screening to falsifiable shadow evaluation', () => {
+test('Developer path advances from Ambient screening to a deterministic falsifiable verdict', () => {
   const landing = read('src', 'landing.ts');
   const quickstart = read('src', 'quickstart.ts');
+  const quickstartDoc = read('docs', 'QUICKSTART.md');
   const economicsLab = read('docs', 'ECONOMICS_LAB.md');
 
   assert.match(landing, /href="\/quickstart#evaluate"/);
   assert.match(quickstart, /id="evaluate"/);
-  assert.match(quickstart, /Ambient finds repetition\. Shadow Proof tests whether the path deserves reuse\./);
+  assert.match(quickstart, /Ambient finds repetition\. Shadow Proof decides whether SeenRelay has earned a place\./);
   assert.match(quickstart, /SeenRelayShadowProof/);
   assert.match(quickstart, /hostileBenchmarkInput/);
   assert.match(quickstart, /hostile_benchmark_input/);
   assert.match(quickstart, /evaluateHostileBenchmark/);
   assert.match(quickstart, /evaluate_hostile_benchmark/);
-  assert.match(quickstart, /The evaluator always leaves automatic reuse disabled/);
+  assert.match(quickstart, /classifyHostileBenchmarkVerdict/);
+  assert.match(quickstart, /classify_hostile_benchmark_verdict/);
+  assert.match(quickstart, /<h3>USE<\/h3>/);
+  assert.match(quickstart, /<h3>DO NOT USE<\/h3>/);
+  assert.match(quickstart, /<h3>INSUFFICIENT EVIDENCE<\/h3>/);
+  assert.match(quickstart, /100-call floor is an operational gate, not a universal statistical-significance claim/);
+  assert.match(quickstart, /Both the evaluator and verdict classifier leave automatic reuse disabled/);
+
+  assert.match(quickstartDoc, /Client v0\.2\.14 was clean-install verified/);
+  assert.match(quickstartDoc, /classifyHostileBenchmarkVerdict/);
+  assert.match(quickstartDoc, /classify_hostile_benchmark_verdict/);
+  assert.match(quickstartDoc, /\*\*`USE`\*\*/);
+  assert.match(quickstartDoc, /\*\*`DO NOT USE`\*\*/);
+  assert.match(quickstartDoc, /\*\*`INSUFFICIENT EVIDENCE`\*\*/);
+  assert.doesNotMatch(quickstartDoc, /0\.2\.13/);
+
   assert.match(economicsLab, /JavaScript \/ TypeScript and Python Shadow Proof implementations/);
   assert.match(economicsLab, /Python follows the same fail-closed evidence contract/);
   assert.doesNotMatch(economicsLab, /Python continues to support shadow measurement but does not claim parity/i);

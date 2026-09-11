@@ -11,12 +11,12 @@ npm install seenrelay
 pip install seenrelay
 ```
 
-Client v0.2.13 was clean-install verified from both public registries on 2026-09-08. JavaScript/TypeScript and Python 0.2.13 support provider-independent local-first Zero-State. Reuse remains caller policy.
+Client v0.2.14 was clean-install verified from both public registries on 2026-09-11. JavaScript/TypeScript and Python 0.2.14 support provider-independent local-first Zero-State. Reuse remains caller policy.
 <!-- END GENERATED:PUBLIC-INSTALL -->
 
 SeenRelay reduces redundant source-backed validation while preserving the application's existing validation policy. It still has exactly two domain operations: **CHECK** and **OBSERVE**.
 
-The recommended 0.2.13 path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
+The recommended 0.2.14 path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
 
 ## Choose the right target
 
@@ -180,9 +180,45 @@ validate_price = protect_validation(
 value = validate_price(known_value)
 ```
 
-With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python's classic API remains shadow-first in 0.2.13; Python Zero-State is a separate explicit local-first path for caller-controlled read-only validation.
+With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python's classic API remains shadow-first in 0.2.14; Python Zero-State is a separate explicit local-first path for caller-controlled read-only validation.
 
-JavaScript / TypeScript and Python 0.2.13 Shadow Proof can retain bounded, sanitized natural-workload benchmark records while authoritative validation still runs. Both export the same schema-v2 evidence shape without fact identity, source, raw values or per-call timestamps; unavailable CHECKs remain in the sample, mismatches fail safety evidence and uncomparable hypothetical reuse remains incomplete. JavaScript / TypeScript evaluates through `seenrelay/economics` and Python through `seenrelay_economics`; neither evaluator enables reuse.
+JavaScript / TypeScript and Python 0.2.14 Shadow Proof can retain bounded, sanitized natural-workload benchmark records while authoritative validation still runs. Both export the same schema-v2 evidence shape without fact identity, source, raw values or per-call timestamps; unavailable CHECKs remain in the sample, mismatches fail safety evidence and uncomparable hypothetical reuse remains incomplete. JavaScript / TypeScript evaluates through `seenrelay/economics` and Python through `seenrelay_economics`; neither evaluator enables reuse.
+
+### Get a deterministic audit verdict
+
+Client 0.2.14 adds matching single-workload verdict helpers so the developer or coding agent does not have to interpret the economics report by hand.
+
+JavaScript / TypeScript:
+
+```js
+import {
+  classifyHostileBenchmarkVerdict,
+  evaluateHostileBenchmark
+} from 'seenrelay/economics';
+
+const report = evaluateHostileBenchmark(benchmarkInput);
+console.log(classifyHostileBenchmarkVerdict(report));
+```
+
+Python:
+
+```python
+from seenrelay_economics import (
+    classify_hostile_benchmark_verdict,
+    evaluate_hostile_benchmark,
+)
+
+report = evaluate_hostile_benchmark(benchmark_input)
+print(classify_hostile_benchmark_verdict(report))
+```
+
+The result is exactly one of:
+
+- **`USE`** — complete natural-workload evidence cleared the operational sample floor, hypothetical reuse matched authoritative validation, and the SeenRelay path beat the best measured non-shared path on both cost and latency. This identifies a candidate for a narrow bounded integration; it does not enable reuse.
+- **`DO NOT USE`** — an unsafe hypothetical reuse was observed, or complete evidence did not beat the best measured non-shared path. Leave the stronger existing path in place.
+- **`INSUFFICIENT EVIDENCE`** — the natural-workload sample is below the operational floor, comparison is incomplete, or the evidence is mechanics-only. Keep measuring and keep active reuse off.
+
+The default 100-call minimum is a conservative operational evidence floor used by the existing natural-workload gate. It is **not** a universal statistical-significance claim.
 
 ## MCP and REST
 

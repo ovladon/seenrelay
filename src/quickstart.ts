@@ -86,13 +86,16 @@ print(client.get_report())</pre></div>
 </section>
 
 <section class="rv-shell rv-section" id="evaluate">
-  <div class="rv-section-head"><div class="rv-eyebrow">FROM CANDIDATE TO EVIDENCE</div><h2>Ambient finds repetition. Shadow Proof tests whether the path deserves reuse.</h2><p>Move only a materially repeated, deterministic, read-only candidate into this stage. Shadow Proof still runs every authoritative validation. The simulated reuse policy is evaluated only afterward, and the hostile evaluator refuses incomplete native-control evidence instead of guessing.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">FROM CANDIDATE TO VERDICT</div><h2>Ambient finds repetition. Shadow Proof decides whether SeenRelay has earned a place.</h2><p>Move only a materially repeated, deterministic, read-only candidate into this stage. Shadow Proof still runs every authoritative validation. The simulated reuse policy is evaluated only afterward, and the hostile evaluator refuses incomplete native-control evidence instead of guessing.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice">
       <header><b>JavaScript / TypeScript</b><span>SHADOW PROOF</span></header>
       <div class="rv-code"><pre>import { SeenRelayClient, reuseKnownOnSameObserved } from 'seenrelay';
 import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
-import { evaluateHostileBenchmark } from 'seenrelay/economics';
+import {
+  classifyHostileBenchmarkVerdict,
+  evaluateHostileBenchmark
+} from 'seenrelay/economics';
 
 const proof = new SeenRelayShadowProof(
   new SeenRelayClient(),
@@ -117,13 +120,17 @@ const input = proof.hostileBenchmarkInput({
   workloadId: 'opaque-workload-id',
   controls: measuredControls
 });
-console.log(evaluateHostileBenchmark(input));</pre></div>
+const report = evaluateHostileBenchmark(input);
+console.log(classifyHostileBenchmarkVerdict(report));</pre></div>
     </article>
     <article class="rv-choice">
       <header><b>Python</b><span>SHADOW PROOF</span></header>
       <div class="rv-code"><pre>from seenrelay import SeenRelayClient, reuse_known_on_same_observed
 from seenrelay_shadow import SeenRelayShadowProof
-from seenrelay_economics import evaluate_hostile_benchmark
+from seenrelay_economics import (
+    classify_hostile_benchmark_verdict,
+    evaluate_hostile_benchmark,
+)
 
 proof = SeenRelayShadowProof(
     SeenRelayClient(),
@@ -147,10 +154,16 @@ benchmark_input = proof.hostile_benchmark_input(
     workload_id="opaque-workload-id",
     controls=measured_controls,
 )
-print(evaluate_hostile_benchmark(benchmark_input))</pre></div>
+report = evaluate_hostile_benchmark(benchmark_input)
+print(classify_hostile_benchmark_verdict(report))</pre></div>
     </article>
   </div>
-  <div class="rv-note"><b>Do not fill the controls optimistically.</b> <code>measuredControls</code> / <code>measured_controls</code> must truthfully declare local cache, source-native conditional validation and provider-native caching. If a stronger control is available but was not measured on the same workload, evaluation is incomplete. The evaluator always leaves automatic reuse disabled.</div>
+  <div class="rv-stack">
+    <article><h3>USE</h3><p>Complete natural-workload evidence cleared the operational sample floor, hypothetical reuse matched authoritative validation, and the measured SeenRelay path beat the best measured non-shared path on both cost and latency. Treat this as a candidate for the narrowest supported integration; it still does not enable reuse automatically.</p></article>
+    <article><h3>DO NOT USE</h3><p>Either a hypothetical reuse disagreed with authoritative validation, or complete evidence failed to beat the best measured non-shared path. Keep the stronger existing path and remove SeenRelay from this workload.</p></article>
+    <article><h3>INSUFFICIENT EVIDENCE</h3><p>The sample is still too small, comparison is incomplete, or the evidence is mechanics-only. Collect more evidence on the same natural workload and leave active reuse off. The default 100-call floor is an operational gate, not a universal statistical-significance claim.</p></article>
+  </div>
+  <div class="rv-note"><b>Do not fill the controls optimistically.</b> <code>measuredControls</code> / <code>measured_controls</code> must truthfully declare local cache, source-native conditional validation and provider-native caching. If a stronger control is available but was not measured on the same workload, evaluation is incomplete. Both the evaluator and verdict classifier leave automatic reuse disabled.</div>
   <div class="rv-actions"><a class="rv-button" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Full Economics Lab →</a><a class="rv-button quiet" href="/economics">Decision model →</a></div>
 </section>
 
@@ -190,7 +203,7 @@ const edge = new SeenRelayZeroState({
   </div>
 </section>
 
-<section class="rv-shell rv-final"><div><div class="rv-eyebrow">AFTER THE FIRST RUN</div><h2>Promote only the expensive paths that actually repeat.</h2><p>If exact repetition is rare, or an equivalent source/provider-native path is already cheaper, leave it alone. If repetition is material across workers, select the narrowest bounded private or optional shared-evidence policy appropriate to that operation.</p></div><div class="rv-actions"><a class="rv-button primary" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="/fleet">Fleet deployment</a><a class="rv-button" href="/clients">Integration options</a><a class="rv-button" href="/economics">Measured tests</a></div></section>
+<section class="rv-shell rv-final"><div><div class="rv-eyebrow">AFTER THE FIRST RUN</div><h2>Promote only the expensive paths that actually repeat.</h2><p>If the verdict is <code>DO NOT USE</code>, leave the stronger path alone. If it is <code>INSUFFICIENT EVIDENCE</code>, keep measuring without reuse. Only a <code>USE</code> workload should advance to the narrowest bounded private or optional shared-evidence policy appropriate to that operation.</p></div><div class="rv-actions"><a class="rv-button primary" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="/fleet">Fleet deployment</a><a class="rv-button" href="/clients">Integration options</a><a class="rv-button" href="/economics">Measured tests</a></div></section>
 </main>
 ${siteFooterHtml()}
 </body>

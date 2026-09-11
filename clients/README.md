@@ -1,7 +1,7 @@
 # SeenRelay deterministic client wrappers
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.13 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.14 · currently free · no account/API key.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.

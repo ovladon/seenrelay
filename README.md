@@ -23,7 +23,7 @@ Run a SeenRelay shadow audit on this project. Find repeated expensive read-only 
 Or use the developer paths below. Full audit method: [`docs/SHADOW_AUDIT.md`](docs/SHADOW_AUDIT.md).
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.13 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.14 · currently free · no account/API key.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
 ## Free shadow audit: measure without changing application behavior
