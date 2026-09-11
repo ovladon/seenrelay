@@ -131,7 +131,7 @@ export function publicLandingPage(origin: string): string {
         <div class="rv-install-view" data-install-view="human" id="developer-audit">
           <div class="rv-step"><span>1</span><div><h4>Install</h4><div class="rv-code"><pre id="npm-install">${npmCommand}</pre><button class="rv-copy" type="button" data-copy-target="npm-install">Copy</button></div><div class="rv-code"><pre id="pip-install">${pipCommand}</pre><button class="rv-copy" type="button" data-copy-target="pip-install">Copy</button></div></div></div>
           <div class="rv-step"><span>2</span><div><h4>Wrap an existing MCP-style client</h4><div class="rv-code"><pre id="ambient-example">import { ambientMcpClient } from 'seenrelay/ambient';\n\nconst client = ambientMcpClient(rawMcpClient);\n// run your existing workload normally\nconsole.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
-          <div class="rv-step"><span>3</span><div><h4>Evaluate before enabling reuse</h4><p>The local report finds exact repeat candidates. Shadow Proof and the economics evaluator can then test safety and net value on the real workload.</p></div></div></div>
+          <div class="rv-step"><span>3</span><div><h4>Evaluate before enabling reuse</h4><p>The local report finds exact repeat candidates. Shadow Proof and the economics evaluator can then test safety and net value on the real workload.</p><a href="/quickstart#evaluate">Open the evaluation recipe →</a></div></div>
         </div>
       </div>
     </div>
