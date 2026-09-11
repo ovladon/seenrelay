@@ -31,3 +31,9 @@ test('intent router is responsive without adding a UI dependency', () => {
   assert.match(funnelCss, /@media\(max-width:860px\)/);
   assert.match(funnelCss, /@media\(max-width:680px\)/);
 });
+
+test('homepage hero typography is bounded by both viewport width and height', () => {
+  assert.match(funnelCss, /\.rv-funnel-hero h1\{[^}]*font-size:clamp\(38px,min\(4\.8vw,7\.2vh\),64px\)/);
+  assert.match(funnelCss, /@media\(max-height:700px\) and \(min-width:681px\)/);
+  assert.match(funnelCss, /font-size:clamp\(32px,10vw,42px\)/);
+});
