@@ -3,6 +3,7 @@
   "$id": "https://seenrelay.com/schemas/shadow-audit-report-v1",
   "title": "SeenRelay Shadow Audit Report v1",
   "description": "Machine-readable output for a measurement-only SeenRelay workload audit. It records workload recurrence, stronger native controls, safety equivalence and economics without enabling reuse.",
+  "$comment": "Consumers must additionally enforce cross-field invariants that JSON Schema cannot portably express here: exact_repeat_count <= protected_call_count; shared_check outcome counts sum to checks when measured; equivalence.mismatches <= equivalence.compared; and the top-level verdict must truthfully summarize the workload verdicts.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -64,6 +65,10 @@
     "nullableNumber": {
       "type": ["number", "null"]
     },
+    "nullableNonNegativeNumber": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
     "nullableString": {
       "type": ["string", "null"]
     },
@@ -116,10 +121,10 @@
       "additionalProperties": false,
       "required": ["median_latency_ms", "cost_per_call", "cost_unit", "capacity_units_per_call", "capacity_unit_label"],
       "properties": {
-        "median_latency_ms": { "$ref": "#/$defs/nullableNumber" },
-        "cost_per_call": { "$ref": "#/$defs/nullableNumber" },
+        "median_latency_ms": { "$ref": "#/$defs/nullableNonNegativeNumber" },
+        "cost_per_call": { "$ref": "#/$defs/nullableNonNegativeNumber" },
         "cost_unit": { "$ref": "#/$defs/nullableString" },
-        "capacity_units_per_call": { "$ref": "#/$defs/nullableNumber" },
+        "capacity_units_per_call": { "$ref": "#/$defs/nullableNonNegativeNumber" },
         "capacity_unit_label": { "$ref": "#/$defs/nullableString" }
       }
     },
@@ -129,8 +134,8 @@
       "required": ["measured", "median_overhead_ms", "prospective_cost_per_check", "cost_unit"],
       "properties": {
         "measured": { "type": "boolean" },
-        "median_overhead_ms": { "$ref": "#/$defs/nullableNumber" },
-        "prospective_cost_per_check": { "$ref": "#/$defs/nullableNumber" },
+        "median_overhead_ms": { "$ref": "#/$defs/nullableNonNegativeNumber" },
+        "prospective_cost_per_check": { "$ref": "#/$defs/nullableNonNegativeNumber" },
         "cost_unit": { "$ref": "#/$defs/nullableString" }
       }
     },
