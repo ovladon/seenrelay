@@ -1,0 +1,76 @@
+name: Distribution Radar
+
+on:
+  schedule:
+    - cron: '41 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+
+      - name: Inspect public distribution surfaces
+        run: node scripts/distribution-radar.mjs
+
+      - name: Publish radar summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f distribution-radar-report.md ]; then
+            cat distribution-radar-report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'Distribution radar did not produce a report.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Open, refresh, or close distribution drift issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title='[distribution-radar] Public discovery or install path drift'
+          issue=$(gh issue list --state open --search '"[distribution-radar] Public discovery or install path drift" in:title' --json number --jq '.[0].number // empty')
+
+          if [ ! -f distribution-radar-report.json ] || [ ! -f distribution-radar-report.md ]; then
+            printf '%s\n' '# SeenRelay distribution radar' '' 'The radar failed before producing its structured report. Inspect this workflow run.' > distribution-radar-report.md
+            drift=true
+          else
+            drift=$(node -e "const x=require('./distribution-radar-report.json');process.stdout.write(String(Boolean(x.drift)))")
+          fi
+
+          if [ "$drift" = 'true' ]; then
+            if [ -n "$issue" ]; then
+              gh issue edit "$issue" --title "$title" --body-file distribution-radar-report.md
+            else
+              gh issue create --title "$title" --body-file distribution-radar-report.md
+            fi
+          elif [ -n "$issue" ]; then
+            gh issue comment "$issue" --body 'The latest distribution radar is green again. Closing the drift issue.'
+            gh issue close "$issue"
+          fi
+
+      - name: Fail on critical distribution breakage
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f distribution-radar-report.json
+          critical=$(node -e "const x=require('./distribution-radar-report.json');process.stdout.write(String(Number(x.critical_failure_count || 0)))")
+          if [ "$critical" -gt 0 ]; then
+            echo "$critical critical distribution checks failed." >&2
+            exit 1
+          fi
