@@ -120,17 +120,19 @@ export function publicLandingPage(origin: string): string {
       <div class="rv-mode-copy"><h3>Start without learning SeenRelay first.</h3><p>The Agent Skill inspects the project, uses only a supported integration boundary and returns a decision instead of blindly enabling reuse.</p></div>
       <div class="rv-mode-note">No SeenRelay account or API key is required. Your existing providers may still require their own credentials.</div>
     </div>
-    <div class="rv-console" aria-live="polite">
+    <div class="rv-console rv-funnel-console" aria-live="polite">
       <div class="rv-console-top"><span class="rv-dots"><i></i><i></i><i></i></span><span>free shadow audit</span></div>
-      <div class="rv-install-view active" data-install-view="agent" id="agent-audit">
-        <div class="rv-step"><span>1</span><div><h4>Install the SeenRelay Agent Skill</h4><div class="rv-code"><pre id="skill-install">${esc(skillCommand)}</pre><button class="rv-copy" type="button" data-copy-target="skill-install">Copy</button></div></div></div>
-        <div class="rv-step"><span>2</span><div><h4>Give your coding agent this task</h4><div class="rv-code"><pre id="agent-prompt">${esc(auditPrompt)}</pre><button class="rv-copy" type="button" data-copy-target="agent-prompt">Copy</button></div></div></div>
-        <div class="rv-step"><span>3</span><div><h4>Read the verdict</h4><p>Keep SeenRelay only on workloads that show safe repetition and positive net economics after stronger native controls.</p></div></div></div>
-      </div>
-      <div class="rv-install-view" data-install-view="human">
-        <div class="rv-step"><span>1</span><div><h4>Install</h4><div class="rv-code"><pre id="npm-install">${npmCommand}</pre><button class="rv-copy" type="button" data-copy-target="npm-install">Copy</button></div><div class="rv-code"><pre id="pip-install">${pipCommand}</pre><button class="rv-copy" type="button" data-copy-target="pip-install">Copy</button></div></div></div>
-        <div class="rv-step"><span>2</span><div><h4>Wrap an existing MCP-style client</h4><div class="rv-code"><pre id="ambient-example">import { ambientMcpClient } from 'seenrelay/ambient';\n\nconst client = ambientMcpClient(rawMcpClient);\n// run your existing workload normally\nconsole.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
-        <div class="rv-step"><span>3</span><div><h4>Evaluate before enabling reuse</h4><p>The local report finds exact repeat candidates. Shadow Proof and the economics evaluator can then test safety and net value on the real workload.</p></div></div></div>
+      <div class="rv-console-body">
+        <div class="rv-install-view active" data-install-view="agent" id="agent-audit">
+          <div class="rv-step"><span>1</span><div><h4>Install the SeenRelay Agent Skill</h4><div class="rv-code"><pre id="skill-install">${esc(skillCommand)}</pre><button class="rv-copy" type="button" data-copy-target="skill-install">Copy</button></div></div></div>
+          <div class="rv-step"><span>2</span><div><h4>Give your coding agent this task</h4><div class="rv-code"><pre id="agent-prompt">${esc(auditPrompt)}</pre><button class="rv-copy" type="button" data-copy-target="agent-prompt">Copy</button></div></div></div>
+          <div class="rv-step"><span>3</span><div><h4>Read the verdict</h4><p>Keep SeenRelay only on workloads that show safe repetition and positive net economics after stronger native controls.</p></div></div></div>
+        </div>
+        <div class="rv-install-view" data-install-view="human" id="developer-audit">
+          <div class="rv-step"><span>1</span><div><h4>Install</h4><div class="rv-code"><pre id="npm-install">${npmCommand}</pre><button class="rv-copy" type="button" data-copy-target="npm-install">Copy</button></div><div class="rv-code"><pre id="pip-install">${pipCommand}</pre><button class="rv-copy" type="button" data-copy-target="pip-install">Copy</button></div></div></div>
+          <div class="rv-step"><span>2</span><div><h4>Wrap an existing MCP-style client</h4><div class="rv-code"><pre id="ambient-example">import { ambientMcpClient } from 'seenrelay/ambient';\n\nconst client = ambientMcpClient(rawMcpClient);\n// run your existing workload normally\nconsole.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
+          <div class="rv-step"><span>3</span><div><h4>Evaluate before enabling reuse</h4><p>The local report finds exact repeat candidates. Shadow Proof and the economics evaluator can then test safety and net value on the real workload.</p></div></div></div>
+        </div>
       </div>
     </div>
   </div>
