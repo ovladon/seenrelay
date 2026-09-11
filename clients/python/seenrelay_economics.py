@@ -45,6 +45,122 @@ def _safety_summary(opportunities: int, unsafe: int, unavailable: int) -> tuple[
     return "pass", True
 
 
+def _validate_evaluation(evaluation: Mapping[str, Any]) -> None:
+    if not isinstance(evaluation, Mapping):
+        raise TypeError("evaluation must be a mapping returned by evaluate_hostile_benchmark")
+    calls = evaluation.get("calls")
+    if not isinstance(calls, int) or isinstance(calls, bool) or calls < 1:
+        raise TypeError("evaluation.calls must be a positive integer")
+    if evaluation.get("sample_type") not in ("natural_workload", "fixed_fact_smoke"):
+        raise ValueError("evaluation.sample_type is invalid")
+    controls = evaluation.get("controls")
+    if not isinstance(controls, Mapping):
+        raise TypeError("evaluation.controls must be a mapping")
+    for name in _CONTROL_NAMES:
+        control = controls.get(name)
+        if not isinstance(control, Mapping):
+            raise TypeError(f"evaluation.controls.{name} must declare available and measured booleans")
+        if not isinstance(control.get("available"), bool) or not isinstance(control.get("measured"), bool):
+            raise TypeError(f"evaluation.controls.{name} must declare available and measured booleans")
+    for name in ("unsafe_hypothetical_reuses", "reuse_comparison_unavailable", "policy_accepted_reuses"):
+        value = evaluation.get(name)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise TypeError(f"evaluation.{name} must be a non-negative integer")
+    if not isinstance(evaluation.get("safety"), Mapping):
+        raise TypeError("evaluation.safety must be a mapping")
+    decision = evaluation.get("decision")
+    if not isinstance(decision, Mapping):
+        raise TypeError("evaluation.decision must be a mapping")
+    if decision.get("automatic_reuse_enabled_by_evaluator") is not False:
+        raise TypeError("evaluation must preserve automatic_reuse_enabled_by_evaluator=False")
+
+
+def classify_hostile_benchmark_verdict(
+    evaluation: Mapping[str, Any], *, minimum_calls: int = 100
+) -> Mapping[str, Any]:
+    """Map one natural-workload evaluation to USE / DO NOT USE / INSUFFICIENT EVIDENCE.
+
+    The logic mirrors the repository's natural-workload gate. A measured hypothetical-reuse
+    mismatch is a hard negative even when the sample is still small. Otherwise evidence must
+    meet the sample floor, comparison completeness and stronger-control requirements before
+    receiving a conclusive economics verdict. This classifier never enables reuse.
+    """
+    _validate_evaluation(evaluation)
+    if not isinstance(minimum_calls, int) or isinstance(minimum_calls, bool) or minimum_calls < 1:
+        raise TypeError("minimum_calls must be a positive integer")
+
+    calls = int(evaluation["calls"])
+    sample_floor_met = calls >= minimum_calls
+    comparison_complete = int(evaluation["reuse_comparison_unavailable"]) == 0
+    controls = evaluation["controls"]
+    controls_complete = all(
+        controls[name]["available"] is False or controls[name]["measured"] is True
+        for name in _CONTROL_NAMES
+    )
+    natural_workload = (
+        evaluation.get("sample_type") == "natural_workload"
+        and evaluation.get("evidence_scope") == "workload_evidence"
+    )
+    safety = evaluation["safety"]
+    decision = evaluation["decision"]
+    unsafe = (
+        int(evaluation["unsafe_hypothetical_reuses"]) > 0
+        or safety.get("state") == "fail"
+        or safety.get("pass") is False
+    )
+    reasons: list[str] = []
+
+    if not natural_workload:
+        verdict = "INSUFFICIENT EVIDENCE"
+        reasons.append("natural_workload_required")
+    elif unsafe:
+        verdict = "DO NOT USE"
+        reasons.append("unsafe_hypothetical_reuse")
+    elif not controls_complete:
+        verdict = "INSUFFICIENT EVIDENCE"
+        reasons.append("stronger_native_control_unmeasured")
+    elif not comparison_complete or safety.get("state") == "incomplete":
+        verdict = "INSUFFICIENT EVIDENCE"
+        reasons.append("reuse_comparison_incomplete")
+    elif not sample_floor_met:
+        verdict = "INSUFFICIENT EVIDENCE"
+        reasons.append("sample_below_minimum")
+    elif safety.get("state") == "no_opportunities" or int(evaluation["policy_accepted_reuses"]) == 0:
+        verdict = "DO NOT USE"
+        reasons.append("no_policy_accepted_reuse_opportunities")
+    elif decision.get("safety_pass") is not True:
+        verdict = "INSUFFICIENT EVIDENCE"
+        reasons.append("safety_not_established")
+    elif decision.get("beats_baseline_on_both") is True:
+        verdict = "USE"
+        reasons.append("safe_candidate_beats_best_existing_path_on_cost_and_latency")
+    else:
+        verdict = "DO NOT USE"
+        if decision.get("positive_on_latency") is not True:
+            reasons.append("latency_not_better_than_best_existing_path")
+        if decision.get("positive_on_cost") is not True:
+            reasons.append("cost_not_better_than_best_existing_path")
+        if not reasons:
+            reasons.append("best_existing_path_not_beaten")
+
+    latency = evaluation.get("latency") if isinstance(evaluation.get("latency"), Mapping) else {}
+    cost = evaluation.get("cost") if isinstance(evaluation.get("cost"), Mapping) else {}
+    return {
+        "verdict": verdict,
+        "reasons": tuple(reasons),
+        "minimum_calls": minimum_calls,
+        "calls": calls,
+        "sample_floor_met": sample_floor_met,
+        "comparison_complete": comparison_complete,
+        "controls_complete": controls_complete,
+        "safety_state": safety.get("state"),
+        "policy_accepted_reuses": int(evaluation["policy_accepted_reuses"]),
+        "latency_outcome": latency.get("outcome"),
+        "cost_outcome": cost.get("outcome"),
+        "automatic_reuse_enabled": False,
+    }
+
+
 def evaluate_hostile_benchmark(input_data: Mapping[str, Any]) -> Mapping[str, Any]:
     """Evaluate sanitized workload evidence against the best non-shared path.
 
