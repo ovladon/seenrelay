@@ -8,18 +8,28 @@ const portableMcp = JSON.parse(fs.readFileSync(new URL('../mcp.json', import.met
 const checks = [];
 
 const userAgent = 'SeenRelay-Distribution-Radar/1.0 (+https://seenrelay.com)';
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function request(url, { json = false } = {}) {
-  const response = await fetch(url, {
-    headers: { 'user-agent': userAgent, accept: json ? 'application/json' : '*/*' },
-    redirect: 'follow',
-    signal: AbortSignal.timeout(20_000)
-  });
-  const text = await response.text();
-  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-  if (!json) return text;
-  try { return JSON.parse(text); }
-  catch { throw new Error('response was not valid JSON'); }
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: { 'user-agent': userAgent, accept: json ? 'application/json' : '*/*' },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(20_000)
+      });
+      const text = await response.text();
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+      if (!json) return text;
+      try { return JSON.parse(text); }
+      catch { throw new Error('response was not valid JSON'); }
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3) await sleep(750 * attempt);
+    }
+  }
+  throw lastError;
 }
 
 function containsObject(root, predicate) {
@@ -109,11 +119,19 @@ await run('glama', 'Glama connector listing', 'advisory', async () => {
   return 'listing present and reports Healthy';
 });
 
+await run('agent-plugins-directory', 'Agent Plugins Directory', 'advisory', async () => {
+  const text = await request('https://agent-plugins.directory/ovladon/seenrelay');
+  if (!/SeenRelay/i.test(text)) throw new Error('directory page no longer identifies SeenRelay');
+  if (!text.includes(pluginManifest.version)) throw new Error(`directory has not indexed current plugin version ${pluginManifest.version}`);
+  if (!text.includes(pluginManifest.description)) throw new Error('directory description has not converged to current plugin metadata');
+  return `indexed ${pluginManifest.version} with current discovery copy`;
+});
+
 await run('agent-plugins-package', 'Agent Plugins portable package', 'informational', async () => {
   if (pluginManifest?.$schema !== 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json') throw new Error('plugin.json schema drift');
   if (pluginManifest?.name !== 'seenrelay') throw new Error('plugin.json name drift');
   if (portableMcp?.mcpServers?.seenrelay?.url !== `${ORIGIN}/mcp`) throw new Error('mcp.json canonical endpoint drift');
-  return 'portable package is present; Agent Plugins v1 intentionally has no central registry';
+  return 'portable package is internally consistent';
 });
 
 const failures = checks.filter((check) => check.status === 'fail');
