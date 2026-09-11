@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://seenrelay.com/schemas/shadow-audit-report-v1",
+  "title": "SeenRelay Shadow Audit Report v1",
+  "description": "Machine-readable output for a measurement-only SeenRelay workload audit. It records workload recurrence, stronger native controls, safety equivalence and economics without enabling reuse.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "mode",
+    "verdict",
+    "summary",
+    "workloads",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "seenrelay-shadow-audit-v1"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "mode": {
+      "const": "shadow"
+    },
+    "verdict": {
+      "$ref": "#/$defs/verdict"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workloads": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/workload"
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "raw_values_included",
+        "credentials_included",
+        "private_fact_identities_included",
+        "source_payloads_included"
+      ],
+      "properties": {
+        "raw_values_included": { "const": false },
+        "credentials_included": { "const": false },
+        "private_fact_identities_included": { "const": false },
+        "source_payloads_included": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "verdict": {
+      "type": "string",
+      "enum": ["USE", "DO NOT USE", "INSUFFICIENT EVIDENCE"]
+    },
+    "nullableNumber": {
+      "type": ["number", "null"]
+    },
+    "nullableString": {
+      "type": ["string", "null"]
+    },
+    "nativeControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "available", "measured", "hits", "equivalent_semantics", "winner"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "in_flight",
+            "caller_private",
+            "source_native",
+            "provider_native",
+            "authoritative_shared_cache",
+            "other"
+          ]
+        },
+        "available": { "type": "boolean" },
+        "measured": { "type": "boolean" },
+        "hits": { "type": ["integer", "null"], "minimum": 0 },
+        "equivalent_semantics": { "type": ["boolean", "null"] },
+        "winner": { "type": "boolean" }
+      }
+    },
+    "sharedCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measured", "checks", "same_observed", "unknown", "other"],
+      "properties": {
+        "measured": { "type": "boolean" },
+        "checks": { "type": "integer", "minimum": 0 },
+        "same_observed": { "type": "integer", "minimum": 0 },
+        "unknown": { "type": "integer", "minimum": 0 },
+        "other": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "equivalence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compared", "mismatches"],
+      "properties": {
+        "compared": { "type": "integer", "minimum": 0 },
+        "mismatches": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["median_latency_ms", "cost_per_call", "cost_unit", "capacity_units_per_call", "capacity_unit_label"],
+      "properties": {
+        "median_latency_ms": { "$ref": "#/$defs/nullableNumber" },
+        "cost_per_call": { "$ref": "#/$defs/nullableNumber" },
+        "cost_unit": { "$ref": "#/$defs/nullableString" },
+        "capacity_units_per_call": { "$ref": "#/$defs/nullableNumber" },
+        "capacity_unit_label": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "seenrelayPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measured", "median_overhead_ms", "prospective_cost_per_check", "cost_unit"],
+      "properties": {
+        "measured": { "type": "boolean" },
+        "median_overhead_ms": { "$ref": "#/$defs/nullableNumber" },
+        "prospective_cost_per_check": { "$ref": "#/$defs/nullableNumber" },
+        "cost_unit": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "economics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparable", "positive_net_value", "net_value_per_1000_calls", "unit", "notes"],
+      "properties": {
+        "comparable": { "type": "boolean" },
+        "positive_net_value": { "type": ["boolean", "null"] },
+        "net_value_per_1000_calls": { "$ref": "#/$defs/nullableNumber" },
+        "unit": { "$ref": "#/$defs/nullableString" },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authoritative_fallback_preserved",
+        "active_reuse_enabled",
+        "freshness_policy_defined",
+        "mutating_or_destructive"
+      ],
+      "properties": {
+        "authoritative_fallback_preserved": { "const": true },
+        "active_reuse_enabled": { "const": false },
+        "freshness_policy_defined": { "type": "boolean" },
+        "mutating_or_destructive": { "type": "boolean" }
+      }
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload_id",
+        "operation",
+        "read_only",
+        "protected_call_count",
+        "exact_repeat_count",
+        "native_controls",
+        "shared_check",
+        "equivalence",
+        "baseline",
+        "seenrelay",
+        "economics",
+        "safety",
+        "verdict",
+        "reasons"
+      ],
+      "properties": {
+        "workload_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A local audit label. Do not place a raw private fact identity or secret here."
+        },
+        "operation": { "type": "string", "minLength": 1 },
+        "read_only": { "type": "boolean" },
+        "protected_call_count": { "type": "integer", "minimum": 0 },
+        "exact_repeat_count": { "type": "integer", "minimum": 0 },
+        "native_controls": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nativeControl" }
+        },
+        "shared_check": { "$ref": "#/$defs/sharedCheck" },
+        "equivalence": { "$ref": "#/$defs/equivalence" },
+        "baseline": { "$ref": "#/$defs/baseline" },
+        "seenrelay": { "$ref": "#/$defs/seenrelayPath" },
+        "economics": { "$ref": "#/$defs/economics" },
+        "safety": { "$ref": "#/$defs/safety" },
+        "verdict": { "$ref": "#/$defs/verdict" },
+        "reasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}
