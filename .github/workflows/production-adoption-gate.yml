@@ -14,6 +14,11 @@ on:
       - 'src/public.ts'
       - 'src/version.ts'
       - 'public/product-facts.json'
+      - 'public/revamp.js'
+      - 'public/revamp.css'
+      - 'public/revamp-factual.css'
+      - 'public/sota.css'
+      - 'public/funnel.css'
       - 'clients/**'
       - 'plugin.json'
       - 'mcp.json'
@@ -140,6 +145,14 @@ jobs:
           curl --fail --silent --show-error --location \
             --header 'Accept: text/html' https://seenrelay.com/ \
             --output "$RUNNER_TEMP/home.html"
+          curl --fail --silent --show-error --location \
+            https://seenrelay.com/revamp.js \
+            --output "$RUNNER_TEMP/revamp.js"
           grep -q 'Run the free shadow audit' "$RUNNER_TEMP/home.html"
           grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' "$RUNNER_TEMP/home.html"
-          echo 'Homepage exposes the expected activation path and falsifiable verdict contract.'
+          grep -q 'rv-console rv-funnel-console' "$RUNNER_TEMP/home.html"
+          grep -q 'rv-console-body' "$RUNNER_TEMP/home.html"
+          grep -q 'id="developer-audit"' "$RUNNER_TEMP/home.html"
+          grep -q 'Integrate directly with the client.' "$RUNNER_TEMP/revamp.js"
+          grep -q 'Install the npm or PyPI client' "$RUNNER_TEMP/revamp.js"
+          echo 'Homepage exposes the expected activation path, contained audit panel and mode-specific Developer guidance.'
