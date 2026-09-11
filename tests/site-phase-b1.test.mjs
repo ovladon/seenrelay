@@ -91,9 +91,15 @@ test('service descriptor continues to derive the public client release', () => {
   assert.match(publicSource, /python_mode: 'shadow_first'/);
 });
 
-test('preview gate enforces the self-service homepage and rejects benchmark marketing', () => {
+test('preview gate enforces the self-service homepage and keeps benchmark marketing off sales surfaces', () => {
   for (const marker of ['Your agents repeat expensive checks.', 'Run the free shadow audit', 'No guessed hit rate.', 'Three steps. No platform migration.', 'SeenRelay does not replace your source of truth.']) {
     assert.match(previewGate, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  assert.doesNotMatch(previewGate, /MEASURED · FIRST-PARTY SMOKE BENCHMARK|Firecrawl JSON extraction|provider calls avoided/);
+  assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/site\.html/);
+  assert.match(previewGate, /! grep -qi 'Firecrawl' \/tmp\/site\.html/);
+  assert.match(previewGate, /! grep -qi 'provider calls avoided' \/tmp\/site\.html/);
+  assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/economics\.html/);
+  assert.match(previewGate, /! grep -qi 'Firecrawl' \/tmp\/economics\.html/);
+  assert.match(previewGate, /! grep -qi 'provider calls avoided' \/tmp\/economics\.html/);
+  assert.match(previewGate, /product-facts\.json/);
 });
