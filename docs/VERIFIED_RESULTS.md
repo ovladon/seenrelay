@@ -10,7 +10,7 @@ Generated from public/product-facts.json. Do not edit measured claims here by ha
 
 ## Interpretation
 
-Rows are verification-gated measurements, not universal performance promises. A caller must measure its own workload in shadow mode and set its own freshness/reuse policy. The website shows the latest verified result per configuration while this document retains the published benchmark records.
+Rows are verification-gated measurements, not universal performance promises. A caller must measure its own workload in shadow mode and set its own freshness/reuse policy. The website does not promote these benchmark records; this document retains them for technical verification.
 
 Evidence:
 - firecrawl-basic-scrape-2026-08-26: https://github.com/ovladon/seenrelay/actions/runs/32953753129 (sha256:1177ca13a1974064942487671352f42a45a74c36745a24680ba62e5d39b3b5f4)
