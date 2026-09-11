@@ -46,29 +46,33 @@ grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
-# The homepage contract is activation-first: problem, safe audit, decision report, measured evidence.
-grep -q 'Find out where your agent fleet is wasting time or provider spend on repeated validation.' /tmp/site.html
+# The homepage contract is customer-first: value, free trial, measured verdict, narrow fit, safe fallback.
+grep -q 'Your agents repeat expensive checks.' /tmp/site.html
+grep -q 'SeenRelay finds the ones you can stop repaying for.' /tmp/site.html
 grep -q "CLIENT ${client_version}" /tmp/site.html
-grep -q 'FREE SHADOW AUDIT' /tmp/site.html
 grep -q 'Run the free shadow audit' /tmp/site.html
-grep -q 'WHAT YOU GET' /tmp/site.html
-grep -q 'USE · DO NOT USE · INSUFFICIENT EVIDENCE' /tmp/site.html
-grep -q 'authoritative calls stay on' /tmp/site.html
+grep -q 'WORKLOAD VERDICT' /tmp/site.html
+grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
+grep -q 'No guessed hit rate.' /tmp/site.html
+grep -q 'Your workload decides.' /tmp/site.html
+grep -q 'Three steps. No platform migration.' /tmp/site.html
+grep -q 'The easiest path is to give SeenRelay to your coding agent.' /tmp/site.html
+grep -q 'every authoritative call still runs' /tmp/site.html
 grep -q 'no account' /tmp/site.html
-grep -q 'no API key' /tmp/site.html
-grep -q 'provider calls avoided' /tmp/site.html
-grep -q 'What SeenRelay has demonstrated — and what it has not.' /tmp/site.html
-grep -q 'Not established' /tmp/site.html
-grep -q 'Your workload decides' /tmp/site.html
-grep -q 'Coding agent' /tmp/site.html
+grep -q 'no SeenRelay API key' /tmp/site.html
 grep -q 'npm install seenrelay' /tmp/site.html
 grep -q 'pip install seenrelay' /tmp/site.html
+grep -q 'SeenRelay does not replace your source of truth.' /tmp/site.html
+grep -q 'When in doubt, validate normally.' /tmp/site.html
+! grep -qi 'first-party smoke' /tmp/site.html
+! grep -qi 'Firecrawl' /tmp/site.html
+! grep -qi 'provider calls avoided' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
-grep -q 'FLEET-LEVEL COST AVOIDANCE' /tmp/economics.html
-grep -q 'MEASURED · FIRST-PARTY SMOKE BENCHMARK' /tmp/economics.html
-grep -q 'Firecrawl JSON extraction' /tmp/economics.html
-grep -q 'Fixed-tier counterexample' /tmp/economics.html
-! grep -q 'Firecrawl Pay As You Go' /tmp/economics.html
+grep -q 'Prove the savings on your workload' /tmp/economics.html
+grep -q 'Free until utility is demonstrated' /tmp/economics.html
+! grep -qi 'first-party smoke' /tmp/economics.html
+! grep -qi 'Firecrawl' /tmp/economics.html
+! grep -qi 'provider calls avoided' /tmp/economics.html
 # The branch alias can retain public max-age content across Preview deployments;
 # cache-bust deployment-specific machine facts before asserting exact release data.
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/product-facts.json?release=${RELEASE_SHA}" -o /tmp/product-facts.json
@@ -103,12 +107,6 @@ grep -q "Python ${client_version} includes an explicit provider-independent Zero
 grep -q "classic Python API and Python Ambient adapters remain shadow-first" /tmp/llms.txt
 ! grep -q '0.2.1' /tmp/llms.txt
 grep -q 'Shared CHECK is off by default' /tmp/llms.txt
-grep -q '## Verified measured results' /tmp/llms.txt
-grep -q 'Structured JSON extraction /' /tmp/llms.txt
-grep -q '3/3 equivalent provider calls avoided' /tmp/llms.txt
-grep -q '15 credits avoided' /tmp/llms.txt
-grep -q 'Evidence: https://github.com/ovladon/seenrelay/actions/runs/' /tmp/llms.txt
-! grep -q 'fit=poor; provider_path_cost=' /tmp/llms.txt
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/service.json" -o /tmp/service.json
 grep -q '"fact_identity":"seenrelay-fact-v3"' /tmp/service.json
 grep -q '"external_verification":false' /tmp/service.json
