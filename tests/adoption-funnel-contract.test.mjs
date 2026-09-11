@@ -117,6 +117,8 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /billing_enabled == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
   assert.match(gate, /seenrelay==\$VERSION/);
+  assert.match(gate, /await import\('seenrelay\/economics'\)/);
+  assert.match(gate, /classify_hostile_benchmark_verdict/);
   for (const homepageAsset of ['public/revamp.js', 'public/revamp.css', 'public/revamp-factual.css', 'public/sota.css', 'public/funnel.css']) {
     assert.match(gate, new RegExp(homepageAsset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
@@ -130,6 +132,11 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /SeenRelayShadowProof/);
   assert.match(gate, /evaluateHostileBenchmark/);
   assert.match(gate, /evaluate_hostile_benchmark/);
+  assert.match(gate, /classifyHostileBenchmarkVerdict/);
+  assert.match(gate, /<h3>USE<\/h3>/);
+  assert.match(gate, /<h3>DO NOT USE<\/h3>/);
+  assert.match(gate, /<h3>INSUFFICIENT EVIDENCE<\/h3>/);
+  assert.match(gate, /Both the evaluator and verdict classifier leave automatic reuse disabled/);
 
   assert.match(radarWorkflow, /schedule:/);
   assert.match(radarWorkflow, /issues: write/);
