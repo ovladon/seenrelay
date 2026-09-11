@@ -34,7 +34,7 @@ A first report should contain enough calls to represent the workload's normal re
 
 ### Natural-workload hostile input
 
-The staged JavaScript / TypeScript Shadow Proof can retain a bounded, sanitized per-call record and explicitly export schema-v2 input for `scripts/evaluate-hostile-benchmark.mjs`. This path remains strict shadow mode: a simulated reuse policy is evaluated only after the authoritative validation has completed and cannot suppress it.
+The current JavaScript / TypeScript and Python Shadow Proof implementations can retain a bounded, sanitized per-call record and explicitly export schema-v2 input for their hostile evaluators. This path remains strict shadow mode: a simulated reuse policy is evaluated only after the authoritative validation has completed and cannot suppress it.
 
 The exported record contains only:
 
@@ -49,7 +49,7 @@ It does not contain the fact descriptor, source URL, known value, validated valu
 
 The hostile evaluator requires the baseline `best_existing_non_shared_path` and explicit measurement declarations for local cache, source-native conditional validation and provider-native caching. If one of those controls is available but was not measured, the evaluator rejects the benchmark as incomplete. CHECK-unavailable calls remain in the natural sample instead of disappearing. A policy-accepted hypothetical reuse that cannot be compared deterministically is `incomplete`, not a safety pass; any observed mismatch fails safety evidence.
 
-Python continues to support shadow measurement but does not claim parity with this natural-workload collector in the staged client release.
+Python follows the same fail-closed evidence contract. If concurrent relay traffic makes per-call CHECK/OBSERVE telemetry impossible to attribute unambiguously, the Python collector invalidates the benchmark export rather than guessing.
 
 ## 3. Direct-reuse economics
 

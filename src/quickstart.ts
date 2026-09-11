@@ -42,8 +42,8 @@ export function quickstartPage(origin: string): string {
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">INTEGRATION QUICKSTART · CLIENT ${esc(clientVersion)}</div>
   <h1>Measure first. Reuse only where the fleet earns it.</h1>
-  <p>The first SeenRelay integration keeps the existing read-only validation authoritative. Ambient measures exact repetition locally while the original operation still runs. If a costly workload repeats materially across workers, the JavaScript/TypeScript client can then use caller-owned encrypted private L1 before optional shared evidence.</p>
-  <div class="rv-actions"><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
+  <p>The first SeenRelay integration keeps the existing read-only validation authoritative. Ambient measures exact repetition locally while the original operation still runs. If a costly workload repeats materially across workers, test that specific path with Shadow Proof before enabling any reuse.</p>
+  <div class="rv-actions"><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="agent">
@@ -55,7 +55,7 @@ export function quickstartPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section" id="manual">
-  <div class="rv-section-head"><div class="rv-eyebrow">MANUAL INTEGRATION</div><h2>The first deployment needs no reuse policy.</h2><p>Install the package and wrap the client you already have. Continue using it normally. The report is local; the wrapper does not authorize automatic reuse.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">MANUAL INTEGRATION</div><h2>The first deployment needs no reuse policy.</h2><p>Install the package and wrap the client you already have. Continue using it normally. The Ambient report is local candidate discovery; it is not by itself a deployment verdict and does not authorize automatic reuse.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice">
       <header><b>JavaScript/TypeScript ${esc(clientVersion)}</b><span>MCP AMBIENT</span></header>
@@ -83,6 +83,75 @@ print(client.get_report())</pre></div>
     </article>
   </div>
   <div class="rv-note"><b>Protocol boundary:</b> SeenRelay's local-first client integrations sit around the application's validation path. Hosted SeenRelay exposes exactly CHECK and OBSERVE, and the original validation remains the fallback.</div>
+</section>
+
+<section class="rv-shell rv-section" id="evaluate">
+  <div class="rv-section-head"><div class="rv-eyebrow">FROM CANDIDATE TO EVIDENCE</div><h2>Ambient finds repetition. Shadow Proof tests whether the path deserves reuse.</h2><p>Move only a materially repeated, deterministic, read-only candidate into this stage. Shadow Proof still runs every authoritative validation. The simulated reuse policy is evaluated only afterward, and the hostile evaluator refuses incomplete native-control evidence instead of guessing.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice">
+      <header><b>JavaScript / TypeScript</b><span>SHADOW PROOF</span></header>
+      <div class="rv-code"><pre>import { SeenRelayClient, reuseKnownOnSameObserved } from 'seenrelay';
+import { SeenRelayShadowProof } from 'seenrelay/shadow-proof';
+import { evaluateHostileBenchmark } from 'seenrelay/economics';
+
+const proof = new SeenRelayShadowProof(
+  new SeenRelayClient(),
+  { benchmarkRecordLimit: 10_000 }
+);
+
+await proof.guard({
+  fact,
+  knownValue,
+  validate: ({ conditionalHeaders }) =&gt;
+    expensiveValidation(conditionalHeaders),
+  benchmark: {
+    reuse: reuseKnownOnSameObserved,
+    baselineCost: measuredValidationCost,
+    checkCost: measuredCheckCost,
+    observeCost: measuredObserveCost,
+    observeAfterBaseline: true
+  }
+});
+
+const input = proof.hostileBenchmarkInput({
+  workloadId: 'opaque-workload-id',
+  controls: measuredControls
+});
+console.log(evaluateHostileBenchmark(input));</pre></div>
+    </article>
+    <article class="rv-choice">
+      <header><b>Python</b><span>SHADOW PROOF</span></header>
+      <div class="rv-code"><pre>from seenrelay import SeenRelayClient, reuse_known_on_same_observed
+from seenrelay_shadow import SeenRelayShadowProof
+from seenrelay_economics import evaluate_hostile_benchmark
+
+proof = SeenRelayShadowProof(
+    SeenRelayClient(),
+    benchmark_record_limit=10_000,
+)
+
+proof.guard(
+    fact=fact,
+    known_value=known_value,
+    validate=lambda ctx: expensive_validation(ctx.conditional_headers),
+    benchmark={
+        "reuse": reuse_known_on_same_observed,
+        "baseline_cost": measured_validation_cost,
+        "check_cost": measured_check_cost,
+        "observe_cost": measured_observe_cost,
+        "observe_after_baseline": True,
+    },
+)
+
+benchmark_input = proof.hostile_benchmark_input(
+    workload_id="opaque-workload-id",
+    controls=measured_controls,
+)
+print(evaluate_hostile_benchmark(benchmark_input))</pre></div>
+    </article>
+  </div>
+  <div class="rv-note"><b>Do not fill the controls optimistically.</b> <code>measuredControls</code> / <code>measured_controls</code> must truthfully declare local cache, source-native conditional validation and provider-native caching. If a stronger control is available but was not measured on the same workload, evaluation is incomplete. The evaluator always leaves automatic reuse disabled.</div>
+  <div class="rv-actions"><a class="rv-button" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Full Economics Lab →</a><a class="rv-button quiet" href="/economics">Decision model →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="fleet">
@@ -121,7 +190,7 @@ const edge = new SeenRelayZeroState({
   </div>
 </section>
 
-<section class="rv-shell rv-final"><div><div class="rv-eyebrow">AFTER THE FIRST RUN</div><h2>Promote only the expensive paths that actually repeat.</h2><p>If exact repetition is rare, or an equivalent source/provider-native path is already cheaper, leave it alone. If repetition is material across workers, select the narrowest bounded private or optional shared-evidence policy appropriate to that operation.</p></div><div class="rv-actions"><a class="rv-button primary" href="/fleet">Fleet deployment</a><a class="rv-button" href="/clients">Integration options</a><a class="rv-button" href="/economics">Measured tests</a></div></section>
+<section class="rv-shell rv-final"><div><div class="rv-eyebrow">AFTER THE FIRST RUN</div><h2>Promote only the expensive paths that actually repeat.</h2><p>If exact repetition is rare, or an equivalent source/provider-native path is already cheaper, leave it alone. If repetition is material across workers, select the narrowest bounded private or optional shared-evidence policy appropriate to that operation.</p></div><div class="rv-actions"><a class="rv-button primary" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="/fleet">Fleet deployment</a><a class="rv-button" href="/clients">Integration options</a><a class="rv-button" href="/economics">Measured tests</a></div></section>
 </main>
 ${siteFooterHtml()}
 </body>

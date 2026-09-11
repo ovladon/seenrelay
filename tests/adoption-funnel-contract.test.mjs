@@ -71,6 +71,25 @@ test('Agent Skill first-use contract is synchronized and does not authorize reus
   assert.match(canonical, /active reuse/i);
 });
 
+test('Developer path advances from Ambient screening to falsifiable shadow evaluation', () => {
+  const landing = read('src', 'landing.ts');
+  const quickstart = read('src', 'quickstart.ts');
+  const economicsLab = read('docs', 'ECONOMICS_LAB.md');
+
+  assert.match(landing, /href="\/quickstart#evaluate"/);
+  assert.match(quickstart, /id="evaluate"/);
+  assert.match(quickstart, /Ambient finds repetition\. Shadow Proof tests whether the path deserves reuse\./);
+  assert.match(quickstart, /SeenRelayShadowProof/);
+  assert.match(quickstart, /hostileBenchmarkInput/);
+  assert.match(quickstart, /hostile_benchmark_input/);
+  assert.match(quickstart, /evaluateHostileBenchmark/);
+  assert.match(quickstart, /evaluate_hostile_benchmark/);
+  assert.match(quickstart, /The evaluator always leaves automatic reuse disabled/);
+  assert.match(economicsLab, /JavaScript \/ TypeScript and Python Shadow Proof implementations/);
+  assert.match(economicsLab, /Python follows the same fail-closed evidence contract/);
+  assert.doesNotMatch(economicsLab, /Python continues to support shadow measurement but does not claim parity/i);
+});
+
 test('adoption automation verifies the exact public path and external discovery surfaces', () => {
   const gate = read('.github', 'workflows', 'production-adoption-gate.yml');
   const radarWorkflow = read('.github', 'workflows', 'distribution-radar.yml');
@@ -85,11 +104,16 @@ test('adoption automation verifies the exact public path and external discovery 
   for (const homepageAsset of ['public/revamp.js', 'public/revamp.css', 'public/revamp-factual.css', 'public/sota.css', 'public/funnel.css']) {
     assert.match(gate, new RegExp(homepageAsset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
+  assert.match(gate, /src\/quickstart\.ts/);
   assert.match(gate, /rv-console rv-funnel-console/);
   assert.match(gate, /rv-console-body/);
   assert.match(gate, /developer-audit/);
+  assert.match(gate, /href="\/quickstart#evaluate"/);
   assert.match(gate, /Integrate directly with the client\./);
   assert.match(gate, /Install the npm or PyPI client/);
+  assert.match(gate, /SeenRelayShadowProof/);
+  assert.match(gate, /evaluateHostileBenchmark/);
+  assert.match(gate, /evaluate_hostile_benchmark/);
 
   assert.match(radarWorkflow, /schedule:/);
   assert.match(radarWorkflow, /issues: write/);

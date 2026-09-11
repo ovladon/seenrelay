@@ -11,6 +11,7 @@ on:
       - 'shared/agent-skill.mjs'
       - 'src/index.ts'
       - 'src/landing.ts'
+      - 'src/quickstart.ts'
       - 'src/public.ts'
       - 'src/version.ts'
       - 'public/product-facts.json'
@@ -146,6 +147,9 @@ jobs:
             --header 'Accept: text/html' https://seenrelay.com/ \
             --output "$RUNNER_TEMP/home.html"
           curl --fail --silent --show-error --location \
+            --header 'Accept: text/html' https://seenrelay.com/quickstart \
+            --output "$RUNNER_TEMP/quickstart.html"
+          curl --fail --silent --show-error --location \
             https://seenrelay.com/revamp.js \
             --output "$RUNNER_TEMP/revamp.js"
           grep -q 'Run the free shadow audit' "$RUNNER_TEMP/home.html"
@@ -153,6 +157,12 @@ jobs:
           grep -q 'rv-console rv-funnel-console' "$RUNNER_TEMP/home.html"
           grep -q 'rv-console-body' "$RUNNER_TEMP/home.html"
           grep -q 'id="developer-audit"' "$RUNNER_TEMP/home.html"
+          grep -q 'href="/quickstart#evaluate"' "$RUNNER_TEMP/home.html"
           grep -q 'Integrate directly with the client.' "$RUNNER_TEMP/revamp.js"
           grep -q 'Install the npm or PyPI client' "$RUNNER_TEMP/revamp.js"
-          echo 'Homepage exposes the expected activation path, contained audit panel and mode-specific Developer guidance.'
+          grep -q 'id="evaluate"' "$RUNNER_TEMP/quickstart.html"
+          grep -q 'SeenRelayShadowProof' "$RUNNER_TEMP/quickstart.html"
+          grep -q 'evaluateHostileBenchmark' "$RUNNER_TEMP/quickstart.html"
+          grep -q 'evaluate_hostile_benchmark' "$RUNNER_TEMP/quickstart.html"
+          grep -q 'The evaluator always leaves automatic reuse disabled' "$RUNNER_TEMP/quickstart.html"
+          echo 'Production exposes the contained first-use panel and a concrete Developer shadow-evaluation path.'
