@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-09-08T13:03:19Z",
+  "updated_at": "2026-09-11T11:21:32Z",
   "positioning": {
     "category": "validation cost avoidance and shared freshness evidence for AI agents",
     "headline": "Avoid redundant expensive validation",
-    "subheadline": "Client 0.2.13 is independently verified on npm and PyPI; npm packaging now enforces valid declared exports and a self-contained prepack path. Provider-independent Zero-State, caller-owned private L1, source-native validation and optional shared CHECK remain unchanged.",
+    "subheadline": "Client 0.2.14 is published on npm and PyPI with deterministic single-workload USE / DO NOT USE / INSUFFICIENT EVIDENCE classification in JavaScript/TypeScript and Python. Provider-independent Zero-State, caller-owned private L1, source-native validation and optional shared CHECK remain unchanged.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.13",
+    "client_version": "0.2.14",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-09-08T13:03:19Z",
-    "verification": "Client 0.2.13 was published to npm and PyPI through trusted publishing and independently verified from both public registries. npm clean-install verification imported every declared export, confirmed obsolete dangling subpaths absent, ran the package-local export validator and successfully repacked the installed public package; PyPI exact-version clean-install and representative imports also passed. Runtime semantics are otherwise unchanged from the previously verified client line."
+    "registry_install_verified_at": "2026-09-11T11:21:32Z",
+    "verification": "Client 0.2.14 was published to npm and PyPI through trusted publishing. The promotion gate independently clean-installs the exact version from both public registries; npm verification imports every declared export, runs the package-local export validator and repacks the installed package, while PyPI verification performs exact-version clean install and representative imports. Client 0.2.14 adds matching deterministic single-workload audit verdict helpers in JavaScript/TypeScript and Python and never enables reuse."
   },
   "fit": {
     "use_when": [
@@ -167,6 +167,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-09-11",
+      "title": "Public client 0.2.14",
+      "summary": "SeenRelay 0.2.14 is published through trusted publishing on npm and PyPI. JavaScript/TypeScript and Python expose matching deterministic single-workload audit verdict helpers: USE only for complete natural evidence that safely beats the best measured non-shared path on both cost and latency; DO NOT USE for unsafe comparisons or complete non-winning evidence; otherwise INSUFFICIENT EVIDENCE. The evaluator never enables reuse."
+    },
     {
       "date": "2026-09-08",
       "title": "Public client 0.2.13",
