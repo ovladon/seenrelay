@@ -25,8 +25,8 @@ test('runtime consumes canonical facts and sales pages avoid benchmark promotion
   assert.match(landing,/f\.install\.npm_command/); assert.match(landing,/f\.install\.pypi_command/);
   assert.match(integrations,/publicProductFacts\.install\.client_version/);
   assert.match(q,/siteFooterHtml\(\)/); assert.match(integrations,/siteFooterHtml\(\)/);
-  assert.match(e,/publicProductFacts\.pricing_snapshots/); assert.doesNotMatch(e,/verifiedBenchmarkHtml\(/); assert.match(i,/\/product-facts\.json/);
-  assert.doesNotMatch(landing+e,/first-party smoke|provider calls avoided|Firecrawl JSON extraction/i);
+  assert.match(e,/Use your invoice, not a public benchmark/); assert.match(e,/Provider spend/); assert.doesNotMatch(e,/verifiedBenchmarkHtml\(|pricing_snapshots/); assert.match(i,/\/product-facts\.json/);
+  assert.doesNotMatch(landing+e,/first-party smoke|provider calls avoided|Firecrawl|OpenAI Web Search/i);
   assert.doesNotMatch(pub+ad+q+landing+integrations+e,/Firecrawl Pay As You Go/);
 });
 test('CI and daily monitor fail on drift or stale pricing',()=>{
