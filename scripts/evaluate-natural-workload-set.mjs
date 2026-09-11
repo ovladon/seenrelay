@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { evaluateHostileBenchmark } from './evaluate-hostile-benchmark.mjs';
+import { evaluateHostileBenchmark, classifyHostileBenchmarkVerdict } from './evaluate-hostile-benchmark.mjs';
 
 export const NATURAL_WORKLOAD_CLASSES = Object.freeze([
   'structured_source_reads',
@@ -30,12 +30,21 @@ export function evaluateNaturalWorkloadSet(inputs, { minimumCalls = 100 } = {}) 
 
   const workloads = inputs.map((input) => {
     const report = evaluateHostileBenchmark(input);
-    const sampleFloorMet = report.calls >= minimumCalls;
-    const unsafe = report.unsafe_hypothetical_reuses > 0;
-    const comparisonComplete = report.reuse_comparison_unavailable === 0;
-    const evidenceComplete = sampleFloorMet && comparisonComplete;
-    const positive = evidenceComplete && !unsafe && report.decision.beats_baseline_on_both === true;
-    return Object.freeze({ workload_id: report.workload_id, workload_class: input.workload_class, calls: report.calls, sample_floor_met: sampleFloorMet, comparison_complete: comparisonComplete, unsafe_hypothetical_reuses: report.unsafe_hypothetical_reuses, safety_state: report.safety.state, latency_outcome: report.latency.outcome, cost_outcome: report.cost.outcome, incremental_value_candidate: positive });
+    const classification = classifyHostileBenchmarkVerdict(report, { minimumCalls });
+    return Object.freeze({
+      workload_id: report.workload_id,
+      workload_class: input.workload_class,
+      calls: report.calls,
+      verdict: classification.verdict,
+      verdict_reasons: classification.reasons,
+      sample_floor_met: classification.sample_floor_met,
+      comparison_complete: classification.comparison_complete,
+      unsafe_hypothetical_reuses: report.unsafe_hypothetical_reuses,
+      safety_state: report.safety.state,
+      latency_outcome: report.latency.outcome,
+      cost_outcome: report.cost.outcome,
+      incremental_value_candidate: classification.verdict === 'USE'
+    });
   });
   const unsafeWorkloads = workloads.filter((w) => w.unsafe_hypothetical_reuses > 0).length;
   const completeWorkloads = workloads.filter((w) => w.sample_floor_met && w.comparison_complete).length;
