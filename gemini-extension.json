@@ -1,11 +1,11 @@
 {
   "name": "seenrelay",
   "version": "0.3.10",
-  "description": "Measure repeated expensive read-only validation across AI agent fleets before policy-gated reuse.",
+  "description": "Find repeated expensive read-only checks in AI agent workloads before policy-gated reuse.",
   "mcpServers": {
     "seenrelay": {
       "httpUrl": "https://seenrelay.com/mcp",
-      "description": "Measure repeated expensive read-only validation across AI agent fleets before policy-gated reuse.",
+      "description": "Find repeated expensive read-only checks in AI agent workloads before policy-gated reuse.",
       "includeTools": [
         "check_fact",
         "observe_fact"

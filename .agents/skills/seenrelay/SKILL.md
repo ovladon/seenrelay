@@ -1,6 +1,6 @@
 ---
 name: seenrelay
-description: Measure repeated expensive read-only validation across agent fleets before enabling reuse. Start in shadow mode, preserve authoritative and stronger native controls, and prefer caller-owned private reuse before optional shared evidence.
+description: Find repeated expensive read-only checks across AI agent fleets and measure whether reuse is worthwhile. Start in shadow mode; preserve authoritative and stronger native controls, and prefer private reuse before optional shared evidence.
 license: SEE LICENSE IN REPOSITORY
 compatibility: Requires a project that can call HTTP/MCP or use the SeenRelay TypeScript/Python client; never use this skill to suppress mutating or destructive operations.
 metadata:
@@ -44,6 +44,14 @@ Use **local/Ambient shadow** first when the goal is to find exact repetition and
 Use **shared-evidence shadow** only when the candidate has a stable source-native fact descriptor, the value is eligible to share under caller policy, and measuring shared evidence is actually relevant. Use the classic client without a `reuse` policy, or `SeenRelayShadowProof` / the Python equivalent. In this lane SeenRelay may CHECK the caller-known value, but the original authoritative validation still runs. Only after a genuinely fresh independent result may the client OBSERVE it best-effort. A CHECK result never authorizes skipping validation in shadow mode.
 
 Do not manufacture a shared fact identity merely to exercise the relay. If the workload cannot support a deterministic shareable fact descriptor, stay on local/Ambient measurement. If shared-evidence shadow produces too little eligible repetition or no economic advantage over stronger existing controls, report that result and leave shared reuse disabled.
+
+## Return a comparable first audit
+
+After measurement, always return a short human-readable decision plus a machine-readable object with `schema_version: "seenrelay-shadow-audit-v1"`. Use the fields defined by `docs/schemas/shadow-audit-report.schema.json` in the SeenRelay repository: workload identity, protected-call count, exact-repeat count, stronger native-control measurements, shared-CHECK outcomes when measured, hypothetical-reuse mismatches, baseline units, SeenRelay overhead/economics, safety state, reasons and verdict.
+
+The only verdicts are **USE / DO NOT USE / INSUFFICIENT EVIDENCE**. A negative verdict is a successful audit when stronger native controls already win, repetition is too low, the operation is unsafe to suppress, equivalence fails or economics are negative.
+
+Do not invent data to make the report look complete. Use `null` for an unmeasured comparable quantity, zero only for a measured zero, and `INSUFFICIENT EVIDENCE` when the sample or comparison is inadequate. Keep raw values, credentials, private fact identities and source payloads out of the machine report. Return the JSON inline unless the caller explicitly requests a persistent `seenrelay-audit.json` artifact or the project already has a suitable generated-report convention.
 
 ## Assess readiness before modifying code
 
