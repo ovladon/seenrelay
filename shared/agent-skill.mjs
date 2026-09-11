@@ -1,4 +1,4 @@
-export const SEENRELAY_SKILL_DESCRIPTION = "Find repeated expensive read-only checks across AI agent fleets and measure whether reuse is worthwhile. Start in shadow mode; preserve authoritative and stronger native controls.";
+export const SEENRELAY_SKILL_DESCRIPTION = "Find repeated expensive read-only checks across AI agent fleets and measure whether reuse is worthwhile. Start in shadow mode; preserve authoritative and stronger native controls, and prefer private reuse before optional shared evidence.";
 
 export function agentSkillMarkdown(){
 return `---
