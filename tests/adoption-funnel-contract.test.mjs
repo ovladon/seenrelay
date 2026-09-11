@@ -76,7 +76,8 @@ test('adoption automation verifies the exact public path and external discovery 
   const radarWorkflow = read('.github', 'workflows', 'distribution-radar.yml');
   const radar = read('scripts', 'distribution-radar.mjs');
 
-  assert.match(gate, /skills@latest add https:\/\/seenrelay\.com --skill seenrelay --yes/);
+  assert.match(gate, /npx skills add https:\/\/seenrelay\.com --skill seenrelay --yes/);
+  assert.match(gate, /npm_config_yes=true/);
   assert.match(gate, /deployment_sha == \$sha/);
   assert.match(gate, /billing_enabled == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
