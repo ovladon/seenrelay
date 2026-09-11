@@ -9,25 +9,6 @@ function esc(value: unknown): string {
     .replaceAll('"', '&quot;');
 }
 
-function evidenceCards(): string {
-  return publicProductFacts.verified_benchmarks
-    .filter((item) => 'matrix' in item)
-    .map((item) => {
-      if (!('matrix' in item)) return '';
-      const matrix = item.matrix;
-      return `<article class="rv-evidence-card">
-        <header><div><small>${esc(matrix.surface)}</small><b>${esc(matrix.configuration)}</b></div></header>
-        <div class="rv-evidence-metrics">
-          <div><strong>${esc(matrix.provider_calls_avoided)}/${esc(item.samples)}</strong><span>provider calls avoided in this smoke test</span></div>
-          <div><strong>${esc(matrix.provider_units_avoided)}</strong><span>${esc(matrix.provider_unit_label)} avoided</span></div>
-          <div><strong>${esc(matrix.baseline_median_ms)} → ${esc(item.reuse_median_ms)} ms</strong><span>measured baseline → reuse path</span></div>
-        </div>
-        <footer><span>mechanics evidence · not workload-fit evidence · n=${esc(item.samples)}</span></footer>
-      </article>`;
-    })
-    .join('');
-}
-
 export function publicLandingPage(origin: string): string {
   const f = publicProductFacts;
   const version = esc(f.install.client_version);
@@ -147,16 +128,6 @@ export function publicLandingPage(origin: string): string {
         <div class="rv-step"><span>3</span><div><h4>Keep only measured value</h4><p>The skill must leave unsupported paths unchanged and should return DO NOT USE when native controls or sparse recurrence make SeenRelay uneconomic.</p></div></div></div>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="rv-shell rv-section" id="tests">
-  <div class="rv-section-head"><div class="rv-eyebrow">MECHANICS EVIDENCE — NOT SALES PROOF</div><h2>The current public smoke tests show that work can be skipped. They do not prove that those specific workloads should buy SeenRelay.</h2><p>All current Firecrawl examples are intentionally retained as first-party mechanics evidence. Their tested facts had cheaper source-native paths, so they are poor-fit workloads. This is not a universal ROI claim.</p></div>
-  <div class="rv-evidence-cards" aria-label="SeenRelay benchmark results">${evidenceCards()}</div>
-  <div class="rv-evidence-interpretation">
-    <article><b>Established</b><p>Bounded reuse can bypass equivalent provider work and can reduce provider units and latency in some measured paths.</p></article>
-    <article><b>Not established</b><p>These smoke tests do not establish a universal hit rate, guaranteed savings, or product-market fit.</p></article>
-    <article><b>Commercial proof</b><p>Your workload must show safe recurrence and positive net economics after stronger native controls and SeenRelay overhead are counted.</p><a href="/economics">See the economic test →</a></article>
   </div>
 </section>
 
