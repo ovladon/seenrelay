@@ -2,6 +2,8 @@
 
 This gate tests whether shared CHECK adds incremental value after the best qualifying non-shared optimization has already been measured. It is designed to return negative results honestly.
 
+External workload candidates are frozen before evidence collection in [`EXTERNAL_WORKLOAD_PRESCREEN.md`](./EXTERNAL_WORKLOAD_PRESCREEN.md). That pre-screen is not benchmark evidence and cannot satisfy the call-count or measurement requirements below.
+
 ## Required evidence
 
 Evaluate three independently defined natural workloads. Repetition must arise from the workload distribution; do not manufacture repeated facts merely to create CHECK hits.
