@@ -43,7 +43,7 @@ test('browser negative controls keep local and provider-native winners visible',
   assert.match(groktocrawl, /groktocrawl#100/);
   assert.match(groktocrawl, /ETag/);
 
-  assert.ok(browserRows.some((line) => line.includes('changedetection.io') && line.includes('`INSUFFICIENT_EVIDENCE`')));
+  assert.ok(browserRows.some((line) => line.includes('changedetection') && line.includes('`INSUFFICIENT_EVIDENCE`')));
   assert.ok(browserRows.some((line) => line.includes('Huginn') && line.includes('`INSUFFICIENT_EVIDENCE`')));
   assert.match(prescreen, /Firecrawl.*provider-native indexed-content reuse/s);
   assert.match(prescreen, /`maxAge: 0`/);
