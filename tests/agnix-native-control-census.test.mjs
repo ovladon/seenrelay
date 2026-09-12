@@ -143,13 +143,21 @@ test('census implementation contains no hosted SeenRelay calls', () => {
   assert.doesNotMatch(source, /SeenRelayClient|SeenRelayShadowProof/);
 });
 
-test('workflow commissions on PR/push, persists only outside PR, and schedules natural collection after upstream', () => {
+test('only the fixed schedule can restore or advance longitudinal native-control state', () => {
   const workflow = fs.readFileSync('.github/workflows/agnix-native-control-census.yml', 'utf8');
+
   assert.match(workflow, /cron: '25 7 \* \* \*'/);
-  assert.match(workflow, /github\.event_name != 'pull_request'/);
-  assert.match(workflow, /actions\/cache\/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9/);
-  assert.match(workflow, /actions\/cache\/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9/);
-  assert.match(workflow, /if \[ "\$\{\{ github\.event_name \}\}" = "schedule" \]; then\n\s+mode=natural/);
+  assert.match(workflow, /- name: Restore scheduled native-control state\n\s+if: github\.event_name == 'schedule'/);
+  assert.match(workflow, /- name: Save scheduled native-control state\n\s+if: success\(\) && github\.event_name == 'schedule'/);
+  assert.match(workflow, /seenrelay-agnix-scheduled-v2-main-\$\{\{ github\.run_id \}\}/);
+  assert.match(workflow, /restore-keys: \|\n\s+seenrelay-agnix-scheduled-v2-main-/);
+  assert.doesNotMatch(workflow, /seenrelay-agnix-native-main-/);
+  assert.doesNotMatch(workflow, /github\.event_name != 'pull_request'/);
+
+  assert.match(workflow, /mode=commissioning\n\s+if \[ "\$\{\{ github\.event_name \}\}" = "schedule" \]; then\n\s+mode=natural/);
+  assert.doesNotMatch(workflow, /inputs\.mode/);
   assert.match(workflow, /CENSUS_MODE: \$\{\{ steps\.mode\.outputs\.mode \}\}/);
+  assert.match(workflow, /v2 intentionally discards the earlier cache namespace/);
+  assert.match(workflow, /Only the fixed daily schedule may restore or advance scheduled state/);
   assert.doesNotMatch(workflow, /SEENRELAY_API_KEY|\/v1\/(check|observe)/i);
 });
