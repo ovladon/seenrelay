@@ -27,9 +27,27 @@ test('prescreen retains every methodological class without manufacturing a compl
   assert.ok(rowsFor('fleet_tool_validations').length > 0);
 
   const browserRows = rowsFor('browser_extraction_reads');
-  assert.ok(browserRows.every((line) => line.includes('`REJECT_BEFORE_COLLECTION`')));
+  assert.ok(browserRows.every((line) => !line.includes('`COLLECT`')));
+  assert.ok(browserRows.some((line) => line.includes('`REJECT_BEFORE_COLLECTION`')));
+  assert.ok(browserRows.some((line) => line.includes('`INSUFFICIENT_EVIDENCE`')));
   assert.match(prescreen, /No `browser_extraction_reads` candidate in this pre-screen currently survives/);
+  assert.match(prescreen, /no admitted browser collection candidate/i);
   assert.match(prescreen, /do not .*manufacture repeated URLs/i);
+});
+
+test('browser negative controls keep local and provider-native winners visible', () => {
+  const browserRows = rowsFor('browser_extraction_reads');
+  const groktocrawl = browserRows.find((line) => line.includes('groktocrawl'));
+  assert.ok(groktocrawl);
+  assert.match(groktocrawl, /Valkey/);
+  assert.match(groktocrawl, /groktocrawl#100/);
+  assert.match(groktocrawl, /ETag/);
+
+  assert.ok(browserRows.some((line) => line.includes('changedetection') && line.includes('`INSUFFICIENT_EVIDENCE`')));
+  assert.ok(browserRows.some((line) => line.includes('Huginn') && line.includes('`INSUFFICIENT_EVIDENCE`')));
+  assert.match(prescreen, /Firecrawl.*provider-native indexed-content reuse/s);
+  assert.match(prescreen, /`maxAge: 0`/);
+  assert.match(prescreen, /Reopen it only when new evidence identifies a deployed workload/);
 });
 
 test('collect candidates freeze best-native controls and falsification criteria first', () => {
