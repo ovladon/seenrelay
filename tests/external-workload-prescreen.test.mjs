@@ -54,14 +54,30 @@ test('browser negative controls keep local and provider-native winners visible',
   assert.match(prescreen, /Reopen it only when new evidence identifies a deployed workload/);
 });
 
-test('collect candidates freeze best-native controls and falsification criteria first', () => {
-  const collectRows = candidateRows.filter((line) => line.includes('`COLLECT`'));
-  assert.ok(collectRows.some((line) => line.includes('Agnix')));
-  assert.ok(collectRows.some((line) => line.includes('Klangschalen')));
+test('fleet candidates fail closed when the workload is private or locally content-addressable', () => {
+  const fleetRows = rowsFor('fleet_tool_validations');
+  assert.ok(fleetRows.every((line) => !line.includes('`COLLECT`')));
+  assert.ok(fleetRows.some((line) => line.includes('Klangschalen') && line.includes('`INSUFFICIENT_EVIDENCE`')));
+  assert.ok(fleetRows.some((line) => line.includes('Velnor Actions') && line.includes('`REJECT_BEFORE_COLLECTION`')));
+  assert.match(prescreen, /no autonomous public `fleet_tool_validations` collection candidate/i);
+  assert.match(prescreen, /full 45-repository workload is not publicly replayable/i);
+  assert.match(prescreen, /commit-addressed local audit caching is already the stronger design/i);
+});
 
+test('the only admitted public collection path is Agnix and native controls run first', () => {
+  const collectRows = candidateRows.filter((line) => line.includes('`COLLECT`'));
+  assert.ok(collectRows.length > 0);
+  assert.ok(collectRows.every((line) => line.includes('Agnix')));
+
+  assert.match(prescreen, /scripts\/agnix-native-control-census\.mjs/);
+  assert.match(prescreen, /agnix-native-control-census\.yml/);
+  assert.match(prescreen, /does not emit `USE` \/ `DO NOT USE`/);
+  assert.match(prescreen, /zero SeenRelay `CHECK`\/`OBSERVE` calls/);
+  assert.match(prescreen, /first complete persistent run is commissioning only/i);
+  assert.match(prescreen, /Do not seed the public relay/i);
   assert.match(prescreen, /ETag/);
   assert.match(prescreen, /If-None-Match/);
   assert.match(prescreen, /Kill criterion:/);
   assert.match(prescreen, /classify the completed workload `DO NOT USE`/);
-  assert.match(prescreen, /do not count commissioning or collector-debug runs/i);
+  assert.match(prescreen, /Do not count commissioning or collector-debug runs/i);
 });
