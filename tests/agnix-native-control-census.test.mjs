@@ -142,3 +142,14 @@ test('census implementation contains no hosted SeenRelay calls', () => {
   assert.doesNotMatch(source, /\/v1\/(check|observe)/i);
   assert.doesNotMatch(source, /SeenRelayClient|SeenRelayShadowProof/);
 });
+
+test('workflow commissions on PR/push, persists only outside PR, and schedules natural collection after upstream', () => {
+  const workflow = fs.readFileSync('.github/workflows/agnix-native-control-census.yml', 'utf8');
+  assert.match(workflow, /cron: '25 7 \* \* \*'/);
+  assert.match(workflow, /github\.event_name != 'pull_request'/);
+  assert.match(workflow, /actions\/cache\/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9/);
+  assert.match(workflow, /actions\/cache\/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9/);
+  assert.match(workflow, /if \[ "\$\{\{ github\.event_name \}\}" = "schedule" \]; then\n\s+mode=natural/);
+  assert.match(workflow, /CENSUS_MODE: \$\{\{ steps\.mode\.outputs\.mode \}\}/);
+  assert.doesNotMatch(workflow, /SEENRELAY_API_KEY|\/v1\/(check|observe)/i);
+});
