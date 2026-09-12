@@ -150,7 +150,7 @@ test('only the fixed schedule can restore or advance longitudinal native-control
   assert.match(workflow, /- name: Restore scheduled native-control state\n\s+if: github\.event_name == 'schedule'/);
   assert.match(workflow, /- name: Save scheduled native-control state\n\s+if: success\(\) && github\.event_name == 'schedule'/);
   assert.match(workflow, /seenrelay-agnix-scheduled-v2-main-\$\{\{ github\.run_id \}\}/);
-  assert.match(workflow, /restore-keys:\n\s+seenrelay-agnix-scheduled-v2-main-/);
+  assert.match(workflow, /restore-keys: \|\n\s+seenrelay-agnix-scheduled-v2-main-/);
   assert.doesNotMatch(workflow, /seenrelay-agnix-native-main-/);
   assert.doesNotMatch(workflow, /github\.event_name != 'pull_request'/);
 
