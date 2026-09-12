@@ -51,7 +51,29 @@ test('browser negative controls keep local and provider-native winners visible',
   assert.ok(browserRows.some((line) => line.includes('Huginn') && line.includes('`INSUFFICIENT_EVIDENCE`')));
   assert.match(prescreen, /Firecrawl.*provider-native indexed-content reuse/s);
   assert.match(prescreen, /`maxAge: 0`/);
-  assert.match(prescreen, /Reopen it only when new evidence identifies a deployed workload/);
+});
+
+test('second browser search wave stays falsification-first and bounded', () => {
+  const browserRows = rowsFor('browser_extraction_reads');
+  const jobseek = browserRows.find((line) => line.includes('jobseek'));
+  const lightcrawl = browserRows.find((line) => line.includes('LightCrawl'));
+
+  assert.ok(jobseek);
+  assert.match(jobseek, /`INSUFFICIENT_EVIDENCE`/);
+  assert.match(jobseek, /cookies/);
+  assert.match(jobseek, /persistent context/);
+  assert.match(jobseek, /independent callers/);
+  assert.match(prescreen, /former exact Chromium transport-capture program \(#8402\) was closed `not planned`/);
+  assert.match(prescreen, /URL equality alone is not fact-identity equality/);
+
+  assert.ok(lightcrawl);
+  assert.match(lightcrawl, /`INSUFFICIENT_EVIDENCE`/);
+  assert.match(lightcrawl, /Redis/);
+  assert.match(lightcrawl, /URL plus scrape parameters/);
+  assert.match(prescreen, /redundant AI-agent rescraping of the same pages/);
+  assert.match(prescreen, /second wave therefore also stops with \*\*no admitted browser collection candidate\*\*/i);
+  assert.match(prescreen, /bounded search is now closed rather than expanded indefinitely/i);
+  assert.match(prescreen, /Reopen it only when new external evidence identifies a deployed workload/);
 });
 
 test('fleet candidates fail closed when the workload is private or locally content-addressable', () => {
