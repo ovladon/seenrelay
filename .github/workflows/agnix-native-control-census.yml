@@ -1,0 +1,101 @@
+name: Agnix Native-Control Census
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/agnix-native-control-census.yml'
+      - 'scripts/agnix-native-control-census.mjs'
+      - 'tests/agnix-native-control-census.test.mjs'
+      - 'docs/EXTERNAL_WORKLOAD_PRESCREEN.md'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/agnix-native-control-census.yml'
+      - 'scripts/agnix-native-control-census.mjs'
+      - 'tests/agnix-native-control-census.test.mjs'
+      - 'docs/EXTERNAL_WORKLOAD_PRESCREEN.md'
+  schedule:
+    - cron: '25 7 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Commissioning is excluded from natural-call counts. Natural still fails closed to commissioning until state exists.'
+        required: true
+        type: choice
+        options:
+          - commissioning
+          - natural
+        default: commissioning
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  agnix-native-control-census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+
+      - name: Restore native-control state
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .seenrelay-research/agnix-native-state.json
+          key: seenrelay-agnix-native-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            seenrelay-agnix-native-main-
+
+      - name: Resolve collection mode
+        id: mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode=commissioning
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            mode=natural
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            mode="${{ inputs.mode }}"
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Requested census mode: $mode"
+
+      - name: Run native-control census
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CENSUS_MODE: ${{ steps.mode.outputs.mode }}
+        run: |
+          mkdir -p .seenrelay-research
+          node scripts/agnix-native-control-census.mjs \
+            --state .seenrelay-research/agnix-native-state.json \
+            --output agnix-native-control-census.json
+
+      - name: Add census summary
+        if: always() && hashFiles('agnix-native-control-census.json') != ''
+        run: cat agnix-native-control-census.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save native-control state
+        if: success() && github.event_name != 'pull_request'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .seenrelay-research/agnix-native-state.json
+          key: seenrelay-agnix-native-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Upload sanitized census report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: agnix-native-control-census
+          path: agnix-native-control-census.json
+          if-no-files-found: warn
+          retention-days: 90
