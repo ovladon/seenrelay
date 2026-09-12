@@ -39,9 +39,13 @@ test('browser negative controls keep local and provider-native winners visible',
   const browserRows = rowsFor('browser_extraction_reads');
   const groktocrawl = browserRows.find((line) => line.includes('groktocrawl'));
   assert.ok(groktocrawl);
+  assert.match(groktocrawl, /`INSUFFICIENT_EVIDENCE`/);
   assert.match(groktocrawl, /Valkey/);
   assert.match(groktocrawl, /groktocrawl#100/);
-  assert.match(groktocrawl, /ETag/);
+  assert.match(groktocrawl, /force_browser=True/);
+  assert.match(groktocrawl, /skips the cache/);
+  assert.match(groktocrawl, /exact URLs across independent callers/);
+  assert.match(prescreen, /simpler local fix/);
 
   assert.ok(browserRows.some((line) => line.includes('changedetection') && line.includes('`INSUFFICIENT_EVIDENCE`')));
   assert.ok(browserRows.some((line) => line.includes('Huginn') && line.includes('`INSUFFICIENT_EVIDENCE`')));
