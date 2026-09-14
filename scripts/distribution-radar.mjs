@@ -45,6 +45,10 @@ function repositoryString(value) {
   return String(value.url || value.web || value.repository || '');
 }
 
+function identifiesSeenRelay(text) {
+  return /SeenRelay/i.test(text) && /io\.github\.ovladon/i.test(text);
+}
+
 async function run(id, label, severity, fn) {
   try {
     const detail = await fn();
@@ -112,11 +116,25 @@ await run('pypi', 'PyPI promoted client', 'critical', async () => {
   return `seenrelay==${version}`;
 });
 
-await run('glama', 'Glama connector listing', 'advisory', async () => {
-  const text = await request('https://glama.ai/mcp/connectors/io.github.ovladon/seenrelay');
-  if (!/SeenRelay/i.test(text)) throw new Error('listing no longer identifies SeenRelay');
-  if (!/Healthy/i.test(text)) throw new Error('listing does not currently expose Healthy status');
-  return 'listing present and reports Healthy';
+await run('glama', 'Glama connector discovery', 'advisory', async () => {
+  const canonicalUrl = 'https://glama.ai/mcp/connectors/io.github.ovladon/seenrelay';
+  const canonicalText = await request(canonicalUrl);
+
+  // The canonical connector page may move identity/status text into client-side hydration.
+  // Treat that page as the reachability check, then verify discovery identity through Glama's
+  // connector index rather than assuming raw canonical HTML is the listing database.
+  if (identifiesSeenRelay(canonicalText) && /Healthy/i.test(canonicalText)) {
+    return 'canonical listing present and reports Healthy';
+  }
+
+  const discoveryText = await request('https://glama.ai/mcp/connectors?query=SeenRelay');
+  if (!identifiesSeenRelay(discoveryText)) {
+    throw new Error('canonical listing is reachable, but Glama connector discovery does not identify SeenRelay');
+  }
+
+  return identifiesSeenRelay(canonicalText)
+    ? 'canonical listing reachable and SeenRelay remains discoverable in Glama connector search'
+    : 'canonical listing reachable; SeenRelay remains discoverable in Glama connector search despite hydrated canonical HTML';
 });
 
 await run('agent-plugins-directory', 'Agent Plugins Directory', 'advisory', async () => {
