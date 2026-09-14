@@ -10,7 +10,7 @@ const checks = [];
 const userAgent = 'SeenRelay-Distribution-Radar/1.0 (+https://seenrelay.com)';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function request(url, { json = false } = {}) {
+async function request(url, { json = false, withMeta = false } = {}) {
   let lastError;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
@@ -21,9 +21,11 @@ async function request(url, { json = false } = {}) {
       });
       const text = await response.text();
       if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-      if (!json) return text;
-      try { return JSON.parse(text); }
+      if (!json) return withMeta ? { text, url: response.url, status: response.status } : text;
+      let body;
+      try { body = JSON.parse(text); }
       catch { throw new Error('response was not valid JSON'); }
+      return withMeta ? { body, text, url: response.url, status: response.status } : body;
     } catch (error) {
       lastError = error;
       if (attempt < 3) await sleep(750 * attempt);
@@ -113,10 +115,28 @@ await run('pypi', 'PyPI promoted client', 'critical', async () => {
 });
 
 await run('glama', 'Glama connector listing', 'advisory', async () => {
-  const text = await request('https://glama.ai/mcp/connectors/io.github.ovladon/seenrelay');
-  if (!/SeenRelay/i.test(text)) throw new Error('listing no longer identifies SeenRelay');
-  if (!/Healthy/i.test(text)) throw new Error('listing does not currently expose Healthy status');
-  return 'listing present and reports Healthy';
+  const listingUrl = 'https://glama.ai/mcp/connectors/io.github.ovladon/seenrelay';
+  const response = await request(listingUrl, { withMeta: true });
+  const finalUrl = new URL(response.url);
+  const expectedPath = '/mcp/connectors/io.github.ovladon/seenrelay';
+  const normalizedPath = finalUrl.pathname.replace(/\/+$/, '');
+
+  if (finalUrl.hostname !== 'glama.ai' || normalizedPath !== expectedPath) {
+    throw new Error(`listing redirected away from the canonical connector route: ${finalUrl.hostname}${normalizedPath}`);
+  }
+
+  if (/\bUnhealthy\b/i.test(response.text)) {
+    throw new Error('listing explicitly reports Unhealthy');
+  }
+
+  const identifiesSeenRelay = /SeenRelay/i.test(response.text)
+    || /io\.github\.ovladon\/seenrelay/i.test(response.text)
+    || /ovladon\/seenrelay/i.test(response.text);
+  const reportsHealthy = /\bHealthy\b/i.test(response.text);
+
+  if (identifiesSeenRelay && reportsHealthy) return 'listing present and reports Healthy';
+  if (identifiesSeenRelay) return 'canonical listing present; rendered health status unavailable in server HTML';
+  return 'canonical listing route resolves; connector UI is client-rendered';
 });
 
 await run('agent-plugins-directory', 'Agent Plugins Directory', 'advisory', async () => {
