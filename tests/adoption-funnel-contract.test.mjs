@@ -142,6 +142,9 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(radarWorkflow, /issues: write/);
   assert.match(radar, /registry\.modelcontextprotocol\.io/);
   assert.match(radar, /glama\.ai\/mcp\/connectors\/io\.github\.ovladon\/seenrelay/);
+  assert.match(radar, /withMeta/);
+  assert.match(radar, /listing explicitly reports Unhealthy/);
+  assert.match(radar, /canonical listing route resolves; connector UI is client-rendered/);
   assert.match(radar, /agent-plugins\.directory\/ovladon\/seenrelay/);
   assert.match(radar, /registry\.npmjs\.org\/seenrelay/);
   assert.match(radar, /pypi\.org\/pypi\/seenrelay/);
