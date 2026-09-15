@@ -91,23 +91,29 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(ui, /classification is temporarily unavailable/);
 });
 
-test('Preview gate resolves the exact PR preview from Vercel comments or check runs', () => {
+test('Preview gate resolves the core deployment and tolerates a non-deploying PR tail', () => {
   const workflow = read('.github', 'workflows', 'preview-release-gate.yml');
   const resolver = read('scripts', 'resolve-pr-preview-url.mjs');
   assert.match(workflow, /Resolve this PR's Vercel Preview URL/);
   assert.match(workflow, /steps\.preview\.outputs\.url/);
   assert.doesNotMatch(workflow, /seenrelay-git-review-v03-bootstrap/);
 
-  // Keep the original Vercel bot comment path when it exists.
-  assert.match(resolver, /vercel\[bot\]/);
-  assert.match(resolver, /Preview/);
-  assert.match(resolver, /process\.stdout\.write\(match\[1\]\)/);
+  // The gate walks the PR first-parent chain and remembers the latest commit
+  // that actually changed the main deployment boundary. A test/docs-only tail
+  // therefore validates the runtime-equivalent deployed ancestor instead of
+  // waiting for a deployment Vercel intentionally skipped.
+  assert.match(workflow, /git rev-list --reverse --first-parent/);
+  assert.match(workflow, /release_sha=\$release_sha/);
+  assert.match(workflow, /DEPLOYMENT_SHA/);
+  assert.match(workflow, /steps\.applicability\.outputs\.release_sha/);
 
-  // Vercel can expose the Preview only through a check run. The fallback
-  // stays pinned to the exact PR head and to the Vercel GitHub App.
-  assert.match(resolver, /pulls\/\$\{pr\}/);
-  assert.match(resolver, /commits\/\$\{headSha\}\/check-runs/);
-  assert.match(resolver, /check\?\.app\?\.slug === 'vercel'/);
-  assert.match(resolver, /previewHostname/);
+  // In this monorepo the Vercel bot comment contains both core and readiness.
+  // The core release gate must select only the seenrelay row.
+  assert.match(resolver, /corePreviewFromComment/);
+  assert.match(resolver, /\[seenrelay\\\]/);
+  assert.match(resolver, /seenrelay-readiness/);
+  assert.match(resolver, /DEPLOYMENT_SHA/);
+  assert.match(resolver, /commits\/\$\{targetSha\}\/check-runs/);
+  assert.doesNotMatch(resolver, /process\.stdout\.write\(match\[1\]\)/);
   assert.match(resolver, /process\.stdout\.write\(candidate\)/);
 });
