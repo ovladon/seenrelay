@@ -2,6 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "hono",
   "regions": ["pdx1"],
+  "ignoreCommand": "bash scripts/vercel-ignore-main.sh",
   "git": {
     "deploymentEnabled": {
       "research/**": false,
