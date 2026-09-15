@@ -33,28 +33,34 @@ export async function classifyMcpDiscoveryRequest(request: Request): Promise<Mcp
   }
 }
 
+/**
+ * Emit discovery interest to the runtime observability stream instead of PostgreSQL.
+ *
+ * This function deliberately keeps its historical name because handleMcp already treats it
+ * as fail-open telemetry. A database write per MCP initialize/tools-list request kept the
+ * scale-to-zero database awake even though these events are protocol interest, not adoption.
+ * The structured event retains the useful aggregate signal without touching DATABASE_URL.
+ */
 export async function recordMcpDiscoveryEvents(events: McpDiscoveryEvent[]): Promise<void> {
   if (!events.length) return;
   const initialize = events.filter((event) => event === 'initialize').length;
   const toolsList = events.filter((event) => event === 'tools_list').length;
   if (!initialize && !toolsList) return;
-  await sql().query(`INSERT INTO mcp_discovery_metrics_daily (
-      day, initialize_requests, tools_list_requests,
-      initialize_first_at, initialize_last_at, tools_list_first_at, tools_list_last_at
-    ) VALUES (
-      current_date, $1, $2,
-      CASE WHEN $1 > 0 THEN now() END, CASE WHEN $1 > 0 THEN now() END,
-      CASE WHEN $2 > 0 THEN now() END, CASE WHEN $2 > 0 THEN now() END
-    )
-    ON CONFLICT (day) DO UPDATE SET
-      initialize_requests = mcp_discovery_metrics_daily.initialize_requests + EXCLUDED.initialize_requests,
-      tools_list_requests = mcp_discovery_metrics_daily.tools_list_requests + EXCLUDED.tools_list_requests,
-      initialize_first_at = COALESCE(mcp_discovery_metrics_daily.initialize_first_at, EXCLUDED.initialize_first_at),
-      initialize_last_at = COALESCE(EXCLUDED.initialize_last_at, mcp_discovery_metrics_daily.initialize_last_at),
-      tools_list_first_at = COALESCE(mcp_discovery_metrics_daily.tools_list_first_at, EXCLUDED.tools_list_first_at),
-      tools_list_last_at = COALESCE(EXCLUDED.tools_list_last_at, mcp_discovery_metrics_daily.tools_list_last_at)`, [initialize, toolsList]);
+  console.info(JSON.stringify({
+    event: 'mcp_discovery',
+    classification: 'aggregate-protocol-interest-not-adoption',
+    initialize_requests: initialize,
+    tools_list_requests: toolsList
+  }));
 }
 
+/**
+ * Historical persisted discovery snapshot.
+ *
+ * The table is intentionally retained so pre-cutover evidence is not destroyed. Live MCP
+ * discovery interest is emitted as structured runtime telemetry and no longer advances this
+ * table. CHECK/OBSERVE/adoption telemetry remains database-backed and unchanged.
+ */
 export async function getMcpDiscoverySnapshot() {
   const rows = await sql().query(`SELECT
     COALESCE(SUM(initialize_requests),0)::int AS initialize_total,
@@ -73,6 +79,8 @@ export async function getMcpDiscoverySnapshot() {
   return {
     status: 'ok' as const,
     classification: 'aggregate-protocol-interest-not-adoption',
+    persistence: 'historical-db-snapshot' as const,
+    live_source: 'runtime-observability' as const,
     summary: (rows as any[])[0] || {}
   };
 }
