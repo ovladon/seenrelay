@@ -110,6 +110,7 @@ test('adoption automation verifies the exact public path and external discovery 
   const gate = read('.github', 'workflows', 'production-adoption-gate.yml');
   const radarWorkflow = read('.github', 'workflows', 'distribution-radar.yml');
   const radar = read('scripts', 'distribution-radar.mjs');
+  const radarHttp = read('scripts', 'distribution-radar-http.mjs');
 
   assert.match(gate, /npx skills add https:\/\/seenrelay\.com --skill seenrelay --yes/);
   assert.match(gate, /npm_config_yes=true/);
@@ -140,7 +141,11 @@ test('adoption automation verifies the exact public path and external discovery 
 
   assert.match(radarWorkflow, /schedule:/);
   assert.match(radarWorkflow, /issues: write/);
-  assert.match(radar, /registry\.modelcontextprotocol\.io/);
+  assert.match(radarHttp, /registry\.modelcontextprotocol\.io/);
+  assert.match(radarHttp, /\/v0\.1\/servers\/\$\{encodedName\}\/versions\/\$\{encodedVersion\}/);
+  assert.match(radarHttp, /\/v0\.1\/servers\?search=\$\{encodedName\}/);
+  assert.match(radarHttp, /upstream_unavailable/);
+  assert.match(radar, /upstreamUnavailable \? 'advisory' : 'critical'/);
   assert.match(radar, /glama\.ai\/mcp\/connectors\/io\.github\.ovladon\/seenrelay/);
   assert.match(radar, /glama\.ai\/mcp\/connectors\?query=SeenRelay/);
   assert.match(radar, /identifiesSeenRelay/);
