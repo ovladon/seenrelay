@@ -1,4 +1,10 @@
 import fs from 'node:fs';
+import {
+  RegistryProbeError,
+  containsObject,
+  lookupOfficialMcpRegistryVersion,
+  requestWithRetry as request
+} from './distribution-radar-http.mjs';
 
 const ORIGIN = 'https://seenrelay.com';
 const registryManifest = JSON.parse(fs.readFileSync(new URL('../registry/server.json', import.meta.url), 'utf8'));
@@ -6,38 +12,6 @@ const productFacts = JSON.parse(fs.readFileSync(new URL('../public/product-facts
 const pluginManifest = JSON.parse(fs.readFileSync(new URL('../plugin.json', import.meta.url), 'utf8'));
 const portableMcp = JSON.parse(fs.readFileSync(new URL('../mcp.json', import.meta.url), 'utf8'));
 const checks = [];
-
-const userAgent = 'SeenRelay-Distribution-Radar/1.0 (+https://seenrelay.com)';
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function request(url, { json = false } = {}) {
-  let lastError;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    try {
-      const response = await fetch(url, {
-        headers: { 'user-agent': userAgent, accept: json ? 'application/json' : '*/*' },
-        redirect: 'follow',
-        signal: AbortSignal.timeout(20_000)
-      });
-      const text = await response.text();
-      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-      if (!json) return text;
-      try { return JSON.parse(text); }
-      catch { throw new Error('response was not valid JSON'); }
-    } catch (error) {
-      lastError = error;
-      if (attempt < 3) await sleep(750 * attempt);
-    }
-  }
-  throw lastError;
-}
-
-function containsObject(root, predicate) {
-  if (Array.isArray(root)) return root.some((value) => containsObject(value, predicate));
-  if (!root || typeof root !== 'object') return false;
-  if (predicate(root)) return true;
-  return Object.values(root).some((value) => containsObject(value, predicate));
-}
 
 function repositoryString(value) {
   if (typeof value === 'string') return value;
@@ -91,12 +65,30 @@ await run('agent-skill-document', 'Canonical Agent Skill document', 'critical', 
   return 'canonical skill and audit contract are present';
 });
 
-await run('mcp-registry', 'Official MCP Registry', 'critical', async () => {
-  const body = await request('https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.ovladon%2Fseenrelay', { json: true });
-  const found = containsObject(body, (value) => value?.name === registryManifest.name && value?.version === registryManifest.version);
-  if (!found) throw new Error(`${registryManifest.name}@${registryManifest.version} is not discoverable in the Official MCP Registry response`);
-  return `${registryManifest.name}@${registryManifest.version}`;
-});
+try {
+  const result = await lookupOfficialMcpRegistryVersion({
+    name: registryManifest.name,
+    version: registryManifest.version
+  });
+  checks.push({
+    id: 'mcp-registry',
+    label: 'Official MCP Registry',
+    severity: 'critical',
+    status: 'ok',
+    detail: result.detail
+  });
+} catch (error) {
+  const upstreamUnavailable = error instanceof RegistryProbeError && error.kind === 'upstream_unavailable';
+  checks.push({
+    id: 'mcp-registry',
+    label: 'Official MCP Registry',
+    severity: upstreamUnavailable ? 'advisory' : 'critical',
+    status: 'fail',
+    detail: upstreamUnavailable
+      ? `inconclusive upstream availability; SeenRelay drift not inferred: ${error.message}`
+      : (error instanceof Error ? error.message : String(error))
+  });
+}
 
 await run('npm', 'npm promoted client', 'critical', async () => {
   const version = productFacts.install.client_version;
