@@ -28,3 +28,11 @@ test('readiness deployment skips unrelated repository changes',()=>{
   assert.doesNotMatch(script,/tests\//);
   assert.doesNotMatch(script,/docs\//);
 });
+
+test('Preview release gate shares the main Vercel deployment boundary',()=>{
+  const workflow=read('.github/workflows/preview-release-gate.yml');
+  assert.match(workflow,/fetch-depth:\s*0/);
+  assert.match(workflow,/VERCEL_GIT_PREVIOUS_SHA="\$BASE_SHA" VERCEL_GIT_COMMIT_SHA="\$HEAD_SHA" bash scripts\/vercel-ignore-main\.sh/);
+  assert.match(workflow,/does not change main deployment inputs/);
+  assert.match(workflow,/steps\.applicability\.outputs\.required == 'true'/);
+});

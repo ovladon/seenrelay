@@ -3,12 +3,12 @@ import { pathToFileURL } from 'node:url';
 
 export const OBSERVER_ID = 'seenrelay-reference-observer-v1';
 export const DEFAULT_ORIGIN = 'https://seenrelay.com';
-export const SCHEDULE_MINUTES = 30;
+export const SCHEDULE_MINUTES = 60;
 export const MAX_SOURCE_BYTES = 5 * 1024 * 1024;
 
 export const SOURCES = [
-  { id:'github-status-indicator', subject:'GitHub overall status indicator', predicate:'status.indicator', source:'https://www.githubstatus.com/api/v2/status.json', locator:{scheme:'json_pointer',value:'/status/indicator'}, period_minutes:30 },
-  { id:'github-status-description', subject:'GitHub overall status description', predicate:'status.description', source:'https://www.githubstatus.com/api/v2/status.json', locator:{scheme:'json_pointer',value:'/status/description'}, period_minutes:30 },
+  { id:'github-status-indicator', subject:'GitHub overall status indicator', predicate:'status.indicator', source:'https://www.githubstatus.com/api/v2/status.json', locator:{scheme:'json_pointer',value:'/status/indicator'}, period_minutes:60 },
+  { id:'github-status-description', subject:'GitHub overall status description', predicate:'status.description', source:'https://www.githubstatus.com/api/v2/status.json', locator:{scheme:'json_pointer',value:'/status/description'}, period_minutes:60 },
   { id:'node-latest-version', subject:'Latest Node.js release version', predicate:'version.latest', source:'https://nodejs.org/dist/index.json', locator:{scheme:'json_pointer',value:'/0/version'}, period_minutes:360 },
   { id:'pypi-openai-version', subject:'Latest openai Python package version', predicate:'version.latest', source:'https://pypi.org/pypi/openai/json', locator:{scheme:'json_pointer',value:'/info/version'}, period_minutes:360 },
   { id:'pypi-anthropic-version', subject:'Latest anthropic Python package version', predicate:'version.latest', source:'https://pypi.org/pypi/anthropic/json', locator:{scheme:'json_pointer',value:'/info/version'}, period_minutes:360 },

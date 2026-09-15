@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OBSERVER_ID, SOURCES, buildObservePayload, jsonPointer, sourceDue } from '../scripts/reference-observer.mjs';
+import { OBSERVER_ID, SCHEDULE_MINUTES, SOURCES, buildObservePayload, jsonPointer, sourceDue } from '../scripts/reference-observer.mjs';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const root=path.join(here,'..');
@@ -11,6 +11,7 @@ const read=(...parts)=>fs.readFileSync(path.join(root,...parts),'utf8');
 
 test('reference observer uses one first-party identity and only allowlisted HTTPS JSON sources',()=>{
   assert.equal(OBSERVER_ID,'seenrelay-reference-observer-v1');
+  assert.equal(SCHEDULE_MINUTES,60);
   assert.ok(SOURCES.length >= 5 && SOURCES.length <= 25);
   assert.equal(new Set(SOURCES.map(x=>x.id)).size,SOURCES.length);
   const allowedHosts=new Set(['www.githubstatus.com','nodejs.org','pypi.org','registry.npmjs.org']);
@@ -20,8 +21,11 @@ test('reference observer uses one first-party identity and only allowlisted HTTP
     assert.ok(allowedHosts.has(u.hostname),`unexpected source host ${u.hostname}`);
     assert.equal(source.locator.scheme,'json_pointer');
     assert.ok(source.locator.value.startsWith('/'));
-    assert.ok(source.period_minutes>=30 && source.period_minutes%30===0);
+    assert.ok(source.period_minutes>=SCHEDULE_MINUTES && source.period_minutes%SCHEDULE_MINUTES===0);
   }
+  const githubStatus=SOURCES.filter(x=>x.id.startsWith('github-status-'));
+  assert.equal(githubStatus.length,2);
+  assert.ok(githubStatus.every(x=>x.period_minutes===60));
 });
 
 test('JSON pointer and payload construction preserve deterministic source-backed identity',()=>{
@@ -38,16 +42,19 @@ test('JSON pointer and payload construction preserve deterministic source-backed
   assert.match(body.idempotency_key,/^reference-observer\/x\//);
 });
 
-test('period scheduling is bounded to one scheduler window per source interval',()=>{
+test('period scheduling is bounded to one hourly scheduler window per source interval',()=>{
   const source={id:'six-hour',period_minutes:360};
   assert.equal(sourceDue(source,new Date('2026-08-25T06:07:00Z')),true);
-  assert.equal(sourceDue(source,new Date('2026-08-25T06:37:00Z')),false);
+  assert.equal(sourceDue(source,new Date('2026-08-25T06:37:00Z')),true);
+  assert.equal(sourceDue(source,new Date('2026-08-25T07:07:00Z')),false);
   assert.equal(sourceDue(source,new Date('2026-08-25T12:07:00Z')),true);
 });
 
-test('reference observer workflow is read-only to GitHub and cannot become a hidden third SeenRelay operation',()=>{
+test('reference observer workflow is hourly, read-only to GitHub and cannot become a hidden third SeenRelay operation',()=>{
   const workflow=read('.github','workflows','reference-observer.yml');
   const script=read('scripts','reference-observer.mjs');
+  assert.match(workflow,/cron:\s*'7 \* \* \* \*'/);
+  assert.doesNotMatch(workflow,/7,37/);
   assert.match(workflow,/contents:\s*read/);
   assert.doesNotMatch(workflow,/contents:\s*write|issues:\s*write|id-token:\s*write/);
   assert.match(workflow,/node scripts\/reference-observer\.mjs/);
