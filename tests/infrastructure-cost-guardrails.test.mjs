@@ -32,7 +32,9 @@ test('readiness deployment skips unrelated repository changes',()=>{
 test('Preview release gate shares the main Vercel deployment boundary',()=>{
   const workflow=read('.github/workflows/preview-release-gate.yml');
   assert.match(workflow,/fetch-depth:\s*0/);
-  assert.match(workflow,/VERCEL_GIT_PREVIOUS_SHA="\$BASE_SHA" VERCEL_GIT_COMMIT_SHA="\$HEAD_SHA" bash scripts\/vercel-ignore-main\.sh/);
-  assert.match(workflow,/does not change main deployment inputs/);
+  assert.match(workflow,/git rev-list --reverse --first-parent/);
+  assert.match(workflow,/VERCEL_GIT_PREVIOUS_SHA="\$parent" VERCEL_GIT_COMMIT_SHA="\$commit" bash scripts\/vercel-ignore-main\.sh/);
+  assert.match(workflow,/no commit in this PR changes main deployment inputs/);
+  assert.match(workflow,/steps\.applicability\.outputs\.release_sha/);
   assert.match(workflow,/steps\.applicability\.outputs\.required == 'true'/);
 });

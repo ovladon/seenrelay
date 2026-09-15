@@ -30,12 +30,12 @@ jobs:
     timeout-minutes: 12
     env:
       BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-      RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.release_sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha || inputs.release_sha }}
     steps:
       - name: Checkout exact head commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.RELEASE_SHA }}
+          ref: ${{ env.HEAD_SHA }}
           fetch-depth: 0
 
       - name: Classify Preview applicability
@@ -45,19 +45,33 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           HEAD_REF: ${{ github.head_ref }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || inputs.release_sha }}
         run: |
           set -euo pipefail
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             echo 'required=true' >> "$GITHUB_OUTPUT"
+            echo "release_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
           elif [[ "$HEAD_REF" == research/* || "$HEAD_REF" == verify/* ]]; then
             echo 'required=false' >> "$GITHUB_OUTPUT"
             echo "Vercel Preview is not applicable: vercel.json disables deployment for $HEAD_REF."
-          elif VERCEL_GIT_PREVIOUS_SHA="$BASE_SHA" VERCEL_GIT_COMMIT_SHA="$HEAD_SHA" bash scripts/vercel-ignore-main.sh; then
-            echo 'required=false' >> "$GITHUB_OUTPUT"
-            echo 'Vercel Preview is not applicable: the PR does not change main deployment inputs.'
           else
-            echo 'required=true' >> "$GITHUB_OUTPUT"
+            release_sha=''
+            while IFS= read -r commit; do
+              [ -n "$commit" ] || continue
+              parent="$(git rev-parse "${commit}^1")"
+              if ! VERCEL_GIT_PREVIOUS_SHA="$parent" VERCEL_GIT_COMMIT_SHA="$commit" bash scripts/vercel-ignore-main.sh; then
+                release_sha="$commit"
+              fi
+            done < <(git rev-list --reverse --first-parent "${BASE_SHA}..${HEAD_SHA}")
+
+            if [ -z "$release_sha" ]; then
+              echo 'required=false' >> "$GITHUB_OUTPUT"
+              echo 'Vercel Preview is not applicable: no commit in this PR changes main deployment inputs.'
+            else
+              echo 'required=true' >> "$GITHUB_OUTPUT"
+              echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+              echo "Core deployment commit: $release_sha"
+            fi
           fi
 
       - name: Resolve this PR's Vercel Preview URL
@@ -67,19 +81,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          DEPLOYMENT_SHA: ${{ steps.applicability.outputs.release_sha }}
         run: |
           set -euo pipefail
           url="$(node scripts/resolve-pr-preview-url.mjs)"
           echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "Resolved Preview: $url"
+          echo "Resolved core Preview: $url"
 
       - name: Run isolated Preview release gate
         if: steps.applicability.outputs.required == 'true'
         shell: bash
         env:
           PREVIEW_URL: ${{ github.event_name == 'pull_request' && steps.preview.outputs.url || inputs.preview_url }}
+          RELEASE_SHA: ${{ github.event_name == 'pull_request' && steps.applicability.outputs.release_sha || inputs.release_sha }}
         run: bash scripts/run-preview-release-gate.sh
 
       - name: Record non-deployed change gate
         if: steps.applicability.outputs.required != 'true'
-        run: echo 'Preview release gate passed as not applicable because this change does not produce the main Vercel deployment.'
+        run: echo 'Preview release gate passed as not applicable because this PR contains no main Vercel deployment input change.'

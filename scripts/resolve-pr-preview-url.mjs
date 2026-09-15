@@ -1,6 +1,7 @@
 const repo = process.env.GITHUB_REPOSITORY;
 const pr = process.env.PR_NUMBER;
 const token = process.env.GITHUB_TOKEN;
+const deploymentSha = process.env.DEPLOYMENT_SHA;
 if (!repo || !pr || !token) throw new Error('GITHUB_REPOSITORY, PR_NUMBER and GITHUB_TOKEN are required');
 
 const headers = {
@@ -18,26 +19,39 @@ async function github(path) {
 
 function previewHostname(text) {
   const match = String(text || '').match(/(?:https:\/\/)?([a-z0-9][a-z0-9.-]*\.vercel\.app)(?:[/?#\s)]|$)/i);
-  return match ? `https://${match[1]}` : null;
+  const candidate = match ? `https://${match[1]}` : null;
+  return candidate && !candidate.includes('seenrelay-readiness-') ? candidate : null;
+}
+
+function corePreviewFromComment(body) {
+  const row = String(body || '')
+    .split('\n')
+    .find((line) => /\[seenrelay\]\(https:\/\/vercel\.com\/[^)]+\/seenrelay\)/i.test(line));
+  if (!row || /\[seenrelay-readiness\]/i.test(row)) return null;
+  const match = row.match(/\[Preview\]\((https:\/\/[^)\s]+\.vercel\.app)\)/i);
+  return match ? match[1] : null;
 }
 
 const pull = await github(`pulls/${pr}`);
 const headSha = pull?.head?.sha;
 if (!headSha) throw new Error('Unable to resolve current PR head SHA');
+const targetSha = deploymentSha || headSha;
 
 for (let attempt = 1; attempt <= 60; attempt++) {
   const comments = await github(`issues/${pr}/comments?per_page=100`);
-  const vercel = [...comments].reverse().find((comment) => comment?.user?.login === 'vercel[bot]');
-  const body = String(vercel?.body || '');
-  const match = body.match(/\[Preview\]\((https:\/\/[^)\s]+\.vercel\.app)\)/i);
-  if (match) {
-    process.stdout.write(match[1]);
-    process.exit(0);
+  const vercelComments = [...comments].reverse().filter((comment) => comment?.user?.login === 'vercel[bot]');
+  for (const comment of vercelComments) {
+    const candidate = corePreviewFromComment(comment?.body);
+    if (candidate) {
+      process.stdout.write(candidate);
+      process.exit(0);
+    }
   }
 
-  // Vercel can expose the current Preview through a check run even when no
-  // issue comment is emitted. Use only checks attached to this exact PR head.
-  const checks = await github(`commits/${headSha}/check-runs?per_page=100`);
+  // Fallback for repositories where Vercel exposes a Preview hostname through
+  // a check run rather than the monorepo comment. Pin it to the deployment SHA
+  // that actually changed the core runtime, not to a non-deploying PR tail.
+  const checks = await github(`commits/${targetSha}/check-runs?per_page=100`);
   const vercelChecks = (checks?.check_runs || []).filter((check) => check?.app?.slug === 'vercel');
   for (const check of vercelChecks) {
     const candidate = previewHostname([
@@ -53,4 +67,4 @@ for (let attempt = 1; attempt <= 60; attempt++) {
 
   await new Promise((resolve) => setTimeout(resolve, 5000));
 }
-throw new Error('Timed out waiting for the current PR Vercel Preview URL');
+throw new Error('Timed out waiting for the current PR core Vercel Preview URL');

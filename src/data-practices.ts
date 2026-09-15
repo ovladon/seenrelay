@@ -14,7 +14,7 @@ export function dataPracticesDescriptor(origin: string) {
       observation_request_processing: ['value in request memory for deterministic fingerprinting', 'timestamps', 'optional evidence fingerprint', 'optional source validator'],
       provenance: ['privacy-salted observer identifier', 'assurance class', 'optional proof fingerprint'],
       hive: ['privacy-salted operational client fingerprint', 'optional server-verified first-party classification derived from a short-lived signed marker', 'privacy-salted conservative reuse-independence bucket', 'lease state', 'aggregate contribution/reuse counters'],
-      aggregate_metrics: ['CHECK/OBSERVE outcomes', 'useful reuse', 'lease counts', 'MCP initialize/tools/list aggregate request counters']
+      aggregate_metrics: ['CHECK/OBSERVE outcomes', 'useful reuse', 'lease counts', 'MCP initialize/tools/list aggregate protocol-interest events']
     },
     application_persists: {
       observation_evidence: ['deterministic value fingerprint', 'timestamps', 'pseudonymous provenance', 'optional evidence fingerprint', 'optional source validator'],
@@ -29,7 +29,8 @@ export function dataPracticesDescriptor(origin: string) {
       'raw self-asserted observer_id'
     ],
     discovery_telemetry: {
-      stores: 'Daily aggregate counts of MCP initialize and tools/list request events only.',
+      live: 'MCP initialize and tools/list protocol-interest counts are emitted as structured runtime observability events and are not persisted by the application to PostgreSQL.',
+      historical_database: 'Pre-cutover daily aggregate MCP discovery counters remain in PostgreSQL as historical evidence and are not advanced by live discovery traffic.',
       does_not_store: ['MCP request payloads', 'clientInfo', 'raw IP address', 'raw user-agent', 'MCP session identifier'],
       interpretation: 'Protocol-interest telemetry is not a unique-client count and is never classified as adoption; automated directory probes and operator diagnostics may be included.'
     },
@@ -45,7 +46,7 @@ export function dataPracticesDescriptor(origin: string) {
       hive_lease_operational_retention_days: days(cfg.hiveLeaseRetentionSeconds),
       useful_reuse_event_retention_days: days(cfg.hiveReuseRetentionSeconds),
       fact_summary: 'Retained to support STALE/latest-observed semantics until an explicit deletion/retention policy removes it.',
-      aggregate_daily_metrics: 'Retained as operational network measurements unless separately removed.'
+      aggregate_daily_metrics: 'Database-backed CHECK/OBSERVE network measurements are retained unless separately removed. Pre-cutover MCP discovery counters are historical and no longer advance.'
     },
     submission_boundary: {
       intended: 'Public or legitimately accessible source-backed operational facts needed by agent workflows.',
