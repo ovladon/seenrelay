@@ -14,6 +14,7 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   const ui = read('public', 'admin-v2.js');
   const identity = read('src', 'identity.ts');
   const classifier = read('src', 'traffic-classification.ts');
+  const benchmarkClassifier = read('src', 'internal-benchmark-classification.ts');
   const marker = read('scripts', 'internal-telemetry-marker.mjs');
   const reference = read('scripts', 'reference-observer.mjs');
   const env = read('.env.example');
@@ -35,6 +36,14 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(db, /unique_actor_claim:\s*false/);
   assert.match(db, /client_only_usage_visible:\s*false/);
   assert.match(db, /server-verified-first-party-reference-observer-and-controlled-benchmarks-excluded/);
+
+  // Scheduled Standards Shadow CHECKs must be excluded by their canonical fact key even after
+  // retention removes the corresponding facts row. Do not regress to a facts-table join only.
+  assert.match(db, /const currentStandardsShadowLease = `h\.last_fact_key IN/);
+  assert.match(db, /const internalBenchmarkLease = `\(\s*\$\{currentStandardsShadowLease\}/);
+  assert.match(db, /currentStandardsShadowFact/);
+  assert.match(benchmarkClassifier, /seenrelay_internal_workload:\s*'standards-shadow-v1'/);
+  assert.match(benchmarkClassifier, /Historical controlled CHECK identities/);
 
   assert.match(classifier, /x-seenrelay-internal-telemetry/);
   assert.match(classifier, /HMAC/);
