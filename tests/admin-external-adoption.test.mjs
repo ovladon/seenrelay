@@ -17,6 +17,7 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   const benchmarkClassifier = read('src', 'internal-benchmark-classification.ts');
   const marker = read('scripts', 'internal-telemetry-marker.mjs');
   const reference = read('scripts', 'reference-observer.mjs');
+  const practices = read('src', 'data-practices.ts');
   const env = read('.env.example');
 
   assert.match(db, /REFERENCE_OBSERVER_ID\s*=\s*'seenrelay-reference-observer-v1'/);
@@ -69,6 +70,10 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.doesNotMatch(reference, /\/v1\/check/);
   assert.match(db, /observer_key IN \(\$\{firstPartyKeyPlaceholders\}\)/);
   assert.match(db, /observer_key NOT IN \(\$\{firstPartyKeyPlaceholders\}\)/);
+  assert.match(practices, /delta_seed_observer/);
+  assert.match(practices, /seenrelay-private-delta-observer-v1/);
+  assert.match(practices, /classified_as_external_adoption:\s*false/);
+  assert.match(practices, /prediction_used_to_create_observation:\s*false/);
 
   assert.match(ui, /External leases · 60s/);
   assert.match(ui, /External CHECK · retained/);
