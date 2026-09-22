@@ -71,6 +71,7 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(db, /observer_key IN \(\$\{firstPartyKeyPlaceholders\}\)/);
   assert.match(db, /String\.fromCharCode\(36\)/);
   assert.match(db, /observer_key NOT IN \(\$\{firstPartyKeyPlaceholders\}\)/);
+  assert.match(practices, /contract_revision:\s*'delta-first-party-gate-v1'/);
   assert.match(practices, /delta_seed_observer/);
   assert.match(practices, /seenrelay-private-delta-observer-v1/);
   assert.match(practices, /classified_as_external_adoption:\s*false/);
