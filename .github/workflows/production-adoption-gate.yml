@@ -10,6 +10,8 @@ on:
       - '.claude/skills/**'
       - 'shared/agent-skill.mjs'
       - 'src/index.ts'
+      - 'src/admin-db.ts'
+      - 'src/data-practices.ts'
       - 'src/landing.ts'
       - 'src/quickstart.ts'
       - 'src/public.ts'
@@ -70,6 +72,21 @@ jobs:
           echo "seenrelay.com did not converge to Production commit $RELEASE_SHA within the gate window." >&2
           cat "$RUNNER_TEMP/health.json" 2>/dev/null || true
           exit 1
+
+      - name: Verify Delta first-party observation boundary in Production
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            https://seenrelay.com/data-practices.json \
+            --output "$RUNNER_TEMP/data-practices.json"
+          jq -e '
+            .first_party_observers.delta_seed_observer.observer_id == "seenrelay-private-delta-observer-v1"
+            and .first_party_observers.delta_seed_observer.protocol_operation == "OBSERVE"
+            and .first_party_observers.delta_seed_observer.classified_as_external_adoption == false
+            and .first_party_observers.delta_seed_observer.prediction_used_to_create_observation == false
+          ' "$RUNNER_TEMP/data-practices.json" >/dev/null
+          echo 'Production exposes the Delta first-party OBSERVE-only non-adoption boundary.'
 
       - name: Verify canonical Agent Skill served by Production
         shell: bash
