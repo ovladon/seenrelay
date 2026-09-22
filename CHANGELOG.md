@@ -6,6 +6,7 @@ Current install/version/verified benchmark facts are generated from `public/prod
 
 ## Unreleased — Deterministic client wrappers
 
+- Retire the recurring Reference Observer schedule now that the private Delta bridge is the sole scheduled first-party bootstrap observer; retain Reference Observer as a manual fallback only.
 - Add vendorable zero-third-party-runtime-dependency JavaScript/TypeScript and Python reference wrappers that put CHECK deterministically in front of an application's existing validation path.
 - Keep shadow mode as the default; bounded reuse requires an explicit caller-supplied policy.
 - Fail open on relay-side timeout, 429, malformed response, or outage without hiding failures from the application's own validation.
