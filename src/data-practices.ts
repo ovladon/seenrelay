@@ -29,6 +29,7 @@ export function dataPracticesDescriptor(origin: string) {
       'raw self-asserted observer_id'
     ],
     first_party_observers: {
+      contract_revision: 'delta-first-party-gate-v1',
       reference_observer: {
         observer_id: 'seenrelay-reference-observer-v1',
         role: 'Bounded first-party bootstrap observations from a documented public-source allowlist.',
