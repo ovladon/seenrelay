@@ -23,7 +23,7 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(db, /REFERENCE_OBSERVER_ID\s*=\s*'seenrelay-reference-observer-v1'/);
   assert.match(db, /DELTA_OBSERVER_ID\s*=\s*'seenrelay-private-delta-observer-v1'/);
   assert.match(db, /FIRST_PARTY_OBSERVER_IDS/);
-  assert.match(db, /firstPartyObserverKeys/);
+  assert.match(db, /deriveFirstPartyObserverKeys/);
   assert.match(db, /privacyScopedHash\('observer-self', id\)/);
   assert.match(db, /h\.client_key LIKE 'internal:%'/);
   assert.match(db, /observations_first_party/);
