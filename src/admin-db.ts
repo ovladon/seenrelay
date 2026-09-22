@@ -116,7 +116,7 @@ export async function getAdminAdoptionData() {
     legacyStandardsShadowFactKeys()
   ]);
   const firstPartyKeyStart = 1;
-  const firstPartyKeyPlaceholders = firstPartyKeys.map((_, index) => '
+  const firstPartyKeyPlaceholders = firstPartyKeys.map((_, index) => String.fromCharCode(36) + (firstPartyKeyStart + index)).join(',');
   const currentKeyStart = firstPartyKeyStart + firstPartyKeys.length;
   const legacyKeyStart = currentKeyStart + standardsShadowKeys.length;
   const cutoffParam = legacyKeyStart + legacyStandardsShadowKeys.length;
