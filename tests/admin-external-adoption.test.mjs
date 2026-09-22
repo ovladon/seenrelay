@@ -69,7 +69,7 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(reference, /\/v1\/observe/);
   assert.doesNotMatch(reference, /\/v1\/check/);
   assert.match(db, /observer_key IN \(\$\{firstPartyKeyPlaceholders\}\)/);
-  assert.match(db, /firstPartyKeys\.map\(\(_, index\) => '\\
+  assert.match(db, /String\\.fromCharCode\\(36\\)/);
   assert.match(db, /observer_key NOT IN \(\$\{firstPartyKeyPlaceholders\}\)/);
   assert.match(practices, /delta_seed_observer/);
   assert.match(practices, /seenrelay-private-delta-observer-v1/);
