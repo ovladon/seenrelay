@@ -30,7 +30,7 @@ function sql() {
   return neon(url);
 }
 
-async function firstPartyObserverKeys(): Promise<string[]> {
+async function deriveFirstPartyObserverKeys(): Promise<string[]> {
   return Promise.all(FIRST_PARTY_OBSERVER_IDS.map(async (id) =>
     `self:${await privacyScopedHash('observer-self', id)}`
   ));
@@ -110,19 +110,19 @@ export async function getAdminSnapshotData() {
  */
 export async function getAdminAdoptionData() {
   const q = sql();
-  const [firstPartyObserverKeys, standardsShadowKeys, legacyStandardsShadowKeys] = await Promise.all([
-    firstPartyObserverKeys(),
+  const [firstPartyKeys, standardsShadowKeys, legacyStandardsShadowKeys] = await Promise.all([
+    deriveFirstPartyObserverKeys(),
     standardsShadowFactKeys(),
     legacyStandardsShadowFactKeys()
   ]);
   const firstPartyKeyStart = 1;
-  const firstPartyKeyPlaceholders = firstPartyObserverKeys.map((_, index) => `${firstPartyKeyStart + index}`).join(',');
-  const currentKeyStart = firstPartyKeyStart + firstPartyObserverKeys.length;
+  const firstPartyKeyPlaceholders = firstPartyKeys.map((_, index) => `${firstPartyKeyStart + index}`).join(',');
+  const currentKeyStart = firstPartyKeyStart + firstPartyKeys.length;
   const legacyKeyStart = currentKeyStart + standardsShadowKeys.length;
   const cutoffParam = legacyKeyStart + legacyStandardsShadowKeys.length;
   const currentKeyPlaceholders = standardsShadowKeys.map((_, index) => `$${currentKeyStart + index}`).join(',');
   const legacyKeyPlaceholders = legacyStandardsShadowKeys.map((_, index) => `$${legacyKeyStart + index}`).join(',');
-  const adoptionParams = [...firstPartyObserverKeys, ...standardsShadowKeys, ...legacyStandardsShadowKeys, STANDARDS_SHADOW_LEGACY_CUTOFF];
+  const adoptionParams = [...firstPartyKeys, ...standardsShadowKeys, ...legacyStandardsShadowKeys, STANDARDS_SHADOW_LEGACY_CUTOFF];
   const currentStandardsShadowFact = `f.fact_key IN (${currentKeyPlaceholders})`;
   const currentStandardsShadowLease = `h.last_fact_key IN (${currentKeyPlaceholders})`;
   const historicalLegacyStandardsShadowLease = `(
