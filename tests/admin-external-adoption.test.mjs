@@ -69,6 +69,75 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(reference, /\/v1\/observe/);
   assert.doesNotMatch(reference, /\/v1\/check/);
   assert.match(db, /observer_key IN \(\$\{firstPartyKeyPlaceholders\}\)/);
+  assert.match(db, /firstPartyKeys\.map\(\(_, index\) => '\\
+  assert.match(db, /observer_key NOT IN \(\$\{firstPartyKeyPlaceholders\}\)/);
+  assert.match(practices, /delta_seed_observer/);
+  assert.match(practices, /seenrelay-private-delta-observer-v1/);
+  assert.match(practices, /classified_as_external_adoption:\s*false/);
+  assert.match(practices, /prediction_used_to_create_observation:\s*false/);
+
+  assert.match(ui, /External leases · 60s/);
+  assert.match(ui, /External CHECK · retained/);
+  assert.match(ui, /External OBSERVE · retained/);
+  assert.match(ui, /External qualified reuse/);
+  assert.match(ui, /Repeat external lease/);
+  assert.match(ui, /Bidirectional CHECK \+ OBSERVE/);
+  assert.match(ui, /Qualified reuse consumer/);
+  assert.match(ui, /Client-only usage/);
+  assert.match(ui, /not observable by hosted service/);
+  assert.match(ui, /Unique actor count/);
+  assert.match(ui, /Global UNKNOWN rate/);
+  assert.match(ui, /First-party classifier/);
+  assert.doesNotMatch(ui, /External Hive Radar/);
+  assert.doesNotMatch(ui, /drawRadar/);
+  assert.match(db, /top_external_leases/);
+  assert.doesNotMatch(ui, /radar_id/);
+  assert.doesNotMatch(db, /active_external_leases/);
+  const discoveryUi = read('public', 'admin-discovery.js');
+  assert.match(discoveryUi, /\/admin\/api\/snapshot/);
+  assert.doesNotMatch(discoveryUi, /window\.fetch\s*=/);
+  assert.match(discoveryUi, /checks_external_retained/);
+  assert.match(discoveryUi, /reuse_external_total/);
+  assert.doesNotMatch(discoveryUi, /checks_external_month/);
+  assert.doesNotMatch(discoveryUi, /reuse_external_month/);
+  assert.match(discoveryUi, /Maintenance autopilot/);
+  assert.match(discoveryUi, /maintenance_autopilot/);
+  assert.match(discoveryUi, /retention housekeeping only/);
+  assert.match(discoveryUi, /inactive until CRON_SECRET is configured/);
+  assert.doesNotMatch(ui, /External CHECK · month/);
+  assert.doesNotMatch(ui, /No external agents active/);
+  assert.doesNotMatch(ui, /s\.derived\?\.qualified_reuse_rate/);
+  assert.doesNotMatch(ui, /derived\?\.unknown_rate/);
+  assert.match(ui, /classification is temporarily unavailable/);
+});
+
+test('Preview gate resolves the core deployment and tolerates a non-deploying PR tail', () => {
+  const workflow = read('.github', 'workflows', 'preview-release-gate.yml');
+  const resolver = read('scripts', 'resolve-pr-preview-url.mjs');
+  assert.match(workflow, /Resolve this PR's Vercel Preview URL/);
+  assert.match(workflow, /steps\.preview\.outputs\.url/);
+  assert.doesNotMatch(workflow, /seenrelay-git-review-v03-bootstrap/);
+
+  // The gate walks the PR first-parent chain and remembers the latest commit
+  // that actually changed the main deployment boundary. A test/docs-only tail
+  // therefore validates the runtime-equivalent deployed ancestor instead of
+  // waiting for a deployment Vercel intentionally skipped.
+  assert.match(workflow, /git rev-list --reverse --first-parent/);
+  assert.match(workflow, /release_sha=\$release_sha/);
+  assert.match(workflow, /DEPLOYMENT_SHA/);
+  assert.match(workflow, /steps\.applicability\.outputs\.release_sha/);
+
+  // In this monorepo the Vercel bot comment contains both core and readiness.
+  // The core release gate must select only the seenrelay row.
+  assert.match(resolver, /corePreviewFromComment/);
+  assert.match(resolver, /\[seenrelay\\\]/);
+  assert.match(resolver, /seenrelay-readiness/);
+  assert.match(resolver, /DEPLOYMENT_SHA/);
+  assert.match(resolver, /commits\/\$\{targetSha\}\/check-runs/);
+  assert.doesNotMatch(resolver, /process\.stdout\.write\(match\[1\]\)/);
+  assert.match(resolver, /process\.stdout\.write\(candidate\)/);
+});
+ \+ \(firstPartyKeyStart \+ index\)\)/);
   assert.match(db, /observer_key NOT IN \(\$\{firstPartyKeyPlaceholders\}\)/);
   assert.match(practices, /delta_seed_observer/);
   assert.match(practices, /seenrelay-private-delta-observer-v1/);
