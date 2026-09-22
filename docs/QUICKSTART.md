@@ -297,7 +297,7 @@ For JavaScript / TypeScript Zero-State:
 
 For the classic shared-evidence path, shadow mode remains the safe first deployment: keep every original validation, measure CHECK results, then enable bounded reuse only if the consuming application's economics and risk policy justify it.
 
-The clients expose local counters and Shadow Proof to support measurement. Package downloads, MCP initialize requests, tools/list requests and first-party Reference Observer activity are not evidence of external adoption.
+The clients expose local counters and Shadow Proof to support measurement. Package downloads, MCP initialize requests, tools/list requests and first-party observer activity are not evidence of external adoption.
 
 ## Security and provenance
 

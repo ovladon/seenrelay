@@ -157,7 +157,7 @@ Use this verdict when the sample is too small, cost/latency units are incomparab
 
 The audit should retain only what is needed to decide workload fit. Sanitized benchmark records should exclude raw values, fact identities, source payloads and per-call timestamps unless the caller explicitly chooses otherwise for its own local analysis.
 
-Package downloads, MCP initialization/tool listing, CI activity and SeenRelay first-party Reference Observer traffic are not external adoption evidence.
+Package downloads, MCP initialization/tool listing, CI activity and SeenRelay first-party observer traffic are not external adoption evidence.
 
 ## Next step after a positive audit
 

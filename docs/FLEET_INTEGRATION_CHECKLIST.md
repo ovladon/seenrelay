@@ -9,4 +9,4 @@
 - [ ] Enable bounded reuse only for fact classes and freshness windows approved by caller policy.
 - [ ] Keep `UNKNOWN`, `STALE`, `CONTESTED`, relay failure and policy rejection fail-open into the original validation.
 - [ ] OBSERVE only independently obtained source results.
-- [ ] Track actual downstream calls and provider spend avoided; do not count package downloads, MCP discovery, or first-party Reference Observer activity as adoption.
+- [ ] Track actual downstream calls and provider spend avoided; do not count package downloads, MCP discovery, or first-party observer activity as adoption.

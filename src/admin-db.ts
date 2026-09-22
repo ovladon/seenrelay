@@ -21,6 +21,8 @@ export interface RuntimeControls {
 }
 
 const REFERENCE_OBSERVER_ID = 'seenrelay-reference-observer-v1';
+const DELTA_OBSERVER_ID = 'seenrelay-private-delta-observer-v1';
+const FIRST_PARTY_OBSERVER_IDS = Object.freeze([REFERENCE_OBSERVER_ID, DELTA_OBSERVER_ID]);
 
 function sql() {
   const url = process.env.DATABASE_URL;
@@ -28,8 +30,10 @@ function sql() {
   return neon(url);
 }
 
-async function referenceObserverKey(): Promise<string> {
-  return `self:${await privacyScopedHash('observer-self', REFERENCE_OBSERVER_ID)}`;
+async function deriveFirstPartyObserverKeys(): Promise<string[]> {
+  return Promise.all(FIRST_PARTY_OBSERVER_IDS.map(async (id) =>
+    `self:${await privacyScopedHash('observer-self', id)}`
+  ));
 }
 
 export async function getRuntimeControls(): Promise<RuntimeControls> {
@@ -106,17 +110,19 @@ export async function getAdminSnapshotData() {
  */
 export async function getAdminAdoptionData() {
   const q = sql();
-  const [firstPartyObserverKey, standardsShadowKeys, legacyStandardsShadowKeys] = await Promise.all([
-    referenceObserverKey(),
+  const [firstPartyKeys, standardsShadowKeys, legacyStandardsShadowKeys] = await Promise.all([
+    deriveFirstPartyObserverKeys(),
     standardsShadowFactKeys(),
     legacyStandardsShadowFactKeys()
   ]);
-  const currentKeyStart = 2;
+  const firstPartyKeyStart = 1;
+  const firstPartyKeyPlaceholders = firstPartyKeys.map((_, index) => String.fromCharCode(36) + (firstPartyKeyStart + index)).join(',');
+  const currentKeyStart = firstPartyKeyStart + firstPartyKeys.length;
   const legacyKeyStart = currentKeyStart + standardsShadowKeys.length;
   const cutoffParam = legacyKeyStart + legacyStandardsShadowKeys.length;
   const currentKeyPlaceholders = standardsShadowKeys.map((_, index) => `$${currentKeyStart + index}`).join(',');
   const legacyKeyPlaceholders = legacyStandardsShadowKeys.map((_, index) => `$${legacyKeyStart + index}`).join(',');
-  const adoptionParams = [firstPartyObserverKey, ...standardsShadowKeys, ...legacyStandardsShadowKeys, STANDARDS_SHADOW_LEGACY_CUTOFF];
+  const adoptionParams = [...firstPartyKeys, ...standardsShadowKeys, ...legacyStandardsShadowKeys, STANDARDS_SHADOW_LEGACY_CUTOFF];
   const currentStandardsShadowFact = `f.fact_key IN (${currentKeyPlaceholders})`;
   const currentStandardsShadowLease = `h.last_fact_key IN (${currentKeyPlaceholders})`;
   const historicalLegacyStandardsShadowLease = `(
@@ -130,7 +136,7 @@ export async function getAdminAdoptionData() {
   const internalBenchmarkFact = `(f.source_url ~ '[?&]seenrelay_(json_)?benchmark=' OR f.source_url ~ '[?&]seenrelay_internal_benchmark=' OR ${currentStandardsShadowFact})`;
   const verifiedInternalLease = `h.client_key LIKE 'internal:%'`;
   const firstPartyLease = `(${verifiedInternalLease} OR EXISTS (
-    SELECT 1 FROM observations_recent fp WHERE fp.lease_id = h.lease_id AND fp.observer_key = $1
+    SELECT 1 FROM observations_recent fp WHERE fp.lease_id = h.lease_id AND fp.observer_key IN (${firstPartyKeyPlaceholders})
   ))`;
   const internalBenchmarkLease = `(
     ${currentStandardsShadowLease}
@@ -141,9 +147,9 @@ export async function getAdminAdoptionData() {
   const externalLease = `NOT (${firstPartyLease}) AND NOT (${internalBenchmarkLease})`;
   const meaningfulExternalLease = `(${externalLease}) AND (h.check_count > 0 OR EXISTS (
     SELECT 1 FROM observations_recent ext JOIN facts f ON f.fact_key=ext.fact_key
-    WHERE ext.lease_id=h.lease_id AND ext.observer_key <> $1 AND NOT (${internalBenchmarkFact})
+    WHERE ext.lease_id=h.lease_id AND ext.observer_key NOT IN (${firstPartyKeyPlaceholders}) AND NOT (${internalBenchmarkFact})
   ))`;
-  const firstPartyObservation = `(observer_key = $1 OR EXISTS (
+  const firstPartyObservation = `(observer_key IN (${firstPartyKeyPlaceholders}) OR EXISTS (
     SELECT 1 FROM hive_leases ih WHERE ih.lease_id=observations_recent.lease_id AND ih.client_key LIKE 'internal:%'
   ))`;
   const externalObservation = `NOT (${firstPartyObservation}) AND NOT EXISTS (
@@ -188,7 +194,7 @@ export async function getAdminAdoptionData() {
 
   return {
     status: 'ok' as const,
-    classification: 'server-verified-first-party-reference-observer-and-controlled-benchmarks-excluded',
+    classification: 'server-verified-first-party-observers-and-controlled-benchmarks-excluded',
     semantics: {
       external_protocol_activity: 'successful/admitted hosted protocol activity not classified as first-party or controlled benchmark',
       external_repeat_lease: 'retained external lease with at least two admitted CHECK/OBSERVE operations',

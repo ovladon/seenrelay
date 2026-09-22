@@ -28,6 +28,21 @@ export function dataPracticesDescriptor(origin: string) {
       'raw Ed25519 public key',
       'raw self-asserted observer_id'
     ],
+    first_party_observers: {
+      reference_observer: {
+        observer_id: 'seenrelay-reference-observer-v1',
+        role: 'Bounded first-party bootstrap observations from a documented public-source allowlist.',
+        protocol_operation: 'OBSERVE',
+        classified_as_external_adoption: false
+      },
+      delta_seed_observer: {
+        observer_id: 'seenrelay-private-delta-observer-v1',
+        role: 'Bounded first-party seed observations derived only after independent authoritative public-source validation.',
+        protocol_operation: 'OBSERVE',
+        classified_as_external_adoption: false,
+        prediction_used_to_create_observation: false
+      }
+    },
     discovery_telemetry: {
       live: 'MCP initialize and tools/list protocol-interest counts are emitted as structured runtime observability events and are not persisted by the application to PostgreSQL.',
       historical_database: 'Pre-cutover daily aggregate MCP discovery counters remain in PostgreSQL as historical evidence and are not advanced by live discovery traffic.',
