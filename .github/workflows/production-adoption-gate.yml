@@ -81,7 +81,8 @@ jobs:
             https://seenrelay.com/data-practices.json \
             --output "$RUNNER_TEMP/data-practices.json"
           jq -e '
-            .first_party_observers.delta_seed_observer.observer_id == "seenrelay-private-delta-observer-v1"
+            .first_party_observers.contract_revision == "delta-first-party-gate-v1"
+            and .first_party_observers.delta_seed_observer.observer_id == "seenrelay-private-delta-observer-v1"
             and .first_party_observers.delta_seed_observer.protocol_operation == "OBSERVE"
             and .first_party_observers.delta_seed_observer.classified_as_external_adoption == false
             and .first_party_observers.delta_seed_observer.prediction_used_to_create_observation == false
