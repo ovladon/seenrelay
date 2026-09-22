@@ -116,6 +116,11 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /npm_config_yes=true/);
   assert.match(gate, /deployment_sha == \$sha/);
   assert.match(gate, /billing_enabled == false/);
+  assert.match(gate, /src\/admin-db\.ts/);
+  assert.match(gate, /src\/data-practices\.ts/);
+  assert.match(gate, /seenrelay-private-delta-observer-v1/);
+  assert.match(gate, /classified_as_external_adoption == false/);
+  assert.match(gate, /prediction_used_to_create_observation == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
   assert.match(gate, /seenrelay==\$VERSION/);
   assert.match(gate, /await import\('seenrelay\/economics'\)/);
