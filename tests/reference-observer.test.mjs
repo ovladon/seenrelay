@@ -50,11 +50,11 @@ test('period scheduling is bounded to one hourly scheduler window per source int
   assert.equal(sourceDue(source,new Date('2026-08-25T12:07:00Z')),true);
 });
 
-test('reference observer workflow is hourly, read-only to GitHub and cannot become a hidden third SeenRelay operation',()=>{
+test('reference observer is manual fallback only, read-only to GitHub and cannot become a hidden third SeenRelay operation',()=>{
   const workflow=read('.github','workflows','reference-observer.yml');
   const script=read('scripts','reference-observer.mjs');
-  assert.match(workflow,/cron:\s*'7 \* \* \* \*'/);
-  assert.doesNotMatch(workflow,/7,37/);
+  assert.match(workflow,/workflow_dispatch:/);
+  assert.doesNotMatch(workflow,/schedule:|cron:/);
   assert.match(workflow,/contents:\s*read/);
   assert.doesNotMatch(workflow,/contents:\s*write|issues:\s*write|id-token:\s*write/);
   assert.match(workflow,/node scripts\/reference-observer\.mjs/);
