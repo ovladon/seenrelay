@@ -223,4 +223,4 @@ expected savings
 - SeenRelay/client overhead
 ```
 
-For shared CHECK-specific economics, use [`docs/ECONOMICS_LAB.md`](../docs/ECONOMICS_LAB.md). Package downloads, MCP initialize, tools/list requests and first-party Reference Observer activity are not evidence of external adoption.
+For shared CHECK-specific economics, use [`docs/ECONOMICS_LAB.md`](../docs/ECONOMICS_LAB.md). Package downloads, MCP initialize, tools/list requests and first-party observer activity are not evidence of external adoption.
