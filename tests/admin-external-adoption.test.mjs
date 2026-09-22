@@ -20,7 +20,10 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   const env = read('.env.example');
 
   assert.match(db, /REFERENCE_OBSERVER_ID\s*=\s*'seenrelay-reference-observer-v1'/);
-  assert.match(db, /privacyScopedHash\('observer-self', REFERENCE_OBSERVER_ID\)/);
+  assert.match(db, /DELTA_OBSERVER_ID\s*=\s*'seenrelay-private-delta-observer-v1'/);
+  assert.match(db, /FIRST_PARTY_OBSERVER_IDS/);
+  assert.match(db, /firstPartyObserverKeys/);
+  assert.match(db, /privacyScopedHash\('observer-self', id\)/);
   assert.match(db, /h\.client_key LIKE 'internal:%'/);
   assert.match(db, /observations_first_party/);
   assert.match(db, /observations_internal_benchmark/);
@@ -35,7 +38,7 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.doesNotMatch(db, /reuse_external_month/);
   assert.match(db, /unique_actor_claim:\s*false/);
   assert.match(db, /client_only_usage_visible:\s*false/);
-  assert.match(db, /server-verified-first-party-reference-observer-and-controlled-benchmarks-excluded/);
+  assert.match(db, /server-verified-first-party-observers-and-controlled-benchmarks-excluded/);
 
   // Scheduled Standards Shadow CHECKs must be excluded by their canonical fact key even after
   // retention removes the corresponding facts row. Do not regress to a facts-table join only.
@@ -64,6 +67,8 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
 
   assert.match(reference, /\/v1\/observe/);
   assert.doesNotMatch(reference, /\/v1\/check/);
+  assert.match(db, /observer_key IN \(\$\{firstPartyKeyPlaceholders\}\)/);
+  assert.match(db, /observer_key NOT IN \(\$\{firstPartyKeyPlaceholders\}\)/);
 
   assert.match(ui, /External leases · 60s/);
   assert.match(ui, /External CHECK · retained/);
