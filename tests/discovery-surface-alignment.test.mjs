@@ -20,6 +20,8 @@ test('README starts with the safe free audit and behavior-preserving proof', () 
   assert.match(t, /ambient_mcp_client\(raw_mcp_client\)/);
   assert.match(t, /client\.get_report\(\)/);
   assert.match(t, /npx skills add https:\/\/seenrelay\.com --skill seenrelay --yes/);
+  assert.match(t, /claude plugin marketplace add ovladon\/seenrelay/);
+  assert.match(t, /claude plugin install seenrelay@seenrelay-plugins/);
   assert.match(t, /docs\/SHADOW_AUDIT\.md/);
   assert.match(t, /BEGIN GENERATED:PUBLIC-FACTS/);
   assert.doesNotMatch(t, /JavaScript\/TypeScript and Python 0\.2\.\d+ include/);
