@@ -37,6 +37,41 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm install --global "@anthropic-ai/claude-code@${CLAUDE_CODE_VALIDATOR_VERSION}"
+          npm install --global --allow-scripts=@anthropic-ai/claude-code "@anthropic-ai/claude-code@${CLAUDE_CODE_VALIDATOR_VERSION}"
           claude --version
-          claude plugin validate . --strict
+
+          # Validate the exact submission tree with Anthropic's normal review semantics.
+          # The manifest deliberately omits an explicit version so community-marketplace
+          # updates can follow the source commit SHA. Anthropic documents version as
+          # optional, but its validator emits one advisory warning for that choice.
+          set +e
+          claude plugin validate . 2>&1 | tee "$RUNNER_TEMP/claude-plugin-validation.txt"
+          VALIDATE_RC=${PIPESTATUS[0]}
+          set -e
+          test "$VALIDATE_RC" -eq 0
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const output = fs.readFileSync(process.env.RUNNER_TEMP + '/claude-plugin-validation.txt', 'utf8');
+          const hasWarnings = /Found \d+ warning/.test(output);
+          if (hasWarnings) {
+            if (!/Found 1 warning/.test(output) || !/version: No version specified/.test(output)) {
+              console.error('Claude validator emitted an unexpected warning.');
+              process.exit(1);
+            }
+            console.log('Accepted the single intentional no-version advisory; no other warnings are allowed.');
+          }
+          NODE
+
+          # Prove the same plugin is warning-free under --strict when only the
+          # intentional version omission is neutralized in a temporary copy.
+          STRICT_DIR="$(mktemp -d)"
+          cp -R .claude-plugin skills "$STRICT_DIR/"
+          node --input-type=module - "$STRICT_DIR/.claude-plugin/plugin.json" <<'NODE'
+          import fs from 'node:fs';
+          const path = process.argv[2];
+          const manifest = JSON.parse(fs.readFileSync(path, 'utf8'));
+          manifest.version = '0.0.0';
+          fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n');
+          NODE
+          claude plugin validate "$STRICT_DIR" --strict
