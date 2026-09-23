@@ -78,6 +78,10 @@ test('Developer path advances from Ambient screening to a deterministic falsifia
   const economicsLab = read('docs', 'ECONOMICS_LAB.md');
 
   assert.match(landing, /href="\/quickstart#evaluate"/);
+  assert.match(landing, /npx seenrelay scan/);
+  assert.match(landing, /uploads nothing, changes nothing/);
+  assert.match(quickstart, /id="scan"/);
+  assert.match(quickstart, /npx seenrelay scan/);
   assert.match(quickstart, /id="evaluate"/);
   assert.match(quickstart, /Ambient finds repetition\. Shadow Proof decides whether SeenRelay has earned a place\./);
   assert.match(quickstart, /SeenRelayShadowProof/);
@@ -93,7 +97,8 @@ test('Developer path advances from Ambient screening to a deterministic falsifia
   assert.match(quickstart, /100-call floor is an operational gate, not a universal statistical-significance claim/);
   assert.match(quickstart, /Both the evaluator and verdict classifier leave automatic reuse disabled/);
 
-  assert.match(quickstartDoc, /Client v0\.2\.14 was clean-install verified/);
+  assert.match(quickstartDoc, /Client v0\.2\.15 was clean-install verified/);
+  assert.match(quickstartDoc, /npx seenrelay scan/);
   assert.match(quickstartDoc, /classifyHostileBenchmarkVerdict/);
   assert.match(quickstartDoc, /classify_hostile_benchmark_verdict/);
   assert.match(quickstartDoc, /\*\*`USE`\*\*/);
@@ -127,6 +132,8 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /classified_as_external_adoption == false/);
   assert.match(gate, /prediction_used_to_create_observation == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
+  assert.match(gate, /seenrelay scan sample --json/);
+  assert.match(gate, /grep -q 'npx seenrelay scan'/);
   assert.match(gate, /seenrelay==\$VERSION/);
   assert.match(gate, /await import\('seenrelay\/economics'\)/);
   assert.match(gate, /classify_hostile_benchmark_verdict/);

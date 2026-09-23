@@ -8,8 +8,35 @@ bypass=()
 if [ -n "${BYPASS_SECRET:-}" ]; then bypass=(-H "x-vercel-protection-bypass: $BYPASS_SECRET"); fi
 json=(-H 'content-type: application/json' "${bypass[@]}")
 
-# Never accept a Preview alias that is still serving a different commit.
-wait_for_exact_deployment() {
+# Accept the exact runtime commit, or a later descendant only when every intervening
+# commit is outside the main Vercel deployment boundary. This lets a successful
+# metadata/test-only tail supersede a failed build of the same runtime tree without
+# ever accepting an unverified runtime change.
+deployment_covers_release() {
+  local actual commit parent
+  actual=$(node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/health.json','utf8'));process.stdout.write(String(x.deployment_sha||''))")
+
+  [ -n "$actual" ] || return 1
+  [ "$actual" = "$RELEASE_SHA" ] && return 0
+
+  git cat-file -e "${RELEASE_SHA}^{commit}" 2>/dev/null || return 1
+  git cat-file -e "${actual}^{commit}" 2>/dev/null || return 1
+  git merge-base --is-ancestor "$RELEASE_SHA" "$actual" || return 1
+
+  while IFS= read -r commit; do
+    [ -n "$commit" ] || continue
+    parent=$(git rev-parse "${commit}^1")
+    if ! VERCEL_GIT_PREVIOUS_SHA="$parent" VERCEL_GIT_COMMIT_SHA="$commit" bash scripts/vercel-ignore-main.sh; then
+      echo "Preview deployment $actual contains runtime-changing commit $commit after required runtime commit $RELEASE_SHA." >&2
+      return 1
+    fi
+  done < <(git rev-list --reverse --first-parent "${RELEASE_SHA}..${actual}")
+
+  echo "Preview deployment $actual is a runtime-equivalent descendant of required commit $RELEASE_SHA."
+  return 0
+}
+
+wait_for_runtime_equivalent_deployment() {
   local stable=0 code
   for _ in $(seq 1 60); do
     code=$(curl -sS "${bypass[@]}" -o /tmp/health.json -w '%{http_code}' "$PREVIEW_URL/healthz" || true)
@@ -17,7 +44,7 @@ wait_for_exact_deployment() {
       && grep -q '"ok":true' /tmp/health.json \
       && grep -q '"billing_enabled":false' /tmp/health.json \
       && grep -q '"environment":"preview"' /tmp/health.json \
-      && grep -q "\"deployment_sha\":\"${RELEASE_SHA}\"" /tmp/health.json; then
+      && deployment_covers_release; then
       stable=$((stable + 1))
       [ "$stable" -ge 5 ] && return 0
     else
@@ -35,7 +62,7 @@ post() {
   curl -fsS "${headers[@]}" --data-binary "@$payload" "$PREVIEW_URL$endpoint" >"$output"
 }
 
-wait_for_exact_deployment
+wait_for_runtime_equivalent_deployment
 cat /tmp/health.json
 
 # Public, machine, admin-boundary and billing-disabled surfaces.
@@ -56,7 +83,8 @@ grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
 grep -q 'No guessed hit rate.' /tmp/site.html
 grep -q 'Your workload decides.' /tmp/site.html
 grep -q 'Three steps. No platform migration.' /tmp/site.html
-grep -q 'The easiest path is to give SeenRelay to your coding agent.' /tmp/site.html
+grep -q 'Scan first. Integrate only a real candidate.' /tmp/site.html
+grep -q 'npx seenrelay scan' /tmp/site.html
 grep -q 'every authoritative call still runs' /tmp/site.html
 grep -q 'no account' /tmp/site.html
 grep -q 'no SeenRelay API key' /tmp/site.html
@@ -89,6 +117,7 @@ NODE
 curl -fsS "${bypass[@]}" -H 'accept: text/html' "$PREVIEW_URL/quickstart" -o /tmp/quickstart.html
 curl -fsS "${bypass[@]}" -H 'accept: text/html' "$PREVIEW_URL/clients" -o /tmp/clients.html
 grep -q "JavaScript/TypeScript ${client_version}" /tmp/quickstart.html
+grep -q 'npx seenrelay scan' /tmp/quickstart.html
 grep -q "CLIENT ${client_version}" /tmp/clients.html
 ! grep -q '0.2.1' /tmp/quickstart.html
 ! grep -q '0.2.1' /tmp/clients.html

@@ -14,6 +14,7 @@ export function publicLandingPage(origin: string): string {
   const version = esc(f.install.client_version);
   const npmCommand = esc(f.install.npm_command);
   const pipCommand = esc(f.install.pypi_command);
+  const scanCommand = esc(f.install.scan_command);
   const skillCommand = `npx skills add ${origin} --skill seenrelay --yes`;
   const auditPrompt = 'Run a SeenRelay shadow audit on this project. Find repeated expensive read-only validations, preserve every authoritative call, measure stronger local/source/provider-native controls first, do not enable reuse, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for each measured workload.';
 
@@ -68,13 +69,13 @@ export function publicLandingPage(origin: string): string {
   <div>
     <div class="rv-kicker"><i></i><span>FREE · NO ACCOUNT · CLIENT ${version}</span></div>
     <h1>Your agents repeat expensive checks. <em>SeenRelay finds the ones you can stop repaying for.</em></h1>
-    <p class="rv-lead">Install SeenRelay around the validation work your agents already perform. Run normally. It measures exact repetition, compares safer native controls first, and tells you whether reuse is worth enabling. Until then, every authoritative call still runs.</p>
+    <p class="rv-lead">Start with a local scan that changes nothing. If it finds a plausible repeated expensive read-only validation, instrument only that path, run normally, and let the real workload decide whether reuse is worth enabling. Until then, every authoritative call still runs.</p>
     <div class="rv-actions rv-actions-spaced">
       <a class="rv-button primary" href="#start">Run the free shadow audit</a>
       <a class="rv-button" href="/quickstart">2-minute quickstart</a>
     </div>
     <div class="rv-proofline" aria-label="Current product facts">
-      <span>free</span><span>no account</span><span>no SeenRelay API key</span><span>shadow-first</span><span>fail open</span><span>npm + PyPI</span>
+      <span>free</span><span>no account</span><span>local prescreen</span><span>no SeenRelay API key</span><span>shadow-first</span><span>fail open</span><span>npm + PyPI</span>
     </div>
   </div>
   <aside class="rv-demo rv-verdict-demo" aria-label="Example SeenRelay audit output">
@@ -111,8 +112,9 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-section" id="start">
   <div class="rv-section-head">
     <div class="rv-eyebrow">TRY IT FREE</div>
-    <h2>The easiest path is to give SeenRelay to your coding agent.</h2>
-    <p>Or install the client directly. Either way, the first run is measurement-only and every authoritative validation stays enabled.</p>
+    <h2>Scan first. Integrate only a real candidate.</h2>
+    <p><code>seenrelay scan</code> reads supported project files locally, uploads nothing, changes nothing and cannot return a USE verdict. If it finds a candidate, continue with a coding agent or the client directly.</p>
+    <div class="rv-code"><pre id="scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="scan-command">Copy</button></div>
   </div>
   <div class="rv-adopt">
     <div class="rv-mode-card">
@@ -124,14 +126,16 @@ export function publicLandingPage(origin: string): string {
       <div class="rv-console-top"><span class="rv-dots"><i></i><i></i><i></i></span><span>free shadow audit</span></div>
       <div class="rv-console-body">
         <div class="rv-install-view active" data-install-view="agent" id="agent-audit">
-          <div class="rv-step"><span>1</span><div><h4>Install the SeenRelay Agent Skill</h4><div class="rv-code"><pre id="skill-install">${esc(skillCommand)}</pre><button class="rv-copy" type="button" data-copy-target="skill-install">Copy</button></div></div></div>
-          <div class="rv-step"><span>2</span><div><h4>Give your coding agent this task</h4><div class="rv-code"><pre id="agent-prompt">${esc(auditPrompt)}</pre><button class="rv-copy" type="button" data-copy-target="agent-prompt">Copy</button></div></div></div>
-          <div class="rv-step"><span>3</span><div><h4>Read the verdict</h4><p>Keep SeenRelay only on workloads that show safe repetition and positive net economics after stronger native controls.</p></div></div></div>
+          <div class="rv-step"><span>1</span><div><h4>Prescreen locally</h4><p>Run <code>npx seenrelay scan</code>. Continue only if it finds a candidate worth runtime measurement.</p></div></div>
+          <div class="rv-step"><span>2</span><div><h4>Install the SeenRelay Agent Skill</h4><div class="rv-code"><pre id="skill-install">${esc(skillCommand)}</pre><button class="rv-copy" type="button" data-copy-target="skill-install">Copy</button></div></div></div>
+          <div class="rv-step"><span>3</span><div><h4>Give your coding agent this task</h4><div class="rv-code"><pre id="agent-prompt">${esc(auditPrompt)}</pre><button class="rv-copy" type="button" data-copy-target="agent-prompt">Copy</button></div></div></div>
+          <div class="rv-step"><span>4</span><div><h4>Read the verdict</h4><p>Keep SeenRelay only on workloads that show safe repetition and positive net economics after stronger native controls.</p></div></div></div>
         </div>
         <div class="rv-install-view" data-install-view="human" id="developer-audit">
-          <div class="rv-step"><span>1</span><div><h4>Install</h4><div class="rv-code"><pre id="npm-install">${npmCommand}</pre><button class="rv-copy" type="button" data-copy-target="npm-install">Copy</button></div><div class="rv-code"><pre id="pip-install">${pipCommand}</pre><button class="rv-copy" type="button" data-copy-target="pip-install">Copy</button></div></div></div>
-          <div class="rv-step"><span>2</span><div><h4>Wrap an existing MCP-style client</h4><div class="rv-code"><pre id="ambient-example">import { ambientMcpClient } from 'seenrelay/ambient';\n\nconst client = ambientMcpClient(rawMcpClient);\n// run your existing workload normally\nconsole.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
-          <div class="rv-step"><span>3</span><div><h4>Evaluate before enabling reuse</h4><p>The local report finds exact repeat candidates. Shadow Proof and the economics evaluator can then test safety and net value on the real workload.</p><a href="/quickstart#evaluate">Open the evaluation recipe →</a></div></div>
+          <div class="rv-step"><span>1</span><div><h4>Prescreen locally</h4><div class="rv-code"><pre id="developer-scan">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="developer-scan">Copy</button></div><p>No source upload, no project modification and no USE verdict from static analysis.</p></div></div>
+          <div class="rv-step"><span>2</span><div><h4>Install</h4><div class="rv-code"><pre id="npm-install">${npmCommand}</pre><button class="rv-copy" type="button" data-copy-target="npm-install">Copy</button></div><div class="rv-code"><pre id="pip-install">${pipCommand}</pre><button class="rv-copy" type="button" data-copy-target="pip-install">Copy</button></div></div></div>
+          <div class="rv-step"><span>3</span><div><h4>Wrap an existing MCP-style client</h4><div class="rv-code"><pre id="ambient-example">import { ambientMcpClient } from 'seenrelay/ambient';\n\nconst client = ambientMcpClient(rawMcpClient);\n// run your existing workload normally\nconsole.log(client.seenRelayAmbient.getReport());</pre><button class="rv-copy" type="button" data-copy-target="ambient-example">Copy</button></div></div></div>
+          <div class="rv-step"><span>4</span><div><h4>Evaluate before enabling reuse</h4><p>The local report finds exact repeat candidates. Shadow Proof and the economics evaluator can then test safety and net value on the real workload.</p><a href="/quickstart#evaluate">Open the evaluation recipe →</a></div></div>
         </div>
       </div>
     </div>

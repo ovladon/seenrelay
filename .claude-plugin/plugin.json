@@ -1,6 +1,7 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "seenrelay",
-  "version": "0.1.0",
+  "displayName": "SeenRelay",
   "description": "Find repeated expensive read-only validation in a codebase and measure whether safer reuse is worthwhile before enabling it.",
   "author": {
     "name": "Vlad Belciug",

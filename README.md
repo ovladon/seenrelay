@@ -23,8 +23,18 @@ Run a SeenRelay shadow audit on this project. Find repeated expensive read-only 
 Or use the developer paths below. Full audit method: [`docs/SHADOW_AUDIT.md`](docs/SHADOW_AUDIT.md).
 
 <!-- BEGIN GENERATED:PUBLIC-FACTS -->
-**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.14 · currently free · no account/API key.
+**Install:** `npm install seenrelay` · `pip install seenrelay` · client v0.2.15 · currently free · no account/API key.
 <!-- END GENERATED:PUBLIC-FACTS -->
+
+## Zero-code local prescreen
+
+Before changing application code, ask whether the repository even contains a plausible recurring expensive read-only validation path:
+
+```bash
+npx seenrelay scan
+```
+
+The scan is local-only: it does not contact SeenRelay, upload source code or modify the project. It reports only pre-evidentiary states such as `CANDIDATE_FOR_SHADOW_MEASUREMENT`, `NATIVE_CONTROL_FIRST`, `NEEDS_RUNTIME_EVIDENCE` and `NO_ELIGIBLE_CANDIDATE_FOUND`. Static analysis cannot return `USE` or authorize reuse.
 
 ## Free shadow audit: measure without changing application behavior
 
@@ -221,7 +231,7 @@ A2A is monitored but is not advertised as an implemented product interface.
 
 ## Verification
 
-`npm run check` performs TypeScript checks, product guardrails, production dependency auditing, structural tests, and runtime tests. Package Validation clean-installs built npm/PyPI artifacts. The Preview Release Gate additionally exercises REST, MCP, fact identity, security boundaries, runtime controls, and reuse accounting against the exact Preview deployment SHA before Production promotion.
+`npm run check` performs TypeScript checks, product guardrails, production dependency auditing, structural tests, and runtime tests. Package Validation clean-installs built npm/PyPI artifacts. The Preview Release Gate additionally exercises REST, MCP, fact identity, security boundaries, runtime controls, and reuse accounting against the required Preview runtime commit, accepting a later serving SHA only when every intervening commit is outside the Vercel runtime boundary.
 
 Builds use the committed lockfile and `npm ci`.
 

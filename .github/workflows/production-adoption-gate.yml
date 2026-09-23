@@ -189,7 +189,17 @@ jobs:
           await import('seenrelay/ambient');
           await import('seenrelay/economics');
           NODE
-          echo "npm seenrelay@$VERSION clean-install passed."
+          mkdir -p sample/jobs
+          cat > sample/jobs/daily-search.ts <<'EOF'
+          import { tavily } from '@tavily/core';
+          const client = tavily({ apiKey: process.env.TAVILY_API_KEY });
+          export async function scheduled() {
+            return client.search("latest AI agent infrastructure releases");
+          }
+          EOF
+          ./node_modules/.bin/seenrelay scan sample --json > scan.json
+          node -e "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('scan.json','utf8')); if(r.overall_status!=='CANDIDATE_FOR_SHADOW_MEASUREMENT'||r.root!=='.') process.exit(1)"
+          echo "npm seenrelay@$VERSION clean-install and local scan passed."
 
       - name: Clean-install promoted PyPI client
         shell: bash
@@ -227,6 +237,8 @@ jobs:
             https://seenrelay.com/revamp.js \
             --output "$RUNNER_TEMP/revamp.js"
           grep -q 'Run the free shadow audit' "$RUNNER_TEMP/home.html"
+          grep -q 'npx seenrelay scan' "$RUNNER_TEMP/home.html"
+          grep -q 'npx seenrelay scan' "$RUNNER_TEMP/quickstart.html"
           grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' "$RUNNER_TEMP/home.html"
           grep -q 'rv-console rv-funnel-console' "$RUNNER_TEMP/home.html"
           grep -q 'rv-console-body' "$RUNNER_TEMP/home.html"

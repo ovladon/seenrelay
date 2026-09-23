@@ -11,7 +11,7 @@ on:
         required: true
         type: string
       release_sha:
-        description: Exact deployment commit SHA expected from /healthz
+        description: Runtime deployment commit SHA that /healthz must serve exactly or cover through a runtime-equivalent descendant
         required: true
         type: string
 

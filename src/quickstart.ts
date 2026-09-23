@@ -11,6 +11,7 @@ function esc(value: unknown): string {
 
 export function quickstartPage(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
+  const scanCommand = publicProductFacts.install.scan_command;
   const skillCommand = `npx skills add ${origin} --skill seenrelay --yes`;
 
   return `<!doctype html>
@@ -42,8 +43,16 @@ export function quickstartPage(origin: string): string {
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">INTEGRATION QUICKSTART · CLIENT ${esc(clientVersion)}</div>
   <h1>Measure first. Reuse only where the fleet earns it.</h1>
-  <p>The first SeenRelay integration keeps the existing read-only validation authoritative. Ambient measures exact repetition locally while the original operation still runs. If a costly workload repeats materially across workers, test that specific path with Shadow Proof before enabling any reuse.</p>
-  <div class="rv-actions"><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
+  <p>Start with a local static prescreen that changes nothing. If it finds a plausible recurring expensive read-only validation, Ambient measures exact repetition locally while the original operation still runs. Test only that candidate with Shadow Proof before enabling any reuse.</p>
+  <div class="rv-actions"><a class="rv-button" href="#scan">Scan first</a><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
+</section>
+
+<section class="rv-shell rv-section" id="scan">
+  <div class="rv-section-head"><div class="rv-eyebrow">ZERO-CODE PRESCREEN</div><h2>Find a candidate before changing the application.</h2><p>The npm CLI reads supported source and configuration files locally. It does not contact SeenRelay, upload project content, modify files, return a <code>USE</code> verdict or authorize reuse.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice"><header><b>Run locally</b><span>NO ACCOUNT</span></header><div class="rv-code"><pre>${esc(scanCommand)}</pre></div><p>Use <code>npx seenrelay scan . --json</code> when a coding agent or CI job needs machine-readable output.</p></article>
+    <article class="rv-choice"><header><b>Interpret conservatively</b><span>PRESCREEN ONLY</span></header><p><code>CANDIDATE_FOR_SHADOW_MEASUREMENT</code> means runtime measurement may be worthwhile. <code>NATIVE_CONTROL_FIRST</code> means test the stronger detected control first. <code>NEEDS_RUNTIME_EVIDENCE</code> means recurrence is not established. <code>NO_ELIGIBLE_CANDIDATE_FOUND</code> means leave SeenRelay out.</p></article>
+  </div>
 </section>
 
 <section class="rv-shell rv-section" id="agent">
