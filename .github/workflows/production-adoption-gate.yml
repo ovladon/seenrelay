@@ -43,6 +43,8 @@ jobs:
     steps:
       - name: Checkout exact main commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js 24
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
@@ -54,10 +56,52 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Wait for this exact commit on Production
+      - name: Classify Production deployment applicability
+        id: applicability
         shell: bash
         env:
-          RELEASE_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+            echo "release_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -z "$BEFORE_SHA" ] || [[ "$BEFORE_SHA" =~ ^0+$ ]] || ! git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+            echo "release_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+            echo 'Production deploy applicability could not be reconstructed; fail open to exact-deployment verification.'
+            exit 0
+          fi
+
+          release_sha=''
+          while IFS= read -r commit; do
+            [ -n "$commit" ] || continue
+            parent="$(git rev-parse "${commit}^1")"
+            if ! VERCEL_GIT_PREVIOUS_SHA="$parent" VERCEL_GIT_COMMIT_SHA="$commit" bash scripts/vercel-ignore-main.sh; then
+              release_sha="$commit"
+            fi
+          done < <(git rev-list --reverse --first-parent "${BEFORE_SHA}..${HEAD_SHA}")
+
+          if [ -z "$release_sha" ]; then
+            echo 'required=false' >> "$GITHUB_OUTPUT"
+            echo 'No commit in this push changes Production deployment inputs; verify the existing healthy Production deployment instead.'
+          else
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+            echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+            echo "Production deployment commit: $release_sha"
+          fi
+
+      - name: Wait for required Production commit
+        if: steps.applicability.outputs.required == 'true'
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ steps.applicability.outputs.release_sha }}
         run: |
           set -euo pipefail
           for attempt in $(seq 1 72); do
@@ -69,9 +113,18 @@ jobs:
             fi
             sleep 10
           done
-          echo "seenrelay.com did not converge to Production commit $RELEASE_SHA within the gate window." >&2
+          echo "seenrelay.com did not converge to required Production commit $RELEASE_SHA within the gate window." >&2
           cat "$RUNNER_TEMP/health.json" 2>/dev/null || true
           exit 1
+
+      - name: Verify healthy existing Production for non-deployed changes
+        if: steps.applicability.outputs.required != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error https://seenrelay.com/healthz --output "$RUNNER_TEMP/health.json"
+          jq -e '.ok == true and .environment == "production" and .billing_enabled == false and (.deployment_sha | type == "string" and length > 0)' "$RUNNER_TEMP/health.json" >/dev/null
+          echo 'Production remains healthy with billing disabled; this push intentionally required no Vercel deployment.'
 
       - name: Verify Delta first-party observation boundary in Production
         shell: bash
