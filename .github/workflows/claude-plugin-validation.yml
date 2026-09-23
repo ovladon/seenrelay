@@ -45,7 +45,7 @@ jobs:
           # updates can follow the source commit SHA. Anthropic documents version as
           # optional, but its validator emits one advisory warning for that choice.
           set +e
-          claude plugin validate . 2>&1 | tee "$RUNNER_TEMP/claude-plugin-validation.txt"
+          claude plugin validate .claude-plugin/plugin.json 2>&1 | tee "$RUNNER_TEMP/claude-plugin-validation.txt"
           VALIDATE_RC=${PIPESTATUS[0]}
           set -e
           test "$VALIDATE_RC" -eq 0
@@ -80,7 +80,20 @@ jobs:
           # install path from a clean Claude plugin state. Use the checked-out
           # directory here so PR validation never depends on main already
           # containing the marketplace file.
-          claude plugin validate .claude-plugin/marketplace.json
+          set +e
+          claude plugin validate .claude-plugin/marketplace.json 2>&1 | tee "$RUNNER_TEMP/claude-marketplace-validation.txt"
+          MARKET_VALIDATE_RC=${PIPESTATUS[0]}
+          set -e
+          test "$MARKET_VALIDATE_RC" -eq 0
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const output = fs.readFileSync(process.env.RUNNER_TEMP + '/claude-marketplace-validation.txt', 'utf8');
+          const hasWarnings = /Found \d+ warning/.test(output);
+          if (hasWarnings && (!/Found 1 warning/.test(output) || !/version: No version specified/.test(output))) {
+            console.error('Claude marketplace validator emitted an unexpected warning.');
+            process.exit(1);
+          }
+          NODE
 
           CLAUDE_TEST_HOME="$(mktemp -d)"
           export HOME="$CLAUDE_TEST_HOME"
