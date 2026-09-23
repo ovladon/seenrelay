@@ -146,6 +146,7 @@ test('SeenRelay exposes a self-hosted Claude Code marketplace', () => {
   const marketplace = JSON.parse(read('.claude-plugin', 'marketplace.json'));
   const publicFacts = JSON.parse(read('public', 'product-facts.json'));
   assert.equal(marketplace.name, 'seenrelay-plugins');
+  assert.equal(marketplace.description, 'SeenRelay plugin for measuring repeated expensive read-only validation before enabling reuse.');
   assert.deepEqual(marketplace.owner, { name: 'SeenRelay' });
   assert.deepEqual(marketplace.plugins, [{ name: 'seenrelay', source: './' }]);
   assert.equal(publicFacts.install.claude_marketplace_add_command, 'claude plugin marketplace add ovladon/seenrelay');
@@ -156,12 +157,13 @@ test('Claude community plugin is validated by a pinned official CLI', () => {
   const workflow = read('.github', 'workflows', 'claude-plugin-validation.yml');
   assert.match(workflow, /CLAUDE_CODE_VALIDATOR_VERSION:\s*'2\.1\.278'/);
   assert.match(workflow, /@anthropic-ai\/claude-code@\$\{CLAUDE_CODE_VALIDATOR_VERSION\}/);
-  assert.match(workflow, /claude plugin validate \. 2>&1/);
+  assert.match(workflow, /claude plugin validate \.claude-plugin\/plugin\.json 2>&1/);
   assert.match(workflow, /Found 1 warning/);
   assert.match(workflow, /version: No version specified/);
   assert.match(workflow, /manifest\.version = '0\.0\.0'/);
   assert.match(workflow, /claude plugin validate "\$STRICT_DIR" --strict/);
-  assert.match(workflow, /claude plugin validate \.claude-plugin\/marketplace\.json/);
+  assert.match(workflow, /claude plugin validate \.claude-plugin\/marketplace\.json 2>&1/);
+  assert.match(workflow, /claude-marketplace-validation\.txt/);
   assert.match(workflow, /claude plugin marketplace add "\$GITHUB_WORKSPACE"/);
   assert.match(workflow, /claude plugin install seenrelay@seenrelay-plugins --scope user/);
   assert.match(workflow, /claude plugin list --json/);
