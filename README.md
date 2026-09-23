@@ -231,7 +231,7 @@ A2A is monitored but is not advertised as an implemented product interface.
 
 ## Verification
 
-`npm run check` performs TypeScript checks, product guardrails, production dependency auditing, structural tests, and runtime tests. Package Validation clean-installs built npm/PyPI artifacts. The Preview Release Gate additionally exercises REST, MCP, fact identity, security boundaries, runtime controls, and reuse accounting against the exact Preview deployment SHA before Production promotion.
+`npm run check` performs TypeScript checks, product guardrails, production dependency auditing, structural tests, and runtime tests. Package Validation clean-installs built npm/PyPI artifacts. The Preview Release Gate additionally exercises REST, MCP, fact identity, security boundaries, runtime controls, and reuse accounting against the required Preview runtime commit, accepting a later serving SHA only when every intervening commit is outside the Vercel runtime boundary.
 
 Builds use the committed lockfile and `npm ci`.
 
