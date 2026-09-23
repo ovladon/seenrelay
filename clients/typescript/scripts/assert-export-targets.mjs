@@ -24,6 +24,7 @@ const targets = [];
 if (typeof pkg.main === 'string') targets.push({ label: 'main', target: pkg.main });
 if (typeof pkg.types === 'string') targets.push({ label: 'types', target: pkg.types });
 collectTargets(pkg.exports, 'exports', targets);
+collectTargets(pkg.bin, 'bin', targets);
 
 if (!targets.length) {
   console.error(`No package entry targets found in ${packageJsonPath}`);
