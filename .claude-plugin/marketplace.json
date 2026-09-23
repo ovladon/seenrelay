@@ -1,5 +1,6 @@
 {
   "name": "seenrelay-plugins",
+  "description": "SeenRelay plugin for measuring repeated expensive read-only validation before enabling reuse.",
   "owner": {
     "name": "SeenRelay"
   },
