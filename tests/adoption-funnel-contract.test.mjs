@@ -115,6 +115,11 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /npx skills add https:\/\/seenrelay\.com --skill seenrelay --yes/);
   assert.match(gate, /npm_config_yes=true/);
   assert.match(gate, /deployment_sha == \$sha/);
+  assert.match(gate, /Classify Production deployment applicability/);
+  assert.match(gate, /scripts\/vercel-ignore-main\.sh/);
+  assert.match(gate, /required=false/);
+  assert.match(gate, /Verify healthy existing Production for non-deployed changes/);
+  assert.match(gate, /fetch-depth: 0/);
   assert.match(gate, /billing_enabled == false/);
   assert.match(gate, /src\/admin-db\.ts/);
   assert.match(gate, /src\/data-practices\.ts/);
