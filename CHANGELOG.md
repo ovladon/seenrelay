@@ -6,6 +6,9 @@ Current install/version/verified benchmark facts are generated from `public/prod
 
 ## Unreleased — Deterministic client wrappers
 
+- Add a local-only `seenrelay scan` static prescreen for metered/read-only validation candidates, recurring execution signals, and stronger native/local controls. The scanner uploads nothing, modifies nothing, and cannot return `USE` or enable reuse.
+- Add a Claude Code plugin manifest that reuses the existing measurement-first SeenRelay Agent Skill without automatically attaching the hosted MCP endpoint.
+
 - Retire the recurring Reference Observer schedule now that the private Delta bridge is the sole scheduled first-party bootstrap observer; retain Reference Observer as a manual fallback only.
 - Add vendorable zero-third-party-runtime-dependency JavaScript/TypeScript and Python reference wrappers that put CHECK deterministically in front of an application's existing validation path.
 - Keep shadow mode as the default; bounded reuse requires an explicit caller-supplied policy.

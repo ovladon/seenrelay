@@ -6,6 +6,20 @@ Local-first, provider-independent client with zero third-party runtime dependenc
 
 Client 0.2.10 includes the multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit alongside the Ambient framework integrations, local integration catalog, Firecrawl shadow helpers, and existing local-first surfaces. It also hardens Zero-State freshness so a negative-age entry caused by clock skew cannot authorize local/private reuse or retained-validator use. Otherwise the JavaScript / TypeScript behavior is unchanged; the new Zero-State implementation in this release is Python-side. Shared evidence never authorizes reuse by itself.
 
+## Local zero-code prescreen
+
+Before changing application code, run a local static prescreen:
+
+```bash
+npx seenrelay scan
+# or machine-readable output
+npx seenrelay scan . --json
+```
+
+The scanner reads supported text/source files locally, does not contact SeenRelay, does not upload source code, and does not modify the target project. It looks for metered or resource-intensive read-only work, recurring execution signals, stronger native/local controls, and supported integration boundaries.
+
+Its states are deliberately pre-evidentiary: `CANDIDATE_FOR_SHADOW_MEASUREMENT`, `NATIVE_CONTROL_FIRST`, `NEEDS_RUNTIME_EVIDENCE`, or `NO_ELIGIBLE_CANDIDATE_FOUND`. Static analysis can never return a SeenRelay `USE` verdict or authorize reuse. A real `USE / DO NOT USE / INSUFFICIENT EVIDENCE` decision still requires natural-workload shadow measurement and comparison against the best measured non-shared path.
+
 ## Shared CHECK assurance
 
 `seenrelay/assurance` turns additive CHECK evidence into an explicit caller-side policy decision. The multi-signal preset requires at least two observer keys, two cryptographic continuity keys, and two reuse-independence buckets, plus matching value fingerprints and acceptable freshness.
