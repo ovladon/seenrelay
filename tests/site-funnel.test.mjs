@@ -9,7 +9,9 @@ const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.ur
 
 test('homepage keeps the runtime primary while routing site owners to the separate diagnostic tool', () => {
   assert.match(landing, /Run the free shadow audit/);
-  assert.match(landing, /The easiest path is to give SeenRelay to your coding agent/);
+  assert.match(landing, /Scan first\. Integrate only a real candidate\./);
+  assert.match(landing, /npx seenrelay scan/);
+  assert.match(landing, /uploads nothing, changes nothing and cannot return a USE verdict/);
   assert.match(landing, /SEPARATE FREE TOOL/);
   assert.match(landing, /Own a site or API\?/);
   assert.match(landing, /href="\/readiness"/);
