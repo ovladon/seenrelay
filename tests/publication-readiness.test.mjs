@@ -142,6 +142,20 @@ test('GitHub Actions are pinned to immutable commit SHAs', () => {
   }
 });
 
+test('Claude community plugin is validated by a pinned official CLI', () => {
+  const workflow = read('.github', 'workflows', 'claude-plugin-validation.yml');
+  assert.match(workflow, /CLAUDE_CODE_VALIDATOR_VERSION:\s*'2\.1\.278'/);
+  assert.match(workflow, /@anthropic-ai\/claude-code@\$\{CLAUDE_CODE_VALIDATOR_VERSION\}/);
+  assert.match(workflow, /claude plugin validate \. --strict/);
+  assert.match(workflow, /\.claude-plugin\/\*\*/);
+  assert.match(workflow, /skills\/\*\*/);
+  const uses = [...workflow.matchAll(/^\s*uses:\s*(actions\/(?:checkout|setup-node))@([^\s#]+)/gm)];
+  assert.equal(uses.length, 2);
+  for (const [, action, ref] of uses) {
+    assert.match(ref, /^[0-9a-f]{40}$/, `${action} must be pinned to a full commit SHA`);
+  }
+});
+
 test('public source-available ownership and third-party notices are explicit', () => {
   const license = read('LICENSE');
   assert.match(license, /Copyright \(c\) 2026 ovladon/);
