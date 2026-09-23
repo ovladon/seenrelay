@@ -30,6 +30,17 @@ npx seenrelay scan . --json
 
 The scanner reads supported source/configuration files locally and does not contact SeenRelay, upload source code or modify the target project. It can identify candidate metered/read-only operations, recurrence signals and stronger local/source/provider-native controls. Its output is deliberately pre-evidentiary and cannot return `USE`, authorize reuse or establish runtime economics.
 
+## Claude Code native plugin
+
+SeenRelay also ships a self-hosted Claude Code marketplace directly from the public repository:
+
+```bash
+claude plugin marketplace add ovladon/seenrelay
+claude plugin install seenrelay@seenrelay-plugins
+```
+
+This path installs the same measurement-first skill without waiting for Anthropic community-directory approval. Community listing is a separate discovery channel, not a runtime dependency.
+
 ## Choose the right target
 
 Use SeenRelay for repeated **read-only** validation whose full path has meaningful cost or latency: paid web search, metered scraping/proxies, browser or extraction work, rate-limited APIs, model-assisted parsing, or multi-step validation.
