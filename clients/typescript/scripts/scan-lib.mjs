@@ -200,7 +200,7 @@ export async function scanRepository(rootPath = process.cwd(), options = {}) {
 
   return {
     schema_version: 'seenrelay-static-prescreen-v1',
-    root,
+    root: '.',
     files_scanned: files.length,
     files_with_relevant_signals: scanned.length,
     candidate_files: candidates.length,
