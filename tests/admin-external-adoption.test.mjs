@@ -128,6 +128,13 @@ test('Preview gate resolves the core deployment and tolerates a non-deploying PR
   assert.match(workflow, /DEPLOYMENT_SHA/);
   assert.match(workflow, /steps\.applicability\.outputs\.release_sha/);
 
+  const releaseGate = read('scripts', 'preview-release-gate.sh');
+  assert.match(releaseGate, /deployment_covers_release/);
+  assert.match(releaseGate, /git merge-base --is-ancestor "\$RELEASE_SHA" "\$actual"/);
+  assert.match(releaseGate, /git rev-list --reverse --first-parent "\$\{RELEASE_SHA\}\.\.\$\{actual\}"/);
+  assert.match(releaseGate, /VERCEL_GIT_PREVIOUS_SHA="\$parent" VERCEL_GIT_COMMIT_SHA="\$commit" bash scripts\/vercel-ignore-main\.sh/);
+  assert.match(releaseGate, /runtime-equivalent descendant/);
+
   // In this monorepo the Vercel bot comment contains both core and readiness.
   // The core release gate must select only the seenrelay row.
   assert.match(resolver, /corePreviewFromComment/);
