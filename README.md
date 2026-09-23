@@ -10,6 +10,17 @@ SeenRelay itself requires no account or API key. A third-party client, directory
 
 ## Fastest start: give the audit to your coding agent
 
+Claude Code native plugin:
+
+```bash
+claude plugin marketplace add ovladon/seenrelay
+claude plugin install seenrelay@seenrelay-plugins
+```
+
+The marketplace is hosted directly in this repository, so this install path does not depend on Anthropic community-directory approval.
+
+Any Agent Skills client:
+
 ```bash
 npx skills add https://seenrelay.com --skill seenrelay --yes
 ```
