@@ -1,0 +1,12 @@
+{
+  "name": "seenrelay-plugins",
+  "owner": {
+    "name": "SeenRelay"
+  },
+  "plugins": [
+    {
+      "name": "seenrelay",
+      "source": "./"
+    }
+  ]
+}
