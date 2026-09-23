@@ -37,6 +37,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm install --global --ignore-scripts "@anthropic-ai/claude-code@${CLAUDE_CODE_VALIDATOR_VERSION}"
+          npm install --global "@anthropic-ai/claude-code@${CLAUDE_CODE_VALIDATOR_VERSION}"
           claude --version
           claude plugin validate . --strict
