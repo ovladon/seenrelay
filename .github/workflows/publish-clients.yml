@@ -157,6 +157,17 @@ jobs:
           ) process.exit(1);
           NODE
 
+          mkdir -p sample/jobs
+          cat > sample/jobs/daily-search.ts <<'EOF'
+          import { tavily } from '@tavily/core';
+          const client = tavily({ apiKey: process.env.TAVILY_API_KEY });
+          export async function scheduled() {
+            return client.search("latest AI agent infrastructure news");
+          }
+          EOF
+          ./node_modules/.bin/seenrelay scan sample --json > scan.json
+          node -e "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('scan.json','utf8')); if(r.overall_status!=='CANDIDATE_FOR_SHADOW_MEASUREMENT'||r.root!=='.') process.exit(1)"
+
           cd "$TMP/node_modules/seenrelay"
           npm pack --dry-run --json >/dev/null
           REPACK="$(npm pack --silent)"
