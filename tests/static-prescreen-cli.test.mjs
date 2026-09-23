@@ -11,7 +11,9 @@ const root = path.join(here, '..');
 test('Claude Code plugin manifest reuses the existing skill without automatic MCP attachment', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, '.claude-plugin', 'plugin.json'), 'utf8'));
   assert.equal(manifest.name, 'seenrelay');
+  assert.equal(manifest.displayName, 'SeenRelay');
   assert.match(manifest.description, /repeated expensive read-only validation/i);
+  assert.equal(Object.hasOwn(manifest, 'version'), false, 'Claude community plugin should follow source commit SHA updates');
   assert.equal(Object.hasOwn(manifest, 'mcpServers'), false);
   assert.equal(fs.existsSync(path.join(root, 'skills', 'seenrelay', 'SKILL.md')), true);
 });
