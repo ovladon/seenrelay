@@ -146,7 +146,11 @@ test('Claude community plugin is validated by a pinned official CLI', () => {
   const workflow = read('.github', 'workflows', 'claude-plugin-validation.yml');
   assert.match(workflow, /CLAUDE_CODE_VALIDATOR_VERSION:\s*'2\.1\.278'/);
   assert.match(workflow, /@anthropic-ai\/claude-code@\$\{CLAUDE_CODE_VALIDATOR_VERSION\}/);
-  assert.match(workflow, /claude plugin validate \. --strict/);
+  assert.match(workflow, /claude plugin validate \. 2>&1/);
+  assert.match(workflow, /Found 1 warning/);
+  assert.match(workflow, /version: No version specified/);
+  assert.match(workflow, /manifest\.version = '0\.0\.0'/);
+  assert.match(workflow, /claude plugin validate "\$STRICT_DIR" --strict/);
   assert.match(workflow, /\.claude-plugin\/\*\*/);
   assert.match(workflow, /skills\/\*\*/);
   const uses = [...workflow.matchAll(/^\s*uses:\s*(actions\/(?:checkout|setup-node))@([^\s#]+)/gm)];
