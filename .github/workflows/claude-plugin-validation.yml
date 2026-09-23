@@ -75,3 +75,19 @@ jobs:
           fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n');
           NODE
           claude plugin validate "$STRICT_DIR" --strict
+
+          # Validate the self-hosted marketplace manifest and prove the native
+          # install path from a clean Claude plugin state. Use the checked-out
+          # directory here so PR validation never depends on main already
+          # containing the marketplace file.
+          claude plugin validate .claude-plugin/marketplace.json
+
+          CLAUDE_TEST_HOME="$(mktemp -d)"
+          export HOME="$CLAUDE_TEST_HOME"
+          claude plugin marketplace add "$GITHUB_WORKSPACE"
+          claude plugin marketplace list --json | tee "$RUNNER_TEMP/claude-marketplaces.json"
+          grep -q '"seenrelay-plugins"' "$RUNNER_TEMP/claude-marketplaces.json"
+
+          claude plugin install seenrelay@seenrelay-plugins --scope user
+          claude plugin list --json | tee "$RUNNER_TEMP/claude-plugins.json"
+          grep -q '"seenrelay"' "$RUNNER_TEMP/claude-plugins.json"
