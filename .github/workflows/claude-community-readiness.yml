@@ -34,12 +34,13 @@ jobs:
       - name: Build synthetic community marketplace entry
         shell: bash
         env:
-          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           cat > .claude-plugin/community-readiness-marketplace.json <<EOF
           {
             "name": "seenrelay-community-readiness",
+            "description": "Validation fixture for the SeenRelay Claude Code community marketplace submission.",
             "owner": {
               "name": "Vlad Belciug"
             },
