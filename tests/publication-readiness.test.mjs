@@ -64,7 +64,11 @@ test('client and quickstart adoption guides are concrete and conservative', () =
   assert.match(clients, /ChatGPT custom MCP apps/);
   assert.match(clients, /shadow mode/i);
   assert.match(clients, /provider-independent/i);
-  assert.match(adoption, /Add SeenRelay to Cursor/);
+  assert.match(adoption, /Add SeenRelay to Claude Code or another Agent Skills client/);
+  assert.match(adoption, /claude plugin marketplace add ovladon\/seenrelay/);
+  assert.match(adoption, /claude plugin install --scope user seenrelay@seenrelay/);
+  assert.match(quickstart, /claude plugin marketplace add ovladon\/seenrelay/);
+  assert.match(quickstart, /does not automatically attach the hosted MCP endpoint/i);
   assert.match(adoption, /seenrelay\/mcp-auto/);
   assert.match(quickstart, /currently free/i);
   assert.ok(
