@@ -97,7 +97,11 @@ test('Developer path advances from Ambient screening to a deterministic falsifia
   assert.match(quickstart, /100-call floor is an operational gate, not a universal statistical-significance claim/);
   assert.match(quickstart, /Both the evaluator and verdict classifier leave automatic reuse disabled/);
 
-  assert.match(quickstartDoc, /Client v0\.2\.15 was clean-install verified/);
+  const promotedClientVersion = json('public', 'product-facts.json').install.client_version;
+  assert.ok(
+    quickstartDoc.includes(`Client v${promotedClientVersion} was clean-install verified`),
+    `quickstart must describe the promoted client ${promotedClientVersion} as registry-verified`
+  );
   assert.match(quickstartDoc, /npx seenrelay scan/);
   assert.match(quickstartDoc, /classifyHostileBenchmarkVerdict/);
   assert.match(quickstartDoc, /classify_hostile_benchmark_verdict/);
