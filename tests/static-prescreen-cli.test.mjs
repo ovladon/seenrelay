@@ -18,6 +18,37 @@ test('Claude Code plugin manifest reuses the existing skill without automatic MC
   assert.equal(fs.existsSync(path.join(root, 'skills', 'seenrelay', 'SKILL.md')), true);
 });
 
+test('minimal Claude community payload is exact, bounded, and synchronized', () => {
+  const payloadRoot = path.join(root, 'integrations', 'claude', 'seenrelay');
+  const canonicalManifest = fs.readFileSync(path.join(root, '.claude-plugin', 'plugin.json'), 'utf8');
+  const packagedManifest = fs.readFileSync(path.join(payloadRoot, '.claude-plugin', 'plugin.json'), 'utf8');
+  const canonicalSkill = fs.readFileSync(path.join(root, 'skills', 'seenrelay', 'SKILL.md'), 'utf8');
+  const packagedSkill = fs.readFileSync(path.join(payloadRoot, 'skills', 'seenrelay', 'SKILL.md'), 'utf8');
+  const canonicalLicense = fs.readFileSync(path.join(root, 'LICENSE'), 'utf8');
+  const packagedLicense = fs.readFileSync(path.join(payloadRoot, 'LICENSE'), 'utf8');
+
+  assert.equal(packagedManifest, canonicalManifest);
+  assert.equal(packagedSkill, canonicalSkill);
+  assert.equal(packagedLicense, canonicalLicense);
+
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile()) files.push(path.relative(payloadRoot, full).split(path.sep).join('/'));
+      else assert.fail(`unexpected non-file payload entry: ${full}`);
+    }
+  };
+  walk(payloadRoot);
+  files.sort();
+  assert.deepEqual(files, [
+    '.claude-plugin/plugin.json',
+    'LICENSE',
+    'skills/seenrelay/SKILL.md'
+  ]);
+});
+
 test('static prescreen marks scheduled metered search as shadow-measurement candidate', () => {
   const result = scanText(`
     import { tavily } from '@tavily/core';

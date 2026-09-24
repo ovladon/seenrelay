@@ -6,12 +6,14 @@ on:
     paths:
       - '.claude-plugin/**'
       - 'skills/**'
+      - 'integrations/claude/seenrelay/**'
       - '.github/workflows/claude-community-readiness.yml'
   push:
     branches: [main]
     paths:
       - '.claude-plugin/**'
       - 'skills/**'
+      - 'integrations/claude/seenrelay/**'
       - '.github/workflows/claude-community-readiness.yml'
 
 permissions:
@@ -51,7 +53,8 @@ jobs:
                 "source": {
                   "source": "url",
                   "url": "https://github.com/ovladon/seenrelay",
-                  "sha": "$SOURCE_SHA"
+                  "sha": "$SOURCE_SHA",
+                  "path": "integrations/claude/seenrelay"
                 }
               }
             ]
