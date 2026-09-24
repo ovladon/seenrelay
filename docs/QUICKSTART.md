@@ -11,12 +11,12 @@ npm install seenrelay
 pip install seenrelay
 ```
 
-Client v0.2.15 was clean-install verified from both public registries on 2026-09-23. JavaScript/TypeScript and Python 0.2.15 support provider-independent local-first Zero-State. Reuse remains caller policy.
+Client v0.2.16 was clean-install verified from both public registries on 2026-09-24. JavaScript/TypeScript and Python 0.2.16 support provider-independent local-first Zero-State. Reuse remains caller policy.
 <!-- END GENERATED:PUBLIC-INSTALL -->
 
 SeenRelay reduces redundant source-backed validation while preserving the application's existing validation policy. It still has exactly two domain operations: **CHECK** and **OBSERVE**.
 
-The recommended 0.2.15 path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
+The recommended 0.2.16 path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
 
 ## Zero-code local prescreen
 
