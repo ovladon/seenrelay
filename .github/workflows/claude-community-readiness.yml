@@ -1,0 +1,67 @@
+name: Claude Community Readiness
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.claude-plugin/**'
+      - 'skills/**'
+      - '.github/workflows/claude-community-readiness.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.claude-plugin/**'
+      - 'skills/**'
+      - '.github/workflows/claude-community-readiness.yml'
+
+permissions:
+  contents: read
+
+env:
+  CLAUDE_CODE_VALIDATOR_VERSION: '2.1.278'
+  CLAUDE_COMMUNITY_VALIDATOR_SHA: 'a727be1c7bd6064419b6f60d71993a19198adc17'
+
+jobs:
+  validate-community-entry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact SeenRelay commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Build synthetic community marketplace entry
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          cat > .claude-plugin/community-readiness-marketplace.json <<EOF
+          {
+            "name": "seenrelay-community-readiness",
+            "owner": {
+              "name": "Vlad Belciug"
+            },
+            "plugins": [
+              {
+                "name": "seenrelay",
+                "description": "Find recurring expensive read-only validation in a codebase, measure stronger native controls first, and determine whether SeenRelay reuse is worth testing without enabling reuse automatically.",
+                "source": {
+                  "source": "url",
+                  "url": "https://github.com/ovladon/seenrelay",
+                  "sha": "$SOURCE_SHA"
+                }
+              }
+            ]
+          }
+          EOF
+
+      - name: Validate with Claude community marketplace policy floor
+        uses: anthropics/claude-plugins-community/.github/actions/validate-plugins@a727be1c7bd6064419b6f60d71993a19198adc17
+        with:
+          marketplace-path: .claude-plugin/community-readiness-marketplace.json
+          validate-all-external: "true"
+          skip-local-folders: "true"
+          fail-on-warnings: "true"
+          claude-cli-version: "2.1.278"
