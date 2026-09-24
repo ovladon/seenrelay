@@ -13,7 +13,16 @@ The audit is intentionally safe and falsifiable:
 
 ## Fastest path: coding agent
 
-Install the published Agent Skill from the canonical domain:
+Claude Code can install the measurement-first SeenRelay plugin persistently from the public repository marketplace:
+
+```bash
+claude plugin marketplace add ovladon/seenrelay
+claude plugin install --scope user seenrelay@seenrelay
+```
+
+This direct repository path does not imply Anthropic community-directory approval, does not automatically attach the hosted MCP endpoint and does not enable reuse.
+
+Other Agent Skills clients can install the same published skill from the canonical SeenRelay domain:
 
 ```bash
 npx skills add https://seenrelay.com --skill seenrelay --yes
@@ -89,7 +98,7 @@ client = ambient_mcp_client(raw_mcp_client)
 print(client.get_report())
 ```
 
-Python 0.2.11 also supports bounded sanitized natural-workload evidence export and hostile economics evaluation through `seenrelay_economics`, while authoritative validation remains mandatory during the measurement window.
+Python 0.2.15 supports bounded sanitized natural-workload evidence export and hostile economics evaluation through `seenrelay_economics`, while authoritative validation remains mandatory during the measurement window.
 
 ## What counts as a useful audit
 
