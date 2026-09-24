@@ -209,7 +209,7 @@ const edge = new SeenRelayZeroState({
   <div class="rv-stack">
     <article><h3>Plain JS / TS function</h3><p><code>SeenRelayZeroState</code> can apply exact in-flight reuse, explicit local/private freshness policy and source-native confirmation before the original validation.</p></article>
     <article><h3>Framework adapters</h3><p>Ambient adapters preserve existing framework/tool behavior while measuring exact repetition locally by default.</p></article>
-    <article><h3>Claude Code plugin + remote MCP</h3><p>Claude Code can install the repository-hosted SeenRelay plugin persistently, while the separate remote MCP path exposes only CHECK + OBSERVE. The self-hosted plugin path does not imply Anthropic marketplace approval; connecting MCP alone does not instrument existing validation work.</p></article>
+    <article><h3>Claude Code plugin + remote MCP</h3><p>Claude Code can install the repository-hosted SeenRelay plugin persistently, while the separate remote MCP path exposes only CHECK + OBSERVE. The self-hosted plugin path does not imply Anthropic marketplace approval. Connecting the protocol alone does not instrument existing validation work.</p></article>
     <article><h3>REST / OpenAPI</h3><p>Direct integrations can use <code>POST /v1/check</code> and <code>POST /v1/observe</code>; the full schema is published at <code>/openapi.json</code>.</p></article>
   </div>
 </section>
