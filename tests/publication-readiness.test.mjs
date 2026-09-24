@@ -160,6 +160,22 @@ test('Claude community plugin is validated by a pinned official CLI', () => {
   }
 });
 
+test('self-hosted Claude marketplace exposes a persistent direct-install path', () => {
+  const marketplace = JSON.parse(read('.claude-plugin', 'marketplace.json'));
+  assert.equal(marketplace.name, 'seenrelay');
+  assert.equal(marketplace.plugins?.length, 1);
+  assert.equal(marketplace.plugins[0]?.name, 'seenrelay');
+  assert.equal(marketplace.plugins[0]?.source, './integrations/claude/seenrelay');
+  assert.equal(marketplace.plugins[0]?.category, 'development');
+  assert.equal(marketplace.plugins[0]?.homepage, 'https://seenrelay.com');
+
+  const workflow = read('.github', 'workflows', 'claude-plugin-validation.yml');
+  assert.match(workflow, /claude plugin validate \.claude-plugin\/marketplace\.json --strict/);
+  assert.match(workflow, /claude plugin marketplace add "\$GITHUB_WORKSPACE"/);
+  assert.match(workflow, /claude plugin install --scope user seenrelay@seenrelay/);
+  assert.match(workflow, /claude plugin list --json/);
+});
+
 test('Claude community marketplace readiness uses Anthropic policy floor at pinned SHAs', () => {
   const workflow = read('.github', 'workflows', 'claude-community-readiness.yml');
   assert.match(workflow, /CLAUDE_CODE_VALIDATOR_VERSION:\s*'2\.1\.278'/);
