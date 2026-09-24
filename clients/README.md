@@ -6,7 +6,7 @@
 
 The client packages put SeenRelay around source-backed validation that an application already performs. They do **not** change the hosted protocol: SeenRelay still has exactly two domain operations, CHECK and OBSERVE.
 
-Client 0.2.15 is published and independently verified on npm and PyPI. It preserves the previously verified runtime capabilities, including provider-independent Zero-State, multi-signal shared-evidence assurance helpers, deterministic Fact Coordinate Kit v1, bounded sanitized natural-workload evidence export and hostile economics evaluation, while repairing npm distribution integrity so every declared export exists and the installed public package can repack itself. Authoritative validation remains mandatory during measurement. Shared evidence remains explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates remain local repetition keys unless a stable source-native locator supports a shared fact descriptor.
+Client 0.2.16 is published and independently verified on npm and PyPI. It preserves the previously verified runtime capabilities, including provider-independent Zero-State, multi-signal shared-evidence assurance helpers, deterministic Fact Coordinate Kit v1, bounded sanitized natural-workload evidence export and hostile economics evaluation, while repairing npm distribution integrity so every declared export exists and the installed public package can repack itself. Authoritative validation remains mandatory during measurement. Shared evidence remains explicit caller policy, does not prove truth or independent real-world actors, and MCP/OpenAPI coordinates remain local repetition keys unless a stable source-native locator supports a shared fact descriptor.
 
 The clients have two deliberately different execution modes:
 
@@ -28,7 +28,7 @@ The clients have two deliberately different execution modes:
 - Firecrawl JavaScript SDK measurement-only shadow pilot: `seenrelay/firecrawl-sdk-shadow`
 - Hostile benchmark evaluator: `seenrelay/economics` / `seenrelay_economics`
 
-The base clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.15` on npm and PyPI. Python's built-in AES-256-GCM private-L1 codec is optional through `seenrelay[crypto]`.
+The base clients have zero third-party runtime dependencies and are publicly available as `seenrelay` version `0.2.16` on npm and PyPI. Python's built-in AES-256-GCM private-L1 codec is optional through `seenrelay[crypto]`.
 
 ## Install
 
