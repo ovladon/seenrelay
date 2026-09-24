@@ -18,6 +18,17 @@ SeenRelay reduces redundant source-backed validation while preserving the applic
 
 The recommended 0.2.16 path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
 
+## Claude Code persistent install
+
+Claude Code can install the measurement-first SeenRelay plugin from this repository's validated self-hosted marketplace:
+
+```bash
+claude plugin marketplace add ovladon/seenrelay
+claude plugin install --scope user seenrelay@seenrelay
+```
+
+This repository-hosted path is separate from Anthropic's reviewed community directory and does not imply Anthropic approval. Installing the plugin does not automatically attach `https://seenrelay.com/mcp`, upload project data, or enable reuse. The plugin begins with measurement and preserves authoritative validation.
+
 ## Zero-code local prescreen
 
 Before editing application code, run the npm package's local static prescreen:

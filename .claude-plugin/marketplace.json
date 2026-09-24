@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "seenrelay",
+  "description": "SeenRelay Claude Code plugin marketplace for measuring repeated expensive read-only validation before enabling reuse.",
+  "owner": {
+    "name": "Vlad Belciug"
+  },
+  "plugins": [
+    {
+      "name": "seenrelay",
+      "displayName": "SeenRelay",
+      "description": "Find recurring expensive read-only validation in a codebase, measure stronger native controls first, and determine whether SeenRelay reuse is worth testing without enabling reuse automatically.",
+      "source": "./integrations/claude/seenrelay",
+      "category": "development",
+      "homepage": "https://seenrelay.com"
+    }
+  ]
+}

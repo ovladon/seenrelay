@@ -10,6 +10,17 @@ SeenRelay itself requires no account or API key. A third-party client, directory
 
 ## Fastest start: give the audit to your coding agent
 
+Claude Code can install SeenRelay persistently from this repository's validated self-hosted marketplace:
+
+```bash
+claude plugin marketplace add ovladon/seenrelay
+claude plugin install --scope user seenrelay@seenrelay
+```
+
+This direct-install path is repository-hosted and does not imply Anthropic marketplace approval. It does not automatically attach the hosted MCP endpoint or enable reuse.
+
+Other Agent Skills clients can use the canonical domain:
+
 ```bash
 npx skills add https://seenrelay.com --skill seenrelay --yes
 ```
@@ -90,7 +101,8 @@ Access is **currently free** and requires no account or API key.
 ## Start here
 
 - Free shadow audit: [`docs/SHADOW_AUDIT.md`](docs/SHADOW_AUDIT.md)
-- Coding-agent install: `npx skills add https://seenrelay.com --skill seenrelay --yes`
+- Claude Code persistent install: `claude plugin marketplace add ovladon/seenrelay` then `claude plugin install --scope user seenrelay@seenrelay`
+- Other coding-agent install: `npx skills add https://seenrelay.com --skill seenrelay --yes`
 - Public install: `npm install seenrelay` or `pip install seenrelay`
 - JavaScript / TypeScript Zero-State: [`clients/typescript/README.md`](clients/typescript/README.md)
 - Fleet economics: `https://seenrelay.com/economics`
