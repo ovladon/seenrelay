@@ -11,6 +11,9 @@ test('homepage keeps the runtime primary while routing site owners to the separa
   assert.match(landing, /Run the free shadow audit/);
   assert.match(landing, /Scan first\. Integrate only a real candidate\./);
   assert.match(landing, /npx seenrelay scan/);
+  assert.match(landing, /claude plugin marketplace add ovladon\/seenrelay/);
+  assert.match(landing, /claude plugin install --scope user seenrelay@seenrelay/);
+  assert.match(landing, /does not automatically attach|other Agent Skills clients/i);
   assert.match(landing, /uploads nothing, changes nothing and cannot return a USE verdict/);
   assert.match(landing, /SEPARATE FREE TOOL/);
   assert.match(landing, /Own a site or API\?/);
