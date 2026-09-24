@@ -169,6 +169,8 @@ test('Claude community marketplace readiness uses Anthropic policy floor at pinn
   assert.match(workflow, /"description": "Validation fixture for the SeenRelay Claude Code community marketplace submission\."/);
   assert.match(workflow, /"url": "https:\/\/github\.com\/ovladon\/seenrelay"/);
   assert.match(workflow, /"sha": "\$SOURCE_SHA"/);
+  assert.match(workflow, /"path": "integrations\/claude\/seenrelay"/);
+  assert.match(workflow, /integrations\/claude\/seenrelay\/\*\*/);
   assert.match(workflow, /validate-all-external:\s*"true"/);
   assert.match(workflow, /fail-on-warnings:\s*"true"/);
   assert.match(workflow, /claude-cli-version:\s*"2\.1\.278"/);
