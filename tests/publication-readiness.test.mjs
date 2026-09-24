@@ -160,6 +160,19 @@ test('Claude community plugin is validated by a pinned official CLI', () => {
   }
 });
 
+test('public website exposes the validated Claude direct-install path without approval overclaim', () => {
+  for (const parts of [['src', 'landing.ts'], ['src', 'integrations.ts'], ['src', 'quickstart.ts'], ['src', 'adoption.ts']]) {
+    const surface = read(...parts);
+    assert.match(surface, /claude plugin marketplace add ovladon\/seenrelay/);
+    assert.match(surface, /claude plugin install --scope user seenrelay@seenrelay/);
+    assert.match(surface, /does not imply Anthropic marketplace approval/i);
+  }
+  const trust = read('src', 'trust.ts');
+  assert.match(trust, /repository_core: 'SeenRelay Source-Available License'/);
+  assert.match(trust, /claude_plugin: 'SeenRelay Source-Available License'/);
+  assert.match(trust, /client_libraries: 'MIT'/);
+});
+
 test('self-hosted Claude marketplace exposes a persistent direct-install path', () => {
   const marketplace = JSON.parse(read('.claude-plugin', 'marketplace.json'));
   assert.equal(marketplace.name, 'seenrelay');
