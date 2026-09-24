@@ -30,6 +30,23 @@ npx seenrelay scan . --json
 
 The scanner reads supported source/configuration files locally and does not contact SeenRelay, upload source code or modify the target project. It can identify candidate metered/read-only operations, recurrence signals and stronger local/source/provider-native controls. Its output is deliberately pre-evidentiary and cannot return `USE`, authorize reuse or establish runtime economics.
 
+## Coding-agent install
+
+For Claude Code, install SeenRelay persistently from the public repository marketplace:
+
+```bash
+claude plugin marketplace add ovladon/seenrelay
+claude plugin install --scope user seenrelay@seenrelay
+```
+
+The repository-hosted plugin is CI-validated with a pinned Claude Code version. It installs the same measurement-first SeenRelay skill, does not automatically attach the hosted MCP endpoint, does not enable reuse, and is not a claim of Anthropic community-directory approval.
+
+For other Agent Skills-compatible coding agents:
+
+```bash
+npx skills add https://seenrelay.com --skill seenrelay --yes
+```
+
 ## Choose the right target
 
 Use SeenRelay for repeated **read-only** validation whose full path has meaningful cost or latency: paid web search, metered scraping/proxies, browser or extraction work, rate-limited APIs, model-assisted parsing, or multi-step validation.
@@ -192,9 +209,9 @@ validate_price = protect_validation(
 value = validate_price(known_value)
 ```
 
-With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python's classic API remains shadow-first in 0.2.14; Python Zero-State is a separate explicit local-first path for caller-controlled read-only validation.
+With no explicit reuse policy, the classic clients remain strict shadow mode: CHECK runs, the original validation still runs, and the independently obtained result is OBSERVEd best-effort. Python's classic API remains shadow-first in 0.2.15; Python Zero-State is a separate explicit local-first path for caller-controlled read-only validation.
 
-JavaScript / TypeScript and Python 0.2.14 Shadow Proof can retain bounded, sanitized natural-workload benchmark records while authoritative validation still runs. Both export the same schema-v2 evidence shape without fact identity, source, raw values or per-call timestamps; unavailable CHECKs remain in the sample, mismatches fail safety evidence and uncomparable hypothetical reuse remains incomplete. JavaScript / TypeScript evaluates through `seenrelay/economics` and Python through `seenrelay_economics`; neither evaluator enables reuse.
+JavaScript / TypeScript and Python 0.2.15 Shadow Proof can retain bounded, sanitized natural-workload benchmark records while authoritative validation still runs. Both export the same schema-v2 evidence shape without fact identity, source, raw values or per-call timestamps; unavailable CHECKs remain in the sample, mismatches fail safety evidence and uncomparable hypothetical reuse remains incomplete. JavaScript / TypeScript evaluates through `seenrelay/economics` and Python through `seenrelay_economics`; neither evaluator enables reuse.
 
 ### Get a deterministic audit verdict
 
