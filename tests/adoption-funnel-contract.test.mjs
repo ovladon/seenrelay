@@ -24,6 +24,12 @@ test('mutable discovery manifests use customer-problem language and stay aligned
   // previously published description until the next genuine service release.
   assert.equal(registry.version, plugin.version);
   assert.ok(registry.description.length <= 100);
+
+  const facts = json('public', 'product-facts.json');
+  assert.equal(facts.install.claude_marketplace_add_command, 'claude plugin marketplace add ovladon/seenrelay');
+  assert.equal(facts.install.claude_plugin_install_command, 'claude plugin install --scope user seenrelay@seenrelay');
+  assert.equal(facts.install.claude_plugin_distribution, 'repository_hosted_marketplace');
+  assert.equal(facts.install.claude_plugin_anthropic_approval_claimed, false);
 });
 
 test('shadow audit schema and reference result preserve falsifiable measurement semantics', () => {
@@ -79,6 +85,10 @@ test('Developer path advances from Ambient screening to a deterministic falsifia
 
   assert.match(landing, /href="\/quickstart#evaluate"/);
   assert.match(landing, /npx seenrelay scan/);
+  assert.match(landing, /claude plugin marketplace add ovladon\/seenrelay/);
+  assert.match(landing, /claude plugin install --scope user seenrelay@seenrelay/);
+  assert.match(quickstart, /claude plugin marketplace add ovladon\/seenrelay/);
+  assert.match(quickstart, /claude plugin install --scope user seenrelay@seenrelay/);
   assert.match(landing, /uploads nothing, changes nothing/);
   assert.match(quickstart, /id="scan"/);
   assert.match(quickstart, /npx seenrelay scan/);
@@ -99,6 +109,8 @@ test('Developer path advances from Ambient screening to a deterministic falsifia
 
   assert.match(quickstartDoc, /Client v0\.2\.15 was clean-install verified/);
   assert.match(quickstartDoc, /npx seenrelay scan/);
+  assert.match(quickstartDoc, /claude plugin marketplace add ovladon\/seenrelay/);
+  assert.match(quickstartDoc, /claude plugin install --scope user seenrelay@seenrelay/);
   assert.match(quickstartDoc, /classifyHostileBenchmarkVerdict/);
   assert.match(quickstartDoc, /classify_hostile_benchmark_verdict/);
   assert.match(quickstartDoc, /\*\*`USE`\*\*/);
@@ -134,6 +146,8 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
   assert.match(gate, /seenrelay scan sample --json/);
   assert.match(gate, /grep -q 'npx seenrelay scan'/);
+  assert.match(gate, /grep -q 'claude plugin marketplace add ovladon\/seenrelay'/);
+  assert.match(gate, /grep -q 'claude plugin install --scope user seenrelay@seenrelay'/);
   assert.match(gate, /seenrelay==\$VERSION/);
   assert.match(gate, /await import\('seenrelay\/economics'\)/);
   assert.match(gate, /classify_hostile_benchmark_verdict/);
