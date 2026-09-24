@@ -170,7 +170,11 @@ test('self-hosted Claude marketplace exposes a persistent direct-install path', 
   assert.equal(marketplace.plugins[0]?.homepage, 'https://seenrelay.com');
 
   const workflow = read('.github', 'workflows', 'claude-plugin-validation.yml');
-  assert.match(workflow, /claude plugin validate \.claude-plugin\/marketplace\.json --strict/);
+  assert.match(workflow, /claude plugin validate \.claude-plugin\/marketplace\.json 2>&1/);
+  assert.match(workflow, /claude-marketplace-validation\.txt/);
+  assert.match(workflow, /Accepted the single intentional marketplace no-version advisory/);
+  assert.match(workflow, /MARKET_STRICT_DIR/);
+  assert.match(workflow, /claude plugin validate "\$MARKET_STRICT_DIR\/\.claude-plugin\/marketplace\.json" --strict/);
   assert.match(workflow, /claude plugin marketplace add "\$GITHUB_WORKSPACE"/);
   assert.match(workflow, /claude plugin install --scope user seenrelay@seenrelay/);
   assert.match(workflow, /claude plugin list --json/);
