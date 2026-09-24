@@ -35,7 +35,7 @@ SeenRelay is a provider-independent validation reuse layer for agent fleets. See
 
 ## First proof: measure without changing application behavior
 
-## Add SeenRelay to a coding agent
+## Add SeenRelay to Cursor, Claude Code, or another coding agent
 
 Claude Code persistent repository-hosted plugin:
 
