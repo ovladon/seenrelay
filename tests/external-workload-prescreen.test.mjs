@@ -102,6 +102,6 @@ test('Agnix closes as a negative result and leaves no admitted collection path',
   assert.match(prescreen, /agnix-native-control-census\.yml/);
   assert.match(prescreen, /zero SeenRelay `CHECK`\/`OBSERVE` calls/);
   assert.match(prescreen, /scheduled collector is retired/i);
-  assert.match(prescreen, /does not advance to shared Shadow Proof/i);
+  assert.match(prescreen, /does \*\*not\*\* advance to shared Shadow Proof/i);
   assert.match(prescreen, /do not weaken freshness or manufacture recurrence/i);
 });
