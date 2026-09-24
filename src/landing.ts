@@ -16,6 +16,8 @@ export function publicLandingPage(origin: string): string {
   const pipCommand = esc(f.install.pypi_command);
   const scanCommand = esc(f.install.scan_command);
   const skillCommand = `npx skills add ${origin} --skill seenrelay --yes`;
+  const claudeMarketplaceCommand = 'claude plugin marketplace add ovladon/seenrelay';
+  const claudePluginCommand = 'claude plugin install --scope user seenrelay@seenrelay';
   const auditPrompt = 'Run a SeenRelay shadow audit on this project. Find repeated expensive read-only validations, preserve every authoritative call, measure stronger local/source/provider-native controls first, do not enable reuse, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for each measured workload.';
 
   return `<!doctype html>
@@ -127,7 +129,8 @@ export function publicLandingPage(origin: string): string {
       <div class="rv-console-body">
         <div class="rv-install-view active" data-install-view="agent" id="agent-audit">
           <div class="rv-step"><span>1</span><div><h4>Prescreen locally</h4><p>Run <code>npx seenrelay scan</code>. Continue only if it finds a candidate worth runtime measurement.</p></div></div>
-          <div class="rv-step"><span>2</span><div><h4>Install the SeenRelay Agent Skill</h4><div class="rv-code"><pre id="skill-install">${esc(skillCommand)}</pre><button class="rv-copy" type="button" data-copy-target="skill-install">Copy</button></div></div></div>
+          <div class="rv-step"><span>2</span><div><h4>Install persistently in Claude Code</h4><div class="rv-code"><pre id="claude-marketplace-install">${esc(claudeMarketplaceCommand)}
+${esc(claudePluginCommand)}</pre><button class="rv-copy" type="button" data-copy-target="claude-marketplace-install">Copy</button></div><p>Uses SeenRelay's public repository marketplace. For other Agent Skills clients, use <code>${esc(skillCommand)}</code>.</p></div></div>
           <div class="rv-step"><span>3</span><div><h4>Give your coding agent this task</h4><div class="rv-code"><pre id="agent-prompt">${esc(auditPrompt)}</pre><button class="rv-copy" type="button" data-copy-target="agent-prompt">Copy</button></div></div></div>
           <div class="rv-step"><span>4</span><div><h4>Read the verdict</h4><p>Keep SeenRelay only on workloads that show safe repetition and positive net economics after stronger native controls.</p></div></div></div>
         </div>
