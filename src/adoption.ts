@@ -11,9 +11,9 @@ const SITEMAP_PAGES = [
   { path: '/fleet', lastmod: '2026-09-08' },
   { path: '/readiness', lastmod: '2026-09-09' },
   { path: '/economics', lastmod: '2026-09-01' },
-  { path: '/quickstart', lastmod: '2026-09-08' },
-  { path: '/clients', lastmod: '2026-09-08' },
-  { path: '/trust', lastmod: '2026-09-08' },
+  { path: '/quickstart', lastmod: '2026-09-24' },
+  { path: '/clients', lastmod: '2026-09-24' },
+  { path: '/trust', lastmod: '2026-09-24' },
   { path: '/data-practices', lastmod: '2026-08-30' },
 ] as const;
 
@@ -35,9 +35,16 @@ SeenRelay is a provider-independent validation reuse layer for agent fleets. See
 
 ## First proof: measure without changing application behavior
 
-## Add SeenRelay to Cursor or another Agent Skills client
+## Add SeenRelay to a coding agent
 
-For a compatible coding agent, install the published SeenRelay skill directly from the canonical domain:
+Claude Code persistent repository-hosted plugin:
+
+\`claude plugin marketplace add ovladon/seenrelay\`
+\`claude plugin install --scope user seenrelay@seenrelay\`
+
+This self-hosted path is validated and available now. It does not imply Anthropic marketplace approval, does not automatically attach the hosted MCP endpoint, and does not enable reuse.
+
+Other compatible Agent Skills clients can install the published SeenRelay skill directly from the canonical domain:
 
 \`npx skills add ${origin} --skill seenrelay --yes\`
 
