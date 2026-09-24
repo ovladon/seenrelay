@@ -160,6 +160,25 @@ test('Claude community plugin is validated by a pinned official CLI', () => {
   }
 });
 
+test('Claude community marketplace readiness uses Anthropic policy floor at pinned SHAs', () => {
+  const workflow = read('.github', 'workflows', 'claude-community-readiness.yml');
+  assert.match(workflow, /CLAUDE_CODE_VALIDATOR_VERSION:\s*'2\.1\.278'/);
+  assert.match(workflow, /CLAUDE_COMMUNITY_VALIDATOR_SHA:\s*'a727be1c7bd6064419b6f60d71993a19198adc17'/);
+  assert.match(workflow, /anthropics\/claude-plugins-community\/\.github\/actions\/validate-plugins@a727be1c7bd6064419b6f60d71993a19198adc17/);
+  assert.match(workflow, /github\.event\.pull_request\.head\.sha \|\| github\.sha/);
+  assert.match(workflow, /"description": "Validation fixture for the SeenRelay Claude Code community marketplace submission\."/);
+  assert.match(workflow, /"url": "https:\/\/github\.com\/ovladon\/seenrelay"/);
+  assert.match(workflow, /"sha": "\$SOURCE_SHA"/);
+  assert.match(workflow, /validate-all-external:\s*"true"/);
+  assert.match(workflow, /fail-on-warnings:\s*"true"/);
+  assert.match(workflow, /claude-cli-version:\s*"2\.1\.278"/);
+  const uses = [...workflow.matchAll(/^\s*uses:\s*([^\s]+)@([^\s#]+)/gm)];
+  assert.equal(uses.length, 2);
+  for (const [, action, ref] of uses) {
+    assert.match(ref, /^[0-9a-f]{40}$/, `${action} must be pinned to a full commit SHA`);
+  }
+});
+
 test('public source-available ownership and third-party notices are explicit', () => {
   const license = read('LICENSE');
   assert.match(license, /Copyright \(c\) 2026 ovladon/);
