@@ -35,9 +35,16 @@ SeenRelay is a provider-independent validation reuse layer for agent fleets. See
 
 ## First proof: measure without changing application behavior
 
-## Add SeenRelay to Cursor or another Agent Skills client
+## Add SeenRelay to Claude Code or another Agent Skills client
 
-For a compatible coding agent, install the published SeenRelay skill directly from the canonical domain:
+For Claude Code, install the measurement-first plugin persistently from SeenRelay's public repository marketplace:
+
+\`claude plugin marketplace add ovladon/seenrelay\`
+\`claude plugin install --scope user seenrelay@seenrelay\`
+
+This repository-hosted install path is validated by pinned Claude Code CI. It does not imply Anthropic community-directory approval, does not automatically attach SeenRelay's hosted MCP endpoint, and does not enable reuse.
+
+For another compatible Agent Skills client, install the same skill directly from the canonical SeenRelay domain:
 
 \`npx skills add ${origin} --skill seenrelay --yes\`
 
