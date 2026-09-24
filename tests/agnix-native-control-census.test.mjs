@@ -178,7 +178,8 @@ test('completed natural collection is retired and remaining runs are commissioni
   assert.doesNotMatch(workflow, /seenrelay-agnix-scheduled-v2-main-/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /mode=commissioning/);
-  assert.match(workflow, /natural scheduled series closed after the frozen review floor was reached/i);
+  assert.match(workflow, /natural scheduled series closed after the frozen review floor/i);
+  assert.match(workflow, /reached\. Remaining executions are commissioning\/regression checks only/i);
   assert.match(workflow, /cannot advance longitudinal natural evidence/i);
   assert.match(workflow, /CENSUS_MODE: \$\{\{ steps\.mode\.outputs\.mode \}\}/);
   assert.doesNotMatch(workflow, /SEENRELAY_API_KEY|\/v1\/(check|observe)/i);
