@@ -76,6 +76,19 @@ test('static prescreen keeps stronger cache/native controls ahead of SeenRelay',
   assert.equal(result.stronger_controls_detected.some((x) => x.id === 'local_cache'), true);
 });
 
+test('static prescreen treats Firecrawl provider cache semantics as native-control-first', () => {
+  const result = scanText(`
+    import FirecrawlApp from '@mendable/firecrawl-js';
+    const firecrawl = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY });
+    export async function scheduled(url) {
+      return firecrawl.scrapeUrl(url, { formats: ['extract'] });
+    }
+  `, 'cron/check-prices.ts');
+  assert.equal(result.status, 'NATIVE_CONTROL_FIRST');
+  assert.equal(result.stronger_controls_detected.some((x) => x.id === 'firecrawl_provider_cache'), true);
+  assert.match(result.next_step, /native\/local control/i);
+});
+
 test('static prescreen cannot infer natural recurrence from a provider import alone', () => {
   const result = scanText(`
     import Exa from 'exa-js';
