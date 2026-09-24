@@ -25,6 +25,13 @@ export function trustDescriptor(origin: string) {
       failure_semantics: 'Relay-side failures fail open into the caller\'s original validation path.',
       adoption_default: 'shadow mode; no validation is skipped until caller policy explicitly allows reuse.'
     },
+    licensing: {
+      repository_core: 'SeenRelay Source-Available License',
+      claude_plugin: 'SeenRelay Source-Available License',
+      client_libraries: 'MIT',
+      repository_license: 'https://github.com/ovladon/seenrelay/blob/main/LICENSE',
+      client_license: 'https://github.com/ovladon/seenrelay/blob/main/clients/LICENSE'
+    },
     service: {
       billing_enabled: false,
       current_api_fee_usd: 0,
@@ -64,7 +71,7 @@ export function trustPage(origin: string): string {
 <main>
 <section class="hero compact"><div class="eyebrow">VERIFY BEFORE YOU TRUST</div><h1>Verify SeenRelay.</h1><p class="lead">SeenRelay sits in the validation path. Inspect the client, run shadow mode, keep the original validation, and verify the package, release and live deployment.</p><div class="cta"><a class="primary" href="https://github.com/ovladon/seenrelay">Inspect the source</a><a class="secondary" href="/trust.json">Machine-readable posture</a><a class="secondary" href="/data-practices">Data practices</a></div></section>
 <section class="section decision"><div class="section-head"><div><div class="eyebrow">MINIMAL BLAST RADIUS</div><h2>Start with a removable wrapper.</h2></div><p>Trust should be earned after integration, not required before it.</p></div><div class="proof-grid"><article><b>Zero required base runtime dependencies</b><span>The base JavaScript/TypeScript and Python packages do not pull a dependency tree into your application. Python's optional <code>crypto</code> extra adds the documented cryptography dependency.</span></article><article><b>Shadow mode first</b><span>CHECK can run while every original validation still executes. No reuse is required until your own evidence and policy justify it.</span></article><article><b>Fail open</b><span>If SeenRelay is unavailable, the wrapper falls back to the validation your application already intended to perform.</span></article><article><b>No lock-in path</b><span>Remove the preflight and keep the original validation function. Leaving does not require exporting SeenRelay-owned application state.</span></article></div></section>
-<section class="section split"><div><div class="eyebrow">SOFTWARE SUPPLY CHAIN</div><h2>Verify the package and release.</h2><p>The client source is public and MIT-licensed. Automated package publishing is configured for registry Trusted Publishing/OIDC instead of long-lived publication tokens. Registry provenance or attestations should be checked for the exact version you install; a release process is evidence, not a substitute for reviewing the package.</p><p><b>Current client:</b> v${esc(trust.client.version)} · ${esc(trust.client.runtime_dependencies)} required base runtime dependencies.</p></div><div class="terminal"><pre>${esc(trust.client.npm)}
+<section class="section split"><div><div class="eyebrow">SOFTWARE SUPPLY CHAIN</div><h2>Verify the package and release.</h2><p>The JavaScript/TypeScript and Python client libraries are public and MIT-licensed. The repository core and Claude plugin use the separate SeenRelay source-available license. Automated package publishing is configured for registry Trusted Publishing/OIDC instead of long-lived publication tokens. Registry provenance or attestations should be checked for the exact version you install; a release process is evidence, not a substitute for reviewing the package.</p><p><b>Current client:</b> v${esc(trust.client.version)} · ${esc(trust.client.runtime_dependencies)} required base runtime dependencies.</p></div><div class="terminal"><pre>${esc(trust.client.npm)}
 
 # or
 
