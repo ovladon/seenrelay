@@ -11,6 +11,7 @@ test('human pages share one accurate legal footer', () => {
   const view = read('src', 'public-facts-view.ts');
   assert.match(view, /export function siteFooterHtml/);
   assert.match(view, /All rights reserved/);
+  assert.match(view, /Core &amp; Claude plugin: SeenRelay License/);
   assert.match(view, /Client libraries: MIT License/);
   assert.match(view, /Recent observations, not universal truth/);
   assert.match(view, /currentYear > 2026/);
@@ -19,6 +20,6 @@ test('human pages share one accurate legal footer', () => {
   for (const file of ['public.ts', 'landing.ts', 'quickstart.ts', 'integrations.ts', 'economics.ts']) {
     const text = read('src', file);
     assert.match(text, /siteFooterHtml\(\)/);
-    assert.doesNotMatch(text, /All rights reserved|Client libraries: MIT License|Recent observations, not universal truth/);
+    assert.doesNotMatch(text, /All rights reserved|Core &amp; Claude plugin: SeenRelay License|Client libraries: MIT License|Recent observations, not universal truth/);
   }
 });

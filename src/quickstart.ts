@@ -13,6 +13,7 @@ export function quickstartPage(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   const scanCommand = publicProductFacts.install.scan_command;
   const skillCommand = `npx skills add ${origin} --skill seenrelay --yes`;
+  const claudePluginCommand = `claude plugin marketplace add ovladon/seenrelay\nclaude plugin install --scope user seenrelay@seenrelay`;
 
   return `<!doctype html>
 <html lang="en">
@@ -58,7 +59,8 @@ export function quickstartPage(origin: string): string {
 <section class="rv-shell rv-section" id="agent">
   <div class="rv-section-head"><div class="rv-eyebrow">CODING-AGENT INTEGRATION</div><h2>Give the agent the SeenRelay integration contract, not a long setup guide.</h2><p>The Agent Skill is published through the SeenRelay domain. The first task preserves the authoritative call, selects only a supported adapter, runs the project's existing tests and reports exact repeated workloads rather than automatically enabling reuse.</p></div>
   <div class="rv-choice-grid">
-    <article class="rv-choice"><header><b>1. Install the skill</b><span>Agent Skills</span></header><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><p>The skill contains the protocol boundary, supported integrations and fail-closed rules.</p></article>
+    <article class="rv-choice"><header><b>1A. Claude Code persistent plugin</b><span>REPOSITORY-HOSTED</span></header><div class="rv-code"><pre>${esc(claudePluginCommand)}</pre></div><p>This validated self-hosted install does not imply Anthropic marketplace approval, does not automatically attach MCP, and does not enable reuse.</p></article>
+    <article class="rv-choice"><header><b>1B. Other Agent Skills clients</b><span>Agent Skills</span></header><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><p>The skill contains the protocol boundary, supported integrations and fail-closed rules.</p></article>
     <article class="rv-choice"><header><b>2. Give the integration task</b><span>Prompt</span></header><div class="rv-code"><pre>Find repeated expensive read-only validations across this agent fleet. Integrate SeenRelay only through a supported adapter, start in shadow mode, preserve the authoritative call and stronger native controls, run the existing tests, and report the exact workloads that repeat. Where workers already share a caller-owned store, evaluate encrypted private L1 before optional shared CHECK.</pre></div></article>
   </div>
 </section>
@@ -207,7 +209,7 @@ const edge = new SeenRelayZeroState({
   <div class="rv-stack">
     <article><h3>Plain JS / TS function</h3><p><code>SeenRelayZeroState</code> can apply exact in-flight reuse, explicit local/private freshness policy and source-native confirmation before the original validation.</p></article>
     <article><h3>Framework adapters</h3><p>Ambient adapters preserve existing framework/tool behavior while measuring exact repetition locally by default.</p></article>
-    <article><h3>Remote MCP clients</h3><p>Official MCP Registry identifier: <code>io.github.ovladon/seenrelay</code>. The Integrations page provides copy-ready Cursor, VS Code/GitHub Copilot and Claude Code connection paths for <code>https://seenrelay.com/mcp</code>. Connecting the protocol alone does not instrument existing validation work.</p></article>
+    <article><h3>Claude Code plugin + remote MCP</h3><p>Claude Code can install the repository-hosted SeenRelay plugin persistently, while the separate remote MCP path exposes only CHECK + OBSERVE. Official MCP Registry identifier: <code>io.github.ovladon/seenrelay</code>. The self-hosted plugin path does not imply Anthropic marketplace approval. Connecting the protocol alone does not instrument existing validation work.</p></article>
     <article><h3>REST / OpenAPI</h3><p>Direct integrations can use <code>POST /v1/check</code> and <code>POST /v1/observe</code>; the full schema is published at <code>/openapi.json</code>.</p></article>
   </div>
 </section>

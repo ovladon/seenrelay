@@ -17,6 +17,7 @@ export function clientsPage(origin: string): string {
   const vscodeInstall = 'vscode:mcp/install?%7B%22name%22%3A%22seenrelay%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fseenrelay.com%2Fmcp%22%7D';
   const vscodeCommand = `code --add-mcp '{"name":"seenrelay","type":"http","url":"${productionMcp}"}'`;
   const claudeCommand = `claude mcp add --transport http --scope user seenrelay ${productionMcp}`;
+  const claudePluginCommand = `claude plugin marketplace add ovladon/seenrelay\nclaude plugin install --scope user seenrelay@seenrelay`;
 
   return `<!doctype html>
 <html lang="en">
@@ -55,6 +56,8 @@ export function clientsPage(origin: string): string {
   <div class="rv-section-head"><div class="rv-eyebrow">INSTRUMENT AN APPLICATION</div><h2>Start with one behavior-preserving wrapper.</h2><p>No tool is automatically treated as safe to suppress. Ambient integrations keep the authoritative call and measure exact repetition locally first.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice"><header><b>Coding agent</b><span>Agent Skill</span></header><p>Install the published SeenRelay skill, then ask the coding agent to inspect the project, select a supported adapter, preserve the authoritative call, run existing tests and report repeated eligible workloads.</p><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><a href="/.well-known/agent-skills/seenrelay/SKILL.md">Inspect the skill →</a></article>
+
+    <article class="rv-choice"><header><b>Claude Code</b><span>Persistent plugin</span></header><p>Install the validated repository-hosted SeenRelay plugin persistently. It provides the same measurement-first contract without automatically attaching the hosted MCP endpoint or enabling reuse.</p><div class="rv-code"><pre>${esc(claudePluginCommand)}</pre></div><p>This self-hosted path is available now and does not imply Anthropic marketplace approval or listing.</p></article>
 
     <article class="rv-choice"><header><b>Existing MCP client</b><span>JavaScript / TypeScript</span></header><p>One wrapper line adds local shadow measurement. Existing <code>callTool(...)</code> usage stays unchanged.</p><div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
 
@@ -99,7 +102,7 @@ from seenrelay_zero_state import SeenRelayZeroState</pre></div><p>Caller-owned p
 
     <article class="rv-choice"><header><b>VS Code / GitHub Copilot</b><span>One click + CLI</span></header><p>Use VS Code's MCP install URL, or the CLI fallback below.</p><div class="rv-actions"><a class="rv-button primary" href="${vscodeInstall}">Install in VS Code</a></div><div class="rv-code"><pre>${esc(vscodeCommand)}</pre></div></article>
 
-    <article class="rv-choice"><header><b>Claude Code</b><span>One command</span></header><p>Add the public Streamable HTTP endpoint at user scope.</p><div class="rv-code"><pre>${esc(claudeCommand)}</pre></div><p>No account or SeenRelay API key is currently required.</p></article>
+    <article class="rv-choice"><header><b>Claude Code</b><span>Remote MCP</span></header><p>Alternatively, expose only the hosted CHECK + OBSERVE protocol to Claude Code by adding the public Streamable HTTP endpoint at user scope.</p><div class="rv-code"><pre>${esc(claudeCommand)}</pre></div><p>No account or SeenRelay API key is currently required. Connecting MCP alone does not instrument existing validation work.</p></article>
 
     <article class="rv-choice"><header><b>Other MCP / REST clients</b><span>Remote protocol</span></header><p>Any compatible client can connect directly. The hosted domain surface remains exactly CHECK and OBSERVE.</p><div class="rv-code"><pre>MCP Registry  io.github.ovladon/seenrelay
 MCP           ${productionMcp}
