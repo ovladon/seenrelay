@@ -81,3 +81,55 @@ jobs:
 
           # Validate the exact minimal community payload as shipped through source.path.
           claude plugin validate integrations/claude/seenrelay
+
+          # Validate the repository-hosted marketplace used for immediate direct installs.
+          # The marketplace points at the same intentionally versionless plugin payload.
+          set +e
+          claude plugin validate .claude-plugin/marketplace.json 2>&1 | tee "$RUNNER_TEMP/claude-marketplace-validation.txt"
+          MARKET_VALIDATE_RC=${PIPESTATUS[0]}
+          set -e
+          test "$MARKET_VALIDATE_RC" -eq 0
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const output = fs.readFileSync(process.env.RUNNER_TEMP + '/claude-marketplace-validation.txt', 'utf8');
+          const warnings = output.match(/Found (\d+) warning/);
+          if (warnings) {
+            if (warnings[1] !== '1' || !/version: No version specified/.test(output)) {
+              console.error('Claude marketplace validator emitted an unexpected warning.');
+              process.exit(1);
+            }
+            console.log('Accepted the single intentional marketplace no-version advisory.');
+          }
+          NODE
+
+          MARKET_STRICT_DIR="$(mktemp -d)"
+          mkdir -p "$MARKET_STRICT_DIR/.claude-plugin" "$MARKET_STRICT_DIR/integrations/claude"
+          cp .claude-plugin/marketplace.json "$MARKET_STRICT_DIR/.claude-plugin/marketplace.json"
+          cp -R integrations/claude/seenrelay "$MARKET_STRICT_DIR/integrations/claude/seenrelay"
+          node --input-type=module - "$MARKET_STRICT_DIR/integrations/claude/seenrelay/.claude-plugin/plugin.json" <<'NODE'
+          import fs from 'node:fs';
+          const path = process.argv[2];
+          const manifest = JSON.parse(fs.readFileSync(path, 'utf8'));
+          manifest.version = '0.0.0';
+          fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n');
+          NODE
+          claude plugin validate "$MARKET_STRICT_DIR/.claude-plugin/marketplace.json" --strict
+
+          # Exercise real local marketplace discovery/install without executing the plugin.
+          MARKET_HOME="$(mktemp -d)"
+          (
+            export HOME="$MARKET_HOME"
+            export CLAUDE_CONFIG_DIR="$MARKET_HOME/.claude"
+            claude plugin marketplace add "$GITHUB_WORKSPACE"
+            claude plugin install --scope user seenrelay@seenrelay
+            claude plugin list --json > "$RUNNER_TEMP/seenrelay-plugin-list.json"
+          )
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw = fs.readFileSync(process.env.RUNNER_TEMP + '/seenrelay-plugin-list.json', 'utf8');
+          if (!raw.includes('seenrelay')) {
+            console.error('SeenRelay was not discoverable after marketplace add/install.');
+            process.exit(1);
+          }
+          NODE
