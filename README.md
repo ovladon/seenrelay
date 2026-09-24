@@ -17,7 +17,7 @@ claude plugin marketplace add ovladon/seenrelay
 claude plugin install --scope user seenrelay@seenrelay
 ```
 
-This direct-install path is repository-hosted and does **not** imply Anthropic marketplace approval. It does not automatically attach the hosted MCP endpoint or enable reuse.
+This direct-install path is repository-hosted and does not imply Anthropic marketplace approval. It does not automatically attach the hosted MCP endpoint or enable reuse.
 
 Other Agent Skills clients can use the canonical domain:
 
