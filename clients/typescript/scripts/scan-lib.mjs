@@ -51,6 +51,13 @@ const NATIVE_CONTROL_PATTERNS = [
   { id: 'provider_cache', label: 'provider-native cache/freshness option', patterns: [/\bmaxAge\b/, /\bmax_age\b/, /\bcache(?:d|Control|_control)?\b/i] }
 ];
 
+const PROVIDER_IMPLICIT_CONTROLS = {
+  firecrawl: {
+    id: 'firecrawl_provider_cache',
+    label: 'Firecrawl provider cache/freshness semantics (measure maxAge/storeInCache before SeenRelay)'
+  }
+};
+
 const INTEGRATION_PATTERNS = [
   { id: 'mcp', label: 'MCP client', patterns: [/\bcallTool\s*\(/, /\bcall_tool\s*\(/, /@modelcontextprotocol\//i] },
   { id: 'openai_agents', label: 'OpenAI Agents', patterns: [/@openai\/agents/i, /\bopenai-agents\b/i] },
@@ -148,6 +155,15 @@ export function scanText(text, rel = 'input') {
     label: control.label,
     lines: lineNumbers(text, control.patterns)
   }));
+  for (const hit of providerHits) {
+    const implicit = PROVIDER_IMPLICIT_CONTROLS[hit.id];
+    if (implicit && !controls.some((control) => control.id === implicit.id)) {
+      controls.push({
+        ...implicit,
+        lines: hit.lines
+      });
+    }
+  }
   const integrations = INTEGRATION_PATTERNS.filter((integration) => matchesAny(text, integration.patterns)).map((integration) => integration.label);
   const stableIdentityVisible = matchesAny(text, LITERAL_IDENTITY_PATTERNS);
   const status = inferStatus({ providerHits, recurrence, controls });
