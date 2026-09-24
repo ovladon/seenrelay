@@ -6,6 +6,8 @@ Current install/version/verified benchmark facts are generated from `public/prod
 
 ## Unreleased — Deterministic client wrappers
 
+- Make the local static prescreen conservatively classify Firecrawl workloads as `NATIVE_CONTROL_FIRST` until provider `maxAge` / `storeInCache` behavior is measured, even when those defaults are not explicit in application code.
+
 - Add a local-only `seenrelay scan` static prescreen for metered/read-only validation candidates, recurring execution signals, and stronger native/local controls. The scanner uploads nothing, modifies nothing, and cannot return `USE` or enable reuse.
 - Add a Claude Code plugin manifest that reuses the existing measurement-first SeenRelay Agent Skill without automatically attaching the hosted MCP endpoint.
 
