@@ -86,20 +86,22 @@ test('fleet candidates fail closed when the workload is private or locally conte
   assert.match(prescreen, /commit-addressed local audit caching is already the stronger design/i);
 });
 
-test('the only admitted public collection path is Agnix and native controls run first', () => {
+test('Agnix closes as a negative result and leaves no admitted collection path', () => {
   const collectRows = candidateRows.filter((line) => line.includes('`COLLECT`'));
-  assert.ok(collectRows.length > 0);
-  assert.ok(collectRows.every((line) => line.includes('Agnix')));
+  assert.equal(collectRows.length, 0);
+
+  const agnix = rowsFor('structured_source_reads').find((line) => line.includes('Agnix'));
+  assert.ok(agnix);
+  assert.match(agnix, /`DO_NOT_USE_AFTER_COLLECTION`/);
+  assert.match(agnix, /132 successful validations/);
+  assert.match(agnix, /once per day/);
+  assert.match(agnix, /110 conditional requests/);
+  assert.match(agnix, /9 source-authoritative/);
 
   assert.match(prescreen, /scripts\/agnix-native-control-census\.mjs/);
   assert.match(prescreen, /agnix-native-control-census\.yml/);
-  assert.match(prescreen, /does not emit `USE` \/ `DO NOT USE`/);
   assert.match(prescreen, /zero SeenRelay `CHECK`\/`OBSERVE` calls/);
-  assert.match(prescreen, /first complete persistent run is commissioning only/i);
-  assert.match(prescreen, /Do not seed the public relay/i);
-  assert.match(prescreen, /ETag/);
-  assert.match(prescreen, /If-None-Match/);
-  assert.match(prescreen, /Kill criterion:/);
-  assert.match(prescreen, /classify the completed workload `DO NOT USE`/);
-  assert.match(prescreen, /Do not count commissioning or collector-debug runs/i);
+  assert.match(prescreen, /scheduled collector is retired/i);
+  assert.match(prescreen, /does not advance to shared Shadow Proof/i);
+  assert.match(prescreen, /do not weaken freshness or manufacture recurrence/i);
 });
