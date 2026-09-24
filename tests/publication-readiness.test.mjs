@@ -165,6 +165,8 @@ test('Claude community marketplace readiness uses Anthropic policy floor at pinn
   assert.match(workflow, /CLAUDE_CODE_VALIDATOR_VERSION:\s*'2\.1\.278'/);
   assert.match(workflow, /CLAUDE_COMMUNITY_VALIDATOR_SHA:\s*'a727be1c7bd6064419b6f60d71993a19198adc17'/);
   assert.match(workflow, /anthropics\/claude-plugins-community\/\.github\/actions\/validate-plugins@a727be1c7bd6064419b6f60d71993a19198adc17/);
+  assert.match(workflow, /github\.event\.pull_request\.head\.sha \|\| github\.sha/);
+  assert.match(workflow, /"description": "Validation fixture for the SeenRelay Claude Code community marketplace submission\."/);
   assert.match(workflow, /"url": "https:\/\/github\.com\/ovladon\/seenrelay"/);
   assert.match(workflow, /"sha": "\$SOURCE_SHA"/);
   assert.match(workflow, /validate-all-external:\s*"true"/);
