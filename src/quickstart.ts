@@ -13,6 +13,8 @@ export function quickstartPage(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   const scanCommand = publicProductFacts.install.scan_command;
   const skillCommand = `npx skills add ${origin} --skill seenrelay --yes`;
+  const claudeMarketplaceCommand = 'claude plugin marketplace add ovladon/seenrelay';
+  const claudePluginCommand = 'claude plugin install --scope user seenrelay@seenrelay';
 
   return `<!doctype html>
 <html lang="en">
@@ -58,7 +60,8 @@ export function quickstartPage(origin: string): string {
 <section class="rv-shell rv-section" id="agent">
   <div class="rv-section-head"><div class="rv-eyebrow">CODING-AGENT INTEGRATION</div><h2>Give the agent the SeenRelay integration contract, not a long setup guide.</h2><p>The Agent Skill is published through the SeenRelay domain. The first task preserves the authoritative call, selects only a supported adapter, runs the project's existing tests and reports exact repeated workloads rather than automatically enabling reuse.</p></div>
   <div class="rv-choice-grid">
-    <article class="rv-choice"><header><b>1. Install the skill</b><span>Agent Skills</span></header><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><p>The skill contains the protocol boundary, supported integrations and fail-closed rules.</p></article>
+    <article class="rv-choice"><header><b>1. Install the integration contract</b><span>Claude Code + Agent Skills</span></header><p><b>Claude Code, persistent:</b></p><div class="rv-code"><pre>${esc(claudeMarketplaceCommand)}
+${esc(claudePluginCommand)}</pre></div><p><b>Other Agent Skills clients:</b></p><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><p>Both paths install the same measurement-first skill. Neither path automatically attaches the hosted MCP endpoint or enables reuse.</p></article>
     <article class="rv-choice"><header><b>2. Give the integration task</b><span>Prompt</span></header><div class="rv-code"><pre>Find repeated expensive read-only validations across this agent fleet. Integrate SeenRelay only through a supported adapter, start in shadow mode, preserve the authoritative call and stronger native controls, run the existing tests, and report the exact workloads that repeat. Where workers already share a caller-owned store, evaluate encrypted private L1 before optional shared CHECK.</pre></div></article>
   </div>
 </section>
