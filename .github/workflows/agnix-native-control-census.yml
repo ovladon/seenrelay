@@ -17,8 +17,6 @@ on:
       - 'scripts/agnix-native-control-census.mjs'
       - 'tests/agnix-native-control-census.test.mjs'
       - 'docs/EXTERNAL_WORKLOAD_PRESCREEN.md'
-  schedule:
-    - cron: '25 7 * * *'
   workflow_dispatch:
 
 permissions:
@@ -38,30 +36,16 @@ jobs:
         with:
           node-version: '22'
 
-      # v2 intentionally discards the earlier cache namespace. Push-triggered
-      # commissioning runs had refreshed validators between scheduled windows,
-      # so that state is not admissible for longitudinal natural collection.
-      # Only the fixed daily schedule may restore or advance scheduled state.
-      - name: Restore scheduled native-control state
-        if: github.event_name == 'schedule'
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .seenrelay-research/agnix-native-state.json
-          key: seenrelay-agnix-scheduled-v2-main-${{ github.run_id }}
-          restore-keys: |
-            seenrelay-agnix-scheduled-v2-main-
-
+      # The natural scheduled series closed after the frozen review floor was
+      # reached. Remaining executions are commissioning/regression checks only;
+      # they cannot advance longitudinal natural evidence.
       - name: Resolve collection mode
         id: mode
         shell: bash
         run: |
           set -euo pipefail
-          mode=commissioning
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            mode=natural
-          fi
-          echo "mode=$mode" >> "$GITHUB_OUTPUT"
-          echo "Requested census mode: $mode"
+          echo "mode=commissioning" >> "$GITHUB_OUTPUT"
+          echo "Requested census mode: commissioning"
 
       - name: Run native-control census
         env:
@@ -76,13 +60,6 @@ jobs:
       - name: Add census summary
         if: always() && hashFiles('agnix-native-control-census.json') != ''
         run: cat agnix-native-control-census.json >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Save scheduled native-control state
-        if: success() && github.event_name == 'schedule'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: .seenrelay-research/agnix-native-state.json
-          key: seenrelay-agnix-scheduled-v2-main-${{ github.run_id }}
 
       - name: Upload sanitized census report
         if: always()

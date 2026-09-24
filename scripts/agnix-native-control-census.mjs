@@ -6,6 +6,7 @@ import path from 'node:path';
 
 export const REPORT_SCHEMA = 'seenrelay-native-control-census-v1';
 export const STATE_SCHEMA = 'seenrelay-agnix-native-state-v1';
+export const NATIVE_CONTROL_REVIEW_FLOOR = 100;
 const DEFAULT_DEFINITION = 'https://raw.githubusercontent.com/agent-sh/agnix/main/.github/tool-release-baselines.json';
 
 function sha256(value) {
@@ -368,7 +369,11 @@ export async function runCensus({ definition, state = freshState(), token = '', 
       automatic_reuse_authorized: false,
       public_claim_authorized: false,
       next_step: complete
-        ? (effectiveMode === 'commissioning' ? 'RUN_NATURALLY_WITH_NATIVE_CONTROLS' : 'KEEP_ACCUMULATING_NATIVE_CONTROL_CENSUS')
+        ? (effectiveMode === 'commissioning'
+          ? 'COMMISSIONING_ONLY_NATURAL_SERIES_CLOSED'
+          : (state.cumulative.logical_validations >= NATIVE_CONTROL_REVIEW_FLOOR
+            ? 'APPLY_FROZEN_NATIVE_CONTROL_GATE'
+            : 'KEEP_ACCUMULATING_NATIVE_CONTROL_CENSUS'))
         : 'FIX_FIDELITY_OR_SOURCE_FAILURES_BEFORE_COUNTING_ANY_CALLS'
     }
   };

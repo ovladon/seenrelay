@@ -6,6 +6,7 @@ import path from 'node:path';
 
 import {
   REPORT_SCHEMA,
+  NATIVE_CONTROL_REVIEW_FLOOR,
   classifyTool,
   extractHtmlVersion,
   loadState,
@@ -95,6 +96,31 @@ test('later natural run sends ETag and counts a source-native 304', async () => 
   assert.equal(second.report.cumulative_natural.logical_validations, 1);
 });
 
+test('natural series stops at the frozen native-control review floor', async () => {
+  const state = tempState();
+  state.commissioned = true;
+  state.cumulative.logical_validations = NATIVE_CONTROL_REVIEW_FLOOR - 1;
+  state.cumulative.successful_validations = NATIVE_CONTROL_REVIEW_FLOOR - 1;
+  state.cumulative.network_requests = NATIVE_CONTROL_REVIEW_FLOOR - 1;
+
+  const fetchImpl = async () => new Response(JSON.stringify({ tag_name: 'v1.2.3' }), {
+    status: 200,
+    headers: { etag: '"abc"', 'content-type': 'application/json' }
+  });
+
+  const { report } = await runCensus({
+    definition: definition({ github_repo: 'example/project', last_known_version: 'v1.2.3' }),
+    state,
+    fetchImpl,
+    requestedMode: 'natural'
+  });
+
+  assert.equal(report.cumulative_natural.logical_validations, NATIVE_CONTROL_REVIEW_FLOOR);
+  assert.equal(report.interpretation.next_step, 'APPLY_FROZEN_NATIVE_CONTROL_GATE');
+  assert.equal(report.audit_verdict, null);
+  assert.equal(report.interpretation.shared_check_value_proven, false);
+});
+
 test('public report exports aggregates rather than source identities or values', async () => {
   const state = tempState();
   const sourceIdentity = 'private-looking-owner/private-looking-repo';
@@ -143,21 +169,18 @@ test('census implementation contains no hosted SeenRelay calls', () => {
   assert.doesNotMatch(source, /SeenRelayClient|SeenRelayShadowProof/);
 });
 
-test('only the fixed schedule can restore or advance longitudinal native-control state', () => {
+test('completed natural collection is retired and remaining runs are commissioning only', () => {
   const workflow = fs.readFileSync('.github/workflows/agnix-native-control-census.yml', 'utf8');
 
-  assert.match(workflow, /cron: '25 7 \* \* \*'/);
-  assert.match(workflow, /- name: Restore scheduled native-control state\n\s+if: github\.event_name == 'schedule'/);
-  assert.match(workflow, /- name: Save scheduled native-control state\n\s+if: success\(\) && github\.event_name == 'schedule'/);
-  assert.match(workflow, /seenrelay-agnix-scheduled-v2-main-\$\{\{ github\.run_id \}\}/);
-  assert.match(workflow, /restore-keys: \|\n\s+seenrelay-agnix-scheduled-v2-main-/);
-  assert.doesNotMatch(workflow, /seenrelay-agnix-native-main-/);
-  assert.doesNotMatch(workflow, /github\.event_name != 'pull_request'/);
-
-  assert.match(workflow, /mode=commissioning\n\s+if \[ "\$\{\{ github\.event_name \}\}" = "schedule" \]; then\n\s+mode=natural/);
-  assert.doesNotMatch(workflow, /inputs\.mode/);
+  assert.doesNotMatch(workflow, /schedule:/);
+  assert.doesNotMatch(workflow, /cron:/);
+  assert.doesNotMatch(workflow, /actions\/cache\/(restore|save)/);
+  assert.doesNotMatch(workflow, /seenrelay-agnix-scheduled-v2-main-/);
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /mode=commissioning/);
+  assert.match(workflow, /natural scheduled series closed after the frozen review floor/i);
+  assert.match(workflow, /reached\. Remaining executions are commissioning\/regression checks only/i);
+  assert.match(workflow, /cannot advance longitudinal natural evidence/i);
   assert.match(workflow, /CENSUS_MODE: \$\{\{ steps\.mode\.outputs\.mode \}\}/);
-  assert.match(workflow, /v2 intentionally discards the earlier cache namespace/);
-  assert.match(workflow, /Only the fixed daily schedule may restore or advance scheduled state/);
   assert.doesNotMatch(workflow, /SEENRELAY_API_KEY|\/v1\/(check|observe)/i);
 });
