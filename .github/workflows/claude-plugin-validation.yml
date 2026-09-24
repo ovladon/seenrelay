@@ -79,5 +79,28 @@ jobs:
           claude plugin validate "$STRICT_DIR" --strict
 
 
+          # Validate the repository-hosted marketplace used for immediate direct installs.
+          claude plugin validate .claude-plugin/marketplace.json --strict
+
+          # Exercise the real marketplace add/install flow in an isolated Claude home.
+          # This does not contact SeenRelay or execute the plugin; it proves discovery
+          # and persistent installation from the repository marketplace.
+          MARKET_HOME="$(mktemp -d)"
+          (
+            export HOME="$MARKET_HOME"
+            export CLAUDE_CONFIG_DIR="$MARKET_HOME/.claude"
+            claude plugin marketplace add "$GITHUB_WORKSPACE"
+            claude plugin install --scope user seenrelay@seenrelay
+            claude plugin list --json > "$RUNNER_TEMP/seenrelay-plugin-list.json"
+          )
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw = fs.readFileSync(process.env.RUNNER_TEMP + '/seenrelay-plugin-list.json', 'utf8');
+          if (!raw.includes('seenrelay')) {
+            console.error('SeenRelay was not discoverable after marketplace add/install.');
+            process.exit(1);
+          }
+          NODE
+
           # Validate the exact minimal community payload as shipped through source.path.
           claude plugin validate integrations/claude/seenrelay
