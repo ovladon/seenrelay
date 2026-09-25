@@ -23,8 +23,9 @@ test('fleet page exposes only current caller-owned fleet capability', () => {
   assert.match(fleet, /original validation remains the fallback/i);
 });
 
-test('homepage makes free safe measurement the primary activation path', () => {
-  assert.match(landing, /Run the free shadow audit/i);
+test('homepage makes free evidence trial then safe workload measurement the activation path', () => {
+  assert.match(landing, /Try one live CHECK/i);
+  assert.match(landing, /Evidence trial only/i);
   assert.match(landing, /every authoritative call still runs/i);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/i);
   assert.match(landing, /coding agent/i);
