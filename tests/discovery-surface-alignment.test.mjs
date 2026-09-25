@@ -6,9 +6,12 @@ const read = (p) => fs.readFileSync(new URL(`../${p}`, import.meta.url), 'utf8')
 
 test('README starts with the safe free audit and behavior-preserving proof', () => {
   const t = read('README.md');
-  const audit = t.indexOf('Find out whether your agent fleet is wasting time or provider spend');
+  const audit = t.indexOf('Help agents decide when a known external state really needs fresh authoritative validation');
   const architecture = t.indexOf('SeenRelay is a provider-independent reuse layer');
   assert.ok(audit >= 0 && architecture > audit);
+  assert.match(t, /## What SeenRelay is deciding/);
+  assert.match(t, /I already know X/);
+  assert.match(t, /starter-facts\.json/);
   assert.match(t, /## Fastest start: give the audit to your coding agent/);
   assert.match(t, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/);
   assert.match(t, /preserve every authoritative call/);
