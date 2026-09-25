@@ -47,6 +47,13 @@ jobs:
             if (width !== 1270 || height !== 760) throw new Error(p + ' wrong dimensions');
           }
           NODE
+      - name: Upload capture artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-hunt-screenshots
+          path: artifacts/product-hunt
+          if-no-files-found: error
+          compression-level: 6
       - name: Commit captured media
         shell: bash
         run: |
