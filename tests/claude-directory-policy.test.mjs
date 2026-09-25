@@ -33,7 +33,7 @@ test('public privacy notice is a real separate surface', () => {
   const publicSource = read('src', 'public.ts');
 
   assert.match(index, /app\.get\('\/privacy'/);
-  assert.match(privacy, /SeenRelay Privacy Notice/);
+  assert.match(privacy, /SeenRelay — Privacy Notice/);
   assert.match(privacy, /Vercel Privacy Notice/);
   assert.match(privacy, /Neon Privacy Policy/);
   assert.match(privacy, /does not contact SeenRelay, upload source code/i);
