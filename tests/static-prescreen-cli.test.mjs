@@ -101,3 +101,17 @@ test('npm package declares the local CLI entry point', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'clients', 'typescript', 'package.json'), 'utf8'));
   assert.equal(pkg.bin?.seenrelay, './scripts/seenrelay-cli.mjs');
 });
+
+
+test('static prescreen treats MCP ttlMs/cacheScope as native-control-first', () => {
+  const result = scanText(`
+    import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+    const schedule = 'hourly';
+    const toolMetadata = { ttlMs: 300000, cacheScope: 'public' };
+    export async function scheduled(client) {
+      return client.callTool({ name: 'read_status', arguments: { service: 'example' } });
+    }
+  `, 'jobs/mcp-status.ts');
+  assert.equal(result.status, 'NATIVE_CONTROL_FIRST');
+  assert.equal(result.stronger_controls_detected.some((x) => x.id === 'mcp_cache_freshness'), true);
+});
