@@ -159,7 +159,7 @@ export async function adminSnapshot(request: Request): Promise<Response> {
       hidden_client_telemetry:false
     },
     safety,
-    semantics:{fact_identity:'seenrelay-fact-v3',operations:['CHECK','OBSERVE'],truth_oracle:false,reward:'qualified cross-bucket reuse only; never truth confidence',adoption:'external protocol activity excludes server-verified first-party traffic, bounded first-party observers and controlled benchmark facts; it is not a unique-actor claim'},
+    semantics:{fact_identity:'seenrelay-fact-v3',operations:['CHECK','OBSERVE'],truth_oracle:false,reward:'qualified cross-bucket reuse only; never truth confidence',adoption:'external protocol activity excludes server-verified first-party traffic, bounded first-party observers, controlled benchmark facts and the public website demo; it is not a unique-actor claim'},
     readiness:readinessPayload(),credential_rotation:credentialRotation
   });
 }
