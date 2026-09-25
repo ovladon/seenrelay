@@ -47,6 +47,7 @@ const SCHEDULE_PATTERNS = [
 
 const NATIVE_CONTROL_PATTERNS = [
   { id: 'source_conditional', label: 'source-native conditional validation', patterns: [/If-None-Match/i, /If-Modified-Since/i, /\betag\b/i, /Last-Modified/i, /\b304\b/] },
+  { id: 'mcp_cache_freshness', label: 'MCP-native ttlMs/cacheScope freshness metadata', patterns: [/\bttlMs\b/, /\bcacheScope\b/] },
   { id: 'local_cache', label: 'local/private cache or memoization', patterns: [/\bredis\b/i, /\bvalkey\b/i, /\bmemcached\b/i, /\bLRU\b/, /\bmemo(?:ize|ization|ized)?\b/i, /\bcache\b/i, /\bttl\b/i] },
   { id: 'provider_cache', label: 'provider-native cache/freshness option', patterns: [/\bmaxAge\b/, /\bmax_age\b/, /\bcache(?:d|Control|_control)?\b/i] }
 ];

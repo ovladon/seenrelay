@@ -20,6 +20,23 @@ The scanner reads supported text/source files locally, does not contact SeenRela
 
 Its states are deliberately pre-evidentiary: `CANDIDATE_FOR_SHADOW_MEASUREMENT`, `NATIVE_CONTROL_FIRST`, `NEEDS_RUNTIME_EVIDENCE`, or `NO_ELIGIBLE_CANDIDATE_FOUND`. Static analysis can never return a SeenRelay `USE` verdict or authorize reuse. A real `USE / DO NOT USE / INSUFFICIENT EVIDENCE` decision still requires natural-workload shadow measurement and comparison against the best measured non-shared path.
 
+
+## Instant starter fact CHECK
+
+To see the hosted evidence layer work before integrating an application, list the bounded canonical starter facts:
+
+```bash
+npx seenrelay check-starter --list
+```
+
+Then ask CHECK about a value your application already knows, with a freshness window you choose explicitly:
+
+```bash
+npx seenrelay check-starter node-latest-version --known v24.0.0 --max-age 3600
+```
+
+This command uses the existing public `starter-facts.json` catalog and `POST /v1/check`. It does not fetch the authoritative answer, choose a TTL, enable reuse, or add a hosted operation. `SAME_OBSERVED` is compatible recent evidence only; active suppression still requires separate workload proof and caller policy.
+
 ## Shared CHECK assurance
 
 `seenrelay/assurance` turns additive CHECK evidence into an explicit caller-side policy decision. The multi-signal preset requires at least two observer keys, two cryptographic continuity keys, and two reuse-independence buckets, plus matching value fingerprints and acceptable freshness.
