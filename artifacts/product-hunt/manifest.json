@@ -1,0 +1,18 @@
+{
+  "captured_at": "2026-09-25T09:25:22.526Z",
+  "production_url": "https://seenrelay.com",
+  "viewport": {
+    "width": 1270,
+    "height": 760
+  },
+  "fact_id": "github-status-indicator",
+  "authoritative_source": "https://www.githubstatus.com/api/v2/status.json",
+  "authoritative_locator": {
+    "scheme": "json_pointer",
+    "value": "/status/indicator"
+  },
+  "authoritative_value_used": "none",
+  "caller_max_age_seconds": 3600,
+  "production_check_status": "STALE",
+  "production_result_text": "LIVE RESULT\nCHECK ONLY\nSTALE\nKnown evidence is outside your chosen freshness window.\n\nValidate the authoritative source if fresh state is required.\n\nEVIDENCE AGE\n60931s\nOBSERVERS\n—"
+}
