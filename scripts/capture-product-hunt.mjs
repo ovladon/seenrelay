@@ -39,10 +39,11 @@ await page.screenshot({ path: path.join(OUT, '01-seenrelay-hero.png'), type: 'pn
 
 await page.waitForSelector('#live-check-form', { timeout: 30000 });
 await page.evaluate(() => {
-  document.querySelector('#live-check')?.scrollIntoView({ block: 'start' });
-  window.scrollBy(0, -8);
+  document.documentElement.style.scrollBehavior = 'auto';
+  const el = document.querySelector('#live-check');
+  if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 72);
 });
-await new Promise(r => setTimeout(r, 500));
+await new Promise(r => setTimeout(r, 300));
 
 await page.select('#live-check-fact', 'github-status-indicator');
 await page.$eval('#live-check-known', (el, value) => { el.value=''; el.dispatchEvent(new Event('input',{bubbles:true})); el.value=String(value); el.dispatchEvent(new Event('input',{bubbles:true})); }, known);
@@ -56,13 +57,18 @@ await page.waitForFunction(() => {
 
 const checkStatus = await page.$eval('.rv-live-check-status', el => el.textContent?.trim() || '');
 const resultText = await page.$eval('#live-check-result', el => el.innerText);
+await page.evaluate(() => {
+  const el = document.querySelector('#live-check');
+  if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 72);
+});
+await new Promise(r => setTimeout(r, 300));
 await page.screenshot({ path: path.join(OUT, '02-seenrelay-live-check-real-result.png'), type: 'png' });
 
 await page.evaluate(() => {
-  document.querySelector('#start')?.scrollIntoView({ block: 'start' });
-  window.scrollBy(0, -8);
+  const el = document.querySelector('#start');
+  if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 72);
 });
-await new Promise(r => setTimeout(r, 500));
+await new Promise(r => setTimeout(r, 300));
 await page.screenshot({ path: path.join(OUT, '03-seenrelay-scanner-shadow-audit.png'), type: 'png' });
 
 await fs.writeFile(path.join(OUT, 'manifest.json'), JSON.stringify({
