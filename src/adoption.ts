@@ -7,11 +7,12 @@ export function robotsText(origin: string): string {
 }
 
 const SITEMAP_PAGES = [
-  { path: '/', lastmod: '2026-09-09' },
+  { path: '/', lastmod: '2026-09-25' },
   { path: '/fleet', lastmod: '2026-09-08' },
   { path: '/readiness', lastmod: '2026-09-09' },
   { path: '/economics', lastmod: '2026-09-01' },
-  { path: '/quickstart', lastmod: '2026-09-24' },
+  { path: '/quickstart', lastmod: '2026-09-25' },
+  { path: '/starter-facts', lastmod: '2026-09-25' },
   { path: '/clients', lastmod: '2026-09-24' },
   { path: '/trust', lastmod: '2026-09-24' },
   { path: '/data-practices', lastmod: '2026-08-30' },
@@ -26,13 +27,19 @@ export function llmsText(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   return `# SeenRelay
 
-SeenRelay helps an agent or application determine whether repeated expensive read-only validation is worth reusing before any reuse is enabled. Start with the free shadow audit: keep every authoritative validation on, measure exact recurrence and stronger local/source/provider-native controls, compare hypothetical reuse with the authoritative outcome, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.
+SeenRelay helps an agent or application decide whether a source-backed state it already knows needs fresh authoritative validation now. Start with the free shadow audit: keep every authoritative validation on, measure exact recurrence and stronger local/source/provider-native controls, compare hypothetical reuse with the authoritative outcome, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.
 
 Site and API owners can also use ${origin}/readiness for a free native-first quick audit of one public HTTPS root response. That surface checks bounded HTTP freshness/validator evidence and recommends native fixes first; it cannot determine SeenRelay workload fit from a surface scan.
 
 SeenRelay is currently free and requires no SeenRelay account or API key. The strongest current product fit is a fleet of workers or agents that repeatedly validates the same deterministic state while browser sessions, scraping/extraction, model work, paid search, rate-limited capacity or multi-step validation is materially expensive. SeenRelay should stay out of cheap one-off paths and paths already solved by an equivalent authoritative cache.
 
-SeenRelay is a provider-independent validation reuse layer for agent fleets. SeenRelay is a reuse layer for repeated read-only validation. It reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
+SeenRelay is a provider-independent revalidation decision layer for known external state. It coordinates recent source-backed evidence across compatible callers while keeping local/private state, source-native confirmation and the authoritative source ahead of optional shared CHECK. It reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
+
+## Known-state decision boundary
+
+The core question is: \`I already know X — do I need to validate X again now?\`
+
+CHECK is not a lookup for somebody else's raw answer. The caller supplies the known value, deterministic source-backed fact identity and its own freshness window. Canonical starter fact descriptors are published at ${origin}/starter-facts.json; they contain no observed values, no recommended TTL and no reuse authorization.
 
 ## First proof: measure without changing application behavior
 
@@ -103,6 +110,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 
 ## Use SeenRelay when
 
+- the caller already retains a known source-backed value and naturally needs to decide whether to validate it again;
 - a repeated read-only validation has deterministic identity and meaningful cost or latency;
 - the same exact source-backed state repeats across runs, workers, agents or services;
 - local/private/source-native reuse can avoid work before shared evidence exists;
@@ -123,6 +131,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 - Site/API owner quick readiness audit: ${origin}/readiness
 - Fleet deployment: ${origin}/fleet
 - Quickstart: ${origin}/quickstart
+- Canonical starter facts for known-state revalidation: ${origin}/starter-facts.json
 - Client integrations: ${origin}/clients
 - Economics and measured examples: ${origin}/economics
 - Product facts: ${origin}/product-facts.json

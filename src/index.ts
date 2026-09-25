@@ -20,6 +20,7 @@ import { getPublicStats } from './public-db.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
 import { dataPracticesDescriptor, dataPracticesPage } from './data-practices.js';
 import { privacyPage } from './privacy.js';
+import { starterFactsDescriptor, starterFactsPage } from './starter-facts.js';
 import { productFactsForOrigin } from './public-facts-view.js';
 import type { CheckRequest, ObserveRequest } from './types.js';
 import { maintenanceCron } from './maintenance.js';
@@ -87,6 +88,15 @@ app.get('/service.json', (c) => {
 app.get('/product-facts.json', (c) => {
   c.header('cache-control', 'public, max-age=300');
   return c.json(productFactsForOrigin(new URL(c.req.url).origin));
+});
+app.get('/starter-facts', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(starterFactsPage(new URL(c.req.url).origin));
+});
+app.get('/starter-facts.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  return c.json(starterFactsDescriptor(new URL(c.req.url).origin));
 });
 app.get('/quickstart', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");

@@ -74,15 +74,15 @@ curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_U
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
 # The homepage contract is customer-first: value, free trial, measured verdict, narrow fit, safe fallback.
-grep -q 'Your agents repeat expensive checks.' /tmp/site.html
-grep -q 'SeenRelay finds the ones you can stop repaying for.' /tmp/site.html
+grep -q 'Your agents already know things.' /tmp/site.html
+grep -q 'SeenRelay helps decide when they need to look again.' /tmp/site.html
 grep -q "CLIENT ${client_version}" /tmp/site.html
 grep -q 'Run the free shadow audit' /tmp/site.html
 grep -q 'WORKLOAD VERDICT' /tmp/site.html
 grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
 grep -q 'No guessed hit rate.' /tmp/site.html
 grep -q 'Your workload decides.' /tmp/site.html
-grep -q 'Three steps. No platform migration.' /tmp/site.html
+grep -q 'Before paying to look again, ask what you already know.' /tmp/site.html
 grep -q 'Scan first. Integrate only a real candidate.' /tmp/site.html
 grep -q 'npx seenrelay scan' /tmp/site.html
 grep -q 'every authoritative call still runs' /tmp/site.html
@@ -91,6 +91,8 @@ grep -q 'no SeenRelay API key' /tmp/site.html
 grep -q 'npm install seenrelay' /tmp/site.html
 grep -q 'pip install seenrelay' /tmp/site.html
 grep -q 'SeenRelay does not replace your source of truth.' /tmp/site.html
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/starter-facts.json" -o /tmp/starter-facts.json
+jq -e '.schema == "seenrelay-starter-facts-v1" and (.facts | length) == 15 and .semantics.values_included == false and .semantics.freshness_policy_included == false and .semantics.automatic_reuse_authorized == false' /tmp/starter-facts.json
 grep -q 'When in doubt, validate normally.' /tmp/site.html
 ! grep -qi 'first-party smoke' /tmp/site.html
 ! grep -qi 'Firecrawl' /tmp/site.html
@@ -124,7 +126,9 @@ grep -q "CLIENT ${client_version}" /tmp/clients.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
-grep -q 'SeenRelay is a reuse layer for repeated read-only validation' /tmp/llms.txt
+grep -q 'SeenRelay is a provider-independent revalidation decision layer for known external state' /tmp/llms.txt
+grep -q '## Known-state decision boundary' /tmp/llms.txt
+grep -q 'starter-facts.json' /tmp/llms.txt
 grep -q '## First proof: measure without changing application behavior' /tmp/llms.txt
 grep -q "JavaScript / TypeScript ${client_version}:" /tmp/llms.txt
 grep -q "Python ${client_version}:" /tmp/llms.txt

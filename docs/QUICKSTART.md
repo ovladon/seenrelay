@@ -14,9 +14,24 @@ pip install seenrelay
 Client v0.2.16 was clean-install verified from both public registries on 2026-09-24. JavaScript/TypeScript and Python 0.2.16 support provider-independent local-first Zero-State. Reuse remains caller policy.
 <!-- END GENERATED:PUBLIC-INSTALL -->
 
-SeenRelay reduces redundant source-backed validation while preserving the application's existing validation policy. It still has exactly two domain operations: **CHECK** and **OBSERVE**.
+SeenRelay helps an application decide whether a source-backed state it already knows needs fresh authoritative validation now. It preserves the application's existing validation policy and still has exactly two domain operations: **CHECK** and **OBSERVE**.
 
 The recommended 0.2.16 path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
+
+## Known-state revalidation
+
+The core question is: **“I already know X — do I need to validate X again now?”**
+
+CHECK does not fetch somebody else's raw answer. The caller supplies a deterministic source-backed fact, its known value and its own maximum acceptable evidence age. SeenRelay reports compatible recent observations; the caller still decides whether to validate again.
+
+For a small public set of supported facts, use the canonical descriptor catalog:
+
+- human: https://seenrelay.com/starter-facts
+- machine JSON: https://seenrelay.com/starter-facts.json
+
+The catalog contains identity metadata only. It does not publish observed values, recommend a TTL or authorize reuse.
+
+See [DECISION_LAYER.md](DECISION_LAYER.md) for the full execution order and boundary.
 
 ## Claude Code persistent install
 
@@ -43,7 +58,7 @@ The scanner reads supported source/configuration files locally and does not cont
 
 ## Choose the right target
 
-Use SeenRelay for repeated **read-only** validation whose full path has meaningful cost or latency: paid web search, metered scraping/proxies, browser or extraction work, rate-limited APIs, model-assisted parsing, or multi-step validation.
+Use SeenRelay for repeated **read-only** revalidation where the caller already retains a known state and another authoritative look has meaningful cost or latency: paid web search, metered scraping/proxies, browser or extraction work, rate-limited APIs, model-assisted parsing, multi-step validation, or deterministic public status/version checks when shared evidence adds value beyond native controls.
 
 Do not suppress mutating/destructive operations. A cheap one-off GET with little chance of repetition is usually a poor fit.
 

@@ -20,7 +20,7 @@ export function quickstartPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Install SeenRelay, measure repeated expensive read-only validation, then use caller-owned fleet reuse only where the workload earns it.">
+<meta name="description" content="Use SeenRelay to decide when known external state needs fresh validation, while keeping local, source-native and authoritative paths ahead of optional shared evidence.">
 <link rel="canonical" href="${origin}/quickstart">
 <meta name="theme-color" content="#080a0e">
 <meta name="color-scheme" content="dark">
@@ -43,9 +43,17 @@ export function quickstartPage(origin: string): string {
 <main id="main-content">
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">INTEGRATION QUICKSTART · CLIENT ${esc(clientVersion)}</div>
-  <h1>Measure first. Reuse only where the fleet earns it.</h1>
-  <p>Start with a local static prescreen that changes nothing. If it finds a plausible recurring expensive read-only validation, Ambient measures exact repetition locally while the original operation still runs. Test only that candidate with Shadow Proof before enabling any reuse.</p>
-  <div class="rv-actions"><a class="rv-button" href="#scan">Scan first</a><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
+  <h1>Start from what the application already knows.</h1>
+  <p>SeenRelay belongs before an eligible read-only revalidation. Keep local/private state, use source-native confirmation first, optionally consult compatible recent observations, and preserve the authoritative validation until Shadow Proof shows that a narrower shortcut is both safe and worthwhile.</p>
+  <div class="rv-actions"><a class="rv-button" href="#known-state">Known-state path</a><a class="rv-button" href="#scan">Scan first</a><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
+</section>
+
+<section class="rv-shell rv-section" id="known-state">
+  <div class="rv-section-head"><div class="rv-eyebrow">KNOWN-STATE REVALIDATION</div><h2>CHECK asks whether you need to look again; it does not fetch the answer for you.</h2><p>Your application supplies the value it already knows, a deterministic source-backed fact and its own maximum evidence age. SeenRelay reports recent compatible observations. Unknown, stale, contested or policy-rejected evidence falls through to the authoritative source.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice"><header><b>Canonical starter facts</b><span>IDENTITY ONLY</span></header><p>Use the published descriptors for supported public versions/status facts when they match your workload. The catalog publishes no observed values, recommended TTL or reuse authorization.</p><div class="rv-actions"><a class="rv-button" href="/starter-facts">Browse facts</a><a class="rv-button quiet" href="/starter-facts.json">Machine JSON →</a></div></article>
+    <article class="rv-choice"><header><b>Your own fact</b><span>STABLE SOURCE REQUIRED</span></header><p>Use a stable authoritative source plus a source-native locator. Prefer a miss over guessing that two integrations mean the same thing.</p><div class="rv-actions"><a class="rv-button" href="https://github.com/ovladon/seenrelay/blob/main/docs/FACT_COORDINATE_KIT.md">Fact Coordinate Kit</a></div></article>
+  </div>
 </section>
 
 <section class="rv-shell rv-section" id="scan">

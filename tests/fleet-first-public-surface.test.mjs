@@ -41,7 +41,7 @@ test('primary public surfaces describe fleet value without universal savings cla
   assert.match(landing, /Your workload decides/i);
   assert.match(quickstart, /FLEET PATH/);
   assert.match(quickstart, /privateStore: fleetStore/);
-  assert.match(adoption, /provider-independent validation reuse layer for agent fleets/i);
+  assert.match(adoption, /provider-independent revalidation decision layer for known external state/i);
   assert.match(adoption, /\/fleet/);
   assert.match(index, /app\.get\('\/fleet'/);
   for (const source of [fleet, landing, quickstart, adoption]) {

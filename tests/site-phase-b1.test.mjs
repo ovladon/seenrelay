@@ -23,8 +23,8 @@ test('homepage follows the customer journey from value to trial to safety', () =
   const ids = ['what', 'how', 'start', 'fit', 'safety', 'resources'].map((id) => landing.indexOf(`id="${id}"`));
   assert.ok(ids.every((x) => x >= 0));
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
-  assert.match(landing, /Your agents repeat expensive checks/i);
-  assert.match(landing, /SeenRelay finds the ones you can stop repaying for/i);
+  assert.match(landing, /Your agents already know things/i);
+  assert.match(landing, /SeenRelay helps decide when they need to look again/i);
   assert.match(landing, /Run the free shadow audit/i);
   assert.match(landing, /No guessed hit rate/i);
   assert.match(landing, /Your workload decides/i);
@@ -50,10 +50,10 @@ test('first use is free, behavior-preserving and self-service', () => {
 });
 
 test('homepage explains narrow fit and safe fallback without requiring protocol knowledge first', () => {
-  assert.match(landing, /Paid web search/);
-  assert.match(landing, /Browser \/ portal checks/);
-  assert.match(landing, /Metered extraction/);
+  assert.match(landing, /Known public state/);
+  assert.match(landing, /Browser \/ paid validation/);
   assert.match(landing, /Agent fleets/);
+  assert.match(landing, /Temporal provenance/);
   assert.match(landing, /SeenRelay does not replace your source of truth/i);
   assert.match(landing, /When in doubt, validate normally/i);
   assert.match(landing, /Hosted SeenRelay still exposes exactly CHECK and OBSERVE/i);
@@ -92,7 +92,7 @@ test('service descriptor continues to derive the public client release', () => {
 });
 
 test('preview gate enforces the self-service homepage and keeps benchmark marketing off sales surfaces', () => {
-  for (const marker of ['Your agents repeat expensive checks.', 'Run the free shadow audit', 'No guessed hit rate.', 'Three steps. No platform migration.', 'SeenRelay does not replace your source of truth.']) {
+  for (const marker of ['Your agents already know things.', 'Run the free shadow audit', 'No guessed hit rate.', 'Before paying to look again, ask what you already know.', 'SeenRelay does not replace your source of truth.']) {
     assert.match(previewGate, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/site\.html/);

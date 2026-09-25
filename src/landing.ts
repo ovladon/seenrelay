@@ -24,7 +24,7 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="SeenRelay finds repeated expensive read-only validation in AI agent workloads and helps reuse it safely when the measured economics justify it.">
+<meta name="description" content="SeenRelay helps agents decide when a known external state needs fresh validation, using local and source-native controls first and recent shared evidence only when it adds measured value.">
 <link rel="canonical" href="${origin}/">
 <link rel="service-desc" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <link rel="service-desc" type="application/json" href="${origin}/openapi.json" title="SeenRelay OpenAPI description">
@@ -35,11 +35,11 @@ export function publicLandingPage(origin: string): string {
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — stop repeating expensive agent validation">
-<meta property="og:description" content="Run your workload normally. SeenRelay measures exact repetition, safety and economics before reuse is enabled.">
+<meta property="og:title" content="SeenRelay — know when your agents need to look again">
+<meta property="og:description" content="Known state, recent evidence, native controls and authoritative fallback — one decision boundary before agents spend resources validating again.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
-<title>SeenRelay — Stop repeating expensive agent validation</title>
+<title>SeenRelay — Know when agents need to validate again</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
@@ -69,14 +69,14 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-hero rv-funnel-hero" id="what">
   <div>
     <div class="rv-kicker"><i></i><span>FREE · NO ACCOUNT · CLIENT ${version}</span></div>
-    <h1>Your agents repeat expensive checks. <em>SeenRelay finds the ones you can stop repaying for.</em></h1>
-    <p class="rv-lead">Start with a local scan that changes nothing. If it finds a plausible repeated expensive read-only validation, instrument only that path, run normally, and let the real workload decide whether reuse is worth enabling. Until then, every authoritative call still runs.</p>
+    <h1>Your agents already know things. <em>SeenRelay helps decide when they need to look again.</em></h1>
+    <p class="rv-lead">Put one decision boundary before eligible read-only revalidation. Use local or caller-owned state first, source-native confirmation when available, compatible recent observations only when useful, and the authoritative source whenever evidence or policy is insufficient. Start in shadow mode: every authoritative call still runs until the real workload earns a narrower shortcut.</p>
     <div class="rv-actions rv-actions-spaced">
       <a class="rv-button primary" href="#start">Run the free shadow audit</a>
       <a class="rv-button" href="/quickstart">2-minute quickstart</a>
     </div>
     <div class="rv-proofline" aria-label="Current product facts">
-      <span>free</span><span>no account</span><span>local prescreen</span><span>no SeenRelay API key</span><span>shadow-first</span><span>fail open</span><span>npm + PyPI</span>
+      <span>free</span><span>no account</span><span>no SeenRelay API key</span><span>known-state revalidation</span><span>native-first</span><span>shadow-first</span><span>fail open</span><span>CHECK + OBSERVE</span>
     </div>
   </div>
   <aside class="rv-demo rv-verdict-demo" aria-label="Example SeenRelay audit output">
@@ -95,18 +95,18 @@ export function publicLandingPage(origin: string): string {
 </section>
 
 <section class="rv-band" aria-label="SeenRelay principles"><div class="rv-band-inner">
-  <div><b>Measure first</b><span>No reuse during the first audit</span></div>
-  <div><b>Native first</b><span>ETag/cache wins when it is better</span></div>
-  <div><b>Reuse narrowly</b><span>Only explicit read-only candidates</span></div>
-  <div><b>Fall back safely</b><span>The original validation remains authoritative</span></div>
+  <div><b>Known state first</b><span>Ask whether a value needs revalidation now</span></div>
+  <div><b>Native first</b><span>ETag/cache wins when it answers the same question better</span></div>
+  <div><b>Recent evidence, not truth</b><span>CHECK reports compatible observations</span></div>
+  <div><b>Fall back safely</b><span>The authoritative source remains available</span></div>
 </div></section>
 
 <section class="rv-shell rv-section" id="how">
-  <div class="rv-section-head"><div class="rv-eyebrow">HOW IT WORKS</div><h2>Three steps. No platform migration.</h2><p>SeenRelay wraps an existing validation boundary. You do not move your agents, data or source of truth into SeenRelay.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">THE DECISION BOUNDARY</div><h2>Before paying to look again, ask what you already know.</h2><p>SeenRelay does not replace your agents, source of truth or provider. It coordinates the decision to revalidate a known external state.</p></div>
   <div class="rv-grid-3">
-    <article class="rv-card accent"><span class="rv-number">01</span><h3>Wrap one validation path</h3><p>Start with an existing MCP client, supported agent framework or read-only function. The original operation still runs exactly as before.</p></article>
-    <article class="rv-card"><span class="rv-number">02</span><h3>Run your normal workload</h3><p>SeenRelay measures exact recurrence and candidate savings locally. It does not authorize reuse merely because a repeat exists.</p></article>
-    <article class="rv-card"><span class="rv-number">03</span><h3>Keep only measured value</h3><p>Get a USE, DO NOT USE or INSUFFICIENT EVIDENCE verdict. Enable the narrowest safe reuse path only where the math wins.</p></article>
+    <article class="rv-card accent"><span class="rv-number">01</span><h3>Retain the known state</h3><p>Your application already has a value from an earlier authoritative observation. SeenRelay does not need to become the source of truth.</p></article>
+    <article class="rv-card"><span class="rv-number">02</span><h3>Decide whether to look again</h3><p>Local/private reuse and source-native validators go first. An optional CHECK can add recent compatible evidence for a deterministic source-backed fact.</p></article>
+    <article class="rv-card"><span class="rv-number">03</span><h3>Validate when policy says so</h3><p>Unknown, stale, contested or uneconomic paths fall through. After fresh independent validation, OBSERVE can help the next compatible caller.</p></article>
   </div>
 </section>
 
@@ -144,14 +144,14 @@ export function publicLandingPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section" id="fit">
-  <div class="rv-section-head"><div class="rv-eyebrow">GOOD FIT</div><h2>SeenRelay is for repeated checks that are expensive enough to matter.</h2><p>It is deliberately narrow. Cheap one-off reads and mutating operations should stay exactly as they are.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">WHERE IT FITS</div><h2>SeenRelay is for revalidation decisions where another look has a real cost.</h2><p>The core shape is simple: the caller already knows a source-backed value, freshness matters, and validating again consumes enough time, provider spend, rate limit, browser work or downstream computation to justify a decision layer.</p></div>
   <div class="rv-usecases">
-    <article class="rv-usecase"><i>01</i><h3>Paid web search</h3><p>Repeated source-backed searches where provider spend is meaningful.</p></article>
-    <article class="rv-usecase"><i>02</i><h3>Browser / portal checks</h3><p>Read-only browser work with proxy, rendering or navigation cost.</p></article>
-    <article class="rv-usecase"><i>03</i><h3>Metered extraction</h3><p>Repeated scraping, extraction or model-assisted parsing with deterministic identity.</p></article>
-    <article class="rv-usecase"><i>04</i><h3>Agent fleets</h3><p>Multiple workers or restarts that may otherwise repay for the same bounded validation.</p></article>
+    <article class="rv-usecase"><i>01</i><h3>Known public state</h3><p>Versions, status and other deterministic source-backed facts that callers retain and periodically revalidate.</p></article>
+    <article class="rv-usecase"><i>02</i><h3>Browser / paid validation</h3><p>Read-only browser, search, extraction or proxy work where a fresh look has measurable marginal cost.</p></article>
+    <article class="rv-usecase"><i>03</i><h3>Agent fleets</h3><p>Workers, runs or organizations that may otherwise ask the same freshness question independently.</p></article>
+    <article class="rv-usecase"><i>04</i><h3>Temporal provenance</h3><p>Workflows that need to know not only a value, but when compatible independent observations last supported it.</p></article>
   </div>
-  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/fleet">See the product architecture</a><a class="rv-button quiet" href="/clients">Browse integrations →</a></div>
+  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/starter-facts">See canonical starter facts</a><a class="rv-button" href="/fleet">See the product architecture</a><a class="rv-button quiet" href="/clients">Browse integrations →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="safety">
@@ -182,7 +182,7 @@ export function publicLandingPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-final">
-  <div><div class="rv-eyebrow">START SMALL</div><h2>Measure one expensive repeated validation today.</h2><p>If SeenRelay cannot demonstrate value on your workload, leave it out. If it can, promote only that measured path.</p></div>
+  <div><div class="rv-eyebrow">START WITH ONE DECISION</div><h2>Measure whether one known state really needs another expensive look.</h2><p>If local or source-native controls already solve it better, leave SeenRelay out. If recent shared evidence creates measurable residual value, promote only that path.</p></div>
   <div class="rv-actions"><a class="rv-button primary" href="#start">Try SeenRelay free</a><a class="rv-button" href="/quickstart">Quickstart</a></div>
 </section>
 </main>
