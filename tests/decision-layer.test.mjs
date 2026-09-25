@@ -62,3 +62,19 @@ test('starter facts stay aligned with the bounded first-party public source set'
     assert.match(source, new RegExp(id.replaceAll('-', '\\-')));
   }
 });
+
+
+test('homepage live CHECK is an evidence trial, not a new operation or reuse authorization', () => {
+  const landing = read('src', 'landing.ts');
+  const script = read('public', 'revamp.js');
+
+  assert.match(landing, /id="live-check-form"/);
+  assert.match(landing, /data-catalog-endpoint="\/starter-facts\.json"/);
+  assert.match(landing, /data-check-endpoint="\/v1\/check"/);
+  assert.match(landing, /SAME_OBSERVED is not truth and does not by itself permit suppression/i);
+  assert.match(script, /starter-facts\.json/);
+  assert.match(script, /\/v1\/check/);
+  assert.match(script, /web-starter-check/);
+  assert.doesNotMatch(script, /\/v1\/observe/);
+  assert.doesNotMatch(landing, /recommended TTL|automatic reuse authorized/i);
+});
