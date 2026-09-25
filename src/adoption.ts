@@ -12,6 +12,7 @@ const SITEMAP_PAGES = [
   { path: '/readiness', lastmod: '2026-09-09' },
   { path: '/economics', lastmod: '2026-09-01' },
   { path: '/quickstart', lastmod: '2026-09-24' },
+  { path: '/starter-facts', lastmod: '2026-09-25' },
   { path: '/clients', lastmod: '2026-09-24' },
   { path: '/trust', lastmod: '2026-09-24' },
   { path: '/data-practices', lastmod: '2026-08-30' },
@@ -123,6 +124,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 - Site/API owner quick readiness audit: ${origin}/readiness
 - Fleet deployment: ${origin}/fleet
 - Quickstart: ${origin}/quickstart
+- Canonical starter facts for known-state revalidation: ${origin}/starter-facts.json
 - Client integrations: ${origin}/clients
 - Economics and measured examples: ${origin}/economics
 - Product facts: ${origin}/product-facts.json
