@@ -74,7 +74,7 @@ export function verifiedWorkloadMapHtml(): string {
 export function siteFooterHtml(): string {
   const currentYear = new Date().getUTCFullYear();
   const copyrightYears = currentYear > 2026 ? `2026–${currentYear}` : '2026';
-  return `<footer><span>© ${copyrightYears} SeenRelay. All rights reserved.</span><span>Recent observations, not universal truth.</span><span><a href="/data-practices">Data practices</a> · <a href="https://github.com/ovladon/seenrelay/blob/main/LICENSE">Core &amp; Claude plugin: SeenRelay License</a> · <a href="https://github.com/ovladon/seenrelay/blob/main/clients/LICENSE">Client libraries: MIT License</a> · CHECK · OBSERVE</span></footer>`;
+  return `<footer><span>© ${copyrightYears} SeenRelay. All rights reserved.</span><span>Recent observations, not universal truth.</span><span><a href="/privacy">Privacy</a> · <a href="/data-practices">Data practices</a> · <a href="https://github.com/ovladon/seenrelay/blob/main/LICENSE">Core &amp; Claude plugin: SeenRelay License</a> · <a href="https://github.com/ovladon/seenrelay/blob/main/clients/LICENSE">Client libraries: MIT License</a> · CHECK · OBSERVE</span></footer>`;
 }
 
 export function machinePublicFactsText(origin: string): string {

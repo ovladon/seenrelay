@@ -48,6 +48,7 @@ export function trustDescriptor(origin: string) {
       branch_ruleset: 'https://github.com/ovladon/seenrelay/rules/21309307',
       security_policy: 'https://github.com/ovladon/seenrelay/blob/main/SECURITY.md',
       threat_model: 'https://github.com/ovladon/seenrelay/blob/main/docs/THREAT_MODEL.md',
+      privacy_notice: `${origin}/privacy`,
       data_practices: `${origin}/data-practices`,
       release_model: 'Pull request -> required CI verify -> required isolated Preview Release Gate -> main -> Production.',
       required_merge_gates: ['pull_request', 'verify', 'preview-release-gate'],

@@ -84,6 +84,7 @@ export function dataPracticesDescriptor(origin: string) {
     },
     endpoints: {
       service: `${origin}/service.json`,
+      privacy: `${origin}/privacy`,
       data_practices: `${origin}/data-practices.json`,
       public_stats: `${origin}/public-stats.json`
     }

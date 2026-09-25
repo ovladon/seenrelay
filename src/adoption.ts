@@ -15,6 +15,7 @@ const SITEMAP_PAGES = [
   { path: '/clients', lastmod: '2026-09-24' },
   { path: '/trust', lastmod: '2026-09-24' },
   { path: '/data-practices', lastmod: '2026-08-30' },
+  { path: '/privacy', lastmod: '2026-09-25' },
 ] as const;
 
 export function sitemapXml(origin: string): string {
@@ -134,6 +135,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 - Legacy Agent Skill discovery fallback: ${origin}/.well-known/skills/index.json
 - MCP Registry: io.github.ovladon/seenrelay
 - Trust: ${origin}/trust
+- Privacy notice: ${origin}/privacy
 - Data practices: ${origin}/data-practices.json
 - Public aggregate metrics: ${origin}/public-stats.json
 
