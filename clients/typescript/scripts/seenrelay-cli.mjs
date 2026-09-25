@@ -9,7 +9,8 @@ function help() {
 
 Usage:
   seenrelay scan [path] [--json]
-  seenrelay check-starter --list [--json]\n  seenrelay check-starter <fact-id> --known <value> --max-age <seconds> [--json]
+  seenrelay check-starter --list [--json]
+  seenrelay check-starter <fact-id> --known <value> --max-age <seconds> [--json]
 
 Commands:
   scan           Local-only static prescreen for recurring expensive read-only validation candidates.
