@@ -8,8 +8,8 @@ const revampClient = fs.readFileSync(new URL('../public/revamp.js', import.meta.
 const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.url), 'utf8');
 
 test('homepage keeps the runtime primary while routing site owners to the separate diagnostic tool', () => {
-  assert.match(landing, /Run the free shadow audit/);
-  assert.match(landing, /Scan first\. Integrate only a real candidate\./);
+  assert.match(landing, /Try one live CHECK/);
+  assert.match(landing, /Then scan a real workload\. Integrate only a real candidate\./);
   assert.match(landing, /npx seenrelay scan/);
   assert.match(landing, /uploads nothing, changes nothing and cannot return a USE verdict/);
   assert.match(landing, /SEPARATE FREE TOOL/);
@@ -50,7 +50,7 @@ test('Try it audit steps stay inside one explicit console body in both modes', (
 });
 
 test('Try it explanatory copy follows the selected installation mode', () => {
-  assert.match(revampClient, /modeContent=\{agent:/);
+  assert.match(revampClient, /modeContent=\{\s*agent:/);
   assert.match(revampClient, /human:\{title:'Integrate directly with the client\.'/);
   assert.match(revampClient, /Install the npm or PyPI client/);
   assert.match(revampClient, /title\.textContent=copy\.title/);

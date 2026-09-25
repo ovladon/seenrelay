@@ -26,6 +26,8 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(db, /deriveFirstPartyObserverKeys/);
   assert.match(db, /privacyScopedHash\('observer-self', id\)/);
   assert.match(db, /h\.client_key LIKE 'internal:%'/);
+  assert.match(db, /h\.client_key LIKE 'demo:%'/);
+  assert.match(db, /leases_public_demo/);
   assert.match(db, /observations_first_party/);
   assert.match(db, /observations_internal_benchmark/);
   assert.match(db, /observations_external/);
@@ -39,7 +41,7 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.doesNotMatch(db, /reuse_external_month/);
   assert.match(db, /unique_actor_claim:\s*false/);
   assert.match(db, /client_only_usage_visible:\s*false/);
-  assert.match(db, /server-verified-first-party-observers-and-controlled-benchmarks-excluded/);
+  assert.match(db, /server-verified-first-party-controlled-benchmarks-and-public-demo-excluded/);
 
   // Scheduled Standards Shadow CHECKs must be excluded by their canonical fact key even after
   // retention removes the corresponding facts row. Do not regress to a facts-table join only.
@@ -54,7 +56,7 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.match(classifier, /MAX_SKEW_SECONDS = 300/);
   assert.match(classifier, /never authorize, reject or otherwise change a domain operation/);
   assert.match(identity, /isVerifiedInternalTelemetry/);
-  assert.match(identity, /prefix = internal \? 'internal' : 'client'/);
+  assert.match(identity, /clientHint === 'web-starter-check' \? 'demo' : 'client'/);
   assert.match(marker, /seenrelay-internal-telemetry-v1/);
   assert.match(env, /INTERNAL_TELEMETRY_SECRET=/);
 

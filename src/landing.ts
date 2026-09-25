@@ -52,7 +52,7 @@ export function publicLandingPage(origin: string): string {
   <a class="rv-brand" href="/" aria-label="SeenRelay home"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
   <nav class="rv-nav-links" aria-label="Primary navigation">
     <a href="#how">How it works</a>
-    <a href="#start">Try it</a>
+    <a href="#live-check">Try it</a>
     <a href="/fleet">Product</a>
     <a href="/clients">Integrations</a>
     <a href="/trust">Trust</a>
@@ -60,9 +60,9 @@ export function publicLandingPage(origin: string): string {
   </nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
-    <nav aria-label="Mobile navigation"><a href="#how">How it works</a><a href="#start">Try it</a><a href="/fleet">Product</a><a href="/clients">Integrations</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a><a href="/readiness">Free site tool</a></nav>
+    <nav aria-label="Mobile navigation"><a href="#how">How it works</a><a href="#live-check">Try it</a><a href="/fleet">Product</a><a href="/clients">Integrations</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a><a href="/readiness">Free site tool</a></nav>
   </details>
-  <div class="rv-nav-actions"><a class="rv-chip" href="/clients">Integrations</a><a class="rv-button primary" href="#start">Try SeenRelay free</a></div>
+  <div class="rv-nav-actions"><a class="rv-chip" href="/clients">Integrations</a><a class="rv-button primary" href="#live-check">Try SeenRelay free</a></div>
 </header>
 
 <main id="main-content">
@@ -72,8 +72,8 @@ export function publicLandingPage(origin: string): string {
     <h1>Your agents already know things. <em>SeenRelay helps decide when they need to look again.</em></h1>
     <p class="rv-lead">Put one decision boundary before eligible read-only revalidation. Use local or caller-owned state first, source-native confirmation when available, compatible recent observations only when useful, and the authoritative source whenever evidence or policy is insufficient. Start in shadow mode: every authoritative call still runs until the real workload earns a narrower shortcut.</p>
     <div class="rv-actions rv-actions-spaced">
-      <a class="rv-button primary" href="#start">Run the free shadow audit</a>
-      <a class="rv-button" href="/quickstart">2-minute quickstart</a>
+      <a class="rv-button primary" href="#live-check">Try one live CHECK</a>
+      <a class="rv-button" href="#start">Audit my agent</a>
     </div>
     <div class="rv-proofline" aria-label="Current product facts">
       <span>free</span><span>no account</span><span>no SeenRelay API key</span><span>known-state revalidation</span><span>native-first</span><span>shadow-first</span><span>fail open</span><span>CHECK + OBSERVE</span>
@@ -101,6 +101,46 @@ export function publicLandingPage(origin: string): string {
   <div><b>Fall back safely</b><span>The authoritative source remains available</span></div>
 </div></section>
 
+<section class="rv-shell rv-section rv-live-check-section" id="live-check">
+  <div class="rv-section-head">
+    <div class="rv-eyebrow">SEE THE DECISION LAYER WORK</div>
+    <h2>Ask one real question before integrating anything.</h2>
+    <p>Choose a canonical public fact, enter the value you already know, and choose the maximum evidence age your own policy is willing to consider. SeenRelay will run the existing CHECK operation and return recent compatible evidence. It will not fetch the authoritative answer or authorize reuse.</p>
+  </div>
+  <div class="rv-live-check-grid">
+    <form class="rv-live-check-form" id="live-check-form" data-catalog-endpoint="/starter-facts.json" data-check-endpoint="/v1/check">
+      <label for="live-check-fact">1. Choose a starter fact</label>
+      <select id="live-check-fact" name="fact" required><option value="">Loading starter facts…</option></select>
+      <div class="rv-live-check-source" id="live-check-source">Canonical source details will appear here.</div>
+
+      <label for="live-check-known">2. Enter the value you already know</label>
+      <input id="live-check-known" name="known" type="text" autocomplete="off" spellcheck="false" placeholder="Example: none or v24.0.0" required>
+
+      <label for="live-check-max-age">3. Choose your freshness window</label>
+      <div class="rv-live-check-age">
+        <input id="live-check-max-age" name="maxAge" type="number" min="1" max="604800" step="1" inputmode="numeric" placeholder="Seconds, e.g. 300" required>
+        <span>1 second – 7 days. SeenRelay does not choose this for you.</span>
+      </div>
+
+      <button class="rv-button primary rv-live-check-submit" type="submit">Ask SeenRelay</button>
+      <p class="rv-live-check-boundary">Evidence trial only. <b>SAME_OBSERVED is not truth and does not by itself permit suppression.</b> The authoritative source remains the fallback.</p>
+    </form>
+
+    <aside class="rv-live-check-result" id="live-check-result" aria-live="polite">
+      <div class="rv-demo-head"><span>LIVE RESULT</span><b>CHECK only</b></div>
+      <div class="rv-live-check-state" data-state="idle">
+        <span class="rv-live-check-status">READY</span>
+        <h3>One known state. One explicit freshness policy.</h3>
+        <p>Open the authoritative source if you need to confirm the value first. Then ask SeenRelay whether compatible recent observations exist within the window you chose.</p>
+        <dl>
+          <div><dt>Evidence age</dt><dd>—</dd></div>
+          <div><dt>Observers</dt><dd>—</dd></div>
+        </dl>
+      </div>
+    </aside>
+  </div>
+</section>
+
 <section class="rv-shell rv-section" id="how">
   <div class="rv-section-head"><div class="rv-eyebrow">THE DECISION BOUNDARY</div><h2>Before paying to look again, ask what you already know.</h2><p>SeenRelay does not replace your agents, source of truth or provider. It coordinates the decision to revalidate a known external state.</p></div>
   <div class="rv-grid-3">
@@ -112,8 +152,8 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-section" id="start">
   <div class="rv-section-head">
-    <div class="rv-eyebrow">TRY IT FREE</div>
-    <h2>Scan first. Integrate only a real candidate.</h2>
+    <div class="rv-eyebrow">TEST IT ON YOUR AGENT</div>
+    <h2>Then scan a real workload. Integrate only a real candidate.</h2>
     <p><code>seenrelay scan</code> reads supported project files locally, uploads nothing, changes nothing and cannot return a USE verdict. If it finds a candidate, continue with a coding agent or the client directly.</p>
     <div class="rv-code"><pre id="scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="scan-command">Copy</button></div>
   </div>
@@ -183,7 +223,7 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-final">
   <div><div class="rv-eyebrow">START WITH ONE DECISION</div><h2>Measure whether one known state really needs another expensive look.</h2><p>If local or source-native controls already solve it better, leave SeenRelay out. If recent shared evidence creates measurable residual value, promote only that path.</p></div>
-  <div class="rv-actions"><a class="rv-button primary" href="#start">Try SeenRelay free</a><a class="rv-button" href="/quickstart">Quickstart</a></div>
+  <div class="rv-actions"><a class="rv-button primary" href="#live-check">Try one live CHECK</a><a class="rv-button" href="#start">Audit my agent</a></div>
 </section>
 </main>
 ${siteFooterHtml()}

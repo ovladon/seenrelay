@@ -58,6 +58,23 @@ test('platform forwarded hint contributes to client continuity', async () => {
 
 
 
+test('public website demo gets a separate privacy-safe lease class', async () => {
+  process.env.PRIVACY_SALT='test-privacy-salt-that-is-longer-than-thirty-two-characters';
+  const demo=new Request('https://seenrelay.test/v1/check',{method:'POST',headers:{
+    'x-forwarded-for':'203.0.113.9',
+    'user-agent':'browser',
+    'x-seenrelay-client':'web-starter-check'
+  }});
+  const ordinary=new Request('https://seenrelay.test/v1/check',{method:'POST',headers:{
+    'x-forwarded-for':'203.0.113.9',
+    'user-agent':'browser',
+    'x-seenrelay-client':'other-client'
+  }});
+  assert.match(await deriveClientKey(demo),/^demo:/);
+  assert.match(await deriveClientKey(ordinary),/^client:/);
+  assert.equal(await deriveReuseIndependenceKey(demo),await deriveReuseIndependenceKey(ordinary));
+});
+
 test('server-verified first-party telemetry marker changes only operational classification', async () => {
   const oldSecret=process.env.INTERNAL_TELEMETRY_SECRET;
   const oldSalt=process.env.PRIVACY_SALT;

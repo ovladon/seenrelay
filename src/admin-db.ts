@@ -135,6 +135,7 @@ export async function getAdminAdoptionData() {
   )`;
   const internalBenchmarkFact = `(f.source_url ~ '[?&]seenrelay_(json_)?benchmark=' OR f.source_url ~ '[?&]seenrelay_internal_benchmark=' OR ${currentStandardsShadowFact})`;
   const verifiedInternalLease = `h.client_key LIKE 'internal:%'`;
+  const publicDemoLease = `h.client_key LIKE 'demo:%'`;
   const firstPartyLease = `(${verifiedInternalLease} OR EXISTS (
     SELECT 1 FROM observations_recent fp WHERE fp.lease_id = h.lease_id AND fp.observer_key IN (${firstPartyKeyPlaceholders})
   ))`;
@@ -144,7 +145,7 @@ export async function getAdminAdoptionData() {
     OR EXISTS (SELECT 1 FROM observations_recent ibo JOIN facts f ON f.fact_key=ibo.fact_key WHERE ibo.lease_id=h.lease_id AND ${internalBenchmarkFact})
     OR EXISTS (SELECT 1 FROM facts f WHERE f.fact_key=h.last_fact_key AND ${internalBenchmarkFact})
   )`;
-  const externalLease = `NOT (${firstPartyLease}) AND NOT (${internalBenchmarkLease})`;
+  const externalLease = `NOT (${firstPartyLease}) AND NOT (${internalBenchmarkLease}) AND NOT (${publicDemoLease})`;
   const meaningfulExternalLease = `(${externalLease}) AND (h.check_count > 0 OR EXISTS (
     SELECT 1 FROM observations_recent ext JOIN facts f ON f.fact_key=ext.fact_key
     WHERE ext.lease_id=h.lease_id AND ext.observer_key NOT IN (${firstPartyKeyPlaceholders}) AND NOT (${internalBenchmarkFact})
@@ -173,6 +174,7 @@ export async function getAdminAdoptionData() {
       (SELECT COUNT(*)::int FROM hive_leases) AS leases_total,
       (SELECT COUNT(*)::int FROM hive_leases h WHERE ${firstPartyLease}) AS leases_first_party,
       (SELECT COUNT(*)::int FROM hive_leases h WHERE ${internalBenchmarkLease}) AS leases_internal_benchmark,
+      (SELECT COUNT(*)::int FROM hive_leases h WHERE ${publicDemoLease}) AS leases_public_demo,
       (SELECT COALESCE(SUM(h.check_count),0)::int FROM hive_leases h WHERE ${internalBenchmarkLease}) AS checks_internal_benchmark,
       (SELECT COUNT(*)::int FROM hive_leases h WHERE ${meaningfulExternalLease}) AS leases_external,
       (SELECT COUNT(*)::int FROM hive_leases h WHERE ${meaningfulExternalLease} AND (h.check_count + h.observe_count) >= 2) AS leases_external_repeat,
@@ -194,9 +196,9 @@ export async function getAdminAdoptionData() {
 
   return {
     status: 'ok' as const,
-    classification: 'server-verified-first-party-observers-and-controlled-benchmarks-excluded',
+    classification: 'server-verified-first-party-controlled-benchmarks-and-public-demo-excluded',
     semantics: {
-      external_protocol_activity: 'successful/admitted hosted protocol activity not classified as first-party or controlled benchmark',
+      external_protocol_activity: 'successful/admitted hosted protocol activity not classified as first-party, controlled benchmark or public website demo',
       external_repeat_lease: 'retained external lease with at least two admitted CHECK/OBSERVE operations',
       external_bidirectional_lease: 'retained external lease with both CHECK and OBSERVE activity',
       external_reuse_consumer: 'retained external lease that consumed at least one qualified reuse event',
