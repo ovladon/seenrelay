@@ -118,4 +118,21 @@ export function renderStarterCheck(result) {
   return `${lines.join('\n')}\n`;
 }
 
+
+export function renderStarterCatalog(catalog) {
+  const facts = Array.isArray(catalog?.facts) ? catalog.facts : [];
+  const lines = [
+    'SeenRelay starter facts',
+    '=======================',
+    'Choose a fact you already know, then supply your own explicit freshness window.',
+    ''
+  ];
+  for (const entry of facts) {
+    lines.push(`${entry.id}  ${entry.fact?.subject || ''}`.trimEnd());
+  }
+  lines.push('');
+  lines.push('The catalog contains identity only: no current values, recommended TTL, truth verdict, or reuse authorization.');
+  return `${lines.join('\n')}\n`;
+}
+
 export { DEFAULT_ORIGIN };
