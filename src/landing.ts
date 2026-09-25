@@ -70,13 +70,13 @@ export function publicLandingPage(origin: string): string {
   <div>
     <div class="rv-kicker"><i></i><span>FREE · NO ACCOUNT · CLIENT ${version}</span></div>
     <h1>Your agents already know things. <em>SeenRelay helps decide when they need to look again.</em></h1>
-    <p class="rv-lead">Put one decision boundary before eligible read-only revalidation. Use local or caller-owned state first, source-native confirmation when available, compatible recent observations only when useful, and the authoritative source whenever evidence or policy is insufficient. Start in shadow mode: nothing is skipped until the real workload earns it.</p>
+    <p class="rv-lead">Put one decision boundary before eligible read-only revalidation. Use local or caller-owned state first, source-native confirmation when available, compatible recent observations only when useful, and the authoritative source whenever evidence or policy is insufficient. Start in shadow mode: every authoritative call still runs until the real workload earns a narrower shortcut.</p>
     <div class="rv-actions rv-actions-spaced">
       <a class="rv-button primary" href="#start">Run the free shadow audit</a>
       <a class="rv-button" href="/quickstart">2-minute quickstart</a>
     </div>
     <div class="rv-proofline" aria-label="Current product facts">
-      <span>free</span><span>no account</span><span>known-state revalidation</span><span>native-first</span><span>shadow-first</span><span>fail open</span><span>CHECK + OBSERVE</span>
+      <span>free</span><span>no account</span><span>no SeenRelay API key</span><span>known-state revalidation</span><span>native-first</span><span>shadow-first</span><span>fail open</span><span>CHECK + OBSERVE</span>
     </div>
   </div>
   <aside class="rv-demo rv-verdict-demo" aria-label="Example SeenRelay audit output">
