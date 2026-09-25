@@ -2,14 +2,14 @@
 import process from 'node:process';
 import path from 'node:path';
 import { scanRepository, renderHumanReport } from './scan-lib.mjs';
-import { runStarterCheck, renderStarterCheck } from './starter-check-lib.mjs';
+import { fetchStarterCatalog, runStarterCheck, renderStarterCheck, renderStarterCatalog } from './starter-check-lib.mjs';
 
 function help() {
   return `SeenRelay CLI
 
 Usage:
   seenrelay scan [path] [--json]
-  seenrelay check-starter <fact-id> --known <value> --max-age <seconds> [--json]
+  seenrelay check-starter --list [--json]\n  seenrelay check-starter <fact-id> --known <value> --max-age <seconds> [--json]
 
 Commands:
   scan           Local-only static prescreen for recurring expensive read-only validation candidates.
@@ -49,12 +49,23 @@ if (command === 'scan') {
 }
 
 if (command === 'check-starter') {
-  const factId = args[1] && !args[1].startsWith('-') ? args[1] : '';
-  const knownValue = optionValue(args, '--known');
-  const maxAgeSeconds = optionValue(args, '--max-age');
   const origin = optionValue(args, '--origin') || 'https://seenrelay.com';
   const json = args.includes('--json');
 
+  if (args.includes('--list')) {
+    try {
+      const { catalog } = await fetchStarterCatalog({ origin });
+      process.stdout.write(json ? `${JSON.stringify(catalog, null, 2)}\n` : renderStarterCatalog(catalog));
+      process.exit(0);
+    } catch (error) {
+      process.stderr.write(`SeenRelay check-starter failed: ${error instanceof Error ? error.message : String(error)}\n`);
+      process.exit(2);
+    }
+  }
+
+  const factId = args[1] && !args[1].startsWith('-') ? args[1] : '';
+  const knownValue = optionValue(args, '--known');
+  const maxAgeSeconds = optionValue(args, '--max-age');
   try {
     const result = await runStarterCheck({
       factId,
