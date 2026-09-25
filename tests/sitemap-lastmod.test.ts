@@ -11,6 +11,7 @@ const expected = [
   ['https://seenrelay.com/clients', '2026-09-24'],
   ['https://seenrelay.com/trust', '2026-09-24'],
   ['https://seenrelay.com/data-practices', '2026-08-30'],
+  ['https://seenrelay.com/privacy', '2026-09-25'],
 ] as const;
 
 test('sitemap exposes verified significant lastmod dates for every public human URL', () => {
