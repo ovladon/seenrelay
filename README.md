@@ -1,12 +1,21 @@
 # SeenRelay
 
-**Find out whether your agent fleet is wasting time or provider spend on repeated read-only validation — before enabling reuse.**
+**Help agents decide when a known external state really needs fresh authoritative validation.**
 
-SeenRelay starts with a free shadow audit. Run the workload you already have while every authoritative validation stays enabled. Measure exact recurrence, stronger local/source/provider-native controls, safety equivalence and prospective economics. Keep SeenRelay only where the result is `USE`; accept `DO NOT USE` or `INSUFFICIENT EVIDENCE` everywhere else.
+SeenRelay sits at the revalidation decision boundary. Keep the state your application already knows, prefer local/private and source-native controls first, consult compatible recent shared observations only when useful, and fall through to the authoritative source whenever evidence or policy is insufficient. Start with a free shadow audit while every authoritative validation remains enabled. Keep SeenRelay only where the result is `USE`; accept `DO NOT USE` or `INSUFFICIENT EVIDENCE` everywhere else.
 
 Currently free · no account · no SeenRelay API key required.
 
 SeenRelay itself requires no account or API key. A third-party client, directory, gateway, or assistant may require its own account to use that third-party service; that is not a SeenRelay access requirement. The canonical direct MCP endpoint is `https://seenrelay.com/mcp`.
+
+
+## What SeenRelay is deciding
+
+SeenRelay is designed around one question: **“I already know X — do I need to pay to validate X again now?”**
+
+CHECK is not a lookup for somebody else's raw result. The caller supplies the known value, deterministic source-backed fact identity and its own freshness window. SeenRelay reports compatible recent evidence; the caller keeps authority over whether to validate again.
+
+For a small public set of source-backed facts, use the canonical starter descriptors at `https://seenrelay.com/starter-facts.json`. They publish identity metadata only — no observed values, no recommended TTL and no reuse authorization. Full decision-layer rationale: [`docs/DECISION_LAYER.md`](docs/DECISION_LAYER.md).
 
 ## Fastest start: give the audit to your coding agent
 
@@ -100,6 +109,8 @@ Access is **currently free** and requires no account or API key.
 
 ## Start here
 
+- Decision layer: [`docs/DECISION_LAYER.md`](docs/DECISION_LAYER.md)
+- Canonical starter facts: `https://seenrelay.com/starter-facts.json`
 - Free shadow audit: [`docs/SHADOW_AUDIT.md`](docs/SHADOW_AUDIT.md)
 - Claude Code persistent install: `claude plugin marketplace add ovladon/seenrelay` then `claude plugin install --scope user seenrelay@seenrelay`
 - Other coding-agent install: `npx skills add https://seenrelay.com --skill seenrelay --yes`
