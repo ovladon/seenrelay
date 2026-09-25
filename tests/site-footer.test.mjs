@@ -11,6 +11,8 @@ test('human pages share one accurate legal footer', () => {
   const view = read('src', 'public-facts-view.ts');
   assert.match(view, /export function siteFooterHtml/);
   assert.match(view, /All rights reserved/);
+  assert.match(view, /Questions \/ pilot/);
+  assert.match(view, /github\.com\/ovladon\/seenrelay\/issues\/new/);
   assert.match(view, /href="\/privacy">Privacy<\/a>/);
   assert.match(view, /Core &amp; Claude plugin: SeenRelay License/);
   assert.match(view, /Client libraries: MIT License/);
