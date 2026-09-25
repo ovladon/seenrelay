@@ -35,14 +35,18 @@ jobs:
       - name: Verify image dimensions
         shell: bash
         run: |
-          python - <<'PY'
-          from PIL import Image
-          from pathlib import Path
-          for p in sorted(Path('artifacts/product-hunt').glob('*.png')):
-              im=Image.open(p)
-              print(p, im.size)
-              assert im.size == (1270,760), (p,im.size)
-          PY
+          node <<'NODE'
+          const fs = require('fs');
+          for (const name of fs.readdirSync('artifacts/product-hunt').filter(x => x.endsWith('.png')).sort()) {
+            const p = 'artifacts/product-hunt/' + name;
+            const b = fs.readFileSync(p);
+            if (b.toString('hex',0,8) !== '89504e470d0a1a0a') throw new Error(p + ' is not PNG');
+            const width = b.readUInt32BE(16);
+            const height = b.readUInt32BE(20);
+            console.log(p, width + 'x' + height);
+            if (width !== 1270 || height !== 760) throw new Error(p + ' wrong dimensions');
+          }
+          NODE
       - name: Commit captured media
         shell: bash
         run: |
