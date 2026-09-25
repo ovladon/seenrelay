@@ -1,0 +1,54 @@
+name: Product Hunt Capture
+
+on:
+  push:
+    branches:
+      - capture/product-hunt-2026-09-25
+    paths-ignore:
+      - 'artifacts/product-hunt/**'
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: capture/product-hunt-2026-09-25
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install temporary browser client
+        run: npm install --no-save --package-lock=false puppeteer-core@24
+      - name: Locate Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+          "$CHROME_PATH" --version
+      - name: Capture Production screenshots
+        run: node scripts/capture-product-hunt.mjs
+      - name: Verify image dimensions
+        shell: bash
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          for p in sorted(Path('artifacts/product-hunt').glob('*.png')):
+              im=Image.open(p)
+              print(p, im.size)
+              assert im.size == (1270,760), (p,im.size)
+          PY
+      - name: Commit captured media
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "seenrelay-capture-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add artifacts/product-hunt
+          git commit -m "Capture Product Hunt Production screenshots [skip ci]"
+          git push origin HEAD:capture/product-hunt-2026-09-25
