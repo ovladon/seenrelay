@@ -100,7 +100,7 @@ export async function deriveClientKey(request: Request, verifiedInternalTelemetr
   const ua = request.headers.get('user-agent') || 'unknown';
   const clientHint = request.headers.get('x-seenrelay-client')?.trim() || '';
   const internal = verifiedInternalTelemetry ?? await isVerifiedInternalTelemetry(request);
-  const prefix = internal ? 'internal' : 'client';
+  const prefix = internal ? 'internal' : clientHint === 'web-starter-check' ? 'demo' : 'client';
   return `${prefix}:${await privacyScopedHash('client', `${networkHint}|${ua}|${clientHint}`)}`;
 }
 
