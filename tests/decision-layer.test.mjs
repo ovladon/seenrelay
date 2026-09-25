@@ -21,7 +21,8 @@ test('known-state decision layer is explicit without adding a protocol operation
   assert.match(index, /app\.get\('\/starter-facts'/);
   assert.match(index, /app\.get\('\/starter-facts\.json'/);
   assert.match(decision, /exactly two domain operations: \*\*CHECK\*\* and \*\*OBSERVE\*\*/);
-  assert.doesNotMatch(`${landing}\n${service}\n${decision}`, /third domain operation|truth oracle|guaranteed savings/i);
+  assert.doesNotMatch(`${landing}\n${service}\n${decision}`, /third domain operation|guaranteed savings/i);
+  assert.match(decision, /It does not replace the authoritative source, browse for arbitrary answers, or decide truth/i);
 });
 
 test('starter fact catalog publishes deterministic identity only', () => {
