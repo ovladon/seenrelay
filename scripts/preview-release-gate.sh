@@ -126,7 +126,9 @@ grep -q "CLIENT ${client_version}" /tmp/clients.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
-grep -q 'SeenRelay is a reuse layer for repeated read-only validation' /tmp/llms.txt
+grep -q 'SeenRelay is a provider-independent revalidation decision layer for known external state' /tmp/llms.txt
+grep -q '## Known-state decision boundary' /tmp/llms.txt
+grep -q 'starter-facts.json' /tmp/llms.txt
 grep -q '## First proof: measure without changing application behavior' /tmp/llms.txt
 grep -q "JavaScript / TypeScript ${client_version}:" /tmp/llms.txt
 grep -q "Python ${client_version}:" /tmp/llms.txt
