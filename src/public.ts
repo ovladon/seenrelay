@@ -90,6 +90,7 @@ export function serviceDescriptor(origin: string) {
       sitemap: `${origin}/sitemap.xml`,
       health: `${origin}/healthz`,
       public_stats: `${origin}/public-stats.json`,
+      privacy: `${origin}/privacy`,
       data_practices: `${origin}/data-practices.json`,
       service_descriptor: `${origin}/service.json`,
       product_facts: `${origin}/product-facts.json`,
