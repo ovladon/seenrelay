@@ -20,12 +20,13 @@ test('public route keeps HTML and machine surfaces separate', () => {
 });
 
 test('homepage follows the customer journey from value to trial to safety', () => {
-  const ids = ['what', 'how', 'start', 'fit', 'safety', 'resources'].map((id) => landing.indexOf(`id="${id}"`));
+  const ids = ['what', 'live-check', 'how', 'start', 'fit', 'safety', 'resources'].map((id) => landing.indexOf(`id="${id}"`));
   assert.ok(ids.every((x) => x >= 0));
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
   assert.match(landing, /Your agents already know things/i);
   assert.match(landing, /SeenRelay helps decide when they need to look again/i);
-  assert.match(landing, /Run the free shadow audit/i);
+  assert.match(landing, /Try one live CHECK/i);
+  assert.match(landing, /Evidence trial only/i);
   assert.match(landing, /No guessed hit rate/i);
   assert.match(landing, /Your workload decides/i);
 });
@@ -82,7 +83,10 @@ test('homepage visual system remains responsive, accessible and dependency free'
   assert.match(funnelCss, /@media\(max-width:680px\)/);
   assert.match(revampJs, /data-mode-button/);
   assert.match(revampJs, /navigator\.clipboard/);
-  assert.doesNotMatch(revampJs, /fetch\(|XMLHttpRequest|WebSocket|createElement\('link'\)/);
+  assert.match(revampJs, /fetch\(catalogEndpoint/);
+  assert.match(revampJs, /fetch\(checkEndpoint/);
+  assert.match(revampJs, /web-starter-check/);
+  assert.doesNotMatch(revampJs, /XMLHttpRequest|WebSocket|createElement\('link'\)|\/v1\/observe/);
   assert.doesNotMatch(landing, /\sstyle=/i);
 });
 
@@ -92,7 +96,7 @@ test('service descriptor continues to derive the public client release', () => {
 });
 
 test('preview gate enforces the self-service homepage and keeps benchmark marketing off sales surfaces', () => {
-  for (const marker of ['Your agents already know things.', 'Run the free shadow audit', 'No guessed hit rate.', 'Before paying to look again, ask what you already know.', 'SeenRelay does not replace your source of truth.']) {
+  for (const marker of ['Your agents already know things.', 'Try one live CHECK', 'Evidence trial only.', 'No guessed hit rate.', 'Before paying to look again, ask what you already know.', 'SeenRelay does not replace your source of truth.']) {
     assert.match(previewGate, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/site\.html/);
