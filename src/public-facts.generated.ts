@@ -152,7 +152,7 @@ export const publicProductFacts = {
     }
   ],
   "pricing_snapshots": {
-    "checked_at": "2026-08-26",
+    "checked_at": "2026-09-25",
     "max_age_days": 30,
     "openai_web_search": {
       "price_usd_per_1000_calls": 10,
