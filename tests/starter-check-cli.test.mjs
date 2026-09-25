@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { runStarterCheck, renderStarterCheck } from '../clients/typescript/scripts/starter-check-lib.mjs';
+import { runStarterCheck, renderStarterCheck, renderStarterCatalog } from '../clients/typescript/scripts/starter-check-lib.mjs';
 
 const catalog = {
   schema: 'seenrelay-starter-facts-v1',
@@ -82,4 +82,13 @@ test('starter CHECK rejects unknown canonical ids before calling CHECK', async (
     /Unknown starter fact/
   );
   assert.equal(calls, 1);
+});
+
+
+test('starter catalog rendering exposes ids but no values or TTL policy', () => {
+  const human = renderStarterCatalog(catalog);
+  assert.match(human, /node-latest-version/);
+  assert.match(human, /identity only/i);
+  assert.match(human, /no current values/i);
+  assert.match(human, /recommended TTL/i);
 });
