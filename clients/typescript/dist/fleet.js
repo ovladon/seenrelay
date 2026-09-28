@@ -182,7 +182,7 @@ export function createRedisRestFleetStore(options = {}) {
       const expiresAtMs = now() + leaseMs;
       const pendingToken = `P|${generation}|${ownerId}|${expiresAtMs}`;
       const { lock } = keys(scopeHash, coordinateKey);
-      const result = await command(['EVAL', CLAIM_LUA, 1, lock, pendingToken, String(Math.ceil(leaseMs))]);
+      const result = await command(['EVAL', CLAIM_LUA, '1', lock, pendingToken, String(Math.ceil(leaseMs))]);
       if (!Array.isArray(result) || result.length < 2) throw new Error('Redis REST claim returned an invalid response');
       if (Number(result[0]) === 1) return { role: 'leader', generation, expiresAtMs, pendingToken };
       const existing = tokenParts(result[1]);
@@ -214,7 +214,7 @@ export function createRedisRestFleetStore(options = {}) {
       const { lock, result } = keys(scopeHash, coordinateKey, generation);
       const completedToken = `C|${generation}|${ownerId}|${now() + completionGraceMs}`;
       const published = await command([
-        'EVAL', PUBLISH_LUA, 2, lock, result, pendingToken, sealedResult,
+        'EVAL', PUBLISH_LUA, '2', lock, result, pendingToken, sealedResult,
         String(Math.ceil(resultTtlMs)), completedToken, String(Math.ceil(completionGraceMs))
       ]);
       return Number(published) === 1;
@@ -224,7 +224,7 @@ export function createRedisRestFleetStore(options = {}) {
       const { lock } = keys(scopeHash, coordinateKey, generation);
       const failedToken = `F|${generation}|${ownerId}|${now() + failureGraceMs}`;
       const failed = await command([
-        'EVAL', FAIL_LUA, 1, lock, pendingToken, failedToken, String(Math.ceil(failureGraceMs))
+        'EVAL', FAIL_LUA, '1', lock, pendingToken, failedToken, String(Math.ceil(failureGraceMs))
       ]);
       return Number(failed) === 1;
     }
