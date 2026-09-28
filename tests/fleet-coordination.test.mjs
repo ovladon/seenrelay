@@ -5,7 +5,8 @@ import {
   SeenRelayFleetCoordinator,
   InMemoryFleetCoordinationStore,
   createRedisRestFleetStore,
-  fleetCodecFromPrivateCodec
+  fleetCodecFromPrivateCodec,
+  createFleetSavingsLedger
 } from '../clients/typescript/dist/fleet.js';
 import { createAesGcmPrivateCodec } from '../clients/typescript/dist/zero-state.js';
 
@@ -296,4 +297,191 @@ test('Redis REST URL normalization handles long trailing-slash input without reg
   });
   assert.equal(claim.role, 'leader');
   assert.equal(seen[0], 'https://redis.example');
+});
+
+
+test('follower reuse emits one conservative avoided-execution receipt and ledger value', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const sharedCodec = codec();
+  const ledger = createFleetSavingsLedger();
+  const receipts = [];
+  const onReceipt = (receipt) => {
+    receipts.push(receipt);
+    ledger.record(receipt);
+  };
+  const a = new SeenRelayFleetCoordinator({ store, codec: sharedCodec, scopeKey: 'tenant-fleet-a', pollMs: 2 });
+  const b = new SeenRelayFleetCoordinator({ store, codec: sharedCodec, scopeKey: 'tenant-fleet-a', pollMs: 2 });
+  let executions = 0;
+  const execute = async () => {
+    executions += 1;
+    await sleep(30);
+    return { answer: 42 };
+  };
+
+  await Promise.all([
+    a.run({
+      coordinate,
+      policy: shareablePolicy,
+      execute,
+      cost: { marginalCostUsd: 1.44, provenance: 'provider_list_price' },
+      onReceipt
+    }),
+    b.run({
+      coordinate,
+      policy: shareablePolicy,
+      execute,
+      cost: { marginalCostUsd: 1.44, provenance: 'provider_list_price' },
+      onReceipt
+    })
+  ]);
+
+  assert.equal(executions, 1);
+  assert.equal(receipts.length, 2);
+  const follower = receipts.find((r) => r.path === 'follower_reuse');
+  const leader = receipts.find((r) => r.path === 'leader_execution');
+  assert.ok(follower);
+  assert.ok(leader);
+  assert.equal(follower.avoidedExecutions, 1);
+  assert.equal(follower.grossAvoidedCostUsd, 1.44);
+  assert.equal(follower.costProvenance, 'provider_list_price');
+  assert.equal(leader.avoidedExecutions, 0);
+  assert.equal(leader.grossAvoidedCostUsd, null);
+
+  const snapshot = ledger.snapshot();
+  assert.equal(snapshot.receipts, 2);
+  assert.equal(snapshot.authoritativeExecutions, 1);
+  assert.equal(snapshot.followerReuses, 1);
+  assert.equal(snapshot.avoidedExecutions, 1);
+  assert.equal(snapshot.costedAvoidedExecutions, 1);
+  assert.equal(snapshot.uncostedAvoidedExecutions, 0);
+  assert.ok(Math.abs(snapshot.grossAvoidedCostUsd - 1.44) < 1e-12);
+
+  assert.equal(a.getTelemetry().avoidedExecutions + b.getTelemetry().avoidedExecutions, 1);
+  assert.ok(Math.abs(a.getTelemetry().grossAvoidedCostUsd + b.getTelemetry().grossAvoidedCostUsd - 1.44) < 1e-12);
+});
+
+test('follower reuse remains measurable when dollar cost is unknown', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const sharedCodec = codec();
+  const ledger = createFleetSavingsLedger();
+  const a = new SeenRelayFleetCoordinator({ store, codec: sharedCodec, scopeKey: 'tenant-fleet-a', pollMs: 2 });
+  const b = new SeenRelayFleetCoordinator({ store, codec: sharedCodec, scopeKey: 'tenant-fleet-a', pollMs: 2 });
+  let executions = 0;
+  const execute = async () => {
+    executions += 1;
+    await sleep(25);
+    return { answer: 7 };
+  };
+
+  await Promise.all([
+    a.run({ coordinate, policy: shareablePolicy, execute, onReceipt: ledger.record }),
+    b.run({ coordinate, policy: shareablePolicy, execute, onReceipt: ledger.record })
+  ]);
+
+  const snapshot = ledger.snapshot();
+  assert.equal(executions, 1);
+  assert.equal(snapshot.avoidedExecutions, 1);
+  assert.equal(snapshot.uncostedAvoidedExecutions, 1);
+  assert.equal(snapshot.costedAvoidedExecutions, 0);
+  assert.equal(snapshot.grossAvoidedCostUsd, 0);
+});
+
+test('result-derived cost resolver can cost a follower reuse without affecting coordination', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const sharedCodec = codec();
+  const receipts = [];
+  const a = new SeenRelayFleetCoordinator({ store, codec: sharedCodec, scopeKey: 'tenant-fleet-a', pollMs: 2 });
+  const b = new SeenRelayFleetCoordinator({ store, codec: sharedCodec, scopeKey: 'tenant-fleet-a', pollMs: 2 });
+  let executions = 0;
+  const execute = async () => {
+    executions += 1;
+    await sleep(25);
+    return { usage: { billedUsd: 0.75 }, answer: 9 };
+  };
+  const cost = {
+    provenance: 'provider_reported',
+    resolveMarginalCostUsd: (value) => value.usage.billedUsd
+  };
+
+  await Promise.all([
+    a.run({ coordinate, policy: shareablePolicy, execute, cost, onReceipt: (r) => receipts.push(r) }),
+    b.run({ coordinate, policy: shareablePolicy, execute, cost, onReceipt: (r) => receipts.push(r) })
+  ]);
+
+  assert.equal(executions, 1);
+  const follower = receipts.find((r) => r.path === 'follower_reuse');
+  assert.equal(follower.costResolution, 'resolved');
+  assert.equal(follower.costProvenance, 'provider_reported');
+  assert.equal(follower.grossAvoidedCostUsd, 0.75);
+});
+
+test('receipt callback failure never changes the authoritative or reused result', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const sharedCodec = codec();
+  const a = new SeenRelayFleetCoordinator({ store, codec: sharedCodec, scopeKey: 'tenant-fleet-a', pollMs: 2 });
+  const b = new SeenRelayFleetCoordinator({ store, codec: sharedCodec, scopeKey: 'tenant-fleet-a', pollMs: 2 });
+  let executions = 0;
+  const execute = async () => {
+    executions += 1;
+    await sleep(25);
+    return { answer: 42 };
+  };
+  const badReceipt = () => { throw new Error('analytics down'); };
+
+  const [ra, rb] = await Promise.all([
+    a.run({ coordinate, policy: shareablePolicy, execute, cost: 0.1, onReceipt: badReceipt }),
+    b.run({ coordinate, policy: shareablePolicy, execute, cost: 0.1, onReceipt: badReceipt })
+  ]);
+
+  assert.deepEqual(ra, { answer: 42 });
+  assert.deepEqual(rb, { answer: 42 });
+  assert.equal(executions, 1);
+  assert.equal(a.getTelemetry().receiptFailures + b.getTelemetry().receiptFailures, 2);
+});
+
+test('malformed cost metadata never converts a successful operation into an error', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const c = new SeenRelayFleetCoordinator({ store, codec: codec(), scopeKey: 'tenant-fleet-a' });
+  const receipts = [];
+  const value = await c.run({
+    coordinate,
+    policy: shareablePolicy,
+    execute: async () => ({ answer: 1 }),
+    cost: { marginalCostUsd: -5, provenance: 'bad' },
+    onReceipt: (r) => receipts.push(r)
+  });
+  assert.deepEqual(value, { answer: 1 });
+  assert.equal(c.getTelemetry().receiptFailures, 1);
+  assert.equal(receipts.length, 1);
+  assert.equal(receipts[0].grossAvoidedCostUsd, null);
+});
+
+test('native and policy passthrough receipts never claim avoided executions', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const c = new SeenRelayFleetCoordinator({ store, codec: codec(), scopeKey: 'tenant-fleet-a' });
+  const receipts = [];
+
+  await c.run({
+    coordinate,
+    policy: { sideEffectClass: 'mutation', exactSingleAnswerShareable: true },
+    execute: async () => 1,
+    cost: 1,
+    onReceipt: (r) => receipts.push(r)
+  });
+  await c.run({
+    coordinate,
+    policy: {
+      ...shareablePolicy,
+      nativeControl: { exactResponseCache: true, cacheHitMarginalCostZero: true }
+    },
+    execute: async () => 2,
+    cost: 1,
+    onReceipt: (r) => receipts.push(r)
+  });
+
+  assert.equal(receipts.length, 2);
+  assert.equal(receipts[0].avoidedExecutions, 0);
+  assert.equal(receipts[1].avoidedExecutions, 0);
+  assert.equal(receipts[0].grossAvoidedCostUsd, null);
+  assert.equal(receipts[1].grossAvoidedCostUsd, null);
 });
