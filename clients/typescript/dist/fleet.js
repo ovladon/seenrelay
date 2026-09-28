@@ -435,7 +435,12 @@ export class SeenRelayFleetCoordinator {
   getTelemetry() { return Object.freeze({ ...this.metrics }); }
 
   async #receipt({ options, coordinateKey = null, path, role, executedAuthoritative, reusedFollower, value }) {
-    const costInput = normalizeCostInput(options.cost);
+    let costInput = null;
+    try {
+      costInput = normalizeCostInput(options.cost);
+    } catch {
+      this.metrics.receiptFailures += 1;
+    }
     const cost = await resolveReceiptCost(costInput, value);
     const receipt = buildSavingsReceipt({
       coordinateKey,
