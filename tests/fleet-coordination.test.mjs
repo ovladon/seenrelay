@@ -264,3 +264,36 @@ test('Redis REST read closes the publish race between result GET and completed l
   assert.deepEqual(state, { status: 'completed', sealedResult: 'ciphertext-after-publish' });
   assert.equal(resultReads, 2);
 });
+
+
+test('Redis REST URL normalization handles long trailing-slash input without regex backtracking', async () => {
+  const longUrl = 'https://redis.example' + '/'.repeat(100_000);
+  const seen = [];
+  const store = createRedisRestFleetStore({
+    url: longUrl,
+    token: 'secret-token',
+    fetchImpl: async (url, init) => {
+      seen.push(url);
+      const command = JSON.parse(init.body);
+      if (command[0] === 'EVAL') {
+        return new Response(JSON.stringify({ result: [1, command[4]] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' }
+        });
+      }
+      return new Response(JSON.stringify({ result: null }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      });
+    },
+    now: () => 1000
+  });
+  const claim = await store.tryClaim({
+    scopeHash: 'scopehash',
+    coordinateKey: 'coordinatehash',
+    ownerId: 'owner-a',
+    leaseMs: 1000
+  });
+  assert.equal(claim.role, 'leader');
+  assert.equal(seen[0], 'https://redis.example');
+});
