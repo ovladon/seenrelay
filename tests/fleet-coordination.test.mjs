@@ -222,3 +222,45 @@ test('Redis REST fleet store sends atomic Lua claim/publish commands without exp
   assert.equal(calls[0][3].includes('tenant-fleet-a'), false);
   assert.equal(calls[1][0], 'EVAL');
 });
+
+
+test('Redis REST read closes the publish race between result GET and completed lock GET', async () => {
+  let resultReads = 0;
+  const generation = 'generation-race';
+  const ownerId = 'owner-race';
+  const completedToken = `C|${generation}|${ownerId}|9999999999999`;
+  const fakeFetch = async (_url, init) => {
+    const command = JSON.parse(init.body);
+    if (command[0] === 'GET' && String(command[1]).includes(':result:')) {
+      resultReads += 1;
+      return new Response(
+        JSON.stringify({ result: resultReads === 1 ? null : 'ciphertext-after-publish' }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      );
+    }
+    if (command[0] === 'GET' && String(command[1]).endsWith(':lock')) {
+      return new Response(
+        JSON.stringify({ result: completedToken }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      );
+    }
+    throw new Error('unexpected command '+JSON.stringify(command));
+  };
+
+  const store = createRedisRestFleetStore({
+    url: 'https://redis.example',
+    token: 'secret-token',
+    fetchImpl: fakeFetch,
+    now: () => 1000
+  });
+
+  const state = await store.read({
+    scopeHash: 'scopehash',
+    coordinateKey: 'coordinatehash',
+    generation,
+    pendingToken: `P|${generation}|${ownerId}|9999999999999`
+  });
+
+  assert.deepEqual(state, { status: 'completed', sealedResult: 'ciphertext-after-publish' });
+  assert.equal(resultReads, 2);
+});
