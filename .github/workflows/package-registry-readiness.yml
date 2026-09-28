@@ -99,19 +99,23 @@ jobs:
           if not any('github.com/ovladon/seenrelay' in value for value in candidates):
               raise SystemExit("PyPI project 'seenrelay' does not identify the SeenRelay repository.")
 
-          releases = data.get('releases') or {}
-          missing = [version for version in {public_version, release_version} if not releases.get(version)]
-          if missing:
-              raise SystemExit(
-                  "PyPI exact release metadata missing for: " + ", ".join(sorted(missing))
-              )
+          # PyPI's generic project JSON can lag a freshly published release.
+          # Validate each rollout version against its version-specific endpoint.
+          for version in sorted({public_version, release_version}):
+              with urllib.request.urlopen(
+                  f'https://pypi.org/pypi/seenrelay/{version}/json',
+                  timeout=20,
+              ) as response:
+                  release_data = json.load(response)
+              release_info = release_data.get('info') or {}
+              if str(release_info.get('version') or '') != version:
+                  raise SystemExit(
+                      f"PyPI exact endpoint did not confirm seenrelay {version}."
+                  )
 
-          # PyPI's generic info.version can lag freshly published artifacts. Exact
-          # release presence is the rollout invariant; Public Registry Verification
-          # separately clean-installs the promoted exact version.
           print(
               f"PyPI project ownership verified; generic latest={info.get('version') or 'unknown'}; "
-              f"exact public/release artifacts present={public_version},{release_version}"
+              f"version-specific rollout endpoints confirmed={public_version},{release_version}"
           )
           PY
           echo 'PyPI project exists, points to the SeenRelay repository, and exposes the exact rollout artifacts.'
