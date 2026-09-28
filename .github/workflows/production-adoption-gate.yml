@@ -236,7 +236,8 @@ jobs:
           curl --fail --silent --show-error --location \
             https://seenrelay.com/revamp.js \
             --output "$RUNNER_TEMP/revamp.js"
-          grep -q 'Run the free shadow audit' "$RUNNER_TEMP/home.html"
+          grep -q 'Audit my agent' "$RUNNER_TEMP/home.html"
+          grep -q 'free shadow audit' "$RUNNER_TEMP/home.html"
           grep -q 'npx seenrelay scan' "$RUNNER_TEMP/home.html"
           grep -q 'npx seenrelay scan' "$RUNNER_TEMP/quickstart.html"
           grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' "$RUNNER_TEMP/home.html"
