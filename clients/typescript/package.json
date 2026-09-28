@@ -56,6 +56,10 @@
     "./ambient": {
       "types": "./dist/ambient.d.ts",
       "import": "./dist/ambient.js"
+    },
+    "./fleet": {
+      "types": "./dist/fleet.d.ts",
+      "import": "./dist/fleet.js"
     }
   },
   "files": [
