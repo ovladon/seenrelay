@@ -55,7 +55,7 @@ async function worker() {
     },
     execute: async () => {
       await appendFile(path.join(root, 'upstream.log'), `${process.pid}\n`);
-      await sleep(900);
+      await sleep(5_000);
       return { authoritative: true, value: 42 };
     }
   });
@@ -104,7 +104,7 @@ async function parent() {
   const [ra, rb] = await Promise.all([a, b]);
   const lines = (await readFile(path.join(root, 'upstream.log'), 'utf8')).trim().split(/\n+/).filter(Boolean);
 
-  if (lines.length !== 1) throw new Error(`expected one upstream execution, got ${lines.length}`);
+  if (lines.length !== 1) throw new Error(`expected one upstream execution, got ${lines.length}; a=${JSON.stringify(ra.telemetry)} b=${JSON.stringify(rb.telemetry)}`);
   if (ra.value?.value !== 42 || rb.value?.value !== 42) throw new Error('workers did not receive the same authoritative result');
   const leaders = ra.telemetry.leaderExecutions + rb.telemetry.leaderExecutions;
   const followers = ra.telemetry.followerReuses + rb.telemetry.followerReuses;
