@@ -248,6 +248,7 @@ jobs:
           # Keep the Production gate aligned with the customer-facing contract
           # already verified by the Preview Release Gate. Avoid copy that is no
           # longer part of the canonical homepage.
+          echo 'Verifying current Production first-use contract.'
           assert_contains "$RUNNER_TEMP/home.html" 'Your agents already know things.'
           assert_contains "$RUNNER_TEMP/home.html" 'SeenRelay helps decide when they need to look again.'
           assert_contains "$RUNNER_TEMP/home.html" 'Try one live CHECK'
