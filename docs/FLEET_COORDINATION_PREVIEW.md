@@ -1,6 +1,6 @@
-# Fleet coordination preview
+# Fleet coordination
 
-> Draft API. This page belongs to PR #304 and is not part of the current stable release.
+Fleet-level exact in-flight coordination is available in the JavaScript / TypeScript client from 0.2.17.
 
 SeenRelay's existing Zero-State client coalesces identical in-flight work inside one process. The fleet preview extends the same conservative idea across workers that share a caller-owned coordination store.
 
@@ -165,6 +165,59 @@ The repository tests require:
 - failures fail open.
 
 A separate remote-store proof workflow tests the same primitive through a temporary Redis REST instance.
+
+## Savings receipts
+
+Coordination can now emit conservative local receipts. A follower reuse is the only path that counts as an avoided execution.
+
+```js
+import {
+  createFleetSavingsLedger
+} from 'seenrelay/fleet';
+
+const savings = createFleetSavingsLedger();
+
+const result = await fleet.run({
+  coordinate,
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  },
+  execute: expensiveReadOnlyTask,
+
+  // Optional. Cost never authorizes coordination.
+  cost: {
+    marginalCostUsd: 0.48,
+    provenance: 'provider_list_price'
+  },
+
+  // Local callback only. If it fails, the application result is unchanged.
+  onReceipt: savings.record
+});
+
+console.log(savings.snapshot());
+```
+
+A receipt separates two facts:
+
+- `avoidedExecutions`: whether one authoritative execution was actually avoided;
+- `grossAvoidedCostUsd`: the caller-supplied or caller-resolved marginal cost, when available.
+
+If cost is unknown, SeenRelay can still report `avoidedExecutions: 1` without inventing a dollar value.
+
+For result-dependent provider billing, use a resolver:
+
+```js
+cost: {
+  provenance: 'provider_reported',
+  resolveMarginalCostUsd: (response) => response.usage?.billedUsd
+}
+```
+
+Cost provenance is explicit. Supported labels are caller-defined strings; useful examples are `provider_reported`, `provider_list_price`, `caller_measured`, and `caller_estimate`.
+
+Receipts are local. They do not enable billing, upload customer spend, or change CHECK / OBSERVE.
 
 ## Adoption path
 

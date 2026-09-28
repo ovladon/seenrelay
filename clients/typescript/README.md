@@ -189,6 +189,36 @@ const result = await fleet.run({
 
 Every result-affecting qualifier belongs in the coordinate. Different fleet scopes never coordinate. Mutations, independent sampling, underspecified policies, store failures, follower timeouts and codec failures preserve the application's authoritative path.
 
+To quantify value locally, attach a savings receipt ledger:
+
+```js
+import { createFleetSavingsLedger } from 'seenrelay/fleet';
+
+const savings = createFleetSavingsLedger();
+
+await fleet.run({
+  coordinate,
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  },
+  execute: expensiveReadOnlyTask,
+  cost: {
+    marginalCostUsd: 0.48,
+    provenance: 'provider_list_price'
+  },
+  onReceipt: savings.record
+});
+
+console.log(savings.snapshot());
+// avoidedExecutions counts only actual follower reuse.
+// grossAvoidedCostUsd is null/absent from a receipt when cost is unknown.
+```
+
+Cost metadata never authorizes coordination. If cost is unknown, SeenRelay reports avoided executions without inventing dollars. Receipt callback failures never change the application result.
+
+
 If the provider already supplies a zero-cost exact response cache, declare that native control and SeenRelay steps aside.
 
 This surface is deliberately narrower than semantic caching: it coordinates only an exact compatible operation that is already in flight.

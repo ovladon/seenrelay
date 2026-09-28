@@ -14,6 +14,65 @@ export interface FleetExecutionPolicy {
   nativeControl?: FleetNativeControl;
 }
 
+export interface FleetCostInput<T = unknown> {
+  /** Fixed marginal cost estimate for one authoritative execution. */
+  marginalCostUsd?: number;
+  /** Explicit provenance label, e.g. provider_reported, provider_list_price, caller_measured, caller_estimate. */
+  provenance?: string;
+  /** Optional caller-owned resolver when marginal cost depends on the authoritative result. */
+  resolveMarginalCostUsd?(value: T): number | null | undefined | Promise<number | null | undefined>;
+}
+
+export type FleetSavingsReceiptPath =
+  | 'policy_passthrough'
+  | 'native_control_passthrough'
+  | 'fail_open_store_claim'
+  | 'leader_codec_fail_local_result'
+  | 'leader_oversize_local_result'
+  | 'leader_execution'
+  | 'fail_open_store_read'
+  | 'follower_reuse'
+  | 'fail_open_codec'
+  | 'fail_open_missing_generation'
+  | 'fail_open_lease_expired'
+  | 'fail_open_wait_timeout';
+
+export interface FleetSavingsReceipt {
+  schema: 'seenrelay-fleet-savings-receipt-v0';
+  /** Opaque exact-coordinate hash; never the raw coordinate. */
+  coordinateHash: string | null;
+  path: FleetSavingsReceiptPath;
+  role: 'leader' | 'follower' | 'passthrough' | 'fail_open';
+  executedAuthoritative: boolean;
+  reusedFollower: boolean;
+  avoidedExecutions: number;
+  marginalCostUsd: number | null;
+  costProvenance: string | null;
+  costResolution: 'not_provided' | 'unknown' | 'resolved' | 'fixed' | 'resolver_failed';
+  grossAvoidedCostUsd: number | null;
+  createdAt: string;
+}
+
+export interface FleetSavingsLedgerSnapshot {
+  schema: 'seenrelay-fleet-savings-ledger-v0';
+  receipts: number;
+  authoritativeExecutions: number;
+  followerReuses: number;
+  avoidedExecutions: number;
+  grossAvoidedCostUsd: number;
+  costedAvoidedExecutions: number;
+  uncostedAvoidedExecutions: number;
+  receiptPaths: Readonly<Record<string, number>>;
+  costProvenance: Readonly<Record<string, number>>;
+}
+
+export interface FleetSavingsLedger {
+  record(receipt: FleetSavingsReceipt): void;
+  snapshot(): Readonly<FleetSavingsLedgerSnapshot>;
+}
+
+export declare function createFleetSavingsLedger(): FleetSavingsLedger;
+
 export interface FleetCodecContext {
   scopeHash: string;
   coordinateKey: string;
@@ -117,6 +176,13 @@ export interface FleetRunOptions<T> {
   policy: FleetExecutionPolicy;
   /** Original authoritative operation. It remains the fail-open fallback. */
   execute(): T | Promise<T>;
+  /**
+   * Optional marginal cost for one authoritative execution.
+   * A bare number is treated as caller_estimate. Cost never authorizes coordination.
+   */
+  cost?: number | FleetCostInput<T>;
+  /** Best-effort local callback. Receipt callback failures never change the operation result. */
+  onReceipt?(receipt: FleetSavingsReceipt): void | Promise<void>;
 }
 
 export interface FleetTelemetry {
@@ -132,6 +198,10 @@ export interface FleetTelemetry {
   codecFailures: number;
   followerTimeouts: number;
   oversizeResults: number;
+  avoidedExecutions: number;
+  grossAvoidedCostUsd: number;
+  costedAvoidedExecutions: number;
+  receiptFailures: number;
 }
 
 export declare class SeenRelayFleetCoordinator {

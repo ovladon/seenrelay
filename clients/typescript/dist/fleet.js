@@ -38,6 +38,157 @@ function sealedBytes(value) {
   throw new TypeError('fleet codec seal() must return a string or Uint8Array');
 }
 
+function optionalNonNegativeFinite(value, label) {
+  if (value === undefined || value === null) return null;
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) throw new TypeError(`${label} must be a non-negative finite number`);
+  return n;
+}
+
+function normalizeCostInput(cost) {
+  if (cost === undefined || cost === null) return null;
+  if (typeof cost === 'number') {
+    return Object.freeze({
+      marginalCostUsd: optionalNonNegativeFinite(cost, 'cost'),
+      provenance: 'caller_estimate',
+      resolver: null
+    });
+  }
+  if (typeof cost !== 'object') throw new TypeError('cost must be a number or object');
+  const resolver = cost.resolveMarginalCostUsd;
+  if (resolver !== undefined && typeof resolver !== 'function') {
+    throw new TypeError('cost.resolveMarginalCostUsd must be a function');
+  }
+  const marginalCostUsd = optionalNonNegativeFinite(cost.marginalCostUsd, 'cost.marginalCostUsd');
+  if (marginalCostUsd === null && typeof resolver !== 'function') {
+    throw new TypeError('cost requires marginalCostUsd or resolveMarginalCostUsd()');
+  }
+  const provenance = typeof cost.provenance === 'string' && cost.provenance.trim()
+    ? cost.provenance.trim()
+    : 'caller_estimate';
+  return Object.freeze({ marginalCostUsd, provenance, resolver: resolver ?? null });
+}
+
+async function resolveReceiptCost(costInput, value) {
+  if (!costInput) return { marginalCostUsd: null, provenance: null, costResolution: 'not_provided' };
+  if (costInput.resolver) {
+    try {
+      const resolved = optionalNonNegativeFinite(
+        await costInput.resolver(value),
+        'cost.resolveMarginalCostUsd() result'
+      );
+      return {
+        marginalCostUsd: resolved,
+        provenance: costInput.provenance,
+        costResolution: resolved === null ? 'unknown' : 'resolved'
+      };
+    } catch {
+      return {
+        marginalCostUsd: null,
+        provenance: costInput.provenance,
+        costResolution: 'resolver_failed'
+      };
+    }
+  }
+  return {
+    marginalCostUsd: costInput.marginalCostUsd,
+    provenance: costInput.provenance,
+    costResolution: costInput.marginalCostUsd === null ? 'unknown' : 'fixed'
+  };
+}
+
+function buildSavingsReceipt({
+  coordinateKey,
+  path,
+  role,
+  executedAuthoritative,
+  reusedFollower,
+  marginalCostUsd,
+  provenance,
+  costResolution
+}) {
+  const avoidedExecutions = reusedFollower ? 1 : 0;
+  const grossAvoidedCostUsd = avoidedExecutions === 1 && marginalCostUsd !== null
+    ? marginalCostUsd
+    : null;
+  return Object.freeze({
+    schema: 'seenrelay-fleet-savings-receipt-v0',
+    coordinateHash: coordinateKey ?? null,
+    path,
+    role,
+    executedAuthoritative: Boolean(executedAuthoritative),
+    reusedFollower: Boolean(reusedFollower),
+    avoidedExecutions,
+    marginalCostUsd,
+    costProvenance: provenance,
+    costResolution,
+    grossAvoidedCostUsd,
+    createdAt: new Date().toISOString()
+  });
+}
+
+async function emitReceipt(callback, receipt) {
+  if (typeof callback !== 'function') return true;
+  try {
+    await callback(receipt);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function createFleetSavingsLedger() {
+  const state = {
+    receipts: 0,
+    authoritativeExecutions: 0,
+    followerReuses: 0,
+    avoidedExecutions: 0,
+    grossAvoidedCostUsd: 0,
+    costedAvoidedExecutions: 0,
+    uncostedAvoidedExecutions: 0,
+    receiptPaths: Object.create(null),
+    costProvenance: Object.create(null)
+  };
+
+  const record = (receipt) => {
+    if (!receipt || receipt.schema !== 'seenrelay-fleet-savings-receipt-v0') {
+      throw new TypeError('record() requires a SeenRelay fleet savings receipt');
+    }
+    state.receipts += 1;
+    if (receipt.executedAuthoritative) state.authoritativeExecutions += 1;
+    if (receipt.reusedFollower) state.followerReuses += 1;
+    state.avoidedExecutions += Number(receipt.avoidedExecutions || 0);
+    state.receiptPaths[receipt.path] = (state.receiptPaths[receipt.path] || 0) + 1;
+    if (receipt.costProvenance) {
+      state.costProvenance[receipt.costProvenance] =
+        (state.costProvenance[receipt.costProvenance] || 0) + 1;
+    }
+    if (receipt.avoidedExecutions > 0) {
+      if (receipt.grossAvoidedCostUsd === null) {
+        state.uncostedAvoidedExecutions += receipt.avoidedExecutions;
+      } else {
+        state.costedAvoidedExecutions += receipt.avoidedExecutions;
+        state.grossAvoidedCostUsd += receipt.grossAvoidedCostUsd;
+      }
+    }
+  };
+
+  const snapshot = () => Object.freeze({
+    schema: 'seenrelay-fleet-savings-ledger-v0',
+    receipts: state.receipts,
+    authoritativeExecutions: state.authoritativeExecutions,
+    followerReuses: state.followerReuses,
+    avoidedExecutions: state.avoidedExecutions,
+    grossAvoidedCostUsd: state.grossAvoidedCostUsd,
+    costedAvoidedExecutions: state.costedAvoidedExecutions,
+    uncostedAvoidedExecutions: state.uncostedAvoidedExecutions,
+    receiptPaths: Object.freeze({ ...state.receiptPaths }),
+    costProvenance: Object.freeze({ ...state.costProvenance })
+  });
+
+  return Object.freeze({ record, snapshot });
+}
+
 export function fleetCodecFromPrivateCodec(privateCodec) {
   if (!privateCodec || typeof privateCodec.seal !== 'function' || typeof privateCodec.open !== 'function') {
     throw new TypeError('privateCodec must provide seal() and open()');
@@ -273,11 +424,44 @@ export class SeenRelayFleetCoordinator {
       storeFailures: 0,
       codecFailures: 0,
       followerTimeouts: 0,
-      oversizeResults: 0
+      oversizeResults: 0,
+      avoidedExecutions: 0,
+      grossAvoidedCostUsd: 0,
+      costedAvoidedExecutions: 0,
+      receiptFailures: 0
     };
   }
 
   getTelemetry() { return Object.freeze({ ...this.metrics }); }
+
+  async #receipt({ options, coordinateKey = null, path, role, executedAuthoritative, reusedFollower, value }) {
+    let costInput = null;
+    try {
+      costInput = normalizeCostInput(options.cost);
+    } catch {
+      this.metrics.receiptFailures += 1;
+    }
+    const cost = await resolveReceiptCost(costInput, value);
+    const receipt = buildSavingsReceipt({
+      coordinateKey,
+      path,
+      role,
+      executedAuthoritative,
+      reusedFollower,
+      marginalCostUsd: cost.marginalCostUsd,
+      provenance: cost.provenance,
+      costResolution: cost.costResolution
+    });
+    if (receipt.avoidedExecutions > 0) {
+      this.metrics.avoidedExecutions += receipt.avoidedExecutions;
+      if (receipt.grossAvoidedCostUsd !== null) {
+        this.metrics.costedAvoidedExecutions += receipt.avoidedExecutions;
+        this.metrics.grossAvoidedCostUsd += receipt.grossAvoidedCostUsd;
+      }
+    }
+    if (!await emitReceipt(options.onReceipt, receipt)) this.metrics.receiptFailures += 1;
+    return receipt;
+  }
 
   async run(options = {}) {
     if (typeof options.execute !== 'function') throw new TypeError('execute must be a function');
@@ -285,11 +469,29 @@ export class SeenRelayFleetCoordinator {
 
     if (!explicitSingleAnswerPolicy(options.policy)) {
       this.metrics.policyPassthrough += 1;
-      return options.execute();
+      const value = await options.execute();
+      await this.#receipt({
+        options,
+        path: 'policy_passthrough',
+        role: 'passthrough',
+        executedAuthoritative: true,
+        reusedFollower: false,
+        value
+      });
+      return value;
     }
     if (nativeZeroCostDominates(options.policy)) {
       this.metrics.nativeControlPassthrough += 1;
-      return options.execute();
+      const value = await options.execute();
+      await this.#receipt({
+        options,
+        path: 'native_control_passthrough',
+        role: 'passthrough',
+        executedAuthoritative: true,
+        reusedFollower: false,
+        value
+      });
+      return value;
     }
 
     const coordinateKey = sha256JsonFingerprint({ fleetCoordinateV0: options.coordinate });
@@ -304,7 +506,16 @@ export class SeenRelayFleetCoordinator {
     } catch {
       this.metrics.storeFailures += 1;
       this.metrics.failOpenExecutions += 1;
-      return options.execute();
+      const value = await options.execute();
+      await this.#receipt({
+        options, coordinateKey,
+        path: 'fail_open_store_claim',
+        role: 'fail_open',
+        executedAuthoritative: true,
+        reusedFollower: false,
+        value
+      });
+      return value;
     }
 
     if (claim.role === 'leader') {
@@ -341,6 +552,14 @@ export class SeenRelayFleetCoordinator {
             pendingToken: claim.pendingToken
           });
         } catch { this.metrics.storeFailures += 1; }
+        await this.#receipt({
+          options, coordinateKey,
+          path: 'leader_codec_fail_local_result',
+          role: 'leader',
+          executedAuthoritative: true,
+          reusedFollower: false,
+          value
+        });
         return value;
       }
 
@@ -355,6 +574,14 @@ export class SeenRelayFleetCoordinator {
             pendingToken: claim.pendingToken
           });
         } catch { this.metrics.storeFailures += 1; }
+        await this.#receipt({
+          options, coordinateKey,
+          path: 'leader_oversize_local_result',
+          role: 'leader',
+          executedAuthoritative: true,
+          reusedFollower: false,
+          value
+        });
         return value;
       }
 
@@ -369,6 +596,14 @@ export class SeenRelayFleetCoordinator {
         });
         if (!published) this.metrics.storeFailures += 1;
       } catch { this.metrics.storeFailures += 1; }
+      await this.#receipt({
+        options, coordinateKey,
+        path: 'leader_execution',
+        role: 'leader',
+        executedAuthoritative: true,
+        reusedFollower: false,
+        value
+      });
       return value;
     }
 
@@ -387,36 +622,89 @@ export class SeenRelayFleetCoordinator {
       } catch {
         this.metrics.storeFailures += 1;
         this.metrics.failOpenExecutions += 1;
-        return options.execute();
+        const value = await options.execute();
+        await this.#receipt({
+          options, coordinateKey,
+          path: 'fail_open_store_read',
+          role: 'fail_open',
+          executedAuthoritative: true,
+          reusedFollower: false,
+          value
+        });
+        return value;
       }
 
       if (state?.status === 'completed') {
         try {
           const value = await this.codec.open(state.sealedResult, context);
           this.metrics.followerReuses += 1;
+          await this.#receipt({
+            options, coordinateKey,
+            path: 'follower_reuse',
+            role: 'follower',
+            executedAuthoritative: false,
+            reusedFollower: true,
+            value
+          });
           return value;
         } catch {
           this.metrics.codecFailures += 1;
           this.metrics.failOpenExecutions += 1;
-          return options.execute();
+          const value = await options.execute();
+          await this.#receipt({
+            options, coordinateKey,
+            path: 'fail_open_codec',
+            role: 'fail_open',
+            executedAuthoritative: true,
+            reusedFollower: false,
+            value
+          });
+          return value;
         }
       }
 
       if (!state || state.status === 'failed' || state.status === 'missing') {
         this.metrics.failOpenExecutions += 1;
-        return options.execute();
+        const value = await options.execute();
+        await this.#receipt({
+          options, coordinateKey,
+          path: 'fail_open_missing_generation',
+          role: 'fail_open',
+          executedAuthoritative: true,
+          reusedFollower: false,
+          value
+        });
+        return value;
       }
 
       if (Number(state.expiresAtMs) <= this.now()) {
         this.metrics.followerTimeouts += 1;
         this.metrics.failOpenExecutions += 1;
-        return options.execute();
+        const value = await options.execute();
+        await this.#receipt({
+          options, coordinateKey,
+          path: 'fail_open_lease_expired',
+          role: 'fail_open',
+          executedAuthoritative: true,
+          reusedFollower: false,
+          value
+        });
+        return value;
       }
       await sleep(this.pollMs);
     }
 
     this.metrics.followerTimeouts += 1;
     this.metrics.failOpenExecutions += 1;
-    return options.execute();
+    const value = await options.execute();
+    await this.#receipt({
+      options, coordinateKey,
+      path: 'fail_open_wait_timeout',
+      role: 'fail_open',
+      executedAuthoritative: true,
+      reusedFollower: false,
+      value
+    });
+    return value;
   }
 }
