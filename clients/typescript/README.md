@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Client 0.2.17 adds an opt-in fleet-level exact in-flight coordination surface for JavaScript / TypeScript. Separate workers can share one authoritative execution for an explicitly read-only, exact-single-answer operation through a caller-owned coordination store. Results can be sealed with the existing AES-256-GCM private codec. Provider-native zero-cost exact caches take precedence, unsafe/underspecified calls pass through, and coordination failures fail open to the original call. Python remains behaviorally unchanged in 0.2.17. Shared evidence never authorizes reuse by itself.
+Client 0.2.18 adds conservative local savings receipts and an aggregation ledger to the fleet-level exact in-flight coordination surface. Only an actual follower reuse counts as an avoided execution; dollar savings require caller-supplied or caller-resolved marginal cost with explicit provenance, and unknown cost remains unknown. Receipt callbacks and cost metadata cannot authorize coordination or change the application result. Fleet coordination remains opt-in, fail-open, caller-scoped, and provider-native-control-first. Python remains behaviorally unchanged in 0.2.18. Shared evidence never authorizes reuse by itself.
 
 ## Local zero-code prescreen
 
