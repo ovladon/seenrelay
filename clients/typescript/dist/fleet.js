@@ -138,7 +138,10 @@ function tokenParts(token) {
 }
 
 export function createRedisRestFleetStore(options = {}) {
-  const url = typeof options.url === 'string' ? options.url.replace(/\/+$/, '') : '';
+  const rawUrl = typeof options.url === 'string' ? options.url : '';
+  let urlEnd = rawUrl.length;
+  while (urlEnd > 0 && rawUrl.charCodeAt(urlEnd - 1) === 47) urlEnd -= 1;
+  const url = rawUrl.slice(0, urlEnd);
   const token = options.token;
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const prefix = options.prefix ?? 'seenrelay:fleet:v0';
