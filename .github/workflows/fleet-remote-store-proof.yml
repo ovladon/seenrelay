@@ -1,0 +1,66 @@
+name: Fleet Remote Store Proof
+
+on:
+  push:
+    branches:
+      - feature/fleet-coordination-preview
+    paths:
+      - '.github/workflows/fleet-remote-store-proof.yml'
+      - 'scripts/test-fleet-redis-remote.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-remote-store-proof
+  cancel-in-progress: true
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Provision temporary Redis REST test store
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST https://upstash.com/start-redis             -H 'User-Agent: chatgpt-seenrelay'             -o /tmp/upstash.md
+          node <<'NODE'
+          const fs=require('node:fs');
+          const text=fs.readFileSync('/tmp/upstash.md','utf8');
+          const url=
+            text.match(/UPSTASH_REDIS_REST_URL\s*=\s*["'`]?([^"'\s`]+)/i)?.[1] ||
+            text.match(/https:\/\/[A-Za-z0-9.-]+\.upstash\.io/i)?.[0];
+          const token=
+            text.match(/UPSTASH_REDIS_REST_TOKEN\s*=\s*["'`]?([^"'\s`]+)/i)?.[1] ||
+            text.match(/Authorization:\s*Bearer\s+([^\s`]+)/i)?.[1];
+          if(!url||!token) throw new Error('Unable to parse temporary Redis REST credentials');
+          process.stdout.write('::add-mask::'+token+'\n');
+          fs.appendFileSync(process.env.GITHUB_ENV,
+            'UPSTASH_REDIS_REST_URL='+url+'\n'+
+            'UPSTASH_REDIS_REST_TOKEN='+token+'\n');
+          NODE
+
+      - name: Prove remote two-process coordination
+        run: |
+          set -euo pipefail
+          node scripts/test-fleet-redis-remote.mjs | tee /tmp/fleet-remote-proof.json
+          grep -q '"result":"PASS"' /tmp/fleet-remote-proof.json
+
+      - name: Upload proof
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: fleet-remote-store-proof
+          path: /tmp/fleet-remote-proof.json
+          if-no-files-found: error
+          retention-days: 30
