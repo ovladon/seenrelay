@@ -236,7 +236,11 @@ jobs:
           curl --fail --silent --show-error --location \
             https://seenrelay.com/revamp.js \
             --output "$RUNNER_TEMP/revamp.js"
-          grep -q 'Run the free shadow audit' "$RUNNER_TEMP/home.html"
+          grep -q 'Try one live CHECK' "$RUNNER_TEMP/home.html"
+          grep -q 'id="live-check-form"' "$RUNNER_TEMP/home.html"
+          grep -q 'data-catalog-endpoint="/starter-facts.json"' "$RUNNER_TEMP/home.html"
+          grep -q 'data-check-endpoint="/v1/check"' "$RUNNER_TEMP/home.html"
+          grep -q 'Evidence trial only.' "$RUNNER_TEMP/home.html"
           grep -q 'npx seenrelay scan' "$RUNNER_TEMP/home.html"
           grep -q 'npx seenrelay scan' "$RUNNER_TEMP/quickstart.html"
           grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' "$RUNNER_TEMP/home.html"
@@ -246,6 +250,10 @@ jobs:
           grep -q 'href="/quickstart#evaluate"' "$RUNNER_TEMP/home.html"
           grep -q 'Integrate directly with the client.' "$RUNNER_TEMP/revamp.js"
           grep -q 'Install the npm or PyPI client' "$RUNNER_TEMP/revamp.js"
+          grep -q 'web-starter-check' "$RUNNER_TEMP/revamp.js"
+          grep -q 'fetch(catalogEndpoint' "$RUNNER_TEMP/revamp.js"
+          grep -q 'fetch(checkEndpoint' "$RUNNER_TEMP/revamp.js"
+          ! grep -q '/v1/observe' "$RUNNER_TEMP/revamp.js"
           grep -q 'id="evaluate"' "$RUNNER_TEMP/quickstart.html"
           grep -q 'SeenRelayShadowProof' "$RUNNER_TEMP/quickstart.html"
           grep -q 'evaluateHostileBenchmark' "$RUNNER_TEMP/quickstart.html"
