@@ -34,21 +34,61 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsS -X POST https://upstash.com/start-redis             -H 'User-Agent: chatgpt-seenrelay'             -o /tmp/upstash.md
+          curl -fsS -X POST https://upstash.com/start-redis \
+            -H 'User-Agent: chatgpt-seenrelay' \
+            -o /tmp/upstash.md
           node <<'NODE'
           const fs=require('node:fs');
           const text=fs.readFileSync('/tmp/upstash.md','utf8');
-          const url=
-            text.match(/UPSTASH_REDIS_REST_URL\s*=\s*["'`]?([^"'\s`]+)/i)?.[1] ||
-            text.match(/https:\/\/[A-Za-z0-9.-]+\.upstash\.io/i)?.[0];
-          const token=
-            text.match(/UPSTASH_REDIS_REST_TOKEN\s*=\s*["'`]?([^"'\s`]+)/i)?.[1] ||
-            text.match(/Authorization:\s*Bearer\s+([^\s`]+)/i)?.[1];
-          if(!url||!token) throw new Error('Unable to parse temporary Redis REST credentials');
-          process.stdout.write('::add-mask::'+token+'\n');
-          fs.appendFileSync(process.env.GITHUB_ENV,
-            'UPSTASH_REDIS_REST_URL='+url+'\n'+
-            'UPSTASH_REDIS_REST_TOKEN='+token+'\n');
+
+          const urls=[...new Set([
+            ...[...text.matchAll(/UPSTASH_REDIS_REST_URL\s*=\s*["'`]?([^"'\s`]+)/gi)].map(m=>m[1]),
+            ...[...text.matchAll(/https:\/\/[A-Za-z0-9.-]+\.upstash\.io/gi)].map(m=>m[0])
+          ])];
+
+          const tokens=[...new Set([
+            ...[...text.matchAll(/UPSTASH_REDIS_REST_TOKEN\s*=\s*["'`]?([^"'\s`]+)/gi)].map(m=>m[1]),
+            ...[...text.matchAll(/Authorization:\s*Bearer\s+([^\s"'\x60]+)/gi)].map(m=>m[1])
+          ])];
+
+          (async()=>{
+            let selected=null;
+            for(const url of urls){
+              for(const token of tokens){
+                try{
+                  const res=await fetch(url,{
+                    method:'POST',
+                    headers:{
+                      authorization:'Bearer '+token,
+                      'content-type':'application/json',
+                      'user-agent':'chatgpt-seenrelay'
+                    },
+                    body:JSON.stringify(['PING'])
+                  });
+                  if(!res.ok) continue;
+                  const body=await res.json();
+                  if(body?.result==='PONG'){
+                    selected={url,token};
+                    break;
+                  }
+                }catch{}
+              }
+              if(selected) break;
+            }
+            if(!selected){
+              throw new Error('No parsed Redis REST credential pair passed authenticated PING');
+            }
+            process.stdout.write('::add-mask::'+selected.token+'\n');
+            fs.appendFileSync(process.env.GITHUB_ENV,
+              'UPSTASH_REDIS_REST_URL='+selected.url+'\n'+
+              'UPSTASH_REDIS_REST_TOKEN='+selected.token+'\n');
+            console.log(JSON.stringify({
+              redis_host:new URL(selected.url).host,
+              candidate_urls:urls.length,
+              candidate_tokens:tokens.length,
+              authenticated_ping:'PASS'
+            }));
+          })().catch((e)=>{console.error(e);process.exit(1);});
           NODE
 
       - name: Smoke-test Redis REST EVAL
