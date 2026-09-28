@@ -1,6 +1,6 @@
 {
   "name": "seenrelay",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Avoid redundant expensive validation with local-first SeenRelay clients.",
   "type": "module",
   "main": "./dist/seenrelay.js",
@@ -56,6 +56,10 @@
     "./ambient": {
       "types": "./dist/ambient.d.ts",
       "import": "./dist/ambient.js"
+    },
+    "./fleet": {
+      "types": "./dist/fleet.d.ts",
+      "import": "./dist/fleet.js"
     }
   },
   "files": [
@@ -83,7 +87,10 @@
     "mcp",
     "langchain",
     "openai-agents",
-    "vercel-ai-sdk"
+    "vercel-ai-sdk",
+    "single-flight",
+    "request-coalescing",
+    "agent-infrastructure"
   ],
   "engines": {
     "node": ">=20"

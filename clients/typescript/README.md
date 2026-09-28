@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Client 0.2.10 includes the multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit alongside the Ambient framework integrations, local integration catalog, Firecrawl shadow helpers, and existing local-first surfaces. It also hardens Zero-State freshness so a negative-age entry caused by clock skew cannot authorize local/private reuse or retained-validator use. Otherwise the JavaScript / TypeScript behavior is unchanged; the new Zero-State implementation in this release is Python-side. Shared evidence never authorizes reuse by itself.
+Client 0.2.17 adds an opt-in fleet-level exact in-flight coordination surface for JavaScript / TypeScript. Separate workers can share one authoritative execution for an explicitly read-only, exact-single-answer operation through a caller-owned coordination store. Results can be sealed with the existing AES-256-GCM private codec. Provider-native zero-cost exact caches take precedence, unsafe/underspecified calls pass through, and coordination failures fail open to the original call. Python remains behaviorally unchanged in 0.2.17. Shared evidence never authorizes reuse by itself.
 
 ## Local zero-code prescreen
 
@@ -147,6 +147,51 @@ Zero-State is useful without a populated public network:
 - OBSERVE is never required to return the application's validated result.
 
 The default completed-result freshness window is `0`. SeenRelay does not invent a TTL for an arbitrary tool call.
+
+## Fleet-level exact in-flight coordination
+
+For expensive work repeated at the same time across separate workers, `seenrelay/fleet` can coordinate one authoritative execution without turning the result into a sequential cache.
+
+```js
+import {
+  SeenRelayFleetCoordinator,
+  createRedisRestFleetStore,
+  fleetCodecFromPrivateCodec
+} from 'seenrelay/fleet';
+import { createAesGcmPrivateCodec } from 'seenrelay/zero-state';
+
+const fleet = new SeenRelayFleetCoordinator({
+  store: createRedisRestFleetStore({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN
+  }),
+  codec: fleetCodecFromPrivateCodec(
+    createAesGcmPrivateCodec(Buffer.from(process.env.SEENRELAY_FLEET_KEY, 'base64'))
+  ),
+  scopeKey: process.env.SEENRELAY_FLEET_SCOPE
+});
+
+const result = await fleet.run({
+  coordinate: {
+    provider: 'openai',
+    operation: 'responses.create',
+    model: 'gpt-5.6-sol',
+    input
+  },
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  },
+  execute: () => expensiveReadOnlyCall()
+});
+```
+
+Every result-affecting qualifier belongs in the coordinate. Different fleet scopes never coordinate. Mutations, independent sampling, underspecified policies, store failures, follower timeouts and codec failures preserve the application's authoritative path.
+
+If the provider already supplies a zero-cost exact response cache, declare that native control and SeenRelay steps aside.
+
+This surface is deliberately narrower than semantic caching: it coordinates only an exact compatible operation that is already in flight.
 
 ## Bind once around MCP tool calls
 
