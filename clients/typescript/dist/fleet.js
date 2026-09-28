@@ -205,6 +205,15 @@ export function createRedisRestFleetStore(options = {}) {
         if (parsed && parsed.expiresAtMs > now()) return { status: 'pending', expiresAtMs: parsed.expiresAtMs };
       }
       const parsed = tokenParts(current);
+      if (parsed?.generation === generation && parsed.state === 'C') {
+        // A publish may complete atomically between our first GET(result) and GET(lock).
+        // Re-read the result before treating the generation as missing.
+        const completedResult = await command(['GET', result]);
+        if (completedResult !== null && completedResult !== undefined) {
+          return { status: 'completed', sealedResult: completedResult };
+        }
+        return { status: 'missing' };
+      }
       if (parsed?.generation === generation && parsed.state === 'F') return { status: 'failed' };
       return { status: 'missing' };
     },
