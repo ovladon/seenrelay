@@ -20,6 +20,20 @@ The scanner reads supported text/source files locally, does not contact SeenRela
 
 Its states are deliberately pre-evidentiary: `CANDIDATE_FOR_SHADOW_MEASUREMENT`, `NATIVE_CONTROL_FIRST`, `NEEDS_RUNTIME_EVIDENCE`, or `NO_ELIGIBLE_CANDIDATE_FOUND`. Static analysis can never return a SeenRelay `USE` verdict or authorize reuse. A real `USE / DO NOT USE / INSUFFICIENT EVIDENCE` decision still requires natural-workload shadow measurement and comparison against the best measured non-shared path.
 
+## Local fleet trace census
+
+If you already have caller-owned call traces, rank exact in-flight overlap before changing the workload:
+
+```bash
+npx seenrelay trace-census fleet-trace.jsonl
+npx seenrelay trace-census fleet-trace.jsonl --json
+```
+
+The trace census is local-only and accepts sanitized events with opaque SHA-256 exact-coordinate hashes, start/end timestamps, worker identity, explicit shareability policy and optional caller-provenanced marginal cost. It rejects common raw prompt/argument/URL/result fields rather than retaining them.
+
+The report separates observed overlap from successful-leader opportunities and leaves `actual_avoided_executions` / `actual_net_savings_usd` null. It is a way to find natural workloads worth instrumenting, not a shortcut around shadow evidence or native-control comparison. See `docs/FLEET_TRACE_CENSUS.md` and `docs/FLEET_OVERLAP_GATE.md`.
+
+
 ## Shared CHECK assurance
 
 `seenrelay/assurance` turns additive CHECK evidence into an explicit caller-side policy decision. The multi-signal preset requires at least two observer keys, two cryptographic continuity keys, and two reuse-independence buckets, plus matching value fingerprints and acceptable freshness.

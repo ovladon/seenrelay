@@ -23,6 +23,9 @@ Mutations and consequential external actions are not fleet-overlap savings candi
 
 Static repository inspection and issue reports can nominate candidates but cannot establish savings.
 
+
+When a workload already has caller-owned traces, [FLEET_TRACE_CENSUS.md](./FLEET_TRACE_CENSUS.md) may be used as an earlier local ranking step. Trace-census overlap is still pre-activation opportunity evidence: it cannot establish result compatibility, actual avoided executions or net savings.
+
 Before a natural workload is promoted to active fleet coordination, retain at least 100 eligible call starts from the frozen workload distribution. This is a screening floor, not a statistical-confidence claim. Commissioning, synthetic collision injection and tuning runs do not count toward the floor.
 
 The shadow report must retain, at minimum:
