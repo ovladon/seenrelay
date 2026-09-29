@@ -143,6 +143,7 @@ jobs:
           from seenrelay_assurance import assess_shared_check_evidence, multi_signal_retained_reuse_policy
           from seenrelay_coordinates import json_pointer_fact, element_id_fact, source_key_fact, mcp_tool_coordinate, openapi_operation_coordinate
           from seenrelay_zero_state import SeenRelayZeroState, fresh_result, sha256_json_fingerprint
+          from seenrelay_fleet import InMemoryFleetShadowStore, SeenRelayFleetShadowMeter, wrap_fleet_shadow_call
           client = SeenRelayClient(transport=lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError('not called during import test')))
           proof = SeenRelayShadowProof(client)
           edge = SeenRelayZeroState()
@@ -151,6 +152,7 @@ jobs:
           assert callable(json_pointer_fact) and callable(element_id_fact) and callable(source_key_fact)
           assert callable(mcp_tool_coordinate) and callable(openapi_operation_coordinate)
           assert callable(edge.guard) and callable(fresh_result)
+          assert callable(InMemoryFleetShadowStore) and callable(SeenRelayFleetShadowMeter) and callable(wrap_fleet_shadow_call)
           assert sha256_json_fingerprint({"id": 1}).startswith("sha256:")
           PY
       - name: Verify optional crypto extra from wheel metadata
