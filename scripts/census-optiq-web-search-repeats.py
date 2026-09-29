@@ -62,6 +62,11 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("dataset_dir", type=Path)
     parser.add_argument("--out", type=Path, default=Path("optiq-web-search-repeat-census.json"))
+    parser.add_argument(
+        "--dataset-revision",
+        default="05f81b5bfb8244c2886d25dadd3815560d705ca2",
+        help="Exact Hugging Face dataset revision analyzed.",
+    )
     args = parser.parse_args()
 
     sessions_total = 0
@@ -230,7 +235,7 @@ def main() -> int:
         "evidence_class": "external_public_trace_characterization",
         "dataset": {
             "name": "mlx-community/optiq-lab-traces",
-            "pinned_revision": "05f81b5bfb8244c2886d25dadd3815560d705ca2",
+            "pinned_revision": args.dataset_revision,
             "license": "CC BY 4.0",
             "known_provider_control": "OptiQ Lab web_search uses DuckDuckGo without an API key.",
             "natural_customer_roi": False,
