@@ -68,6 +68,6 @@ export function commercialPage(origin: string): string {
   <div class="rv-actions rv-actions-spaced"><a class="rv-button primary" href="${issueUrl}">Open pilot inquiry</a><a class="rv-button" href="/economics">Review economics method</a><a class="rv-button" href="/trust">Review trust posture</a></div>
 </section>
 </main>
-${siteFooterHtml(origin)}
+${siteFooterHtml()}
 </body></html>`;
 }
