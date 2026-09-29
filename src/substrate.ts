@@ -98,7 +98,7 @@ export function substratePage(origin: string): string {
   </div>
 </section>
 </main>
-${siteFooterHtml(origin)}
+${siteFooterHtml()}
 <script src="/revamp.js" defer></script>
 </body></html>`;
 }
