@@ -187,31 +187,27 @@ print(classify_hostile_benchmark_verdict(report))</pre></div>
 </section>
 
 <section class="rv-shell rv-section" id="fleet">
-  <div class="rv-section-head"><div class="rv-eyebrow">FLEET PATH · JAVASCRIPT / TYPESCRIPT</div><h2>Coordinate exact simultaneous work before considering temporal reuse.</h2><p>Client ${esc(clientVersion)} exposes <code>seenrelay/fleet</code> for caller-scoped in-flight coordination across workers. It does not create a sequential cache: a later call runs normally unless another policy separately authorizes completed-result reuse.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">FLEET PATH · JAVASCRIPT / TYPESCRIPT</div><h2>Measure distributed overlap first. Coordinate only if the data justifies it.</h2><p>Client ${esc(clientVersion)} exposes both shadow measurement and active exact in-flight coordination under <code>seenrelay/fleet</code>. Shadow mode keeps every authoritative operation enabled and shares no result.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice">
-      <header><b>Exact in-flight fleet coordination</b><span>ONE AUTHORITATIVE EXECUTION</span></header>
+      <header><b>1. Shadow overlap meter</b><span>NO SUPPRESSION</span></header>
       <div class="rv-code"><pre>import {
-  SeenRelayFleetCoordinator,
-  createRedisRestFleetStore,
-  fleetCodecFromPrivateCodec,
-  createFleetSavingsLedger
+  SeenRelayFleetShadowMeter,
+  createRedisRestFleetStore
 } from 'seenrelay/fleet';
-import { createAesGcmPrivateCodec } from 'seenrelay/zero-state';
 
-const savings = createFleetSavingsLedger();
-const fleet = new SeenRelayFleetCoordinator({
-  store: createRedisRestFleetStore({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN
-  }),
-  codec: fleetCodecFromPrivateCodec(
-    createAesGcmPrivateCodec(keyBytes)
-  ),
+const store = createRedisRestFleetStore({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  prefix: 'seenrelay:fleet:shadow:v0'
+});
+
+const meter = new SeenRelayFleetShadowMeter({
+  store,
   scopeKey: process.env.SEENRELAY_FLEET_SCOPE
 });
 
-await fleet.run({
+await meter.measure({
   coordinate,
   policy: {
     sideEffectClass: 'read_only',
@@ -222,16 +218,42 @@ await fleet.run({
   cost: {
     marginalCostUsd: 0.48,
     provenance: 'provider_list_price'
+  }
+});
+
+console.log(meter.getReport());</pre></div>
+      <p>Every call still runs. <code>callsWithIdenticalInflightPredecessor</code> measures exact eligible collisions; <code>overlappedFollowerObservedCostUsd</code> is observed shadow cost, not avoided savings.</p>
+    </article>
+    <article class="rv-choice">
+      <header><b>2. Active coordination</b><span>ONLY AFTER FIT</span></header>
+      <div class="rv-code"><pre>import {
+  SeenRelayFleetCoordinator,
+  fleetCodecFromPrivateCodec,
+  createFleetSavingsLedger
+} from 'seenrelay/fleet';
+import { createAesGcmPrivateCodec } from 'seenrelay/zero-state';
+
+const savings = createFleetSavingsLedger();
+const fleet = new SeenRelayFleetCoordinator({
+  store,
+  codec: fleetCodecFromPrivateCodec(
+    createAesGcmPrivateCodec(keyBytes)
+  ),
+  scopeKey: process.env.SEENRELAY_FLEET_SCOPE
+});
+
+await fleet.run({
+  coordinate,
+  policy,
+  execute: expensiveCall,
+  cost: {
+    marginalCostUsd: 0.48,
+    provenance: 'provider_list_price'
   },
   onReceipt: savings.record
 });</pre></div>
-      <p>Only actual follower reuse counts as an avoided execution. Unknown cost stays unknown. Mutations, independent sampling and mismatched coordinates pass through.</p>
-    </article>
-    <article class="rv-choice">
-      <header><b>Completed-result reuse is separate</b><span>EXPLICIT FRESHNESS</span></header>
-      <p>Use <code>SeenRelayZeroState</code> private L1 only when the caller has an explicit freshness policy for a completed result. Keep <code>privateMaxAgeMs = 0</code> when completed results must not suppress live validation.</p>
-      <p>If a provider already offers an equivalent zero-cost exact response cache, declare the native control and let it win.</p>
-      <a href="/fleet">Full fleet coordination, receipts and boundaries →</a>
+      <p>Only actual follower reuse counts as an avoided execution. Unknown cost stays unknown. Mutations, independent sampling and a declared zero-cost exact provider cache remain outside coordination.</p>
+      <a href="/fleet">Full measurement, coordination, receipts and boundaries →</a>
     </article>
   </div>
 </section>

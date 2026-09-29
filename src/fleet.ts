@@ -43,9 +43,9 @@ export function fleetPage(origin: string): string {
 
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">FLEET COORDINATION · CLIENT ${version}</div>
-  <h1>Stop paying twice for the same expensive work that is already in flight.</h1>
-  <p>For an explicitly shareable read-only operation, SeenRelay can coordinate exact simultaneous calls across separate workers so one authoritative execution satisfies the followers. It does not turn the result into a sequential cache, and every failure path falls back to the original operation.</p>
-  <div class="rv-actions"><a class="rv-button primary" href="#coordinate">Coordinate one call</a><a class="rv-button" href="#measure">Measure savings</a><a class="rv-button quiet" href="/data-practices">Data practices →</a></div>
+  <h1>Measure duplicate expensive work before you suppress a single call.</h1>
+  <p>Client ${version} can first measure exact in-flight overlap across separate workers while every authoritative operation still runs. If that shadow evidence shows material compatible overlap, the same caller-owned store can then coordinate one execution for simultaneous followers.</p>
+  <div class="rv-actions"><a class="rv-button primary" href="#shadow">Measure overlap first</a><a class="rv-button" href="#coordinate">Enable coordination only if justified</a><a class="rv-button quiet" href="/data-practices">Data practices →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="fit">
@@ -54,6 +54,56 @@ export function fleetPage(origin: string): string {
     <article class="rv-card"><span class="rv-number">01</span><h3>Hosted tools and containers</h3><p>Read-only code execution, sandboxes, browser sessions or other separately billed resources where duplicate top-level calls allocate duplicate infrastructure.</p></article>
     <article class="rv-card"><span class="rv-number">02</span><h3>Expensive deterministic work</h3><p>Extraction, parsing, model-assisted validation or other exact work where all callers explicitly accept the same result.</p></article>
     <article class="rv-card"><span class="rv-number">03</span><h3>Parallel agent fleets</h3><p>Workers, queues or services that can encounter the same exact coordinate concurrently but should not independently repay for it.</p></article>
+  </div>
+</section>
+
+<section class="rv-shell rv-section" id="shadow">
+  <div class="rv-section-head"><div class="rv-eyebrow">SHADOW OVERLAP · NO SUPPRESSION</div><h2>Find out whether the same expensive call actually collides across workers.</h2><p><code>SeenRelayFleetShadowMeter</code> uses caller-owned coordination metadata only. Every call still executes authoritatively, no result is shared, and no hosted CHECK or OBSERVE is sent.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice">
+      <header><b>Distributed shadow meter</b><span>MEASURE FIRST</span></header>
+      <div class="rv-code"><pre>import {
+  SeenRelayFleetShadowMeter,
+  createRedisRestFleetStore
+} from 'seenrelay/fleet';
+
+const meter = new SeenRelayFleetShadowMeter({
+  store: createRedisRestFleetStore({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    prefix: 'seenrelay:fleet:shadow:v0'
+  }),
+  scopeKey: process.env.SEENRELAY_FLEET_SCOPE
+});
+
+const result = await meter.measure({
+  coordinate: {
+    provider: 'openai',
+    operation: 'responses.create',
+    model,
+    input
+  },
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  },
+  execute: () => expensiveCall(),
+  cost: {
+    marginalCostUsd: 0.48,
+    provenance: 'provider_list_price'
+  }
+});
+
+console.log(meter.getReport());</pre></div>
+      <p><code>callsWithIdenticalInflightPredecessor</code> counts eligible calls that started while the same exact coordinate was already running. <code>overlappedFollowerObservedCostUsd</code> is cost actually incurred during shadow measurement — not a savings claim.</p>
+    </article>
+    <article class="rv-choice">
+      <header><b>What the shadow result decides</b><span>NO AUTO-ACTIVATION</span></header>
+      <p>If exact compatible overlap is rare, the call is cheap, or a zero-cost provider-native exact cache already dominates, leave coordination off.</p>
+      <p>If overlap is frequent and materially expensive, move that one reviewed operation to active fleet coordination and measure actual avoided executions with savings receipts.</p>
+      <p>Mutations and independent sampling are excluded from overlap candidacy. Store or cost-metadata failures cannot change the application result.</p>
+    </article>
   </div>
 </section>
 
@@ -187,7 +237,7 @@ const edge = new SeenRelayZeroState({
   </div>
 </section>
 
-<section class="rv-shell rv-final"><div><div class="rv-eyebrow">NEXT STEP</div><h2>Measure one simultaneous expensive operation today.</h2><p>Install client ${version}, keep the original provider/gateway, attach <code>seenrelay/fleet</code> to one exact-shareable read-only call, and inspect the local savings ledger before expanding scope.</p></div><div class="rv-actions"><a class="rv-button primary" href="/quickstart#fleet">Quickstart</a><a class="rv-button" href="/clients">Integration chooser</a></div></section>
+<section class="rv-shell rv-final"><div><div class="rv-eyebrow">NEXT STEP</div><h2>Measure one simultaneous expensive operation today.</h2><p>Install client ${version}, keep every authoritative call enabled, attach <code>SeenRelayFleetShadowMeter</code> to one exact-shareable read-only operation, and enable coordination only if the measured overlap is worth removing.</p></div><div class="rv-actions"><a class="rv-button primary" href="/quickstart#fleet">Quickstart</a><a class="rv-button" href="/clients">Integration chooser</a></div></section>
 
 </main>
 ${siteFooterHtml()}
