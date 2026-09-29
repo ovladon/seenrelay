@@ -150,7 +150,50 @@ The default completed-result freshness window is `0`. SeenRelay does not invent 
 
 ## Fleet-level exact in-flight coordination
 
-For expensive work repeated at the same time across separate workers, `seenrelay/fleet` can coordinate one authoritative execution without turning the result into a sequential cache.
+Before enabling coordination, the same `seenrelay/fleet` surface can measure distributed exact in-flight overlap in shadow mode. The shadow meter uses caller-owned coordination metadata only: every authoritative operation still runs, no result is shared, and no CHECK or OBSERVE is sent.
+
+```js
+import {
+  SeenRelayFleetShadowMeter,
+  createRedisRestFleetStore
+} from 'seenrelay/fleet';
+
+const store = createRedisRestFleetStore({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  prefix: 'seenrelay:fleet:shadow:v0'
+});
+
+const meter = new SeenRelayFleetShadowMeter({
+  store,
+  scopeKey: process.env.SEENRELAY_FLEET_SCOPE
+});
+
+const result = await meter.measure({
+  coordinate: {
+    provider: 'openai',
+    operation: 'responses.create',
+    model,
+    input
+  },
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  },
+  execute: () => expensiveReadOnlyCall(),
+  cost: {
+    marginalCostUsd: 0.48,
+    provenance: 'provider_list_price'
+  }
+});
+
+console.log(meter.getReport());
+```
+
+`callsWithIdenticalInflightPredecessor` counts eligible calls that started while the same exact shadow coordinate already had an active leader lease. `overlappedFollowerObservedCostUsd` is cost that was actually incurred during shadow execution; it is **not** labeled as avoided savings. Mutations, independent sampling and a declared zero-cost provider-native exact response cache are excluded from overlap candidacy. Store failure leaves the authoritative operation untouched and marks that eligible call unclassified.
+
+For expensive work repeated at the same time across separate workers, `seenrelay/fleet` can then coordinate one authoritative execution without turning the result into a sequential cache.
 
 ```js
 import {
