@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-09-29T15:35:00Z",
+  "updated_at": "2026-09-29T15:36:08Z",
   "positioning": {
     "category": "execution reuse and validation cost avoidance for distributed software and AI agents",
     "headline": "Avoid redundant expensive execution",
@@ -16,7 +16,7 @@
     "pypi_command": "pip install seenrelay",
     "client_version": "0.2.23",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-09-29T15:35:00Z",
+    "registry_install_verified_at": "2026-09-29T15:36:08Z",
     "verification": "Client 0.2.23 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only scan CLI, OTLP trace-census CLI and Langfuse opportunity-census CLI, validates package entry targets, and repacks the installed package. Langfuse recurrence remains candidate evidence only: policy review, native-control comparison and shadow measurement are required before active reuse.",
     "scan_command": "npx seenrelay scan",
     "scan_mode": "local_static_prescreen",
