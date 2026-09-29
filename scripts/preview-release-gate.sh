@@ -84,8 +84,8 @@ grep -q 'WHAT IS ALREADY PROVEN' /tmp/site.html
 grep -q '15 CREDITS' /tmp/site.html
 grep -q '9 CREDITS' /tmp/site.html
 grep -qi 'Firecrawl' /tmp/site.html
-grep -q 'No independent customer ROI claim yet' /tmp/site.html
-grep -q 'designed to lose when something simpler is better' /tmp/site.html
+grep -q 'Customer ROI is measured, not assumed' /tmp/site.html
+grep -q 'SeenRelay is recommended only where it is the cheapest safe option' /tmp/site.html
 ! grep -qi 'guaranteed savings' /tmp/site.html
 grep -q 'OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START' /tmp/site.html
 grep -q 'id="live-check-form"' /tmp/site.html

@@ -46,7 +46,7 @@ test('homepage makes the free savings audit the primary activation path', () => 
 test('primary public surfaces describe fleet value without universal savings claims', () => {
   assert.match(landing, /Agent fleets/);
   assert.match(landing, /caller-owned private reuse/i);
-  assert.match(landing, /your workload must prove or reject the economics/i);
+  assert.match(landing, /Customer ROI is measured, not assumed/i);
   assert.match(quickstart, /FLEET PATH/);
   assert.match(quickstart, /seenrelay\/fleet/);
   assert.match(quickstart, /SeenRelayFleetShadowMeter/);

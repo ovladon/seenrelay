@@ -43,8 +43,8 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.match(landing, /controlled first-party smoke tests/i);
   assert.match(landing, /15 CREDITS/);
   assert.match(landing, /9 CREDITS/);
-  assert.match(landing, /No independent customer ROI claim yet/i);
-  assert.match(landing, /designed to lose when something simpler is better/i);
+  assert.match(landing, /Customer ROI is measured, not assumed/i);
+  assert.match(landing, /recommended only where it is the cheapest safe option/i);
   assert.doesNotMatch(landing, /guaranteed savings|always cheaper/i);
 
   assert.match(publicView, /Provider-path smoke: SeenRelay skipped Firecrawl work/);

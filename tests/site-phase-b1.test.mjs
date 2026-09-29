@@ -28,7 +28,7 @@ test('homepage follows the customer journey from value to proof to audit to safe
   assert.match(landing, /Run the free savings audit/i);
   assert.match(landing, /START HERE/i);
   assert.match(landing, /Evidence trial only/i);
-  assert.match(landing, /your workload must prove or reject the economics/i);
+  assert.match(landing, /Customer ROI is measured, not assumed/i);
 });
 
 test('homepage derives package facts and exposes bounded mechanism proof without universal ROI claims', () => {
@@ -40,8 +40,8 @@ test('homepage derives package facts and exposes bounded mechanism proof without
   assert.match(landing, /15 CREDITS/);
   assert.match(landing, /9 CREDITS/);
   assert.match(landing, /controlled first-party smoke tests/i);
-  assert.match(landing, /No independent customer ROI claim yet/i);
-  assert.match(landing, /designed to lose when something simpler is better/i);
+  assert.match(landing, /Customer ROI is measured, not assumed/i);
+  assert.match(landing, /recommended only where it is the cheapest safe option/i);
   assert.doesNotMatch(landing, /guaranteed savings|universal savings percentage/i);
   assert.doesNotMatch(landing, /client\s+0\.2\.\d+/i);
 });
@@ -102,13 +102,13 @@ test('service descriptor continues to derive the public client release', () => {
 });
 
 test('preview gate enforces the self-service audit and bounded mechanism proof', () => {
-  for (const marker of ['Find out if your agents are wasting money on repeated checks.', 'Run the free savings audit', 'START HERE', 'WHAT IS ALREADY PROVEN', 'No independent customer ROI claim yet', 'OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START', 'Evidence trial only.', 'SeenRelay does not replace your source of truth.']) {
+  for (const marker of ['Find out if your agents are wasting money on repeated checks.', 'Run the free savings audit', 'START HERE', 'WHAT IS ALREADY PROVEN', 'Customer ROI is measured, not assumed', 'OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START', 'Evidence trial only.', 'SeenRelay does not replace your source of truth.']) {
     assert.ok(previewGate.includes(marker), `preview gate must require: ${marker}`);
   }
   assert.match(previewGate, /grep -q '15 CREDITS' \/tmp\/site\.html/);
   assert.match(previewGate, /grep -q '9 CREDITS' \/tmp\/site\.html/);
   assert.match(previewGate, /grep -qi 'Firecrawl' \/tmp\/site\.html/);
-  assert.match(previewGate, /grep -q 'No independent customer ROI claim yet' \/tmp\/site\.html/);
+  assert.match(previewGate, /grep -q 'Customer ROI is measured, not assumed' \/tmp\/site\.html/);
   assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/economics\.html/);
   assert.match(previewGate, /product-facts\.json/);
 });
