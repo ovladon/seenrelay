@@ -24,7 +24,7 @@ export function clientsPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Supported SeenRelay integration surfaces for coding agents, MCP, JavaScript/TypeScript, Python and framework adapters.">
+<meta name="description" content="SeenRelay integration surfaces for agents, MCP, JavaScript/TypeScript, Python, OpenTelemetry and generic execution boundaries.">
 <link rel="canonical" href="${origin}/clients">
 <meta name="theme-color" content="#080a0e">
 <meta name="color-scheme" content="dark">
@@ -37,7 +37,7 @@ export function clientsPage(origin: string): string {
 <a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/quickstart">Quickstart</a><a href="/economics">Tests</a><a href="/trust">Trust</a><a href="/openapi.json">OpenAPI</a></nav>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/substrate">Platform</a><a href="/quickstart">Quickstart</a><a href="/economics">Evidence</a><a href="/commercial">Commercial</a><a href="/trust">Trust</a></nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
     <nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/quickstart">Quickstart</a><a href="/economics">Evidence</a><a href="/trust">Trust</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>
@@ -47,8 +47,8 @@ export function clientsPage(origin: string): string {
 <main id="main-content">
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">SUPPORTED INTEGRATIONS · CLIENT ${version}</div>
-  <h1>Put SeenRelay around the validation path you already have.</h1>
-  <p>The lowest-friction first step is behavior-preserving measurement: install the package, wrap the existing client once, run the workload normally, then read the local report. Connecting the hosted MCP protocol is separate and does not by itself enable reuse.</p>
+  <h1>Put SeenRelay around the execution path you already have.</h1>
+  <p>The lowest-friction first step is behavior-preserving measurement: wrap an existing tool/runtime boundary or analyze traces you already collect, run the workload normally, then read the local report. Connecting the hosted MCP protocol is separate and does not by itself enable reuse.</p>
   <div class="rv-actions"><a class="rv-button primary" href="#instrument">Instrument an application</a><a class="rv-button" href="#connect">Connect CHECK + OBSERVE</a></div>
 </section>
 
@@ -79,6 +79,15 @@ const server = ambientOpenAIAgentsMcpServer(rawMcpServer);
 // Vercel AI SDK
 const { tools, seenRelayAmbient } =
   ambientAiSdkMcpTools(await mcpClient.tools());</pre></div><a href="/quickstart">Integration quickstart →</a></article>
+
+    <article class="rv-choice"><header><b>OpenTelemetry / OTLP</b><span>Agent-agnostic census</span></header><p>Analyze explicitly annotated OTLP spans locally without integrating SeenRelay into a specific agent framework.</p><div class="rv-code"><pre>npx seenrelay otel-trace-census traces.otlp.json --json</pre></div><p>Only opaque exact coordinates and explicit SeenRelay policy/economics attributes enter the census. Raw prompts, URLs and payloads are not copied into the report.</p><a href="/substrate#otel">OTLP substrate guide →</a></article>
+
+    <article class="rv-choice"><header><b>Generic execution</b><span>Functions / dispatchers</span></header><p>For reviewed deterministic read-only work, the provider-independent wrappers can sit below an agent, service, CI worker or scheduled process.</p><div class="rv-code"><pre>const result = await edge.guard({
+  coordinate,
+  validate: expensiveReadOnlyWork
+});</pre></div><p>Exact coordinate design and policy remain caller-owned; no tool name or HTTP method is automatically considered safe.</p><a href="/substrate">Execution substrate →</a></article>
+
+    <article class="rv-choice"><header><b>IoT / edge</b><span>Measurement path today</span></header><p>Use generic wrappers or OTLP traces around residual read-only state/metadata validation. Device shadows, subscriptions, retained state and protocol-native mechanisms remain stronger controls when they answer the same question.</p><p>No generic actuation suppression is advertised. Control commands and fresh physical-world sensing stay outside automatic coordination.</p><a href="/substrate#iot">IoT boundary →</a></article>
 
     <article class="rv-choice"><header><b>LangChain / PydanticAI</b><span>Framework adapters</span></header><p>Client ${version} ships local-shadow integration helpers without adding a hosted operation or authorizing reuse.</p><div class="rv-code"><pre>// LangChain JS
 ambientLangChainMcpHooks()
