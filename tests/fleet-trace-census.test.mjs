@@ -107,8 +107,25 @@ test('failed leader overlap is observed but not promoted to potential follower r
 
 test('cost coverage is explicit and unknown dollars are never invented', () => {
   const report = analyzeFleetTrace([
-    call({ call_id: 'a', started_at_ms: 0, ended_at_ms: 100, marginal_cost_usd: undefined, cost_provenance: undefined }),
-    call({ call_id: 'b', worker_id: 'w2', started_at_ms: 10, ended_at_ms: 90, marginal_cost_usd: undefined, cost_provenance: undefined })
+    call({
+      call_id: 'a',
+      started_at_ms: 0,
+      ended_at_ms: 100,
+      marginal_cost_usd: undefined,
+      provider_units: undefined,
+      provider_unit_label: undefined,
+      cost_provenance: undefined
+    }),
+    call({
+      call_id: 'b',
+      worker_id: 'w2',
+      started_at_ms: 10,
+      ended_at_ms: 90,
+      marginal_cost_usd: undefined,
+      provider_units: undefined,
+      provider_unit_label: undefined,
+      cost_provenance: undefined
+    })
   ]);
   assert.equal(report.eligible_costed_events, 0);
   assert.equal(report.cost_coverage_fraction, 0);
