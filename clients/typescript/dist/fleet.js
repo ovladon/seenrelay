@@ -210,6 +210,7 @@ export class SeenRelayFleetShadowMeter {
       successfulExecutions: 0,
       failedExecutions: 0,
       storeFailures: 0,
+      coordinateFailures: 0,
       leaseReleaseMisses: 0,
       costResolutionFailures: 0,
       costedExecutions: 0,
@@ -242,6 +243,7 @@ export class SeenRelayFleetShadowMeter {
       successfulExecutions: this.metrics.successfulExecutions,
       failedExecutions: this.metrics.failedExecutions,
       storeFailures: this.metrics.storeFailures,
+      coordinateFailures: this.metrics.coordinateFailures,
       leaseReleaseMisses: this.metrics.leaseReleaseMisses,
       costResolutionFailures: this.metrics.costResolutionFailures,
       costedExecutions: this.metrics.costedExecutions,
@@ -268,23 +270,30 @@ export class SeenRelayFleetShadowMeter {
       this.metrics.nativeControlDominatedCalls += 1;
     } else {
       this.metrics.eligibleCalls += 1;
-      coordinateKey = sha256JsonFingerprint({ fleetShadowCoordinateV0: options.coordinate });
       try {
-        claim = await this.store.tryClaim({
-          scopeHash: this.scopeHash,
-          coordinateKey,
-          ownerId: this.ownerId,
-          leaseMs: this.leaseMs
-        });
-        if (claim.role === 'leader') {
-          this.metrics.shadowLeaderStarts += 1;
-        } else {
-          overlappedFollower = true;
-          this.metrics.callsWithIdenticalInflightPredecessor += 1;
-        }
+        coordinateKey = sha256JsonFingerprint({ fleetShadowCoordinateV0: options.coordinate });
       } catch {
-        this.metrics.storeFailures += 1;
+        this.metrics.coordinateFailures += 1;
         this.metrics.unclassifiedEligibleCalls += 1;
+      }
+      if (coordinateKey !== null) {
+        try {
+          claim = await this.store.tryClaim({
+            scopeHash: this.scopeHash,
+            coordinateKey,
+            ownerId: this.ownerId,
+            leaseMs: this.leaseMs
+          });
+          if (claim.role === 'leader') {
+            this.metrics.shadowLeaderStarts += 1;
+          } else {
+            overlappedFollower = true;
+            this.metrics.callsWithIdenticalInflightPredecessor += 1;
+          }
+        } catch {
+          this.metrics.storeFailures += 1;
+          this.metrics.unclassifiedEligibleCalls += 1;
+        }
       }
     }
 
@@ -337,6 +346,41 @@ export class SeenRelayFleetShadowMeter {
 
     return value;
   }
+}
+
+export function wrapFleetShadowCall(meter, fn, options = {}) {
+  if (!meter || typeof meter.measure !== 'function') {
+    throw new TypeError('meter must provide measure()');
+  }
+  if (typeof fn !== 'function') throw new TypeError('fn must be a function');
+  if (!options.policy || typeof options.policy !== 'object') {
+    throw new TypeError('options.policy is required');
+  }
+  if (options.coordinateFromArgs !== undefined && typeof options.coordinateFromArgs !== 'function') {
+    throw new TypeError('options.coordinateFromArgs must be a function');
+  }
+
+  return function seenRelayShadowWrappedCall(...args) {
+    let coordinate;
+    if (options.coordinateFromArgs) {
+      try {
+        coordinate = options.coordinateFromArgs(...args);
+      } catch {
+        // A function is intentionally non-JSON-serializable. The meter will
+        // classify this invocation as coordinate-unavailable and still execute it.
+        coordinate = () => {};
+      }
+    } else {
+      coordinate = args;
+    }
+
+    return meter.measure({
+      coordinate,
+      policy: options.policy,
+      execute: () => fn.apply(this, args),
+      ...(options.cost !== undefined ? { cost: options.cost } : {})
+    });
+  };
 }
 
 export function fleetCodecFromPrivateCodec(privateCodec) {
@@ -572,6 +616,7 @@ export class SeenRelayFleetCoordinator {
       followerReuses: 0,
       failOpenExecutions: 0,
       storeFailures: 0,
+      coordinateFailures: 0,
       codecFailures: 0,
       followerTimeouts: 0,
       oversizeResults: 0,
@@ -644,7 +689,24 @@ export class SeenRelayFleetCoordinator {
       return value;
     }
 
-    const coordinateKey = sha256JsonFingerprint({ fleetCoordinateV0: options.coordinate });
+    let coordinateKey;
+    try {
+      coordinateKey = sha256JsonFingerprint({ fleetCoordinateV0: options.coordinate });
+    } catch {
+      this.metrics.coordinateFailures += 1;
+      this.metrics.failOpenExecutions += 1;
+      const value = await options.execute();
+      await this.#receipt({
+        options,
+        path: 'fail_open_coordinate',
+        role: 'fail_open',
+        executedAuthoritative: true,
+        reusedFollower: false,
+        value
+      });
+      return value;
+    }
+
     let claim;
     try {
       claim = await this.store.tryClaim({
