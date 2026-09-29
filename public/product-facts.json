@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-09-29T07:18:56Z",
+  "updated_at": "2026-09-29T12:43:15Z",
   "positioning": {
-    "category": "validation cost avoidance and shared freshness evidence for AI agents",
-    "headline": "Avoid redundant expensive validation",
-    "subheadline": "Client 0.2.20 is published on npm and PyPI. JavaScript / TypeScript now adds a generic `wrapFleetShadowCall()` helper and fail-open coordinate canonicalization for distributed shadow measurement and active fleet coordination: selected calls can use their exact argument list by default, while non-JSON or cyclic coordinates remain unclassified instead of throwing or suppressing the original call. Python remains behaviorally unchanged.",
+    "category": "execution reuse and validation cost avoidance for distributed software and AI agents",
+    "headline": "Avoid redundant expensive execution",
+    "subheadline": "Client 0.2.22 is published on npm and PyPI. JavaScript / TypeScript adds a local OpenTelemetry/OTLP trace census that can measure exact eligible in-flight overlap below individual agent frameworks using opaque caller-supplied coordinates and explicit policy; raw generic prompts, URLs and tool payloads are not copied into the report. Python remains behaviorally unchanged in 0.2.22.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.20",
+    "client_version": "0.2.22",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-09-29T07:18:56Z",
-    "verification": "Client 0.2.20 was published to npm and PyPI through trusted publishing. The public promotion gate independently clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only `seenrelay scan` CLI, validates package entry targets, smoke-tests the distributed fleet shadow meter and generic `wrapFleetShadowCall()` helper, and repacks the installed package, while PyPI verification performs exact-version clean install and representative imports. JavaScript / TypeScript coordinate canonicalization failures are fail-open: the authoritative operation still runs and the call is reported as unclassified rather than forced into a coordinate. Semantic shareability remains explicit. Python behavior is unchanged in 0.2.20.",
+    "registry_install_verified_at": "2026-09-29T12:43:15Z",
+    "verification": "Client 0.2.22 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only scan CLI and OTLP trace-census CLI, validates package entry targets, and repacks the installed package. OTLP census remains observation-only and requires opaque exact coordinates plus explicit policy; it does not authorize reuse.",
     "scan_command": "npx seenrelay scan",
     "scan_mode": "local_static_prescreen",
     "scan_uploads_source": false,
@@ -26,16 +26,16 @@
   },
   "fit": {
     "use_when": [
-      "a repeated read-only validation has a deterministic identity and meaningful cost or latency",
-      "local/private reuse or a source-native validator can avoid work even before shared evidence exists",
-      "the same exact source-backed fact repeats across runs, workers, agents or teams",
-      "validation consumes paid search, metered scraping, browser/extraction, rate-limited API capacity, model work or a multi-step validation chain"
+      "a repeated read-only execution or validation has deterministic identity and meaningful cost, latency or constrained capacity",
+      "local/private reuse or a source-native or protocol-native validator can avoid work even before shared evidence exists",
+      "the same exact source-backed state or execution repeats across runs, workers, agents, services, CI jobs or edge gateways",
+      "validation consumes paid search, metered scraping, browser/extraction, rate-limited API capacity, model work, CI compute or a multi-step validation chain"
     ],
     "do_not_use_when": [
-      "the operation is mutating, destructive or otherwise unsafe to suppress",
-      "the operation is a cheap one-off fetch with little repeat probability",
-      "an equivalent authoritative shared cache already solves the problem",
-      "policy requires a brand-new authoritative source confirmation on every call and no conditional shortcut is useful"
+      "the operation is mutating, destructive, safety-critical or otherwise unsafe to suppress",
+      "the operation is a cheap one-off execution with little repeat probability",
+      "an equivalent authoritative cache, device shadow, subscription, build cache or source-native control already solves the same problem",
+      "policy requires a brand-new authoritative or physical-world observation on every call and no conditional shortcut is useful"
     ]
   },
   "verified_benchmarks": [
@@ -172,6 +172,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-09-29",
+      "title": "Public client 0.2.22",
+      "summary": "SeenRelay 0.2.22 is published through trusted publishing on npm and PyPI. JavaScript / TypeScript packages the local OpenTelemetry/OTLP trace census for agent-agnostic overlap discovery below individual agent frameworks; admission requires an opaque exact coordinate and explicit SeenRelay policy, and the adapter does not copy generic raw prompts, URLs or tool payloads into the census. Python remains behaviorally unchanged."
+    },
     {
       "date": "2026-09-29",
       "title": "Public client 0.2.20",
