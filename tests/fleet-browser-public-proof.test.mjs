@@ -5,14 +5,11 @@ import { readFileSync } from 'node:fs';
 const landing = readFileSync('src/landing.ts', 'utf8');
 const evidence = readFileSync('docs/VERIFIED_FLEET_BROWSER_OVERLAP_2026-09-29.md', 'utf8');
 
-test('homepage exposes bounded cross-worker provider-unit proof without customer ROI claim', () => {
-  assert.match(landing, /18 → 9 CREDITS/);
-  assert.match(landing, /6 Firecrawl browser jobs for 18 credits/);
-  assert.match(landing, /3 jobs for 9 credits/);
-  assert.match(landing, /3 actual follower reuses/);
-  assert.match(landing, /did not show a latency win/i);
-  assert.match(landing, /caller-owned distributed single-flight remains a competing control/i);
-  assert.match(landing, /VERIFIED_FLEET_BROWSER_OVERLAP_2026-09-29\.md/);
+test('homepage exposes a compact bounded provider-unit proof and links to full evidence', () => {
+  assert.match(landing, /18 → 9/);
+  assert.match(landing, /6 browser jobs became 3 jobs \+ 3 follower reuses/i);
+  assert.match(landing, /href="\/fleet#measured-proof"/);
+  assert.match(landing, /Customer ROI is measured, not assumed/i);
 });
 
 test('durable evidence preserves the external-pattern and economics boundaries', () => {
