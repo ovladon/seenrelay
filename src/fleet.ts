@@ -136,7 +136,7 @@ console.log(savings.snapshot());</pre></div>
     </article>
     <article class="rv-choice">
       <header><b>What a receipt does not mean</b><span>CONSERVATIVE</span></header>
-      <p>A receipt is not a billing event, revenue claim or proof that every similar request is shareable. It reports the local coordination path that actually occurred and the caller-provided cost provenance.</p>
+      <p>A receipt is not a billing event, customer-spend claim or proof that every similar request is shareable. It reports the local coordination path that actually occurred and the caller-provided cost provenance.</p>
       <p>Start with one expensive operation. If follower reuse is rare or absolute savings are immaterial, leave the rest of the application unchanged.</p>
       <a href="https://github.com/ovladon/seenrelay/blob/main/docs/FLEET_COORDINATION_PREVIEW.md">Full fleet API and boundaries →</a>
     </article>
