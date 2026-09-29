@@ -77,6 +77,7 @@ jobs:
           import { createFirecrawlShadowPilot } from 'seenrelay/firecrawl-shadow';
           import { createFirecrawlSdkShadowPilot } from 'seenrelay/firecrawl-sdk-shadow';
           import { evaluateHostileBenchmark } from 'seenrelay/economics';
+          import { InMemoryFleetCoordinationStore, SeenRelayFleetShadowMeter } from 'seenrelay/fleet';
 
           const packageJson = JSON.parse(fs.readFileSync('./node_modules/seenrelay/package.json', 'utf8'));
           for (const key of Object.keys(packageJson.exports || {})) {
@@ -110,6 +111,21 @@ jobs:
               }
             }
           );
+          const shadowMeter = new SeenRelayFleetShadowMeter({
+            store: new InMemoryFleetCoordinationStore(),
+            scopeKey: 'clean-install-shadow-scope'
+          });
+          const shadowValue = await shadowMeter.measure({
+            coordinate: { operation: 'clean-install-smoke' },
+            policy: {
+              sideEffectClass: 'read_only',
+              exactSingleAnswerShareable: true,
+              independentSamplesRequired: false
+            },
+            execute: async () => ({ ok: true })
+          });
+          const shadowReport = shadowMeter.getReport();
+
           const economics = evaluateHostileBenchmark({
             schema_version: 2,
             workload_id: 'clean-install-smoke',
@@ -153,6 +169,9 @@ jobs:
             typeof shadowClient.seenRelayFirecrawlShadowPilot?.evaluate !== 'function' ||
             typeof sdkShadowClient.scrape !== 'function' ||
             typeof sdkShadowClient.seenRelayFirecrawlSdkShadowPilot?.evaluate !== 'function' ||
+            shadowValue?.ok !== true ||
+            shadowReport?.authoritativeSuppressionEnabled !== false ||
+            shadowReport?.authoritativeExecutions !== 1 ||
             economics?.decision?.automatic_reuse_enabled_by_evaluator !== false
           ) process.exit(1);
           NODE
