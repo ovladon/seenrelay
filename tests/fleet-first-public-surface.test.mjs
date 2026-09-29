@@ -69,6 +69,8 @@ test('Agent Skill stays byte-for-byte canonical and fleet-first', async () => {
   assert.match(SEENRELAY_SKILL_DESCRIPTION, /agent fleets/i);
   assert.match(SEENRELAY_SKILL_DESCRIPTION, /private reuse before optional shared evidence/i);
   assert.match(skill, /SeenRelayFleetShadowMeter/);
+  assert.match(skill, /seenrelay_fleet/);
+  assert.match(skill, /wrap_fleet_shadow_call/);
   assert.match(skill, /observed overlap cost is incurred measurement rather than avoided savings/i);
   assert.match(skillSource, /operations: CHECK,OBSERVE/);
 });
