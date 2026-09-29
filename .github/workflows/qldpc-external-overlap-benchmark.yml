@@ -1,0 +1,151 @@
+name: qldpc External Overlap Benchmark
+
+on:
+  push:
+    branches:
+      - research/qldpc-external-overlap-benchmark
+    paths:
+      - '.github/workflows/qldpc-external-overlap-benchmark.yml'
+      - 'scripts/qldpc-validate-worker.py'
+      - 'scripts/benchmark-qldpc-verdict-race.mjs'
+      - 'clients/typescript/dist/fleet.js'
+      - 'clients/typescript/dist/zero-state.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qldpc-external-overlap-benchmark
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout SeenRelay
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: seenrelay
+          persist-credentials: false
+
+      - name: Checkout pinned qldpc workload
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: unitaryfoundation/qldpc-challenge
+          ref: 4570f9422c9c9c2782679e1f8015aadf34220655
+          path: qldpc
+          persist-credentials: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Install qldpc core verification dependencies
+        run: python -m pip install --disable-pip-version-check 'numpy>=2.0' 'jsonschema>=4.0' 'stim==1.16.0'
+
+      - name: Verify pinned external commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C qldpc rev-parse HEAD)" = "4570f9422c9c9c2782679e1f8015aadf34220655"
+          git -C qldpc status --short
+
+      - name: Provision temporary Redis REST test store
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST https://upstash.com/start-redis             -H 'User-Agent: chatgpt-seenrelay'             -o /tmp/upstash.md
+          node <<'NODE'
+          const fs=require('node:fs');
+          const text=fs.readFileSync('/tmp/upstash.md','utf8');
+          const urls=[...new Set([
+            ...[...text.matchAll(/UPSTASH_REDIS_REST_URL\s*=\s*["'`]?([^"'\s`]+)/gi)].map(m=>m[1]),
+            ...[...text.matchAll(/https:\/\/[A-Za-z0-9.-]+\.upstash\.io/gi)].map(m=>m[0])
+          ])];
+          const tokens=[...new Set([
+            ...[...text.matchAll(/UPSTASH_REDIS_REST_TOKEN\s*=\s*["'`]?([^"'\s`]+)/gi)].map(m=>m[1]),
+            ...[...text.matchAll(/Authorization:\s*Bearer\s+([^\s"'\x60]+)/gi)].map(m=>m[1])
+          ])];
+          (async()=>{
+            let selected=null;
+            for(const url of urls){
+              for(const token of tokens){
+                try{
+                  const res=await fetch(url,{
+                    method:'POST',
+                    headers:{
+                      authorization:'Bearer '+token,
+                      'content-type':'application/json',
+                      'user-agent':'chatgpt-seenrelay'
+                    },
+                    body:JSON.stringify(['PING'])
+                  });
+                  if(!res.ok) continue;
+                  const body=await res.json();
+                  if(body?.result==='PONG'){ selected={url,token}; break; }
+                }catch{}
+              }
+              if(selected) break;
+            }
+            if(!selected) throw new Error('No parsed Redis REST credential pair passed authenticated PING');
+            process.stdout.write('::add-mask::'+selected.token+'\n');
+            fs.appendFileSync(process.env.GITHUB_ENV,
+              'UPSTASH_REDIS_REST_URL='+selected.url+'\n'+
+              'UPSTASH_REDIS_REST_TOKEN='+selected.token+'\n');
+            console.log(JSON.stringify({
+              redis_host:new URL(selected.url).host,
+              candidate_urls:urls.length,
+              candidate_tokens:tokens.length,
+              authenticated_ping:'PASS'
+            }));
+          })().catch((e)=>{console.error(e);process.exit(1);});
+          NODE
+
+      - name: Smoke-test Redis REST EVAL
+        shell: bash
+        run: |
+          set -euo pipefail
+          RESPONSE="$(curl -fsS -X POST "$UPSTASH_REDIS_REST_URL"             -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN"             -H 'Content-Type: application/json'             -d '["EVAL","return ARGV[1]","0","seenrelay-eval-ok"]')"
+          node -e 'const x=JSON.parse(process.argv[1]); if(x.result!=="seenrelay-eval-ok") process.exit(1)' "$RESPONSE"
+
+      - name: Run external cold-cache overlap reproduction
+        working-directory: seenrelay
+        shell: bash
+        env:
+          QLDPC_ROOT: ${{ github.workspace }}/qldpc
+          PYTHON_BIN: python
+        run: |
+          set -euo pipefail
+          node scripts/benchmark-qldpc-verdict-race.mjs | tee /tmp/qldpc-external-overlap-benchmark.json
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const report=JSON.parse(fs.readFileSync('/tmp/qldpc-external-overlap-benchmark.json','utf8'));
+          if(report.verdict!=='MECHANISM_WIN_ON_COLD_OVERLAP_REPRODUCTION') {
+            throw new Error('benchmark did not establish controlled cold-overlap mechanism win');
+          }
+          if(report.natural_customer_traffic!==false) throw new Error('benchmark must remain non-customer reproduction evidence');
+          if(report.actual_net_savings_usd!==null) throw new Error('benchmark must not invent dollar savings');
+          if(report.baseline_native_cold_race.authoritative_gate_executions!==2) throw new Error('baseline race was not reproduced');
+          if(report.seenrelay_active_coordination.authoritative_gate_executions!==1) throw new Error('active coordination did not reduce execution to one');
+          if(report.seenrelay_active_coordination.actual_avoided_executions!==1) throw new Error('missing actual follower reuse receipt');
+          if(report.best_existing_native_warm_path.reused!==true) throw new Error('native warm-cache control must be measured');
+          console.log(JSON.stringify({acceptance:'PASS', execution_reduction_percent:report.measured_authoritative_execution_reduction_percent}));
+          NODE
+
+      - name: Upload external reproduction evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: qldpc-external-overlap-benchmark
+          path: /tmp/qldpc-external-overlap-benchmark.json
+          if-no-files-found: warn
+          retention-days: 30
