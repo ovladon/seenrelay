@@ -12,9 +12,13 @@ const index = read('src/index.ts');
 const skillSource = read('shared/agent-skill.mjs');
 const skill = read('skills/seenrelay/SKILL.md');
 
-test('fleet page exposes current distributed coordination and keeps temporal reuse separate', () => {
-  assert.match(fleet, /Stop paying twice for the same expensive work that is already in flight/i);
-  assert.match(fleet, /seenrelay\/fleet/);
+test('fleet page exposes shadow-first distributed measurement before active coordination', () => {
+  assert.match(fleet, /Measure duplicate expensive work before you suppress a single call/i);
+  assert.match(fleet, /SeenRelayFleetShadowMeter/);
+  assert.match(fleet, /callsWithIdenticalInflightPredecessor/);
+  assert.match(fleet, /overlappedFollowerObservedCostUsd/);
+  assert.match(fleet, /not a savings claim/i);
+  assert.match(fleet, /every authoritative operation still runs/i);
   assert.match(fleet, /SeenRelayFleetCoordinator/);
   assert.match(fleet, /createRedisRestFleetStore/);
   assert.match(fleet, /createFleetSavingsLedger/);
@@ -45,9 +49,11 @@ test('primary public surfaces describe fleet value without universal savings cla
   assert.match(landing, /Your workload decides/i);
   assert.match(quickstart, /FLEET PATH/);
   assert.match(quickstart, /seenrelay\/fleet/);
+  assert.match(quickstart, /SeenRelayFleetShadowMeter/);
+  assert.match(quickstart, /NO SUPPRESSION/);
   assert.match(quickstart, /SeenRelayFleetCoordinator/);
   assert.match(quickstart, /createFleetSavingsLedger/);
-  assert.match(quickstart, /Completed-result reuse is separate/i);
+  assert.match(quickstart, /Only actual follower reuse counts as an avoided execution/i);
   assert.match(adoption, /provider-independent revalidation decision layer for known external state/i);
   assert.match(adoption, /\/fleet/);
   assert.match(index, /app\.get\('\/fleet'/);
