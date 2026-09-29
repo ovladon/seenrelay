@@ -3,6 +3,7 @@ import process from 'node:process';
 import path from 'node:path';
 import { scanRepository, renderHumanReport } from './scan-lib.mjs';
 import { analyzeFleetTraceFile, renderFleetTraceReport } from './fleet-trace-census-lib.mjs';
+import { analyzeOtelFleetTraceFile } from './otel-trace-census-lib.mjs';
 
 function help() {
   return `SeenRelay CLI
@@ -10,12 +11,14 @@ function help() {
 Usage:
   seenrelay scan [path] [--json]
   seenrelay trace-census <trace.json|trace.jsonl> [--json]
+  seenrelay otel-trace-census <otlp.json> [--json]
 
 Commands:
   scan          Local-only static prescreen for recurring expensive read-only validation candidates.
-  trace-census  Local-only census of exact eligible in-flight overlap from sanitized call traces.
+  trace-census       Local-only census of exact eligible in-flight overlap from sanitized call traces.
+  otel-trace-census  Local-only adapter from OTLP/JSON spans into the same conservative census.
 
-Neither command contacts SeenRelay. Static scan cannot return a USE verdict. Trace census reports pre-activation opportunity, not actual savings.
+None of these commands contacts SeenRelay. Static scan cannot return a USE verdict. Trace census reports pre-activation opportunity, not actual savings.
 `;
 }
 
@@ -39,6 +42,13 @@ if (command === 'scan') {
     process.exit(2);
   }
   const report = await analyzeFleetTraceFile(path.resolve(positional[0]));
+  process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : renderFleetTraceReport(report));
+} else if (command === 'otel-trace-census') {
+  if (!positional[0]) {
+    process.stderr.write(`otel-trace-census requires an OTLP JSON file\n\n${help()}`);
+    process.exit(2);
+  }
+  const report = await analyzeOtelFleetTraceFile(path.resolve(positional[0]));
   process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : renderFleetTraceReport(report));
 } else {
   process.stderr.write(`Unknown command: ${command}\n\n${help()}`);
