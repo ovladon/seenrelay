@@ -22,11 +22,11 @@ test('runtime consumes canonical facts and homepage may surface bounded benchmar
   assert.match(pub,/publicInstallHtml\(\)/); assert.match(pub,/verifiedBenchmarkHtml\(\)/); assert.match(pub,/verifiedWorkloadMapHtml\(\)/); assert.match(pub,/latestVerifiedHtml\(\)/);
   assert.match(ad,/machinePublicFactsText\(origin\)/);
   assert.match(q,/publicProductFacts\.install\.client_version/);
-  assert.match(landing,/f\.install\.npm_command/); assert.match(landing,/f\.install\.pypi_command/);
+  assert.match(landing,/publicProductFacts\.install\.client_version/); assert.match(landing,/publicProductFacts\.install\.scan_command/);
   assert.match(integrations,/publicProductFacts\.install\.client_version/);
   assert.match(q,/siteFooterHtml\(\)/); assert.match(integrations,/siteFooterHtml\(\)/);
   assert.match(e,/Use your invoice, not a public benchmark/); assert.match(e,/Provider spend/); assert.doesNotMatch(e,/verifiedBenchmarkHtml\(|pricing_snapshots/); assert.match(i,/\/product-facts\.json/);
-  assert.match(landing,/controlled first-party smoke tests/i); assert.match(landing,/Firecrawl/); assert.match(landing,/Customer ROI is measured, not assumed/i);
+  assert.match(landing,/Pay less now\./); assert.match(landing,/Firecrawl/); assert.match(landing,/Customer ROI is measured, not assumed/i);
   assert.doesNotMatch(e,/first-party smoke|provider calls avoided|Firecrawl|OpenAI Web Search/i);
   assert.doesNotMatch(pub+ad+q+landing+integrations+e,/Firecrawl Pay As You Go/);
 });
