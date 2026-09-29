@@ -23,8 +23,8 @@ test('homepage follows the customer journey from value to trial to safety', () =
   const ids = ['what', 'live-check', 'how', 'start', 'fit', 'safety', 'resources'].map((id) => landing.indexOf(`id="${id}"`));
   assert.ok(ids.every((x) => x >= 0));
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
-  assert.match(landing, /Your agents already know things/i);
-  assert.match(landing, /SeenRelay helps decide when they need to look again/i);
+  assert.match(landing, /Stop paying twice to verify the same thing/i);
+  assert.match(landing, /SeenRelay finds the repeat work and measures what you can safely avoid/i);
   assert.match(landing, /Try one live CHECK/i);
   assert.match(landing, /Evidence trial only/i);
   assert.match(landing, /No guessed hit rate/i);
@@ -96,7 +96,7 @@ test('service descriptor continues to derive the public client release', () => {
 });
 
 test('preview gate enforces the self-service homepage and keeps benchmark marketing off sales surfaces', () => {
-  for (const marker of ['Your agents already know things.', 'Try one live CHECK', 'Evidence trial only.', 'No guessed hit rate.', 'Before paying to look again, ask what you already know.', 'SeenRelay does not replace your source of truth.']) {
+  for (const marker of ['Stop paying twice to verify the same thing.', 'Try one live CHECK', 'Evidence trial only.', 'No guessed hit rate.', 'Before paying to look again, ask what you already know.', 'SeenRelay does not replace your source of truth.']) {
     assert.match(previewGate, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/site\.html/);
