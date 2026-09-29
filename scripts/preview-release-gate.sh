@@ -74,9 +74,10 @@ curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_U
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
 # The homepage contract is customer-first: value, free trial, measured verdict, narrow fit, safe fallback.
-grep -q 'Your agents already know things.' /tmp/site.html
-grep -q 'SeenRelay helps decide when they need to look again.' /tmp/site.html
+grep -q 'Stop paying twice to verify the same thing.' /tmp/site.html
+grep -q 'SeenRelay finds the repeat work and measures what you can safely avoid.' /tmp/site.html
 grep -q "CLIENT ${client_version}" /tmp/site.html
+grep -q 'Find my savings — free' /tmp/site.html
 grep -q 'Try one live CHECK' /tmp/site.html
 grep -q 'id="live-check-form"' /tmp/site.html
 grep -q 'data-catalog-endpoint="/starter-facts.json"' /tmp/site.html
@@ -87,7 +88,7 @@ grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
 grep -q 'No guessed hit rate.' /tmp/site.html
 grep -q 'Your workload decides.' /tmp/site.html
 grep -q 'Before paying to look again, ask what you already know.' /tmp/site.html
-grep -q 'Then scan a real workload. Integrate only a real candidate.' /tmp/site.html
+grep -q 'Scan a real workload. Measure the savings before changing behavior.' /tmp/site.html
 grep -q 'npx seenrelay scan' /tmp/site.html
 grep -q 'every authoritative call still runs' /tmp/site.html
 grep -q 'no account' /tmp/site.html
