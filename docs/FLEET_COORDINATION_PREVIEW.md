@@ -35,6 +35,24 @@ console.log(meter.getReport());
 
 The report calls this **observed overlap cost**, not savings. Actual avoided-execution receipts require active fleet coordination and a real follower reuse.
 
+To instrument one reviewed call with less boilerplate:
+
+```js
+import { wrapFleetShadowCall } from 'seenrelay/fleet';
+
+const measuredCall = wrapFleetShadowCall(meter, expensiveReadOnlyTask, {
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  }
+});
+
+await measuredCall(input);
+```
+
+The wrapper derives the default exact coordinate from the full argument list. Coordinate serialization failure is measurement-only: the authoritative call still runs and the report increments `coordinateFailures` plus `unclassifiedEligibleCalls`.
+
 SeenRelay's existing Zero-State client coalesces identical in-flight work inside one process. The fleet preview extends the same conservative idea across workers that share a caller-owned coordination store.
 
 It does **not** replace your AI gateway or provider.
