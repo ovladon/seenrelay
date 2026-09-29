@@ -13,7 +13,7 @@ const adoption = fs.readFileSync(new URL('../src/adoption.ts', import.meta.url),
 const pilotTemplate = fs.readFileSync(new URL('../.github/ISSUE_TEMPLATE/commercial-pilot.yml', import.meta.url), 'utf8');
 
 test('public positioning expands below agents without weakening the audit gate', () => {
-  assert.match(landing, /Stop paying for the same work twice/);
+  assert.match(landing, /Pay less now/);
   assert.match(landing, /Across agents, services, browser jobs, CI and IoT/);
   assert.match(landing, /Find out if your agents are wasting money on repeated checks/);
   assert.match(landing, /Every original authoritative call still runs/);
