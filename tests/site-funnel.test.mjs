@@ -13,7 +13,7 @@ test('homepage keeps the runtime primary while routing site owners to the separa
   assert.match(landing, /no-brainer to test, not an automatic deployment/i);
   assert.match(landing, /START HERE/);
   assert.match(landing, /npx seenrelay scan/);
-  assert.match(landing, /uploads nothing and changes nothing/);
+  assert.match(landing, /uploads nothing, changes nothing/);
   assert.match(landing, /If it finds no plausible repeated expensive read-only validation, stop there/);
   assert.match(landing, /free shadow audit measures real traffic without suppressing a single authoritative call/);
   assert.match(landing, /OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START/);
