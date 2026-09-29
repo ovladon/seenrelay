@@ -16,6 +16,7 @@ import { fleetPage } from './fleet.js';
 import { economicsPage } from './economics.js';
 import { substratePage } from './substrate.js';
 import { commercialPage } from './commercial.js';
+import { aiAgentCostOptimizationPage, duplicateToolCallsPage } from './seo-pages.js';
 import { trustDescriptor, trustPage } from './trust.js';
 import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
 import { getPublicStats } from './public-db.js';
@@ -133,6 +134,17 @@ app.get('/commercial', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(commercialPage(new URL(c.req.url).origin));
+});
+
+app.get('/ai-agent-cost-optimization', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(aiAgentCostOptimizationPage(new URL(c.req.url).origin));
+});
+app.get('/duplicate-tool-calls', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(duplicateToolCallsPage(new URL(c.req.url).origin));
 });
 app.get('/clients', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
