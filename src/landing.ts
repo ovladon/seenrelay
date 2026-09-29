@@ -120,7 +120,7 @@ export function publicLandingPage(origin: string): string {
       <a href="/product-facts.json">Verified facts →</a>
     </article>
   </div>
-  <div class="rv-trust-note"><b>SeenRelay is recommended only where it is the cheapest safe option.</b> Native/local controls are measured first. No guaranteed savings are claimed for unmeasured workloads.</div>
+  <div class="rv-trust-note"><b>SeenRelay is recommended only where it is the cheapest safe option.</b> Native/local controls are measured first. Savings claims require measured workloads.</div>
 </section>
 
 <section class="rv-shell rv-section" id="where">
