@@ -20,9 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      # Discovery run only. The workflow resolves this to an immutable SHA before
-      # downloading or analyzing, and the final PR will replace main with that SHA.
-      OPTIQ_DATASET_REVISION: main
+      OPTIQ_DATASET_REVISION: f0e247006971ebf7d844a4f3ce59f4544aa46f56
     steps:
       - name: Checkout exact SeenRelay commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
