@@ -4,6 +4,36 @@
 
 The base package is standard-library-only. It places SeenRelay CHECK around repeated source-backed validation while preserving the application's original validation by default, and it also provides a network-free Zero-State path for eligible caller-owned reuse.
 
+## Distributed fleet shadow overlap
+
+Python now has a shadow-only fleet meter for reviewed expensive read-only calls. It uses caller-owned coordination metadata to classify exact compatible calls that begin while the same coordinate is already in flight. Every authoritative call still executes; no result is shared, no hosted CHECK/OBSERVE is sent, and observed follower cost is measurement cost rather than a savings claim.
+
+```python
+from seenrelay_fleet import (
+    InMemoryFleetShadowStore,
+    SeenRelayFleetShadowMeter,
+    wrap_fleet_shadow_call,
+)
+
+store = InMemoryFleetShadowStore()  # process-local; use a caller-owned shared store across workers
+meter = SeenRelayFleetShadowMeter(store=store, scope_key="opaque-tenant-scope")
+
+measured = wrap_fleet_shadow_call(
+    meter,
+    expensive_read_only_call,
+    policy={
+        "side_effect_class": "read_only",
+        "exact_single_answer_shareable": True,
+    },
+    cost={"marginal_cost_usd": 0.25, "provenance": "billing_record"},
+)
+
+value = await measured("stable-coordinate")
+print(meter.get_report())
+```
+
+Mutations, required independent sampling, and a declared zero-marginal-cost native exact-response cache are excluded. Coordinate or store failures fail open: the original operation still runs and the eligible call remains unclassified. The built-in in-memory store is for one process; cross-worker measurement requires a caller-owned store implementing `try_claim()` and `fail()` atomically.
+
 Client 0.2.11 adds local natural-workload evidence parity: Python Shadow Proof can retain a bounded sanitized cohort and export the same schema-v2 hostile-benchmark input used by JavaScript / TypeScript, while `seenrelay_economics` evaluates that cohort against the best measured non-shared path. It keeps authoritative validation enabled, exports no fact identity/source/raw value/per-call timestamp, and never enables reuse. Provider-independent Zero-State, Ambient adapters, and the hosted CHECK/OBSERVE protocol are otherwise unchanged. The direct Firecrawl SDK shadow adapter remains JavaScript / TypeScript-only.
 
 ## Shared CHECK assurance
