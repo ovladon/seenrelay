@@ -6,6 +6,7 @@ Current install/version/verified benchmark facts are generated from `public/prod
 
 ## Unreleased — Deterministic client wrappers
 
+- Add a distributed JavaScript/TypeScript fleet shadow-overlap meter that uses caller-owned coordination metadata to classify exact eligible in-flight collisions across workers while every authoritative operation still runs. It reports observed overlap and caller-supplied cost provenance without labeling shadow cost as avoided savings, uploading results, or invoking hosted CHECK/OBSERVE.
 - Make the local static prescreen conservatively classify Firecrawl workloads as `NATIVE_CONTROL_FIRST` until provider `maxAge` / `storeInCache` behavior is measured, even when those defaults are not explicit in application code.
 
 - Add a local-only `seenrelay scan` static prescreen for metered/read-only validation candidates, recurring execution signals, and stronger native/local controls. The scanner uploads nothing, modifies nothing, and cannot return `USE` or enable reuse.

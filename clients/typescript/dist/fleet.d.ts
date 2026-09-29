@@ -154,6 +154,62 @@ export interface RedisRestFleetStoreOptions {
 
 export declare function createRedisRestFleetStore(options: RedisRestFleetStoreOptions): FleetCoordinationStore;
 
+export interface SeenRelayFleetShadowMeterOptions {
+  store: Pick<FleetCoordinationStore, 'tryClaim' | 'fail'>;
+  /** Opaque caller-controlled fleet/tenant scope. Different scopes never classify each other as overlap. */
+  scopeKey: string;
+  ownerId?: string;
+  /** Shadow lease horizon for one authoritative execution. */
+  leaseMs?: number;
+}
+
+export interface FleetShadowMeasureOptions<T> {
+  /** Exact caller-defined identity. Include every result-affecting qualifier. */
+  coordinate: unknown;
+  /** Measurement counts overlap only for explicitly single-answer-shareable read-only work. */
+  policy: FleetExecutionPolicy;
+  /** Original authoritative operation. Shadow measurement never suppresses it. */
+  execute(): T | Promise<T>;
+  /** Optional observed marginal cost. It is measurement metadata only. */
+  cost?: number | FleetCostInput<T>;
+}
+
+export interface FleetShadowOverlapReport {
+  schema: 'seenrelay-fleet-shadow-overlap-report-v0';
+  mode: 'shadow';
+  authoritativeSuppressionEnabled: false;
+  calls: number;
+  eligibleCalls: number;
+  policyIneligibleCalls: number;
+  nativeControlDominatedCalls: number;
+  classifiedEligibleCalls: number;
+  unclassifiedEligibleCalls: number;
+  shadowLeaderStarts: number;
+  callsWithIdenticalInflightPredecessor: number;
+  classifiedOverlapStartFraction: number | null;
+  authoritativeExecutions: number;
+  successfulExecutions: number;
+  failedExecutions: number;
+  storeFailures: number;
+  leaseReleaseMisses: number;
+  costResolutionFailures: number;
+  costedExecutions: number;
+  uncostedExecutions: number;
+  /** Sum of caller-supplied/resolved costs actually incurred during shadow execution. */
+  observedCostUsd: number;
+  overlappedFollowerCostedExecutions: number;
+  /** Observed cost incurred by calls that started while the same eligible coordinate already had a shadow leader. Not an avoided-savings claim. */
+  overlappedFollowerObservedCostUsd: number;
+  costProvenance: Readonly<Record<string, number>>;
+}
+
+export declare class SeenRelayFleetShadowMeter {
+  constructor(options: SeenRelayFleetShadowMeterOptions);
+  getReport(): Readonly<FleetShadowOverlapReport>;
+  /** Always executes the authoritative operation and returns that call's own result. */
+  measure<T>(options: FleetShadowMeasureOptions<T>): Promise<T>;
+}
+
 export declare function fleetCodecFromPrivateCodec(privateCodec: PrivateCodec): FleetCodec;
 
 export interface SeenRelayFleetCoordinatorOptions {

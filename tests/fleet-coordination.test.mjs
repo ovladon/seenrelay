@@ -6,7 +6,8 @@ import {
   InMemoryFleetCoordinationStore,
   createRedisRestFleetStore,
   fleetCodecFromPrivateCodec,
-  createFleetSavingsLedger
+  createFleetSavingsLedger,
+  SeenRelayFleetShadowMeter
 } from '../clients/typescript/dist/fleet.js';
 import { createAesGcmPrivateCodec } from '../clients/typescript/dist/zero-state.js';
 
@@ -484,4 +485,145 @@ test('native and policy passthrough receipts never claim avoided executions', as
   assert.equal(receipts[1].avoidedExecutions, 0);
   assert.equal(receipts[0].grossAvoidedCostUsd, null);
   assert.equal(receipts[1].grossAvoidedCostUsd, null);
+});
+
+
+test('distributed shadow meter observes overlap without suppressing either authoritative call', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const a = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  const b = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  let executions = 0;
+
+  const execute = async () => {
+    executions += 1;
+    const own = executions;
+    await sleep(30);
+    return { own };
+  };
+
+  const [ra, rb] = await Promise.all([
+    a.measure({
+      coordinate,
+      policy: shareablePolicy,
+      execute,
+      cost: { marginalCostUsd: 0.6, provenance: 'provider_list_price' }
+    }),
+    b.measure({
+      coordinate,
+      policy: shareablePolicy,
+      execute,
+      cost: { marginalCostUsd: 0.6, provenance: 'provider_list_price' }
+    })
+  ]);
+
+  assert.equal(executions, 2);
+  assert.notDeepEqual(ra, rb);
+
+  const reports = [a.getReport(), b.getReport()];
+  assert.equal(reports.reduce((n, r) => n + r.authoritativeExecutions, 0), 2);
+  assert.equal(reports.reduce((n, r) => n + r.shadowLeaderStarts, 0), 1);
+  assert.equal(reports.reduce((n, r) => n + r.callsWithIdenticalInflightPredecessor, 0), 1);
+  assert.equal(reports.reduce((n, r) => n + r.overlappedFollowerCostedExecutions, 0), 1);
+  assert.ok(Math.abs(reports.reduce((n, r) => n + r.overlappedFollowerObservedCostUsd, 0) - 0.6) < 1e-12);
+  assert.equal(reports.every((r) => r.authoritativeSuppressionEnabled === false), true);
+});
+
+test('distributed shadow meter reports zero overlap for sequential exact calls', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const meter = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  let executions = 0;
+
+  await meter.measure({
+    coordinate,
+    policy: shareablePolicy,
+    execute: async () => ++executions
+  });
+  await meter.measure({
+    coordinate,
+    policy: shareablePolicy,
+    execute: async () => ++executions
+  });
+
+  const report = meter.getReport();
+  assert.equal(executions, 2);
+  assert.equal(report.shadowLeaderStarts, 2);
+  assert.equal(report.callsWithIdenticalInflightPredecessor, 0);
+  assert.equal(report.classifiedOverlapStartFraction, 0);
+});
+
+test('shadow meter excludes mutation, independent sampling, and dominating native exact cache from overlap candidacy', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const meter = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  let executions = 0;
+
+  await Promise.all([
+    meter.measure({
+      coordinate,
+      policy: { sideEffectClass: 'mutation', exactSingleAnswerShareable: true },
+      execute: async () => { executions += 1; await sleep(10); return 1; }
+    }),
+    meter.measure({
+      coordinate,
+      policy: { sideEffectClass: 'read_only', exactSingleAnswerShareable: true, independentSamplesRequired: true },
+      execute: async () => { executions += 1; await sleep(10); return 2; }
+    }),
+    meter.measure({
+      coordinate,
+      policy: {
+        ...shareablePolicy,
+        nativeControl: { exactResponseCache: true, cacheHitMarginalCostZero: true }
+      },
+      execute: async () => { executions += 1; await sleep(10); return 3; }
+    })
+  ]);
+
+  const report = meter.getReport();
+  assert.equal(executions, 3);
+  assert.equal(report.policyIneligibleCalls, 2);
+  assert.equal(report.nativeControlDominatedCalls, 1);
+  assert.equal(report.eligibleCalls, 0);
+  assert.equal(report.callsWithIdenticalInflightPredecessor, 0);
+});
+
+test('shadow store failure cannot suppress or replace the authoritative call', async () => {
+  const store = {
+    async tryClaim() { throw new Error('store unavailable'); },
+    async fail() { throw new Error('not reached'); }
+  };
+  const meter = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  const result = await meter.measure({
+    coordinate,
+    policy: shareablePolicy,
+    execute: async () => ({ authoritative: true }),
+    cost: { marginalCostUsd: 1, provenance: 'caller_measured' }
+  });
+
+  assert.deepEqual(result, { authoritative: true });
+  const report = meter.getReport();
+  assert.equal(report.authoritativeExecutions, 1);
+  assert.equal(report.successfulExecutions, 1);
+  assert.equal(report.storeFailures, 1);
+  assert.equal(report.unclassifiedEligibleCalls, 1);
+  assert.equal(report.callsWithIdenticalInflightPredecessor, 0);
+  assert.equal(report.observedCostUsd, 1);
+});
+
+test('shadow cost resolver failure remains measurement-only', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const meter = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  const result = await meter.measure({
+    coordinate,
+    policy: shareablePolicy,
+    execute: async () => ({ answer: 42 }),
+    cost: {
+      provenance: 'provider_reported',
+      resolveMarginalCostUsd() { throw new Error('usage unavailable'); }
+    }
+  });
+
+  assert.deepEqual(result, { answer: 42 });
+  const report = meter.getReport();
+  assert.equal(report.costResolutionFailures, 1);
+  assert.equal(report.uncostedExecutions, 1);
+  assert.equal(report.observedCostUsd, 0);
 });

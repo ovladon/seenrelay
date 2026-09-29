@@ -189,6 +189,156 @@ export function createFleetSavingsLedger() {
   return Object.freeze({ record, snapshot });
 }
 
+export class SeenRelayFleetShadowMeter {
+  constructor(options = {}) {
+    if (!options.store || typeof options.store.tryClaim !== 'function' || typeof options.store.fail !== 'function') {
+      throw new TypeError('store must provide tryClaim() and fail()');
+    }
+    this.scopeHash = opaqueScopeHash(options.scopeKey);
+    this.store = options.store;
+    this.ownerId = options.ownerId ?? randomUUID();
+    this.leaseMs = positiveFinite(options.leaseMs, 60_000, 'leaseMs');
+    this.metrics = {
+      calls: 0,
+      eligibleCalls: 0,
+      policyIneligibleCalls: 0,
+      nativeControlDominatedCalls: 0,
+      shadowLeaderStarts: 0,
+      callsWithIdenticalInflightPredecessor: 0,
+      unclassifiedEligibleCalls: 0,
+      authoritativeExecutions: 0,
+      successfulExecutions: 0,
+      failedExecutions: 0,
+      storeFailures: 0,
+      leaseReleaseMisses: 0,
+      costResolutionFailures: 0,
+      costedExecutions: 0,
+      uncostedExecutions: 0,
+      observedCostUsd: 0,
+      overlappedFollowerCostedExecutions: 0,
+      overlappedFollowerObservedCostUsd: 0,
+      costProvenance: Object.create(null)
+    };
+  }
+
+  getReport() {
+    const classified = this.metrics.shadowLeaderStarts + this.metrics.callsWithIdenticalInflightPredecessor;
+    return Object.freeze({
+      schema: 'seenrelay-fleet-shadow-overlap-report-v0',
+      mode: 'shadow',
+      authoritativeSuppressionEnabled: false,
+      calls: this.metrics.calls,
+      eligibleCalls: this.metrics.eligibleCalls,
+      policyIneligibleCalls: this.metrics.policyIneligibleCalls,
+      nativeControlDominatedCalls: this.metrics.nativeControlDominatedCalls,
+      classifiedEligibleCalls: classified,
+      unclassifiedEligibleCalls: this.metrics.unclassifiedEligibleCalls,
+      shadowLeaderStarts: this.metrics.shadowLeaderStarts,
+      callsWithIdenticalInflightPredecessor: this.metrics.callsWithIdenticalInflightPredecessor,
+      classifiedOverlapStartFraction: classified > 0
+        ? this.metrics.callsWithIdenticalInflightPredecessor / classified
+        : null,
+      authoritativeExecutions: this.metrics.authoritativeExecutions,
+      successfulExecutions: this.metrics.successfulExecutions,
+      failedExecutions: this.metrics.failedExecutions,
+      storeFailures: this.metrics.storeFailures,
+      leaseReleaseMisses: this.metrics.leaseReleaseMisses,
+      costResolutionFailures: this.metrics.costResolutionFailures,
+      costedExecutions: this.metrics.costedExecutions,
+      uncostedExecutions: this.metrics.uncostedExecutions,
+      observedCostUsd: this.metrics.observedCostUsd,
+      overlappedFollowerCostedExecutions: this.metrics.overlappedFollowerCostedExecutions,
+      overlappedFollowerObservedCostUsd: this.metrics.overlappedFollowerObservedCostUsd,
+      costProvenance: Object.freeze({ ...this.metrics.costProvenance })
+    });
+  }
+
+  async measure(options = {}) {
+    if (typeof options.execute !== 'function') throw new TypeError('execute must be a function');
+    this.metrics.calls += 1;
+    this.metrics.authoritativeExecutions += 1;
+
+    let claim = null;
+    let coordinateKey = null;
+    let overlappedFollower = false;
+
+    if (!explicitSingleAnswerPolicy(options.policy)) {
+      this.metrics.policyIneligibleCalls += 1;
+    } else if (nativeZeroCostDominates(options.policy)) {
+      this.metrics.nativeControlDominatedCalls += 1;
+    } else {
+      this.metrics.eligibleCalls += 1;
+      coordinateKey = sha256JsonFingerprint({ fleetShadowCoordinateV0: options.coordinate });
+      try {
+        claim = await this.store.tryClaim({
+          scopeHash: this.scopeHash,
+          coordinateKey,
+          ownerId: this.ownerId,
+          leaseMs: this.leaseMs
+        });
+        if (claim.role === 'leader') {
+          this.metrics.shadowLeaderStarts += 1;
+        } else {
+          overlappedFollower = true;
+          this.metrics.callsWithIdenticalInflightPredecessor += 1;
+        }
+      } catch {
+        this.metrics.storeFailures += 1;
+        this.metrics.unclassifiedEligibleCalls += 1;
+      }
+    }
+
+    let value;
+    try {
+      value = await options.execute();
+      this.metrics.successfulExecutions += 1;
+    } catch (error) {
+      this.metrics.failedExecutions += 1;
+      throw error;
+    } finally {
+      if (claim?.role === 'leader') {
+        try {
+          const released = await this.store.fail({
+            scopeHash: this.scopeHash,
+            coordinateKey,
+            generation: claim.generation,
+            ownerId: this.ownerId,
+            pendingToken: claim.pendingToken
+          });
+          if (!released) this.metrics.leaseReleaseMisses += 1;
+        } catch {
+          this.metrics.storeFailures += 1;
+        }
+      }
+    }
+
+    let costInput = null;
+    try {
+      costInput = normalizeCostInput(options.cost);
+    } catch {
+      this.metrics.costResolutionFailures += 1;
+    }
+    const cost = await resolveReceiptCost(costInput, value);
+    if (cost.costResolution === 'resolver_failed') this.metrics.costResolutionFailures += 1;
+    if (cost.marginalCostUsd === null) {
+      this.metrics.uncostedExecutions += 1;
+    } else {
+      this.metrics.costedExecutions += 1;
+      this.metrics.observedCostUsd += cost.marginalCostUsd;
+      if (cost.provenance) {
+        this.metrics.costProvenance[cost.provenance] =
+          (this.metrics.costProvenance[cost.provenance] || 0) + 1;
+      }
+      if (overlappedFollower) {
+        this.metrics.overlappedFollowerCostedExecutions += 1;
+        this.metrics.overlappedFollowerObservedCostUsd += cost.marginalCostUsd;
+      }
+    }
+
+    return value;
+  }
+}
+
 export function fleetCodecFromPrivateCodec(privateCodec) {
   if (!privateCodec || typeof privateCodec.seal !== 'function' || typeof privateCodec.open !== 'function') {
     throw new TypeError('privateCodec must provide seal() and open()');

@@ -2,6 +2,39 @@
 
 Fleet-level exact in-flight coordination is available in the JavaScript / TypeScript client from 0.2.17.
 
+The current source also includes a distributed shadow-overlap meter for measuring whether exact eligible calls actually collide across workers before coordination is enabled. Shadow measurement always executes the original operation, shares no result, and performs no hosted SeenRelay CHECK/OBSERVE operation.
+
+```js
+import {
+  SeenRelayFleetShadowMeter,
+  createRedisRestFleetStore
+} from 'seenrelay/fleet';
+
+const meter = new SeenRelayFleetShadowMeter({
+  store: createRedisRestFleetStore({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    prefix: 'seenrelay:fleet:shadow:v0'
+  }),
+  scopeKey: process.env.SEENRELAY_FLEET_SCOPE
+});
+
+await meter.measure({
+  coordinate,
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  },
+  execute: expensiveReadOnlyTask,
+  cost: { marginalCostUsd: 0.48, provenance: 'provider_list_price' }
+});
+
+console.log(meter.getReport());
+```
+
+The report calls this **observed overlap cost**, not savings. Actual avoided-execution receipts require active fleet coordination and a real follower reuse.
+
 SeenRelay's existing Zero-State client coalesces identical in-flight work inside one process. The fleet preview extends the same conservative idea across workers that share a caller-owned coordination store.
 
 It does **not** replace your AI gateway or provider.
