@@ -634,6 +634,7 @@ async function parent() {
     const avoidedExecutions = activeTelemetryTotals.avoidedExecutions;
 
     const sumCredits = (items) => {
+      if (items.length === 0) return null;
       const values = items.map((x) => x.totalCredits).filter(Number.isFinite);
       return values.length === items.length
         ? Number(values.reduce((a, b) => a + b, 0).toFixed(6))
@@ -654,9 +655,15 @@ async function parent() {
     const report = {
       schema_version: 'seenrelay-external-inflight-replay-v1',
       captured_at: new Date().toISOString(),
-      evidence_level: 'controlled_external_failure_pattern_replay',
-      failure_pattern_source: 'https://github.com/langchain-ai/langgraph/issues/7417',
-      failure_pattern_note: 'The external issue reports identical tool arguments re-dispatched while the first tool call is still running. This benchmark simulates that dispatch timing; it is not a LangGraph Cloud trace and is not an independent customer ROI claim.',
+      evidence_level: skipBaseline
+        ? 'controlled_provider_concurrency_headroom'
+        : 'controlled_external_failure_pattern_replay',
+      failure_pattern_source: skipBaseline
+        ? 'https://github.com/ovladon/seenrelay/actions/runs/36560937224'
+        : 'https://github.com/langchain-ai/langgraph/issues/7417',
+      failure_pattern_note: skipBaseline
+        ? 'A prior bounded five-worker baseline hit Firecrawl HTTP 429 at its observed two-job concurrency ceiling. This follow-up tests whether exact in-flight coordination lets all five callers share one provider job. It is controlled mechanics/headroom evidence, not natural customer ROI.'
+        : 'The external issue reports identical tool arguments re-dispatched while the first tool call is still running. This benchmark simulates that dispatch timing; it is not a LangGraph Cloud trace and is not an independent customer ROI claim.',
       natural_customer_roi: false,
       provider: {
         name: 'Firecrawl',
@@ -694,7 +701,9 @@ async function parent() {
         normalized_credits_avoided_at_baseline_mean: normalizedAvoidedCredits,
         dollar_savings_claim: null,
         net_savings_claim: null,
-        note: 'Credits are measured provider units. No dollar or net-savings claim is made because account plan, included credits, local-browser alternatives and coordination-store cost are workload-specific.'
+        note: skipBaseline
+          ? 'No credit delta is computed because the five-worker uncoordinated workload did not complete under the provider concurrency ceiling. The active run reports its measured provider credits only.'
+          : 'Credits are measured provider units. No dollar or net-savings claim is made because account plan, included credits, local-browser alternatives and coordination-store cost are workload-specific.'
       },
       safety: {
         browser_result_stable_across_authoritative_samples: stableLayout,
