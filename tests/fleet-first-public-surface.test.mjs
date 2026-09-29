@@ -30,22 +30,19 @@ test('fleet page exposes shadow-first distributed measurement before active coor
   assert.match(fleet, /CHECK and OBSERVE remain the only hosted SeenRelay domain operations/i);
 });
 
-test('homepage makes the free savings audit the primary activation path', () => {
-  assert.match(landing, /Run the free savings audit/i);
-  assert.match(landing, /OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START/i);
+test('homepage makes the free audit the primary activation path without duplicating agent docs', () => {
+  assert.match(landing, /Pay less now/i);
+  assert.match(landing, /Run the free audit/i);
   assert.match(landing, /Every original authoritative call still runs/i);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/i);
-  assert.match(landing, /coding agent/i);
-  assert.match(landing, /npx skills add/);
-  assert.match(landing, /FREE SAVINGS AUDIT/i);
-  assert.match(landing, /no SeenRelay API key/i);
+  assert.match(landing, /no API key/i);
+  assert.doesNotMatch(landing, /npx skills add|OPTIONAL PROTOCOL DEMO|live-check-form/i);
   assert.match(auditGuide, /every authoritative validation stays enabled/i);
   assert.match(auditGuide, /active SeenRelay reuse stays disabled/i);
 });
 
 test('primary public surfaces describe fleet value without universal savings claims', () => {
-  assert.match(landing, /Agent fleets/);
-  assert.match(landing, /caller-owned private reuse/i);
+  assert.match(landing, /Agents are only the beginning/i);
   assert.match(landing, /Customer ROI is measured, not assumed/i);
   assert.match(quickstart, /FLEET PATH/);
   assert.match(quickstart, /seenrelay\/fleet/);
@@ -54,7 +51,7 @@ test('primary public surfaces describe fleet value without universal savings cla
   assert.match(quickstart, /SeenRelayFleetCoordinator/);
   assert.match(quickstart, /createFleetSavingsLedger/);
   assert.match(quickstart, /Only actual follower reuse counts as an avoided execution/i);
-  assert.match(adoption, /provider-independent revalidation decision layer for known external state/i);
+  assert.match(adoption, /provider-independent execution-reuse and revalidation layer below individual agent frameworks/i);
   assert.match(adoption, /\/fleet/);
   assert.match(index, /app\.get\('\/fleet'/);
   for (const source of [fleet, landing, quickstart, adoption]) {
@@ -63,10 +60,11 @@ test('primary public surfaces describe fleet value without universal savings cla
   }
 });
 
-test('public fleet surfaces expose local trace census without relabeling opportunity as savings', () => {
-  for (const source of [fleet, quickstart, landing]) {
+test('technical fleet surfaces expose local trace census without forcing trace detail onto the homepage', () => {
+  for (const source of [fleet, quickstart]) {
     assert.match(source, /trace-census/);
   }
+  assert.doesNotMatch(landing, /trace-census/);
   assert.match(fleet, /HAVE FLEET TRACES\? · LOCAL-ONLY CENSUS/);
   assert.match(fleet, /does not contact SeenRelay/i);
   assert.match(fleet, /successful_leader_overlap_opportunities/);
@@ -76,9 +74,7 @@ test('public fleet surfaces expose local trace census without relabeling opportu
   assert.match(quickstart, /EXISTING FLEET TRACES · LOCAL-ONLY/);
   assert.match(quickstart, /actual_avoided_executions/);
   assert.match(quickstart, /actual_net_savings_usd/);
-  assert.match(landing, /Already have fleet traces\?/);
-  assert.match(landing, /actual avoided executions and net savings still require active measurement/i);
-  for (const source of [fleet, quickstart, landing]) {
+  for (const source of [fleet, quickstart]) {
     assert.doesNotMatch(source, /trace-census[^\n]{0,240}(?:proves?|guarantees?)\s+(?:savings|ROI)/i);
   }
 });
