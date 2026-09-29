@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-09-29T12:43:15Z",
+  "updated_at": "2026-09-29T12:49:44Z",
   "positioning": {
     "category": "execution reuse and validation cost avoidance for distributed software and AI agents",
     "headline": "Avoid redundant expensive execution",
@@ -16,7 +16,7 @@
     "pypi_command": "pip install seenrelay",
     "client_version": "0.2.22",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-09-29T12:43:15Z",
+    "registry_install_verified_at": "2026-09-29T12:49:44Z",
     "verification": "Client 0.2.22 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only scan CLI and OTLP trace-census CLI, validates package entry targets, and repacks the installed package. OTLP census remains observation-only and requires opaque exact coordinates plus explicit policy; it does not authorize reuse.",
     "scan_command": "npx seenrelay scan",
     "scan_mode": "local_static_prescreen",
