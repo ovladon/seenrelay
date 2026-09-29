@@ -14,13 +14,12 @@ const pilotTemplate = fs.readFileSync(new URL('../.github/ISSUE_TEMPLATE/commerc
 
 test('public positioning expands below agents without weakening the audit gate', () => {
   assert.match(landing, /Pay less now/);
-  assert.match(landing, /Across agents, services, browser jobs, CI and IoT/);
-  assert.match(landing, /Find out if your agents are wasting money on repeated checks/);
+  assert.match(landing, /repeated expensive read-only work across agents and infrastructure/i);
   assert.match(landing, /Every original authoritative call still runs/);
   assert.match(landing, /DO NOT USE/);
-  assert.match(landing, /caller-owned private reuse/i);
-  assert.match(landing, /Agent fleets/);
+  assert.match(landing, /Agents are only the beginning/);
   assert.match(landing, /Commercial pilot/);
+  assert.doesNotMatch(landing, /live-check-form|data-install-view="agent"/);
 });
 
 test('execution substrate page names expanded surfaces and stays native-control-first', () => {
