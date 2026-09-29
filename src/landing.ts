@@ -35,11 +35,11 @@ export function publicLandingPage(origin: string): string {
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — stop paying twice for the same work">
+<meta property="og:title" content="SeenRelay — Pay less now">
 <meta property="og:description" content="Execution-reuse infrastructure below agents: measure exact repeated work across callers and enable coordination only where your own workload proves positive net value.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
-<title>SeenRelay — Stop paying twice for the same work</title>
+<title>SeenRelay — Pay less now</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
@@ -71,8 +71,8 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-hero rv-funnel-hero" id="what">
   <div>
     <div class="rv-kicker"><i></i><span>FREE SAVINGS AUDIT · NO ACCOUNT · NO SEENRELAY API KEY</span></div>
-    <h1>Stop paying for the same work twice. <em>Across agents, services, browser jobs, CI and IoT.</em></h1>
-    <p class="rv-lead"><b>SeenRelay is a no-brainer to test, not an automatic deployment.</b> Find out if your agents are wasting money on repeated checks — and measure the same problem below agents, where services, CI workers, browser jobs and edge processes execute the underlying work. During the shadow audit, every authoritative call still runs while SeenRelay measures exact repetition, stronger native controls and its own overhead. If your real workload does not show safe positive economics, the answer is <b>DO NOT USE</b>.</p>
+    <h1>Pay less now. <em>Across agents, services, browser jobs, CI and IoT.</em></h1>
+    <p class="rv-lead"><b>SeenRelay is a no-brainer to test, not an automatic deployment.</b> Find the repeated read-only work you can stop repaying for now — across agents, services, CI workers, browser jobs and edge processes. During the shadow audit, every authoritative call still runs while SeenRelay measures exact repetition, stronger native controls and its own overhead. If your real workload does not show safe positive economics, the answer is <b>DO NOT USE</b>.</p>
     <div class="rv-actions rv-actions-spaced">
       <a class="rv-button primary" href="#start">Run the free savings audit</a>
       <a class="rv-button" href="#proof">See what is already proven</a>
