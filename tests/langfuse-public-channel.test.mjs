@@ -13,7 +13,8 @@ test('Langfuse page offers a local candidate census without claiming savings',()
   assert.match(page,/Raw tool input is hashed locally/i);
   assert.match(page,/NEEDS_POLICY_REVIEW/);
   assert.match(page,/recorded repeat cost/i);
-  assert.doesNotMatch(page,/guaranteed savings|Langfuse API key.*SeenRelay/i);
+  assert.match(page,/No Langfuse API key goes to SeenRelay/i);
+  assert.doesNotMatch(page,/guaranteed savings/i);
 });
 
 test('Langfuse is exposed through integrations and discovery surfaces',()=>{
