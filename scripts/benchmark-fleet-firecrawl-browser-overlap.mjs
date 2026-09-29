@@ -21,6 +21,8 @@ import { createAesGcmPrivateCodec } from '../clients/typescript/dist/zero-state.
 const FIRECRAWL_BASE = 'https://api.firecrawl.dev/v2';
 const workerMode = process.argv.includes('--worker');
 const rounds = Math.max(1, Math.min(5, Number(process.env.SEENRELAY_FLEET_BENCH_ROUNDS || 3)));
+const workerCount = Math.max(2, Math.min(10, Number(process.env.SEENRELAY_FLEET_BENCH_WORKERS || 2)));
+const skipBaseline = process.env.SEENRELAY_FLEET_BENCH_SKIP_BASELINE === '1';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function createBenchmarkHttpFleetStore(url) {
@@ -443,13 +445,14 @@ async function launchWorker({ root, phase, round, targetUrl, keyHex, redisPrefix
   });
 }
 
-async function runPair({ root, phase, round, runKey, keyHex, redisPrefix, storeUrl }) {
+async function runGroup({ root, phase, round, runKey, keyHex, redisPrefix, storeUrl }) {
   const targetUrl = `https://example.com/?seenrelay_internal_benchmark=fleet-browser-layout-${runKey}-${round}`;
-  const first = launchWorker({ root, phase, round, targetUrl, keyHex, redisPrefix, storeUrl });
-  const second = launchWorker({ root, phase, round, targetUrl, keyHex, redisPrefix, storeUrl });
+  const workers = Array.from({ length: workerCount }, () =>
+    launchWorker({ root, phase, round, targetUrl, keyHex, redisPrefix, storeUrl })
+  );
   await sleep(300);
   await writeFile(path.join(root, `start-${phase}-${round}`), 'go');
-  return Promise.all([first, second]);
+  return Promise.all(workers);
 }
 
 function stableValueKey(result) {
@@ -472,7 +475,7 @@ async function parent() {
   const active = [];
 
   try {
-    const preflight = await runPair({
+    const preflight = await runGroup({
       root,
       phase: 'coord-preflight',
       round: 0,
@@ -494,12 +497,12 @@ async function parent() {
     } catch {}
 
     const coordinationPreflight = {
-      workers: 2,
+      workers: workerCount,
       leader_executions: preflightLeaders,
       follower_reuses: preflightFollowers,
       fail_open_executions: preflightFailOpen,
       store_errors: storeErrors,
-      pass: preflightLeaders === 1 && preflightFollowers === 1 && preflightFailOpen === 0
+      pass: preflightLeaders === 1 && preflightFollowers === workerCount - 1 && preflightFailOpen === 0
     };
 
     if (process.env.SEENRELAY_FLEET_BENCH_DIAGNOSTIC_ONLY === '1') {
@@ -534,7 +537,7 @@ async function parent() {
           } : null
         };
       }
-      const delayed = await runPair({
+      const delayed = await runGroup({
         root,
         phase: 'coord-delayed-preflight',
         round: 1,
@@ -555,12 +558,12 @@ async function parent() {
           .map((line) => JSON.parse(line));
       } catch {}
       const delayedPreflight = {
-        workers: 2,
+        workers: workerCount,
         leader_executions: delayedLeaders,
         follower_reuses: delayedFollowers,
         fail_open_executions: delayedFailOpen,
         store_errors: delayedStoreErrors,
-        pass: delayedLeaders === 1 && delayedFollowers === 1 && delayedFailOpen === 0
+        pass: delayedLeaders === 1 && delayedFollowers === workerCount - 1 && delayedFailOpen === 0
       };
       const diagnostic = {
         schema_version: 'seenrelay-fleet-browser-coordination-diagnostic-v1',
@@ -581,11 +584,13 @@ async function parent() {
       throw new Error(`benchmark coordination preflight failed: ${JSON.stringify(coordinationPreflight)}`);
     }
 
-    for (let round = 1; round <= rounds; round += 1) {
-      baseline.push(await runPair({ root, phase: 'baseline', round, runKey, keyHex, redisPrefix, storeUrl: benchmarkStore.url }));
+    if (!skipBaseline) {
+      for (let round = 1; round <= rounds; round += 1) {
+        baseline.push(await runGroup({ root, phase: 'baseline', round, runKey, keyHex, redisPrefix, storeUrl: benchmarkStore.url }));
+      }
     }
     for (let round = 1; round <= rounds; round += 1) {
-      active.push(await runPair({ root, phase: 'active', round, runKey, keyHex, redisPrefix, storeUrl: benchmarkStore.url }));
+      active.push(await runGroup({ root, phase: 'active', round, runKey, keyHex, redisPrefix, storeUrl: benchmarkStore.url }));
     }
 
     const executionLines = (await readFile(path.join(root, 'provider-executions.jsonl'), 'utf8'))
@@ -598,7 +603,7 @@ async function parent() {
     const flatBaseline = baseline.flat();
     const flatActive = active.flat();
 
-    const allKeys = [...flatBaseline, ...flatActive].map(stableValueKey);
+    const allKeys = [...flatBaseline, ...flatActive].map(stableValueKey).filter((key) => key !== 'null');
     const stableLayout = allKeys.length > 0 && allKeys.every((key) => key === allKeys[0]);
 
     const telemetryFields = [
@@ -629,6 +634,7 @@ async function parent() {
     const avoidedExecutions = activeTelemetryTotals.avoidedExecutions;
 
     const sumCredits = (items) => {
+      if (items.length === 0) return null;
       const values = items.map((x) => x.totalCredits).filter(Number.isFinite);
       return values.length === items.length
         ? Number(values.reduce((a, b) => a + b, 0).toFixed(6))
@@ -649,9 +655,15 @@ async function parent() {
     const report = {
       schema_version: 'seenrelay-external-inflight-replay-v1',
       captured_at: new Date().toISOString(),
-      evidence_level: 'controlled_external_failure_pattern_replay',
-      failure_pattern_source: 'https://github.com/langchain-ai/langgraph/issues/7417',
-      failure_pattern_note: 'The external issue reports identical tool arguments re-dispatched while the first tool call is still running. This benchmark simulates that dispatch timing; it is not a LangGraph Cloud trace and is not an independent customer ROI claim.',
+      evidence_level: skipBaseline
+        ? 'controlled_provider_concurrency_headroom'
+        : 'controlled_external_failure_pattern_replay',
+      failure_pattern_source: skipBaseline
+        ? 'https://github.com/ovladon/seenrelay/actions/runs/36560937224'
+        : 'https://github.com/langchain-ai/langgraph/issues/7417',
+      failure_pattern_note: skipBaseline
+        ? 'A prior bounded five-worker baseline hit Firecrawl HTTP 429 at its observed two-job concurrency ceiling. This follow-up tests whether exact in-flight coordination lets all five callers share one provider job. It is controlled mechanics/headroom evidence, not natural customer ROI.'
+        : 'The external issue reports identical tool arguments re-dispatched while the first tool call is still running. This benchmark simulates that dispatch timing; it is not a LangGraph Cloud trace and is not an independent customer ROI claim.',
       natural_customer_roi: false,
       provider: {
         name: 'Firecrawl',
@@ -663,8 +675,14 @@ async function parent() {
         local_browser_is_competing_control: true
       },
       rounds,
-      workers_per_round: 2,
-      baseline: {
+      workers_per_round: workerCount,
+      baseline: skipBaseline ? {
+        skipped: true,
+        reason: 'A prior bounded 5-worker baseline hit Firecrawl HTTP 429: maximum number of concurrent jobs (2).',
+        evidence_url: 'https://github.com/ovladon/seenrelay/actions/runs/36560937224',
+        provider_concurrency_limit_observed: 2
+      } : {
+        skipped: false,
         provider_executions: baselineExecutions.length,
         total_provider_credits: baselineCredits,
         caller_latency_ms_median: Number(median(flatBaseline.map((x) => x.callerMs)).toFixed(3))
@@ -683,7 +701,9 @@ async function parent() {
         normalized_credits_avoided_at_baseline_mean: normalizedAvoidedCredits,
         dollar_savings_claim: null,
         net_savings_claim: null,
-        note: 'Credits are measured provider units. No dollar or net-savings claim is made because account plan, included credits, local-browser alternatives and coordination-store cost are workload-specific.'
+        note: skipBaseline
+          ? 'No credit delta is computed because the five-worker uncoordinated workload did not complete under the provider concurrency ceiling. The active run reports its measured provider credits only.'
+          : 'Credits are measured provider units. No dollar or net-savings claim is made because account plan, included credits, local-browser alternatives and coordination-store cost are workload-specific.'
       },
       safety: {
         browser_result_stable_across_authoritative_samples: stableLayout,
@@ -693,12 +713,17 @@ async function parent() {
     };
 
     report.kill_criteria = {
-      baseline_executions_equal_two_per_round: baselineExecutions.length === rounds * 2,
+      baseline_boundary_accounted_for: skipBaseline
+        ? workerCount > 2
+        : baselineExecutions.length === rounds * workerCount,
       active_executions_equal_one_per_round: activeExecutions.length === rounds,
-      active_roles_equal_one_leader_one_follower_per_round: leaders === rounds && followers === rounds,
-      avoided_executions_equal_one_per_round: avoidedExecutions === rounds,
+      active_roles_equal_one_leader_rest_followers_per_round:
+        leaders === rounds && followers === rounds * (workerCount - 1),
+      avoided_executions_equal_followers_per_round: avoidedExecutions === rounds * (workerCount - 1),
       authoritative_browser_value_stable: stableLayout,
-      provider_credits_lower_when_measurable: actualCreditDelta == null ? null : actualCreditDelta > 0
+      provider_credits_lower_when_measurable: skipBaseline
+        ? null
+        : (actualCreditDelta == null ? null : actualCreditDelta > 0)
     };
     report.mechanism_result = Object.entries(report.kill_criteria)
       .filter(([, value]) => value !== null)

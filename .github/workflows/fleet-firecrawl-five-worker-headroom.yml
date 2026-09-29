@@ -1,20 +1,13 @@
-name: Fleet Firecrawl Browser Overlap Benchmark
+name: Fleet Firecrawl Five-Worker Headroom Proof
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'scripts/benchmark-fleet-firecrawl-browser-overlap.mjs'
-      - 'tests/fleet-firecrawl-browser-overlap-benchmark.test.mjs'
-      - '.github/workflows/fleet-firecrawl-browser-overlap.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: fleet-firecrawl-browser-overlap-benchmark
+  group: fleet-firecrawl-five-worker-headroom
   cancel-in-progress: true
 
 jobs:
@@ -112,9 +105,11 @@ jobs:
           node scripts/test-fleet-redis-remote.mjs | tee /tmp/fleet-remote-preflight.json
           grep -q '"result":"PASS"' /tmp/fleet-remote-preflight.json
 
-      - name: Run three-round two-worker browser overlap benchmark
+      - name: Run five-worker coordination after observed provider ceiling
         env:
-          SEENRELAY_FLEET_BENCH_ROUNDS: '3'
+          SEENRELAY_FLEET_BENCH_ROUNDS: '1'
+          SEENRELAY_FLEET_BENCH_WORKERS: '5'
+          SEENRELAY_FLEET_BENCH_SKIP_BASELINE: '1'
         run: |
           set -euo pipefail
           node scripts/benchmark-fleet-firecrawl-browser-overlap.mjs | tee /tmp/fleet-firecrawl-browser-overlap.stdout.json
@@ -123,7 +118,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: fleet-firecrawl-browser-overlap-benchmark
+          name: fleet-firecrawl-five-worker-headroom
           path: |
             fleet-firecrawl-browser-overlap-benchmark.json
             /tmp/fleet-firecrawl-browser-overlap.stdout.json
