@@ -19,55 +19,48 @@ test('public route keeps HTML and machine surfaces separate', () => {
   assert.match(index, /accept\.includes\('text\/html'\)/);
 });
 
-test('homepage follows the customer journey from value to proof to audit to safety', () => {
-  const ids = ['what', 'proof', 'how', 'start', 'live-check', 'fit', 'safety', 'resources'].map((id) => landing.indexOf(`id="${id}"`));
+test('homepage follows a short human journey from value to proof to audit', () => {
+  const ids = ['what', 'proof', 'where', 'start'].map((id) => landing.indexOf(`id="${id}"`));
   assert.ok(ids.every((x) => x >= 0));
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
-  assert.match(landing, /Find out if your agents are wasting money on repeated checks/i);
-  assert.match(landing, /SeenRelay is a no-brainer to test, not an automatic deployment/i);
-  assert.match(landing, /Run the free savings audit/i);
-  assert.match(landing, /START HERE/i);
-  assert.match(landing, /Evidence trial only/i);
+  assert.match(landing, /Pay less now\./);
+  assert.match(landing, /Run the free audit/i);
+  assert.match(landing, /It already reduces real provider work/i);
   assert.match(landing, /Customer ROI is measured, not assumed/i);
 });
 
-test('homepage derives package facts and exposes bounded mechanism proof without universal ROI claims', () => {
+test('homepage derives the verified client version and keeps proof bounded', () => {
   assert.match(landing, /publicProductFacts/);
-  assert.match(landing, /f\.install\.client_version/);
-  assert.match(landing, /f\.install\.npm_command/);
-  assert.match(landing, /f\.install\.pypi_command/);
-  assert.match(landing, /WHAT IS ALREADY PROVEN/);
-  assert.match(landing, /15 CREDITS/);
-  assert.match(landing, /9 CREDITS/);
-  assert.match(landing, /controlled first-party smoke tests/i);
-  assert.match(landing, /Customer ROI is measured, not assumed/i);
+  assert.match(landing, /publicProductFacts\.install\.client_version/);
+  assert.match(landing, /publicProductFacts\.install\.scan_command/);
+  assert.match(landing, /18 → 9/);
+  assert.match(landing, /5 → 1/);
+  assert.match(landing, /15/);
   assert.match(landing, /recommended only where it is the cheapest safe option/i);
   assert.doesNotMatch(landing, /guaranteed savings|universal savings percentage/i);
   assert.doesNotMatch(landing, /client\s+0\.2\.\d+/i);
 });
 
 test('first use is free, behavior-preserving and self-service', () => {
-  assert.match(landing, /FREE SAVINGS AUDIT/);
-  assert.match(landing, /no SeenRelay API key/i);
-  assert.match(landing, /every authoritative call still runs/i);
-  assert.match(landing, /npx skills add \$\{origin\} --skill seenrelay --yes/);
-  assert.match(landing, /ambientMcpClient\(rawMcpClient\)/);
-  assert.match(landing, /seenRelayAmbient\.getReport\(\)/);
+  assert.match(landing, /free audit/i);
+  assert.match(landing, /no API key/i);
+  assert.match(landing, /Every original authoritative call still runs/i);
+  assert.match(landing, /npx seenrelay scan/);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/);
 });
 
-test('homepage explains narrow fit and safe fallback without requiring protocol knowledge first', () => {
-  assert.match(landing, /Known public state/);
-  assert.match(landing, /Browser \/ paid validation/);
-  assert.match(landing, /Agent fleets/);
-  assert.match(landing, /Temporal provenance/);
-  assert.match(landing, /SeenRelay does not replace your source of truth/i);
-  assert.match(landing, /When in doubt, validate normally/i);
-  assert.match(landing, /Hosted SeenRelay still exposes exactly CHECK and OBSERVE/i);
+test('homepage names the expanded market without turning into documentation', () => {
+  assert.match(landing, /Agents are only the beginning/i);
+  assert.match(landing, /Agents/);
+  assert.match(landing, /Services/);
+  assert.match(landing, /CI \/ tests/);
+  assert.match(landing, /IoT \/ edge/);
+  assert.match(landing, /href="\/substrate"/);
+  assert.match(landing, /href="\/commercial"/);
+  assert.doesNotMatch(landing, /live-check-form|data-install-view="agent"|npx skills add/);
 });
 
-test('agent onboarding uses Agent Skill discovery from the SeenRelay origin', () => {
-  assert.match(landing, /npx skills add \$\{origin\} --skill seenrelay --yes/);
+test('agent onboarding remains on dedicated technical surfaces', () => {
   assert.match(quickstartSource, /npx skills add \$\{origin\} --skill seenrelay --yes/);
   assert.match(integrationsSource, /npx skills add \$\{origin\} --skill seenrelay --yes/);
 });
@@ -87,13 +80,18 @@ test('homepage visual system remains responsive, accessible and dependency free'
   assert.match(revampCss, /focus-visible/);
   assert.match(funnelCss, /\.rv-verdict-card/);
   assert.match(funnelCss, /@media\(max-width:680px\)/);
-  assert.match(revampJs, /data-mode-button/);
   assert.match(revampJs, /navigator\.clipboard/);
-  assert.match(revampJs, /fetch\(catalogEndpoint/);
-  assert.match(revampJs, /fetch\(checkEndpoint/);
-  assert.match(revampJs, /web-starter-check/);
   assert.doesNotMatch(revampJs, /XMLHttpRequest|WebSocket|createElement\('link'\)|\/v1\/observe/);
   assert.doesNotMatch(landing, /\sstyle=/i);
+});
+
+test('preview gate enforces the concise savings homepage and bounded proof', () => {
+  for (const marker of ['Pay less now.', 'Run the free audit', '18 → 9', '5 → 1', 'Customer ROI is measured, not assumed', 'Every original authoritative call still runs']) {
+    assert.ok(previewGate.includes(marker), `preview gate must require: ${marker}`);
+  }
+  assert.match(previewGate, /grep -qi 'Firecrawl' \/tmp\/site\.html/);
+  assert.match(previewGate, /! grep -qi 'guaranteed savings' \/tmp\/site\.html/);
+  assert.match(previewGate, /product-facts\.json/);
 });
 
 test('service descriptor continues to derive the public client release', () => {
