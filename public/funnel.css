@@ -26,3 +26,10 @@
 .rv-live-check-state dd{margin:8px 0 0;color:#eaf2f0;font-size:18px;font-weight:800}
 @media(max-width:860px){.rv-live-check-grid{grid-template-columns:1fr}.rv-live-check-result{min-height:300px}}
 @media(max-width:680px){.rv-live-check-section{padding-top:54px;padding-bottom:54px}.rv-live-check-form,.rv-live-check-result{padding:16px;border-radius:18px}.rv-live-check-state{padding:18px 2px 2px}.rv-live-check-state dl{grid-template-columns:1fr 1fr}}
+
+.rv-cta-panel{display:grid;grid-template-columns:minmax(0,1.4fr) auto;gap:24px;align-items:center;padding:28px;border:1px solid #2b333e;border-radius:22px;background:linear-gradient(180deg,#10151a,#0b0e13)}
+.rv-cta-panel h2{margin:7px 0 10px;font-size:clamp(28px,3vw,42px);line-height:1.05;letter-spacing:-.04em}
+.rv-cta-panel p{margin:0;color:#8d9ba4;font-size:14px;line-height:1.65;max-width:780px}
+.rv-small{font-size:12px;line-height:1.6;color:#798791}
+.rv-small a{color:#b7c9ff}
+@media(max-width:860px){.rv-cta-panel{grid-template-columns:1fr;align-items:start}}
