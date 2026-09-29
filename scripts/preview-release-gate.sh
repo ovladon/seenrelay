@@ -73,31 +73,23 @@ grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
-# The homepage contract is customer-first: one-command audit, bounded proof, explicit no-fit outcome, safe fallback.
-grep -q 'Find out if your agents are wasting money on repeated checks.' /tmp/site.html
-grep -q 'SeenRelay is a no-brainer to test, not an automatic deployment.' /tmp/site.html
-grep -q 'Run the free savings audit' /tmp/site.html
-grep -q 'START HERE' /tmp/site.html
+# The homepage contract is immediate: clear cost outcome, bounded proof, one-command audit, safe fallback.
+grep -q 'Pay less now.' /tmp/site.html
+grep -q 'SeenRelay finds repeated expensive read-only work across agents and infrastructure' /tmp/site.html
+grep -q 'Run the free audit' /tmp/site.html
 grep -q 'id="hero-scan-command"' /tmp/site.html
 grep -q 'npx seenrelay scan' /tmp/site.html
-grep -q 'WHAT IS ALREADY PROVEN' /tmp/site.html
-grep -q '15 CREDITS' /tmp/site.html
-grep -q '9 CREDITS' /tmp/site.html
+grep -q '18 → 9' /tmp/site.html
+grep -q '5 → 1' /tmp/site.html
 grep -qi 'Firecrawl' /tmp/site.html
 grep -q 'Customer ROI is measured, not assumed' /tmp/site.html
 grep -q 'SeenRelay is recommended only where it is the cheapest safe option' /tmp/site.html
 ! grep -qi 'guaranteed savings' /tmp/site.html
-grep -q 'OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START' /tmp/site.html
-grep -q 'id="live-check-form"' /tmp/site.html
-grep -q 'data-catalog-endpoint="/starter-facts.json"' /tmp/site.html
-grep -q 'data-check-endpoint="/v1/check"' /tmp/site.html
-grep -q 'Evidence trial only.' /tmp/site.html
 grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
 grep -q 'Every original authoritative call still runs' /tmp/site.html
 grep -qi 'no SeenRelay API key' /tmp/site.html
-grep -q 'npm install seenrelay' /tmp/site.html
-grep -q 'pip install seenrelay' /tmp/site.html
-grep -q 'SeenRelay does not replace your source of truth.' /tmp/site.html
+grep -q 'Agents are only the beginning.' /tmp/site.html
+grep -q 'IoT / edge' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/revamp.js" -o /tmp/revamp.js
 grep -q 'web-starter-check' /tmp/revamp.js
 grep -q 'fetch(catalogEndpoint' /tmp/revamp.js
@@ -108,7 +100,7 @@ jq -e '.schema == "seenrelay-starter-facts-v1" and (.facts | length) == 15 and .
 grep -q 'When in doubt, validate normally.' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'Prove the savings on your workload' /tmp/economics.html
-grep -q 'Free until utility is demonstrated' /tmp/economics.html
+grep -q 'Hosted protocol remains free during bootstrap' /tmp/economics.html
 ! grep -qi 'first-party smoke' /tmp/economics.html
 ! grep -qi 'Firecrawl' /tmp/economics.html
 ! grep -qi 'provider calls avoided' /tmp/economics.html
@@ -135,7 +127,7 @@ grep -q "CLIENT ${client_version}" /tmp/clients.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/llms.txt" -o /tmp/llms.txt
 grep -q 'npm install seenrelay' /tmp/llms.txt
 grep -q 'pip install seenrelay' /tmp/llms.txt
-grep -q 'SeenRelay is a provider-independent revalidation decision layer for known external state' /tmp/llms.txt
+grep -q 'SeenRelay is a provider-independent execution-reuse and revalidation layer below individual agent frameworks' /tmp/llms.txt
 grep -q '## Known-state decision boundary' /tmp/llms.txt
 grep -q 'starter-facts.json' /tmp/llms.txt
 grep -q '## First proof: measure without changing application behavior' /tmp/llms.txt
