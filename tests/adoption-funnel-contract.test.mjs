@@ -137,7 +137,10 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /prediction_used_to_create_observation == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
   assert.match(gate, /seenrelay scan sample --json/);
-  assert.match(gate, /grep -q 'npx seenrelay scan'/);
+  assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'npx seenrelay scan'/);
+  assert.match(gate, /Audit my agent/);
+  assert.match(gate, /free shadow audit/);
+  assert.match(gate, /Missing Production first-use invariant/);
   assert.match(gate, /seenrelay==\$VERSION/);
   assert.match(gate, /await import\('seenrelay\/economics'\)/);
   assert.match(gate, /classify_hostile_benchmark_verdict/);
