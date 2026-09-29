@@ -127,6 +127,7 @@ export function publicLandingPage(origin: string): string {
     <h2>Run this first. It is the shortest path to an answer.</h2>
     <p><code>seenrelay scan</code> reads supported project files locally, uploads nothing, changes nothing. If it finds no plausible repeated expensive read-only validation, stop there. If it finds a candidate, the free shadow audit measures real traffic without suppressing a single authoritative call.</p>
     <div class="rv-code"><pre id="scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="scan-command">Copy</button></div>
+    <div class="rv-trust-note"><b>Already have fleet traces?</b> Skip static discovery and run <code>npx seenrelay trace-census fleet-trace.jsonl --json</code> locally. It can quantify exact in-flight overlap opportunity and caller-provenanced potential cost without contacting SeenRelay; actual avoided executions and net savings still require active measurement. <a href="/fleet#trace-census">Open the fleet trace path →</a></div>
   </div>
   <div class="rv-adopt">
     <div class="rv-mode-card">

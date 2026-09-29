@@ -45,7 +45,7 @@ export function quickstartPage(origin: string): string {
   <div class="rv-eyebrow">INTEGRATION QUICKSTART · CLIENT ${esc(clientVersion)}</div>
   <h1>Start from what the application already knows.</h1>
   <p>SeenRelay belongs before an eligible read-only revalidation. Keep local/private state, use source-native confirmation first, optionally consult compatible recent observations, and preserve the authoritative validation until Shadow Proof shows that a narrower shortcut is both safe and worthwhile.</p>
-  <div class="rv-actions"><a class="rv-button" href="#known-state">Known-state path</a><a class="rv-button" href="#scan">Scan first</a><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
+  <div class="rv-actions"><a class="rv-button" href="#known-state">Known-state path</a><a class="rv-button" href="#scan">Scan first</a><a class="rv-button" href="#trace-census">Existing fleet traces</a><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="known-state">
@@ -61,6 +61,15 @@ export function quickstartPage(origin: string): string {
   <div class="rv-choice-grid">
     <article class="rv-choice"><header><b>Run locally</b><span>NO ACCOUNT</span></header><div class="rv-code"><pre>${esc(scanCommand)}</pre></div><p>Use <code>npx seenrelay scan . --json</code> when a coding agent or CI job needs machine-readable output.</p></article>
     <article class="rv-choice"><header><b>Interpret conservatively</b><span>PRESCREEN ONLY</span></header><p><code>CANDIDATE_FOR_SHADOW_MEASUREMENT</code> means runtime measurement may be worthwhile. <code>NATIVE_CONTROL_FIRST</code> means test the stronger detected control first. <code>NEEDS_RUNTIME_EVIDENCE</code> means recurrence is not established. <code>NO_ELIGIBLE_CANDIDATE_FOUND</code> means leave SeenRelay out.</p></article>
+  </div>
+</section>
+
+<section class="rv-shell rv-section" id="trace-census">
+  <div class="rv-section-head"><div class="rv-eyebrow">EXISTING FLEET TRACES · LOCAL-ONLY</div><h2>If you already have timing traces, estimate overlap before adding runtime instrumentation.</h2><p>The trace census reads a sanitized caller-owned JSON/JSONL trace locally. It does not contact SeenRelay or execute the workload, and it reports potential exact in-flight overlap rather than actual savings.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice"><header><b>Run the census</b><span>NO ACCOUNT · NO API KEY</span></header><div class="rv-code"><pre>npx seenrelay trace-census fleet-trace.jsonl
+npx seenrelay trace-census fleet-trace.jsonl --json</pre></div><p>Use opaque SHA-256 coordinate hashes and omit raw prompts, tool arguments, URLs, headers and results. Include caller-provenanced marginal cost or provider units only when you have them.</p></article>
+    <article class="rv-choice"><header><b>Interpret the result</b><span>PRE-ACTIVATION</span></header><p><code>gross_potential_avoided_cost_usd</code> and potential provider units describe overlap opportunity under the supplied trace and cost provenance. <code>actual_avoided_executions</code> and <code>actual_net_savings_usd</code> remain unknown until active coordination is measured.</p><p>Use a positive census to choose one workload for distributed shadow measurement; do not enable broad reuse from the census alone.</p></article>
   </div>
 </section>
 

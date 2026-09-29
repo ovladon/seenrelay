@@ -44,8 +44,8 @@ export function fleetPage(origin: string): string {
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">FLEET COORDINATION · CLIENT ${version}</div>
   <h1>Measure duplicate expensive work before you suppress a single call.</h1>
-  <p>Client ${version} can first measure exact in-flight overlap across separate workers while every authoritative operation still runs. If that shadow evidence shows material compatible overlap, the same caller-owned store can then coordinate one execution for simultaneous followers.</p>
-  <div class="rv-actions"><a class="rv-button primary" href="#shadow">Measure overlap first</a><a class="rv-button" href="#coordinate">Enable coordination only if justified</a><a class="rv-button quiet" href="/data-practices">Data practices →</a></div>
+  <p>Client ${version} can measure exact in-flight overlap across separate workers before active coordination. If you already have caller-owned fleet traces, run the local trace census first; otherwise use distributed shadow measurement while every authoritative operation still runs.</p>
+  <div class="rv-actions"><a class="rv-button primary" href="#trace-census">Analyze existing traces</a><a class="rv-button" href="#shadow">Measure live overlap</a><a class="rv-button" href="#coordinate">Enable coordination only if justified</a><a class="rv-button quiet" href="/data-practices">Data practices →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="fit">
@@ -54,6 +54,24 @@ export function fleetPage(origin: string): string {
     <article class="rv-card"><span class="rv-number">01</span><h3>Hosted tools and containers</h3><p>Read-only code execution, sandboxes, browser sessions or other separately billed resources where duplicate top-level calls allocate duplicate infrastructure.</p></article>
     <article class="rv-card"><span class="rv-number">02</span><h3>Expensive deterministic work</h3><p>Extraction, parsing, model-assisted validation or other exact work where all callers explicitly accept the same result.</p></article>
     <article class="rv-card"><span class="rv-number">03</span><h3>Parallel agent fleets</h3><p>Workers, queues or services that can encounter the same exact coordinate concurrently but should not independently repay for it.</p></article>
+  </div>
+</section>
+
+<section class="rv-shell rv-section" id="trace-census">
+  <div class="rv-section-head"><div class="rv-eyebrow">HAVE FLEET TRACES? · LOCAL-ONLY CENSUS</div><h2>Estimate exact overlap opportunity before instrumenting live traffic.</h2><p>If your fleet already records sanitized call timing, <code>seenrelay trace-census</code> can rank exact-shareable read-only overlap locally. It does not contact SeenRelay, execute the traced workload, suppress a call or turn potential savings into an ROI claim.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice">
+      <header><b>Run on a caller-owned trace</b><span>NO SEENRELAY API</span></header>
+      <div class="rv-code"><pre>npx seenrelay trace-census fleet-trace.jsonl
+npx seenrelay trace-census fleet-trace.jsonl --json</pre></div>
+      <p>The trace contains opaque SHA-256 exact-coordinate hashes, comparable start/end timestamps, worker identity, explicit shareability policy and optional caller-provenanced marginal cost or provider units. Raw prompts, tool arguments, URLs and results are not required and common raw-content fields are rejected.</p>
+    </article>
+    <article class="rv-choice">
+      <header><b>What the report means</b><span>OPPORTUNITY · NOT SAVINGS</span></header>
+      <p><code>successful_leader_overlap_opportunities</code> counts eligible calls that began behind an exact leader that later succeeded. When the caller supplied cost provenance, the report can total <code>gross_potential_avoided_cost_usd</code> and potential provider units.</p>
+      <p><b>Actual avoided executions remain unknown at this stage.</b> They become factual only after active coordination produces follower-reuse receipts. Net savings additionally require measured coordination/store overhead.</p>
+      <a href="https://github.com/ovladon/seenrelay/blob/main/docs/FLEET_TRACE_CENSUS.md">Trace schema and evidence boundary →</a>
+    </article>
   </div>
 </section>
 
