@@ -64,7 +64,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=Path("optiq-web-search-repeat-census.json"))
     parser.add_argument(
         "--dataset-revision",
-        default="05f81b5bfb8244c2886d25dadd3815560d705ca2",
+        default="f0e247006971ebf7d844a4f3ce59f4544aa46f56",
         help="Exact Hugging Face dataset revision analyzed.",
     )
     args = parser.parse_args()
