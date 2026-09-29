@@ -57,6 +57,24 @@ export function fleetPage(origin: string): string {
   </div>
 </section>
 
+<section class="rv-shell rv-section" id="measured-proof">
+  <div class="rv-section-head"><div class="rv-eyebrow">VERIFIED CONTROLLED EVIDENCE</div><h2>We measured both provider-unit reduction and provider headroom.</h2><p>These are controlled first-party mechanics measurements, not natural customer ROI. They show what exact in-flight coordination can do when overlap is present; your own traffic still has to prove that the overlap exists and that SeenRelay beats the best native/local control.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice">
+      <header><b>Provider-unit reduction</b><span>18 → 9 FIRECRAWL CREDITS</span></header>
+      <p>Across 3 rounds with 2 separate workers, the uncoordinated path executed 6 Firecrawl browser jobs for 18 credits. Active coordination executed 3 jobs for 9 credits, with 3 actual follower reuses and matching browser-computed results.</p>
+      <p>The latest repeat remained clean: zero fail-open, store, coordinate, codec or follower-timeout failures. Dollar and net-savings claims remain intentionally unset.</p>
+      <a href="https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_FLEET_BROWSER_OVERLAP_2026-09-29.md">Inspect provider-unit evidence →</a>
+    </article>
+    <article class="rv-choice">
+      <header><b>Provider concurrency headroom</b><span>5 CALLERS → 1 JOB + 4 REUSES</span></header>
+      <p>A 5-worker uncoordinated attempt hit Firecrawl's observed concurrency ceiling of 2 jobs and returned HTTP 429. In the coordinated follow-up, all 5 callers shared one authoritative browser job: 1 leader, 4 follower reuses, 0 coordination failures.</p>
+      <p>This is capacity/headroom evidence, not an 80% savings claim: the five-worker baseline did not complete, so comparative credit delta and dollar savings stay unknown.</p>
+      <a href="https://github.com/ovladon/seenrelay/blob/main/docs/VERIFIED_FLEET_BROWSER_HEADROOM_2026-09-29.md">Inspect headroom evidence →</a>
+    </article>
+  </div>
+</section>
+
 <section class="rv-shell rv-section" id="trace-census">
   <div class="rv-section-head"><div class="rv-eyebrow">HAVE FLEET TRACES? · LOCAL-ONLY CENSUS</div><h2>Estimate exact overlap opportunity before instrumenting live traffic.</h2><p>If your fleet already records sanitized call timing, <code>seenrelay trace-census</code> can rank exact-shareable read-only overlap locally. It does not contact SeenRelay, execute the traced workload, suppress a call or turn potential savings into an ROI claim.</p></div>
   <div class="rv-choice-grid">
