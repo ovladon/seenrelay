@@ -57,9 +57,11 @@ This negative result is retained rather than replaced with a more favorable work
 
 The public client now has distributed fleet shadow measurement and active exact in-flight coordination, so external in-flight overlap is evaluated separately from temporal CHECK/OBSERVE reuse.
 
-The current bounded pass found no admitted natural positive benchmark yet:
+The current bounded pass found no admitted natural positive benchmark yet. New issue reports are retained only when they change the falsification queue:
 
 - **LangGraph Cloud #7417** is the strongest external lead. The reporter observed identical tool-call arguments re-dispatched while the original remained in flight, with both copies completing and 2–3x redundant work/cost. It remains `INSUFFICIENT_EVIDENCE` because the trigger is managed-Cloud-specific and no independently replayable natural >=100-call trace sample is public.
+- **OpenWork #3814** is an active diagnostic lead, not an admitted benchmark. The issue reports 100+ identical or near-identical `browser_eval` executions in rapid parallel bursts, duplicate browser tabs/transcript events and possible API-cost amplification. The root duplication layer is unresolved. Before distributed coordination is eligible, capture logical call identity plus executor/process identity. If all duplicate starts occur inside one dispatcher process, native execution-key + local single-flight is the stronger control.
+- **Hermes Agent #2918** is rejected before collection. The maintainer reports that merged PR #94618 added 20-minute successful-result caching for `web_search` / `web_extract`, in-process single-flight for concurrent identical searches and disk-backed extraction cache shared across CLI/gateway/cron/subagents. That native control wins first.
 - **LangGraph #8393** is rejected before collection: it demonstrates an in-flight duplicate child task, but the root cause is a direct framework deduplication defect with a simple native fix. SeenRelay should not displace that fix.
 - **LangGraph #9106** is rejected for fleet coordination because the completed sibling is re-run later; it is sequential duplicate work, not in-flight overlap.
 - **GPT Researcher #2180** does not establish the hypothesized same-process scraping overlap on current source. Deep-research branches share `visited_urls`, and `_get_new_urls()` inserts each URL into that shared set before its first await. Cross-process/cross-request recurrence remains unproven.
