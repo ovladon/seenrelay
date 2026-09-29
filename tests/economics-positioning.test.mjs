@@ -40,9 +40,10 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.match(economics, /Operational overhead/);
   assert.match(economics, /Outside the target:/);
   assert.doesNotMatch(economics, /verifiedBenchmarkHtml\(|MEASURED · FIRST-PARTY SMOKE BENCHMARK|Firecrawl|OpenAI Web Search|provider calls avoided/i);
-  assert.match(landing, /controlled first-party smoke tests/i);
-  assert.match(landing, /15 CREDITS/);
-  assert.match(landing, /9 CREDITS/);
+  assert.match(landing, /Pay less now\./);
+  assert.match(landing, /18 → 9/);
+  assert.match(landing, /5 → 1/);
+  assert.match(landing, /15/);
   assert.match(landing, /Customer ROI is measured, not assumed/i);
   assert.match(landing, /recommended only where it is the cheapest safe option/i);
   assert.doesNotMatch(landing, /guaranteed savings|always cheaper/i);
