@@ -9,6 +9,7 @@ const expected = [
   ['https://seenrelay.com/commercial', '2026-09-29'],
   ['https://seenrelay.com/ai-agent-cost-optimization', '2026-09-29'],
   ['https://seenrelay.com/duplicate-tool-calls', '2026-09-29'],
+  ['https://seenrelay.com/langfuse', '2026-09-29'],
   ['https://seenrelay.com/readiness', '2026-09-09'],
   ['https://seenrelay.com/economics', '2026-09-01'],
   ['https://seenrelay.com/quickstart', '2026-09-25'],
