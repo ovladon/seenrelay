@@ -33,7 +33,7 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.ok(facts.verified_benchmarks.length >= 1, 'historical benchmark evidence remains available for technical verification');
 
   assert.match(economics, /Prove the savings on your workload before you enable reuse/);
-  assert.match(economics, /Free until utility is demonstrated/);
+  assert.match(economics, /Hosted protocol remains free during bootstrap/);
   assert.match(economics, /NO NETWORK EFFECT REQUIRED/);
   assert.match(economics, /Use your invoice, not a public benchmark/);
   assert.match(economics, /Provider spend/);
