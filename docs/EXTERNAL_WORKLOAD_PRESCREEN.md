@@ -2,7 +2,7 @@
 
 This document freezes external workload candidates **before** natural-workload evidence collection. It is a research pre-screen, not benchmark evidence, not a production claim, and not evidence that shared CHECK is useful for any project named below.
 
-The canonical evidence rules remain in [`NATURAL_WORKLOAD_GATE.md`](./NATURAL_WORKLOAD_GATE.md). A completed natural-workload screen still requires at least 100 protected calls, `sample_type: natural_workload`, the best measured non-shared baseline, authoritative shadow validation, and the existing hostile evaluator. Static repository inspection never counts toward that floor.
+Temporal shared-CHECK evidence remains governed by [`NATURAL_WORKLOAD_GATE.md`](./NATURAL_WORKLOAD_GATE.md). Exact in-flight worker/process duplication is governed separately by [`FLEET_OVERLAP_GATE.md`](./FLEET_OVERLAP_GATE.md). A completed natural-workload screen still requires at least 100 protected calls, `sample_type: natural_workload`, the best measured non-shared baseline, authoritative shadow validation, and the existing hostile evaluator. Static repository inspection never counts toward that floor.
 
 ## Pre-screen states
 
@@ -52,6 +52,20 @@ Under the predeclared kill criterion — native/source controls first, and `DO N
 The completed natural series is first-party controlled research, not adoption and not a public savings claim. The scheduled collector is retired after reaching its predeclared review floor; manual/PR executions are commissioning/regression checks only and cannot add natural evidence. The report remains aggregate-only and makes zero hosted SeenRelay operations.
 
 This negative result is retained rather than replaced with a more favorable workload. A new `structured_source_reads` collection candidate requires genuinely new external evidence; do not weaken freshness or manufacture recurrence to reopen Agnix.
+
+## Exact in-flight fleet-overlap leads — 2026-09-29
+
+The public client now has distributed fleet shadow measurement and active exact in-flight coordination, so external in-flight overlap is evaluated separately from temporal CHECK/OBSERVE reuse.
+
+The current bounded pass found no admitted natural positive benchmark yet:
+
+- **LangGraph Cloud #7417** is the strongest external lead. The reporter observed identical tool-call arguments re-dispatched while the original remained in flight, with both copies completing and 2–3x redundant work/cost. It remains `INSUFFICIENT_EVIDENCE` because the trigger is managed-Cloud-specific and no independently replayable natural >=100-call trace sample is public.
+- **LangGraph #8393** is rejected before collection: it demonstrates an in-flight duplicate child task, but the root cause is a direct framework deduplication defect with a simple native fix. SeenRelay should not displace that fix.
+- **LangGraph #9106** is rejected for fleet coordination because the completed sibling is re-run later; it is sequential duplicate work, not in-flight overlap.
+- **GPT Researcher #2180** does not establish the hypothesized same-process scraping overlap on current source. Deep-research branches share `visited_urls`, and `_get_new_urls()` inserts each URL into that shared set before its first await. Cross-process/cross-request recurrence remains unproven.
+- **qldpc-challenge #2314** is rejected because replicated agent sessions intentionally produce independent results for comparison; `independentSamplesRequired` is true by design.
+
+Do not transform any issue author's cost description into a SeenRelay savings claim. A positive record requires the evidence in `FLEET_OVERLAP_GATE.md`, followed by actual follower-reuse receipts under active coordination.
 
 ## Fleet-validation gap
 

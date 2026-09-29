@@ -1,0 +1,71 @@
+name: External Static Prescreen
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Public GitHub repository in owner/name form'
+        required: true
+        type: string
+      ref:
+        description: 'Optional branch, tag or commit'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  prescreen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout SeenRelay
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: seenrelay
+          persist-credentials: false
+
+      - name: Checkout external repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.ref }}
+          path: target
+          persist-credentials: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '22'
+
+      - name: Run local-only SeenRelay static prescreen
+        shell: bash
+        run: |
+          set -euo pipefail
+          node seenrelay/clients/typescript/scripts/seenrelay-cli.mjs scan target --json > seenrelay-static-prescreen.json
+          cat seenrelay-static-prescreen.json
+
+      - name: Record target metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "repository=${{ inputs.repository }}"
+            echo "requested_ref=${{ inputs.ref }}"
+            echo "resolved_commit=$(git -C target rev-parse HEAD)"
+            echo "seenrelay_commit=$(git -C seenrelay rev-parse HEAD)"
+          } > target-metadata.txt
+          cat target-metadata.txt
+
+      - name: Upload prescreen evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: external-static-prescreen
+          path: |
+            seenrelay-static-prescreen.json
+            target-metadata.txt
+          if-no-files-found: warn
+          retention-days: 14
