@@ -63,6 +63,26 @@ test('primary public surfaces describe fleet value without universal savings cla
   }
 });
 
+test('public fleet surfaces expose local trace census without relabeling opportunity as savings', () => {
+  for (const source of [fleet, quickstart, landing]) {
+    assert.match(source, /trace-census/);
+  }
+  assert.match(fleet, /HAVE FLEET TRACES\? · LOCAL-ONLY CENSUS/);
+  assert.match(fleet, /does not contact SeenRelay/i);
+  assert.match(fleet, /successful_leader_overlap_opportunities/);
+  assert.match(fleet, /gross_potential_avoided_cost_usd/);
+  assert.match(fleet, /Actual avoided executions remain unknown at this stage/i);
+  assert.match(fleet, /Net savings additionally require measured coordination\/store overhead/i);
+  assert.match(quickstart, /EXISTING FLEET TRACES · LOCAL-ONLY/);
+  assert.match(quickstart, /actual_avoided_executions/);
+  assert.match(quickstart, /actual_net_savings_usd/);
+  assert.match(landing, /Already have fleet traces\?/);
+  assert.match(landing, /actual avoided executions and net savings still require active measurement/i);
+  for (const source of [fleet, quickstart, landing]) {
+    assert.doesNotMatch(source, /trace-census[^\n]{0,240}(?:proves?|guarantees?)\s+(?:savings|ROI)/i);
+  }
+});
+
 test('Agent Skill stays byte-for-byte canonical and fleet-first', async () => {
   const { agentSkillMarkdown, SEENRELAY_SKILL_DESCRIPTION } = await import('../shared/agent-skill.mjs');
   assert.equal(skill, agentSkillMarkdown());
