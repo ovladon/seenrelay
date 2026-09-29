@@ -17,7 +17,7 @@ test('canonical public facts drive install surfaces while historical benchmarks 
   assert.doesNotMatch(read('README.md'),/Measured first-party smoke result/);
   assert.doesNotMatch(read('clients','README.md'),/Measured first-party smoke result/);
 });
-test('runtime consumes canonical facts and sales pages avoid benchmark promotion',()=>{
+test('runtime consumes canonical facts and homepage may surface bounded benchmark proof',()=>{
   const pub=read('src','public.ts'), ad=read('src','adoption.ts'), q=read('src','quickstart.ts'), landing=read('src','landing.ts'), integrations=read('src','integrations.ts'), e=read('src','economics.ts'), i=read('src','index.ts');
   assert.match(pub,/publicInstallHtml\(\)/); assert.match(pub,/verifiedBenchmarkHtml\(\)/); assert.match(pub,/verifiedWorkloadMapHtml\(\)/); assert.match(pub,/latestVerifiedHtml\(\)/);
   assert.match(ad,/machinePublicFactsText\(origin\)/);
@@ -26,7 +26,8 @@ test('runtime consumes canonical facts and sales pages avoid benchmark promotion
   assert.match(integrations,/publicProductFacts\.install\.client_version/);
   assert.match(q,/siteFooterHtml\(\)/); assert.match(integrations,/siteFooterHtml\(\)/);
   assert.match(e,/Use your invoice, not a public benchmark/); assert.match(e,/Provider spend/); assert.doesNotMatch(e,/verifiedBenchmarkHtml\(|pricing_snapshots/); assert.match(i,/\/product-facts\.json/);
-  assert.doesNotMatch(landing+e,/first-party smoke|provider calls avoided|Firecrawl|OpenAI Web Search/i);
+  assert.match(landing,/controlled first-party smoke tests/i); assert.match(landing,/Firecrawl/); assert.match(landing,/No independent customer ROI claim yet/i);
+  assert.doesNotMatch(e,/first-party smoke|provider calls avoided|Firecrawl|OpenAI Web Search/i);
   assert.doesNotMatch(pub+ad+q+landing+integrations+e,/Firecrawl Pay As You Go/);
 });
 test('CI and daily monitor fail on drift or stale pricing',()=>{
