@@ -112,10 +112,11 @@ jobs:
           node scripts/test-fleet-redis-remote.mjs | tee /tmp/fleet-remote-preflight.json
           grep -q '"result":"PASS"' /tmp/fleet-remote-preflight.json
 
-      - name: Run one-round five-worker browser overlap benchmark
+      - name: Run five-worker coordination after observed provider ceiling
         env:
           SEENRELAY_FLEET_BENCH_ROUNDS: '1'
           SEENRELAY_FLEET_BENCH_WORKERS: '5'
+          SEENRELAY_FLEET_BENCH_SKIP_BASELINE: '1'
         run: |
           set -euo pipefail
           node scripts/benchmark-fleet-firecrawl-browser-overlap.mjs | tee /tmp/fleet-firecrawl-browser-overlap.stdout.json
