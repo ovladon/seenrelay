@@ -82,6 +82,8 @@ const { tools, seenRelayAmbient } =
 
     <article class="rv-choice"><header><b>OpenTelemetry / OTLP</b><span>Agent-agnostic census</span></header><p>Analyze explicitly annotated OTLP spans locally without integrating SeenRelay into a specific agent framework.</p><div class="rv-code"><pre>npx seenrelay otel-trace-census traces.otlp.json --json</pre></div><p>Only opaque exact coordinates and explicit SeenRelay policy/economics attributes enter the census. Raw prompts, URLs and payloads are not copied into the report.</p><a href="/substrate#otel">OTLP substrate guide →</a></article>
 
+    <article class="rv-choice"><header><b>Langfuse</b><span>Export census · 0.2.23+</span></header><p>Already have TOOL observations? Run a local exact-recurrence census before adding runtime coordination.</p><div class="rv-code"><pre>npx seenrelay langfuse-census observations.json --json</pre></div><p>Raw tool input is hashed locally. Repeats remain <code>NEEDS_POLICY_REVIEW</code>; recorded TOOL cost is not automatically labeled savings.</p><a href="/langfuse">Langfuse census →</a></article>
+
     <article class="rv-choice"><header><b>Generic execution</b><span>Functions / dispatchers</span></header><p>For reviewed deterministic read-only work, the provider-independent wrappers can sit below an agent, service, CI worker or scheduled process.</p><div class="rv-code"><pre>const result = await edge.guard({
   coordinate,
   validate: expensiveReadOnlyWork

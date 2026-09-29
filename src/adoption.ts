@@ -13,6 +13,7 @@ const SITEMAP_PAGES = [
   { path: '/commercial', lastmod: '2026-09-29' },
   { path: '/ai-agent-cost-optimization', lastmod: '2026-09-29' },
   { path: '/duplicate-tool-calls', lastmod: '2026-09-29' },
+  { path: '/langfuse', lastmod: '2026-09-29' },
   { path: '/readiness', lastmod: '2026-09-09' },
   { path: '/economics', lastmod: '2026-09-01' },
   { path: '/quickstart', lastmod: '2026-09-25' },
@@ -137,6 +138,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 - Commercial pilots: ${origin}/commercial
 - AI agent cost optimization: ${origin}/ai-agent-cost-optimization
 - Duplicate tool calls / tool call deduplication: ${origin}/duplicate-tool-calls
+- Langfuse local TOOL census: ${origin}/langfuse
 - Fleet deployment: ${origin}/fleet
 - Quickstart: ${origin}/quickstart
 - Canonical starter facts for known-state revalidation: ${origin}/starter-facts.json

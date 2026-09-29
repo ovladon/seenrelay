@@ -17,6 +17,7 @@ import { economicsPage } from './economics.js';
 import { substratePage } from './substrate.js';
 import { commercialPage } from './commercial.js';
 import { aiAgentCostOptimizationPage, duplicateToolCallsPage } from './seo-pages.js';
+import { langfusePage } from './langfuse.js';
 import { trustDescriptor, trustPage } from './trust.js';
 import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
 import { getPublicStats } from './public-db.js';
@@ -145,6 +146,11 @@ app.get('/duplicate-tool-calls', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(duplicateToolCallsPage(new URL(c.req.url).origin));
+});
+app.get('/langfuse', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(langfusePage(new URL(c.req.url).origin));
 });
 app.get('/clients', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
