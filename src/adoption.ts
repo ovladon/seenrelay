@@ -11,6 +11,8 @@ const SITEMAP_PAGES = [
   { path: '/fleet', lastmod: '2026-09-29' },
   { path: '/substrate', lastmod: '2026-09-29' },
   { path: '/commercial', lastmod: '2026-09-29' },
+  { path: '/ai-agent-cost-optimization', lastmod: '2026-09-29' },
+  { path: '/duplicate-tool-calls', lastmod: '2026-09-29' },
   { path: '/readiness', lastmod: '2026-09-09' },
   { path: '/economics', lastmod: '2026-09-01' },
   { path: '/quickstart', lastmod: '2026-09-25' },
@@ -133,6 +135,8 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 - Site/API owner quick readiness audit: ${origin}/readiness
 - Execution substrate: ${origin}/substrate
 - Commercial pilots: ${origin}/commercial
+- AI agent cost optimization: ${origin}/ai-agent-cost-optimization
+- Duplicate tool calls / tool call deduplication: ${origin}/duplicate-tool-calls
 - Fleet deployment: ${origin}/fleet
 - Quickstart: ${origin}/quickstart
 - Canonical starter facts for known-state revalidation: ${origin}/starter-facts.json
