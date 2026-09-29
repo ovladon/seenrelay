@@ -68,6 +68,10 @@ export function substratePage(origin: string): string {
   </div>
 </section>
 
+<section class="rv-shell rv-section">
+  <div class="rv-actions"><a class="rv-button" href="/ai-agent-cost-optimization">AI agent cost optimization</a><a class="rv-button" href="/duplicate-tool-calls">Duplicate tool calls</a></div>
+</section>
+
 <section class="rv-shell rv-final">
   <div><div class="rv-eyebrow">RULE</div><h2>Instrument broad. Coordinate narrow.</h2><p>Native controls first. Natural exact recurrence second. Positive measured economics before activation.</p></div>
   <div class="rv-actions"><a class="rv-button primary" href="/#start">Run free audit</a><a class="rv-button" href="/commercial">Commercial pilot</a></div>

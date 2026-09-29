@@ -24,12 +24,12 @@ export function clientsPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="SeenRelay integration surfaces for agents, MCP, JavaScript/TypeScript, Python, OpenTelemetry and generic execution boundaries.">
+<meta name="description" content="SeenRelay AI agent integrations for MCP, Claude Code, JavaScript/TypeScript, Python, OpenTelemetry, framework adapters and generic execution boundaries.">
 <link rel="canonical" href="${origin}/clients">
 <meta name="theme-color" content="#080a0e">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
-<title>SeenRelay — Integrations</title>
+<title>SeenRelay AI Agent Integrations — MCP, Claude Code, OpenTelemetry, JavaScript and Python</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 </head>
