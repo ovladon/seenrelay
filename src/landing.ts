@@ -104,8 +104,8 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-section rv-live-check-section" id="live-check">
   <div class="rv-section-head">
     <div class="rv-eyebrow">SEE THE DECISION LAYER WORK</div>
-    <h2>Ask one real question before integrating anything.</h2>
-    <p>Choose a canonical public fact, enter the value you already know, and choose the maximum evidence age your own policy is willing to consider. SeenRelay will run the existing CHECK operation and return recent compatible evidence. It will not fetch the authoritative answer or authorize reuse.</p>
+    <h2>Check for free before you pay to check again.</h2>
+    <p>Choose a canonical public fact, enter the value you already know, and choose the maximum evidence age your own policy is willing to consider. SeenRelay will run the existing free CHECK operation and return recent compatible evidence. It will not fetch the authoritative answer or authorize reuse.</p>
   </div>
   <div class="rv-live-check-grid">
     <form class="rv-live-check-form" id="live-check-form" data-catalog-endpoint="/starter-facts.json" data-check-endpoint="/v1/check">
