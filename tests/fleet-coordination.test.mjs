@@ -7,7 +7,8 @@ import {
   createRedisRestFleetStore,
   fleetCodecFromPrivateCodec,
   createFleetSavingsLedger,
-  SeenRelayFleetShadowMeter
+  SeenRelayFleetShadowMeter,
+  wrapFleetShadowCall
 } from '../clients/typescript/dist/fleet.js';
 import { createAesGcmPrivateCodec } from '../clients/typescript/dist/zero-state.js';
 
@@ -626,4 +627,180 @@ test('shadow cost resolver failure remains measurement-only', async () => {
   assert.equal(report.costResolutionFailures, 1);
   assert.equal(report.uncostedExecutions, 1);
   assert.equal(report.observedCostUsd, 0);
+});
+
+
+test('shadow meter coordinate canonicalization failure never suppresses the authoritative call', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const meter = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  let executions = 0;
+  const cyclic = {};
+  cyclic.self = cyclic;
+
+  const value = await meter.measure({
+    coordinate: cyclic,
+    policy: shareablePolicy,
+    execute: async () => {
+      executions += 1;
+      return { authoritative: true };
+    }
+  });
+
+  assert.deepEqual(value, { authoritative: true });
+  assert.equal(executions, 1);
+  const report = meter.getReport();
+  assert.equal(report.coordinateFailures, 1);
+  assert.equal(report.unclassifiedEligibleCalls, 1);
+  assert.equal(report.authoritativeExecutions, 1);
+  assert.equal(report.callsWithIdenticalInflightPredecessor, 0);
+});
+
+test('active coordinator coordinate canonicalization failure fails open to the original call', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const coordinator = new SeenRelayFleetCoordinator({
+    store,
+    codec: codec(),
+    scopeKey: 'tenant-fleet-a'
+  });
+  const cyclic = {};
+  cyclic.self = cyclic;
+  const receipts = [];
+  let executions = 0;
+
+  const value = await coordinator.run({
+    coordinate: cyclic,
+    policy: shareablePolicy,
+    execute: async () => {
+      executions += 1;
+      return { authoritative: true };
+    },
+    onReceipt: (receipt) => receipts.push(receipt)
+  });
+
+  assert.deepEqual(value, { authoritative: true });
+  assert.equal(executions, 1);
+  assert.equal(coordinator.getTelemetry().coordinateFailures, 1);
+  assert.equal(coordinator.getTelemetry().failOpenExecutions, 1);
+  assert.equal(receipts.length, 1);
+  assert.equal(receipts[0].path, 'fail_open_coordinate');
+  assert.equal(receipts[0].avoidedExecutions, 0);
+});
+
+test('generic shadow wrapper measures identical concurrent arguments while preserving both executions', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const a = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  const b = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  let executions = 0;
+
+  const original = async (id, payload) => {
+    executions += 1;
+    const own = executions;
+    await sleep(30);
+    return { own, id, payload };
+  };
+
+  const wrappedA = wrapFleetShadowCall(a, original, {
+    policy: shareablePolicy,
+    cost: { marginalCostUsd: 0.25, provenance: 'caller_measured' }
+  });
+  const wrappedB = wrapFleetShadowCall(b, original, {
+    policy: shareablePolicy,
+    cost: { marginalCostUsd: 0.25, provenance: 'caller_measured' }
+  });
+
+  const [ra, rb] = await Promise.all([
+    wrappedA('same-id', { x: 1 }),
+    wrappedB('same-id', { x: 1 })
+  ]);
+
+  assert.equal(executions, 2);
+  assert.notEqual(ra.own, rb.own);
+  const reports = [a.getReport(), b.getReport()];
+  assert.equal(reports.reduce((n, r) => n + r.callsWithIdenticalInflightPredecessor, 0), 1);
+  assert.ok(Math.abs(reports.reduce((n, r) => n + r.overlappedFollowerObservedCostUsd, 0) - 0.25) < 1e-12);
+});
+
+test('generic shadow wrapper does not classify different arguments as exact overlap', async () => {
+  const store = new InMemoryFleetCoordinationStore();
+  const a = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  const b = new SeenRelayFleetShadowMeter({ store, scopeKey: 'tenant-shadow-a' });
+  let executions = 0;
+
+  const original = async (value) => {
+    executions += 1;
+    await sleep(20);
+    return value;
+  };
+  const wrappedA = wrapFleetShadowCall(a, original, { policy: shareablePolicy });
+  const wrappedB = wrapFleetShadowCall(b, original, { policy: shareablePolicy });
+
+  const values = await Promise.all([wrappedA('a'), wrappedB('b')]);
+  assert.deepEqual(values.sort(), ['a', 'b']);
+  assert.equal(executions, 2);
+  assert.equal(a.getReport().callsWithIdenticalInflightPredecessor + b.getReport().callsWithIdenticalInflightPredecessor, 0);
+});
+
+test('generic shadow wrapper preserves receiver context', async () => {
+  const meter = new SeenRelayFleetShadowMeter({
+    store: new InMemoryFleetCoordinationStore(),
+    scopeKey: 'tenant-shadow-a'
+  });
+  const wrapped = wrapFleetShadowCall(
+    meter,
+    function add(value) { return this.base + value; },
+    { policy: shareablePolicy }
+  );
+
+  const result = await wrapped.call({ base: 7 }, 5);
+  assert.equal(result, 12);
+  assert.equal(meter.getReport().authoritativeExecutions, 1);
+});
+
+test('generic shadow wrapper leaves non-JSON arguments unclassified but still executes', async () => {
+  const meter = new SeenRelayFleetShadowMeter({
+    store: new InMemoryFleetCoordinationStore(),
+    scopeKey: 'tenant-shadow-a'
+  });
+  let executions = 0;
+  const wrapped = wrapFleetShadowCall(
+    meter,
+    async (fn) => {
+      executions += 1;
+      return fn();
+    },
+    { policy: shareablePolicy }
+  );
+
+  const result = await wrapped(() => 42);
+  assert.equal(result, 42);
+  assert.equal(executions, 1);
+  const report = meter.getReport();
+  assert.equal(report.coordinateFailures, 1);
+  assert.equal(report.unclassifiedEligibleCalls, 1);
+  assert.equal(report.authoritativeExecutions, 1);
+});
+
+test('coordinate builder failure in generic shadow wrapper is fail-open and unclassified', async () => {
+  const meter = new SeenRelayFleetShadowMeter({
+    store: new InMemoryFleetCoordinationStore(),
+    scopeKey: 'tenant-shadow-a'
+  });
+  let executions = 0;
+  const wrapped = wrapFleetShadowCall(
+    meter,
+    async (value) => {
+      executions += 1;
+      return value;
+    },
+    {
+      policy: shareablePolicy,
+      coordinateFromArgs() { throw new Error('cannot normalize'); }
+    }
+  );
+
+  assert.equal(await wrapped('ok'), 'ok');
+  assert.equal(executions, 1);
+  const report = meter.getReport();
+  assert.equal(report.coordinateFailures, 1);
+  assert.equal(report.unclassifiedEligibleCalls, 1);
 });

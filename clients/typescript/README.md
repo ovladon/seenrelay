@@ -193,6 +193,34 @@ console.log(meter.getReport());
 
 `callsWithIdenticalInflightPredecessor` counts eligible calls that started while the same exact shadow coordinate already had an active leader lease. `overlappedFollowerObservedCostUsd` is cost that was actually incurred during shadow execution; it is **not** labeled as avoided savings. Mutations, independent sampling and a declared zero-cost provider-native exact response cache are excluded from overlap candidacy. Store failure leaves the authoritative operation untouched and marks that eligible call unclassified.
 
+For a selected function whose semantics have already been reviewed, use the generic wrapper to remove coordinate/execute boilerplate:
+
+```js
+import {
+  wrapFleetShadowCall
+} from 'seenrelay/fleet';
+
+const measuredCall = wrapFleetShadowCall(
+  meter,
+  expensiveReadOnlyCall,
+  {
+    policy: {
+      sideEffectClass: 'read_only',
+      exactSingleAnswerShareable: true,
+      independentSamplesRequired: false
+    },
+    cost: {
+      marginalCostUsd: 0.48,
+      provenance: 'provider_list_price'
+    }
+  }
+);
+
+await measuredCall(arg1, arg2);
+```
+
+By default, the exact argument list is the shadow coordinate. If the arguments are not safely JSON-canonicalizable, the call still executes and is reported as unclassified rather than being forced into a coordinate. Use `coordinateFromArgs` only when the application can define a stricter exact identity.
+
 For expensive work repeated at the same time across separate workers, `seenrelay/fleet` can then coordinate one authoritative execution without turning the result into a sequential cache.
 
 ```js
