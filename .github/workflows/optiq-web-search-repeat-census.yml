@@ -39,20 +39,41 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           import os
-          from huggingface_hub import snapshot_download
+          import json
+          from pathlib import Path
+          from huggingface_hub import HfApi, snapshot_download
 
           revision = os.environ["OPTIQ_DATASET_REVISION"]
+          repo_id = "mlx-community/optiq-lab-traces"
+          files = HfApi().list_repo_files(repo_id=repo_id, repo_type="dataset", revision=revision)
+          expected_jsonl = sorted(name for name in files if name.endswith(".jsonl"))
           path = snapshot_download(
-              repo_id="mlx-community/optiq-lab-traces",
+              repo_id=repo_id,
               repo_type="dataset",
               revision=revision,
               allow_patterns=["*.jsonl", "README.md"],
               local_dir="/tmp/optiq-lab-traces",
           )
-          print(path)
+          observed_jsonl = sorted(
+              str(p.relative_to(path))
+              for p in Path(path).rglob("*.jsonl")
+              if p.is_file()
+          )
+          manifest = {
+              "repo_id": repo_id,
+              "revision": revision,
+              "dataset_card_declared_sessions": 866,
+              "repo_jsonl_files": len(expected_jsonl),
+              "downloaded_jsonl_files": len(observed_jsonl),
+              "repo_download_match": expected_jsonl == observed_jsonl,
+          }
+          Path("/tmp/optiq-source-manifest.json").write_text(
+              json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+          )
+          print(json.dumps(manifest, indent=2))
+          if not expected_jsonl or expected_jsonl != observed_jsonl:
+              raise SystemExit("pinned Hugging Face repo manifest did not download exactly")
           PY
-
-          test "$(find /tmp/optiq-lab-traces -maxdepth 1 -name '*.jsonl' -type f | wc -l)" -eq 866
 
       - name: Run external trace repeat census
         run: |
@@ -63,12 +84,15 @@ jobs:
           import json
           report = json.load(open("optiq-web-search-repeat-census.json"))
           assert report["dataset"]["pinned_revision"] == "05f81b5bfb8244c2886d25dadd3815560d705ca2"
-          assert report["population"]["sessions"] == 866
+          source_manifest = json.load(open("/tmp/optiq-source-manifest.json"))
+          assert report["population"]["sessions"] == source_manifest["downloaded_jsonl_files"]
           assert report["economics"]["dollar_savings_claim"] is None
           assert report["economics"]["net_savings_claim"] is None
           assert report["interpretation"]["distributed_fleet_overlap_claim"] is False
           print(json.dumps({
-              "sessions": report["population"]["sessions"],
+              "dataset_card_declared_sessions": source_manifest["dataset_card_declared_sessions"],
+              "repo_jsonl_files": source_manifest["repo_jsonl_files"],
+              "sessions_parsed": report["population"]["sessions"],
               "web_search_tool_calls": report["population"]["web_search_tool_calls"],
               "within_session_exact_query_extra_calls": report["within_session"]["exact_query_extra_calls"],
               "within_session_normalized_query_extra_calls": report["within_session"]["normalized_query_extra_calls"],
@@ -86,5 +110,6 @@ jobs:
           path: |
             optiq-web-search-repeat-census.json
             /tmp/optiq-web-search-repeat-census.stdout.json
+            /tmp/optiq-source-manifest.json
           if-no-files-found: warn
           retention-days: 30
