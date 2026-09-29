@@ -20,7 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      OPTIQ_DATASET_REVISION: 05f81b5bfb8244c2886d25dadd3815560d705ca2
+      # Discovery run only. The workflow resolves this to an immutable SHA before
+      # downloading or analyzing, and the final PR will replace main with that SHA.
+      OPTIQ_DATASET_REVISION: main
     steps:
       - name: Checkout exact SeenRelay commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -33,24 +35,35 @@ jobs:
       - name: Install pinned download client
         run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
 
-      - name: Download exact public OptiQ trace revision
+      - name: Resolve and download public OptiQ trace revision
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import os
           import json
+          import os
           from pathlib import Path
           from huggingface_hub import HfApi, snapshot_download
 
-          revision = os.environ["OPTIQ_DATASET_REVISION"]
+          requested_revision = os.environ["OPTIQ_DATASET_REVISION"]
           repo_id = "mlx-community/optiq-lab-traces"
-          files = HfApi().list_repo_files(repo_id=repo_id, repo_type="dataset", revision=revision)
+          api = HfApi()
+          resolved_revision = api.dataset_info(
+              repo_id=repo_id,
+              revision=requested_revision,
+          ).sha
+
+          files = api.list_repo_files(
+              repo_id=repo_id,
+              repo_type="dataset",
+              revision=resolved_revision,
+          )
           expected_jsonl = sorted(name for name in files if name.endswith(".jsonl"))
+
           path = snapshot_download(
               repo_id=repo_id,
               repo_type="dataset",
-              revision=revision,
+              revision=resolved_revision,
               allow_patterns=["*.jsonl", "README.md"],
               local_dir="/tmp/optiq-lab-traces",
           )
@@ -59,37 +72,45 @@ jobs:
               for p in Path(path).rglob("*.jsonl")
               if p.is_file()
           )
+
           manifest = {
               "repo_id": repo_id,
-              "revision": revision,
+              "requested_revision": requested_revision,
+              "revision": resolved_revision,
               "dataset_card_declared_sessions": 866,
               "repo_jsonl_files": len(expected_jsonl),
               "downloaded_jsonl_files": len(observed_jsonl),
               "repo_download_match": expected_jsonl == observed_jsonl,
           }
           Path("/tmp/optiq-source-manifest.json").write_text(
-              json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+              json.dumps(manifest, indent=2) + "\n",
+              encoding="utf-8",
           )
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as fh:
+              fh.write(f"OPTIQ_RESOLVED_REVISION={resolved_revision}\n")
+
           print(json.dumps(manifest, indent=2))
           if not expected_jsonl or expected_jsonl != observed_jsonl:
-              raise SystemExit("pinned Hugging Face repo manifest did not download exactly")
+              raise SystemExit("resolved Hugging Face repo manifest did not download exactly")
           PY
 
       - name: Run external trace repeat census
         run: |
           set -euo pipefail
-          python scripts/census-optiq-web-search-repeats.py             /tmp/optiq-lab-traces             --out optiq-web-search-repeat-census.json             | tee /tmp/optiq-web-search-repeat-census.stdout.json
+          python scripts/census-optiq-web-search-repeats.py             /tmp/optiq-lab-traces             --out optiq-web-search-repeat-census.json             --dataset-revision "$OPTIQ_RESOLVED_REVISION"             | tee /tmp/optiq-web-search-repeat-census.stdout.json
 
           python - <<'PY'
           import json
           report = json.load(open("optiq-web-search-repeat-census.json"))
-          assert report["dataset"]["pinned_revision"] == "05f81b5bfb8244c2886d25dadd3815560d705ca2"
           source_manifest = json.load(open("/tmp/optiq-source-manifest.json"))
+          assert report["dataset"]["pinned_revision"] == source_manifest["revision"]
           assert report["population"]["sessions"] == source_manifest["downloaded_jsonl_files"]
           assert report["economics"]["dollar_savings_claim"] is None
           assert report["economics"]["net_savings_claim"] is None
           assert report["interpretation"]["distributed_fleet_overlap_claim"] is False
           print(json.dumps({
+              "requested_revision": source_manifest["requested_revision"],
+              "resolved_revision": source_manifest["revision"],
               "dataset_card_declared_sessions": source_manifest["dataset_card_declared_sessions"],
               "repo_jsonl_files": source_manifest["repo_jsonl_files"],
               "sessions_parsed": report["population"]["sessions"],
