@@ -81,9 +81,17 @@ jobs:
           python - "$PUBLIC_VERSION" "$RELEASE_VERSION" <<'PY'
           import json
           import sys
+          import urllib.error
           import urllib.request
 
           public_version, release_version = sys.argv[1:3]
+
+          def parse(version):
+              parts = version.split('.')
+              if len(parts) != 3 or any(not part.isdigit() for part in parts):
+                  raise SystemExit(f"Invalid stable version: {version}")
+              return tuple(int(part) for part in parts)
+
           with urllib.request.urlopen('https://pypi.org/pypi/seenrelay/json', timeout=20) as response:
               data = json.load(response)
 
@@ -99,9 +107,14 @@ jobs:
           if not any('github.com/ovladon/seenrelay' in value for value in candidates):
               raise SystemExit("PyPI project 'seenrelay' does not identify the SeenRelay repository.")
 
-          # PyPI's generic project JSON can lag a freshly published release.
-          # Validate each rollout version against its version-specific endpoint.
-          for version in sorted({public_version, release_version}):
+          generic_version = str(info.get('version') or '')
+          if not (parse(public_version) <= parse(generic_version) <= parse(release_version)):
+              raise SystemExit(
+                  f"Unexpected PyPI version during staged rollout: {generic_version} "
+                  f"(expected between {public_version} and {release_version} inclusive)"
+              )
+
+          def verify_exact(version):
               with urllib.request.urlopen(
                   f'https://pypi.org/pypi/seenrelay/{version}/json',
                   timeout=20,
@@ -109,13 +122,27 @@ jobs:
                   release_data = json.load(response)
               release_info = release_data.get('info') or {}
               if str(release_info.get('version') or '') != version:
-                  raise SystemExit(
-                      f"PyPI exact endpoint did not confirm seenrelay {version}."
-                  )
+                  raise SystemExit(f"PyPI exact endpoint did not confirm seenrelay {version}.")
+
+          # The public version is already promoted and must always exist exactly.
+          verify_exact(public_version)
+
+          # A newer RELEASE_VERSION is a staged source candidate. It is allowed to be
+          # absent until the post-merge trusted-publishing workflow publishes it.
+          # If it already exists (for an idempotent retry), verify it exactly.
+          staged_release_state = 'same_as_public'
+          if release_version != public_version:
+              try:
+                  verify_exact(release_version)
+                  staged_release_state = 'already_published'
+              except urllib.error.HTTPError as exc:
+                  if exc.code != 404:
+                      raise
+                  staged_release_state = 'awaiting_trusted_publish'
 
           print(
-              f"PyPI project ownership verified; generic latest={info.get('version') or 'unknown'}; "
-              f"version-specific rollout endpoints confirmed={public_version},{release_version}"
+              f"PyPI project ownership verified; generic latest={generic_version}; "
+              f"public exact={public_version}; staged release={release_version}:{staged_release_state}"
           )
           PY
           echo 'PyPI project exists, points to the SeenRelay repository, and exposes the exact rollout artifacts.'
