@@ -111,6 +111,35 @@ jobs:
           ./node_modules/.bin/seenrelay otel-trace-census otlp.json --json > otel-report.json
           node -e "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('otel-report.json','utf8')); if(r.input_format!=='otlp-json'||r.observed_exact_overlap_starts!==1||r.actual_avoided_executions!==null) process.exit(1)"
 
+          cat > langfuse-observations.json <<'EOF'
+          {
+            "data": [
+              {
+                "id": "tool-a",
+                "traceId": "trace-a",
+                "type": "TOOL",
+                "name": "browser.read",
+                "input": {"url":"https://example.com","mode":"rendered"},
+                "startTime": "2026-09-29T10:00:00.000Z",
+                "endTime": "2026-09-29T10:00:10.000Z",
+                "totalCost": 0.3
+              },
+              {
+                "id": "tool-b",
+                "traceId": "trace-b",
+                "type": "TOOL",
+                "name": "browser.read",
+                "input": {"mode":"rendered","url":"https://example.com"},
+                "startTime": "2026-09-29T10:00:01.000Z",
+                "endTime": "2026-09-29T10:00:09.000Z",
+                "totalCost": 0.3
+              }
+            ]
+          }
+          EOF
+          ./node_modules/.bin/seenrelay langfuse-census langfuse-observations.json --json > langfuse-report.json
+          node -e "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('langfuse-report.json','utf8')); if(r.input_format!=='langfuse-observations-export'||r.exact_repeat_starts!==1||r.exact_inflight_overlap_starts!==1||r.candidate_status!=='NEEDS_POLICY_REVIEW'||r.actual_avoided_executions!==null||r.actual_net_savings_usd!==null) process.exit(1)"
+
           cd "$TMP/node_modules/seenrelay"
           node ./scripts/assert-export-targets.mjs .
           npm pack --dry-run --json >/dev/null
