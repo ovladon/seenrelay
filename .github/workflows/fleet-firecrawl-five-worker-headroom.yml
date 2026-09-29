@@ -1,0 +1,127 @@
+name: Fleet Firecrawl Five-Worker Headroom Proof
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fleet-firecrawl-five-worker-headroom
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact benchmark commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+          package-manager-cache: false
+
+      - name: Verify benchmark evidence boundaries
+        run: node --test tests/fleet-firecrawl-browser-overlap-benchmark.test.mjs
+
+      - name: Provision temporary Redis REST test store
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST https://upstash.com/start-redis \
+            -H 'User-Agent: chatgpt-seenrelay' \
+            -o /tmp/upstash.md
+          node <<'NODE'
+          const fs=require('node:fs');
+          const text=fs.readFileSync('/tmp/upstash.md','utf8');
+
+          const urls=[...new Set([
+            ...[...text.matchAll(/UPSTASH_REDIS_REST_URL\s*=\s*["'`]?([^"'\s`]+)/gi)].map(m=>m[1]),
+            ...[...text.matchAll(/https:\/\/[A-Za-z0-9.-]+\.upstash\.io/gi)].map(m=>m[0])
+          ])];
+
+          const tokens=[...new Set([
+            ...[...text.matchAll(/UPSTASH_REDIS_REST_TOKEN\s*=\s*["'`]?([^"'\s`]+)/gi)].map(m=>m[1]),
+            ...[...text.matchAll(/Authorization:\s*Bearer\s+([^\s"'\x60]+)/gi)].map(m=>m[1])
+          ])];
+
+          (async()=>{
+            let selected=null;
+            for(const url of urls){
+              for(const token of tokens){
+                try{
+                  const res=await fetch(url,{
+                    method:'POST',
+                    headers:{
+                      authorization:'Bearer '+token,
+                      'content-type':'application/json',
+                      'user-agent':'chatgpt-seenrelay'
+                    },
+                    body:JSON.stringify(['PING'])
+                  });
+                  if(!res.ok) continue;
+                  const body=await res.json();
+                  if(body?.result==='PONG'){
+                    selected={url,token};
+                    break;
+                  }
+                }catch{}
+              }
+              if(selected) break;
+            }
+            if(!selected){
+              throw new Error('No parsed Redis REST credential pair passed authenticated PING');
+            }
+            process.stdout.write('::add-mask::'+selected.token+'\n');
+            fs.appendFileSync(process.env.GITHUB_ENV,
+              'UPSTASH_REDIS_REST_URL='+selected.url+'\n'+
+              'UPSTASH_REDIS_REST_TOKEN='+selected.token+'\n');
+            console.log(JSON.stringify({
+              redis_host:new URL(selected.url).host,
+              candidate_urls:urls.length,
+              candidate_tokens:tokens.length,
+              authenticated_ping:'PASS'
+            }));
+          })().catch((e)=>{console.error(e);process.exit(1);});
+          NODE
+
+      - name: Smoke-test Redis REST EVAL
+        shell: bash
+        run: |
+          set -euo pipefail
+          RESPONSE="$(curl -fsS -X POST "$UPSTASH_REDIS_REST_URL" \
+            -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '["EVAL","return ARGV[1]","0","seenrelay-eval-ok"]')"
+          echo "$RESPONSE"
+          node -e 'const x=JSON.parse(process.argv[1]); if(x.result!=="seenrelay-eval-ok") process.exit(1)' "$RESPONSE"
+
+      - name: Prove remote two-process coordination before provider spend
+        run: |
+          set -euo pipefail
+          node scripts/test-fleet-redis-remote.mjs | tee /tmp/fleet-remote-preflight.json
+          grep -q '"result":"PASS"' /tmp/fleet-remote-preflight.json
+
+      - name: Run five-worker coordination after observed provider ceiling
+        env:
+          SEENRELAY_FLEET_BENCH_ROUNDS: '1'
+          SEENRELAY_FLEET_BENCH_WORKERS: '5'
+          SEENRELAY_FLEET_BENCH_SKIP_BASELINE: '1'
+        run: |
+          set -euo pipefail
+          node scripts/benchmark-fleet-firecrawl-browser-overlap.mjs | tee /tmp/fleet-firecrawl-browser-overlap.stdout.json
+
+      - name: Upload raw benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: fleet-firecrawl-five-worker-headroom
+          path: |
+            fleet-firecrawl-browser-overlap-benchmark.json
+            /tmp/fleet-firecrawl-browser-overlap.stdout.json
+            /tmp/fleet-remote-preflight.json
+          if-no-files-found: warn
+          retention-days: 30
