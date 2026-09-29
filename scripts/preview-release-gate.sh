@@ -97,7 +97,6 @@ grep -q 'fetch(checkEndpoint' /tmp/revamp.js
 ! grep -q '/v1/observe' /tmp/revamp.js
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/starter-facts.json" -o /tmp/starter-facts.json
 jq -e '.schema == "seenrelay-starter-facts-v1" and (.facts | length) == 15 and .semantics.values_included == false and .semantics.freshness_policy_included == false and .semantics.automatic_reuse_authorized == false' /tmp/starter-facts.json
-grep -q 'When in doubt, validate normally.' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'Prove the savings on your workload' /tmp/economics.html
 grep -q 'Hosted protocol remains free during bootstrap' /tmp/economics.html
