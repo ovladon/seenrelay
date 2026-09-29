@@ -18,7 +18,7 @@ export function fleetPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Coordinate exact eligible work across agent workers so one authoritative execution can satisfy simultaneous callers, while preserving caller-owned privacy, native controls and fail-open fallback.">
+<meta name="description" content="Coordinate exact eligible work across distributed callers so one authoritative execution can satisfy simultaneous workers, services or agents while preserving native controls and fail-open fallback.">
 <meta name="theme-color" content="#080a0e">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
@@ -32,10 +32,10 @@ export function fleetPage(origin: string): string {
 <a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/quickstart">Quickstart</a><a href="/clients">Integrations</a><a href="/trust">Trust</a></nav>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/substrate">Platform</a><a href="/fleet">Evidence</a><a href="/quickstart">Quickstart</a><a href="/clients">Integrations</a><a href="/commercial">Commercial</a><a href="/trust">Trust</a></nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
-    <nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/quickstart">Quickstart</a><a href="/clients">Integrations</a><a href="/trust">Trust</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>
+    <nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/substrate">Platform</a><a href="/fleet">Evidence</a><a href="/quickstart">Quickstart</a><a href="/clients">Integrations</a><a href="/commercial">Commercial</a><a href="/trust">Trust</a><a href="/service.json">Machine JSON</a></nav>
   </details>
   <div class="rv-nav-actions"><a class="rv-chip" href="/service.json">Machine JSON</a><a class="rv-button" href="/quickstart">Measure first</a></div>
 </header>
@@ -49,11 +49,11 @@ export function fleetPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section" id="fit">
-  <div class="rv-section-head"><div class="rv-eyebrow">WHERE IT FITS</div><h2>High-cost calls that can safely share one answer.</h2><p>The strongest fit is a fleet where multiple workers may launch the same bounded operation at the same time and the operation allocates meaningful provider spend, browser time, container capacity or downstream tool work.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">WHERE IT FITS</div><h2>High-cost exact reads that can safely share one authoritative result.</h2><p>The callers may be agents, services, CI workers or edge processes. The strongest fit is concurrent exact work that allocates meaningful provider spend, browser time, container capacity, rate-limit headroom or downstream tool work.</p></div>
   <div class="rv-grid-3">
     <article class="rv-card"><span class="rv-number">01</span><h3>Hosted tools and containers</h3><p>Read-only code execution, sandboxes, browser sessions or other separately billed resources where duplicate top-level calls allocate duplicate infrastructure.</p></article>
     <article class="rv-card"><span class="rv-number">02</span><h3>Expensive deterministic work</h3><p>Extraction, parsing, model-assisted validation or other exact work where all callers explicitly accept the same result.</p></article>
-    <article class="rv-card"><span class="rv-number">03</span><h3>Parallel agent fleets</h3><p>Workers, queues or services that can encounter the same exact coordinate concurrently but should not independently repay for it.</p></article>
+    <article class="rv-card"><span class="rv-number">03</span><h3>Distributed callers</h3><p>Agents, workers, queues, services or edge processes that can encounter the same exact coordinate concurrently but should not independently repay for it.</p></article>
   </div>
 </section>
 
@@ -91,6 +91,12 @@ npx seenrelay trace-census fleet-trace.jsonl --json</pre></div>
       <a href="https://github.com/ovladon/seenrelay/blob/main/docs/FLEET_TRACE_CENSUS.md">Trace schema and evidence boundary →</a>
     </article>
   </div>
+</section>
+
+<section class="rv-shell rv-section" id="otel">
+  <div class="rv-section-head"><div class="rv-eyebrow">OPENTELEMETRY DISCOVERY · CLIENT 0.2.22+</div><h2>Measure overlap below the framework before adding a SeenRelay wrapper.</h2><p>Existing OTLP/JSON traces can feed the same local census when spans carry an opaque exact coordinate and explicit SeenRelay policy. Span type alone never authorizes reuse.</p></div>
+  <div class="rv-code"><pre>npx seenrelay otel-trace-census traces.otlp.json --json</pre></div>
+  <div class="rv-actions"><a class="rv-button" href="/substrate#otel">Open the execution-substrate guide</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="shadow">
