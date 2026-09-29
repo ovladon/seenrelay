@@ -1,7 +1,7 @@
 import { siteFooterHtml } from './public-facts-view.js';
 
 export function commercialPage(origin: string): string {
-  const issueUrl = 'https://github.com/ovladon/seenrelay/issues/new?title=Commercial%20pilot%20inquiry&body=Please%20describe%20the%20read-only%20workload%20at%20a%20high%20level.%20Do%20not%20post%20credentials%2C%20customer%20data%2C%20private%20URLs%20or%20other%20secrets.';
+  const issueUrl = 'https://github.com/ovladon/seenrelay/issues/new?template=commercial-pilot.yml';
   return `<!doctype html>
 <html lang="en">
 <head>
