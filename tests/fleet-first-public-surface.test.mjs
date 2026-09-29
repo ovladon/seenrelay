@@ -18,7 +18,7 @@ test('fleet page exposes current distributed coordination and keeps temporal reu
   assert.match(fleet, /SeenRelayFleetCoordinator/);
   assert.match(fleet, /createRedisRestFleetStore/);
   assert.match(fleet, /createFleetSavingsLedger/);
-  assert.match(fleet, /Only actual follower reuse counts as an avoided execution/i);
+  assert.match(fleet, /avoidedExecutions.*only on actual follower reuse/i);
   assert.match(fleet, /In-flight coordination is not temporal caching/i);
   assert.match(fleet, /privateMaxAgeMs/);
   assert.match(fleet, /zero-cost exact response cache/i);
