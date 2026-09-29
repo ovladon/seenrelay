@@ -56,3 +56,15 @@ test('registry release retries are idempotent for npm and PyPI', () => {
   assert.match(workflow, /pypi\.org\/pypi\/seenrelay\/\$VERSION\/json/);
   assert.match(workflow, /if: steps\.pypi-version\.outputs\.exists != 'true'/);
 });
+
+
+test('PyPI registry readiness distinguishes verified public artifacts from staged release candidates', () => {
+  const readiness = fs.readFileSync(path.join(root, '.github', 'workflows', 'package-registry-readiness.yml'), 'utf8');
+  assert.match(readiness, /verify_exact\(public_version\)/);
+  assert.match(readiness, /release_version != public_version/);
+  assert.match(readiness, /except urllib\.error\.HTTPError as exc/);
+  assert.match(readiness, /exc\.code != 404/);
+  assert.match(readiness, /awaiting_trusted_publish/);
+  assert.match(readiness, /expected between \{public_version\} and \{release_version\} inclusive/);
+  assert.doesNotMatch(readiness, /for version in sorted\(\{public_version, release_version\}\)/);
+});
