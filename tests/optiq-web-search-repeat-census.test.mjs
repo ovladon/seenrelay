@@ -7,7 +7,7 @@ const workflow = readFileSync('.github/workflows/optiq-web-search-repeat-census.
 
 test('OptiQ census preserves conservative evidence boundaries', () => {
   assert.match(script, /external_public_trace_characterization/);
-  assert.match(script, /05f81b5bfb8244c2886d25dadd3815560d705ca2/);
+  assert.match(script, /f0e247006971ebf7d844a4f3ce59f4544aa46f56/);
   assert.match(script, /DuckDuckGo without an API key/);
   assert.match(script, /dollar_savings_claim["']?:\s*None/);
   assert.match(script, /net_savings_claim["']?:\s*None/);
@@ -24,10 +24,10 @@ test('OptiQ census preserves conservative evidence boundaries', () => {
 });
 
 test('OptiQ workflow pins the dataset and remains bounded/manual-or-PR only', () => {
-  assert.match(workflow, /OPTIQ_DATASET_REVISION:\s*(?:main|[0-9a-f]{40})/);
+  assert.match(workflow, /OPTIQ_DATASET_REVISION:\s*f0e247006971ebf7d844a4f3ce59f4544aa46f56/);
   assert.match(workflow, /resolved_revision = api\.dataset_info/);
   assert.match(workflow, /revision=resolved_revision/);
-  assert.match(workflow, /repo_id="mlx-community\/optiq-lab-traces"/);
+  assert.match(workflow, /repo_id\s*=\s*"mlx-community\/optiq-lab-traces"/);
   assert.match(workflow, /OPTIQ_RESOLVED_REVISION/);
   assert.match(workflow, /866/);
   assert.match(workflow, /timeout-minutes:\s*15/);
