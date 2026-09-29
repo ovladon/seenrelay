@@ -28,7 +28,7 @@ test('homepage follows the customer journey from value to proof to audit to safe
   assert.match(landing, /Run the free savings audit/i);
   assert.match(landing, /START HERE/i);
   assert.match(landing, /Evidence trial only/i);
-  assert.match(landing, /your workload must prove or reject the economics/i);
+  assert.match(landing, /Customer ROI is measured, not assumed/i);
 });
 
 test('homepage derives package facts and exposes bounded mechanism proof without universal ROI claims', () => {
@@ -108,7 +108,7 @@ test('preview gate enforces the self-service audit and bounded mechanism proof',
   assert.match(previewGate, /grep -q '15 CREDITS' \/tmp\/site\.html/);
   assert.match(previewGate, /grep -q '9 CREDITS' \/tmp\/site\.html/);
   assert.match(previewGate, /grep -qi 'Firecrawl' \/tmp\/site\.html/);
-  assert.match(previewGate, /grep -q 'No independent customer ROI claim yet' \/tmp\/site\.html/);
+  assert.match(previewGate, /grep -q 'Customer ROI is measured, not assumed' \/tmp\/site\.html/);
   assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/economics\.html/);
   assert.match(previewGate, /product-facts\.json/);
 });
