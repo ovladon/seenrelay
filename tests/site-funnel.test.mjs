@@ -10,7 +10,7 @@ const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.ur
 test('homepage keeps the runtime primary while routing site owners to the separate diagnostic tool', () => {
   assert.match(landing, /Find my savings — free/);
   assert.match(landing, /Try one live CHECK/);
-  assert.match(landing, /Scan a real workload\\. Measure the savings before changing behavior\\./);
+  assert.match(landing, /Scan a real workload\. Measure the savings before changing behavior\./);
   assert.match(landing, /npx seenrelay scan/);
   assert.match(landing, /uploads nothing, changes nothing/);
   assert.match(landing, /runtime shadow measurement then determines whether the candidate actually produces safe positive net savings/);
