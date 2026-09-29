@@ -1,0 +1,90 @@
+name: OptiQ Web Search Repeat Census
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/census-optiq-web-search-repeats.py'
+      - 'tests/optiq-web-search-repeat-census.test.mjs'
+      - '.github/workflows/optiq-web-search-repeat-census.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: optiq-web-search-repeat-census-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OPTIQ_DATASET_REVISION: 05f81b5bfb8244c2886d25dadd3815560d705ca2
+    steps:
+      - name: Checkout exact SeenRelay commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned download client
+        run: python -m pip install --disable-pip-version-check 'huggingface_hub==0.35.3'
+
+      - name: Download exact public OptiQ trace revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os
+          from huggingface_hub import snapshot_download
+
+          revision = os.environ["OPTIQ_DATASET_REVISION"]
+          path = snapshot_download(
+              repo_id="mlx-community/optiq-lab-traces",
+              repo_type="dataset",
+              revision=revision,
+              allow_patterns=["*.jsonl", "README.md"],
+              local_dir="/tmp/optiq-lab-traces",
+          )
+          print(path)
+          PY
+
+          test "$(find /tmp/optiq-lab-traces -maxdepth 1 -name '*.jsonl' -type f | wc -l)" -eq 866
+
+      - name: Run external trace repeat census
+        run: |
+          set -euo pipefail
+          python scripts/census-optiq-web-search-repeats.py             /tmp/optiq-lab-traces             --out optiq-web-search-repeat-census.json             | tee /tmp/optiq-web-search-repeat-census.stdout.json
+
+          python - <<'PY'
+          import json
+          report = json.load(open("optiq-web-search-repeat-census.json"))
+          assert report["dataset"]["pinned_revision"] == "05f81b5bfb8244c2886d25dadd3815560d705ca2"
+          assert report["population"]["sessions"] == 866
+          assert report["economics"]["dollar_savings_claim"] is None
+          assert report["economics"]["net_savings_claim"] is None
+          assert report["interpretation"]["distributed_fleet_overlap_claim"] is False
+          print(json.dumps({
+              "sessions": report["population"]["sessions"],
+              "web_search_tool_calls": report["population"]["web_search_tool_calls"],
+              "within_session_exact_query_extra_calls": report["within_session"]["exact_query_extra_calls"],
+              "within_session_normalized_query_extra_calls": report["within_session"]["normalized_query_extra_calls"],
+              "same_assistant_message_exact_query_extra_calls": report["within_session"]["same_assistant_message_exact_query_extra_calls"],
+              "cross_message_exact_query_extra_calls": report["within_session"]["cross_message_exact_query_extra_calls"],
+              "exact_query_keys_seen_in_multiple_sessions": report["whole_corpus"]["exact_query_keys_seen_in_multiple_sessions"],
+          }, indent=2))
+          PY
+
+      - name: Upload raw census evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: optiq-web-search-repeat-census
+          path: |
+            optiq-web-search-repeat-census.json
+            /tmp/optiq-web-search-repeat-census.stdout.json
+          if-no-files-found: warn
+          retention-days: 30
