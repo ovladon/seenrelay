@@ -11,7 +11,7 @@ test('homepage states the economic outcome immediately and keeps the audit as th
   assert.match(landing, /Pay less now\./);
   assert.match(landing, /repeated expensive read-only work across agents and infrastructure/i);
   assert.match(landing, /Run the free audit/);
-  assert.match(landing, /npx seenrelay scan/);
+  assert.match(landing, /publicProductFacts\.install\.scan_command/);
   assert.match(landing, /If the scan finds no plausible repeated expensive read-only validation, stop there/);
   assert.match(landing, /free shadow audit measures real traffic without suppressing a single authoritative call/);
   assert.match(landing, /Every original authoritative call still runs/i);
