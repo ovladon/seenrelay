@@ -187,27 +187,51 @@ print(classify_hostile_benchmark_verdict(report))</pre></div>
 </section>
 
 <section class="rv-shell rv-section" id="fleet">
-  <div class="rv-section-head"><div class="rv-eyebrow">FLEET PATH · JAVASCRIPT / TYPESCRIPT</div><h2>Share encrypted reuse state through infrastructure the caller already controls.</h2><p>Private L1 is designed for reuse across workers or process restarts. The backing store sees an opaque SHA-256 coordinate and encrypted payload; the encryption key stays outside the store contract.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">FLEET PATH · JAVASCRIPT / TYPESCRIPT</div><h2>Coordinate exact simultaneous work before considering temporal reuse.</h2><p>Client ${esc(clientVersion)} exposes <code>seenrelay/fleet</code> for caller-scoped in-flight coordination across workers. It does not create a sequential cache: a later call runs normally unless another policy separately authorizes completed-result reuse.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice">
-      <header><b>Caller-owned private L1</b><span>AES-256-GCM</span></header>
+      <header><b>Exact in-flight fleet coordination</b><span>ONE AUTHORITATIVE EXECUTION</span></header>
       <div class="rv-code"><pre>import {
-  SeenRelayZeroState,
-  createAesGcmPrivateCodec
-} from 'seenrelay/zero-state';
+  SeenRelayFleetCoordinator,
+  createRedisRestFleetStore,
+  fleetCodecFromPrivateCodec,
+  createFleetSavingsLedger
+} from 'seenrelay/fleet';
+import { createAesGcmPrivateCodec } from 'seenrelay/zero-state';
 
-const edge = new SeenRelayZeroState({
-  privateStore: fleetStore,
-  privateCodec: createAesGcmPrivateCodec(keyBytes),
-  privateMaxAgeMs: 30_000
+const savings = createFleetSavingsLedger();
+const fleet = new SeenRelayFleetCoordinator({
+  store: createRedisRestFleetStore({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN
+  }),
+  codec: fleetCodecFromPrivateCodec(
+    createAesGcmPrivateCodec(keyBytes)
+  ),
+  scopeKey: process.env.SEENRELAY_FLEET_SCOPE
+});
+
+await fleet.run({
+  coordinate,
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  },
+  execute: expensiveCall,
+  cost: {
+    marginalCostUsd: 0.48,
+    provenance: 'provider_list_price'
+  },
+  onReceipt: savings.record
 });</pre></div>
-      <p>Use a positive <code>privateMaxAgeMs</code> only when the caller has an explicit freshness policy that permits a completed result to suppress source validation.</p>
+      <p>Only actual follower reuse counts as an avoided execution. Unknown cost stays unknown. Mutations, independent sampling and mismatched coordinates pass through.</p>
     </article>
     <article class="rv-choice">
-      <header><b>Keep stronger controls ahead</b><span>ORDER</span></header>
-      <p>Preferred order: exact local/in-flight reuse → caller-owned private L1 → source-native ETag/Last-Modified or stronger authoritative mechanism → optional shared CHECK → original validation.</p>
-      <p>With <code>privateMaxAgeMs = 0</code>, a private completed result is not treated as fresh enough to suppress validation; retained source validators can still support conditional confirmation.</p>
-      <a href="/fleet">Full fleet deployment and boundaries →</a>
+      <header><b>Completed-result reuse is separate</b><span>EXPLICIT FRESHNESS</span></header>
+      <p>Use <code>SeenRelayZeroState</code> private L1 only when the caller has an explicit freshness policy for a completed result. Keep <code>privateMaxAgeMs = 0</code> when completed results must not suppress live validation.</p>
+      <p>If a provider already offers an equivalent zero-cost exact response cache, declare the native control and let it win.</p>
+      <a href="/fleet">Full fleet coordination, receipts and boundaries →</a>
     </article>
   </div>
 </section>
