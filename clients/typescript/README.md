@@ -33,6 +33,17 @@ The trace census is local-only and accepts sanitized events with opaque SHA-256 
 
 The report separates observed overlap from successful-leader opportunities and leaves `actual_avoided_executions` / `actual_net_savings_usd` null. It is a way to find natural workloads worth instrumenting, not a shortcut around shadow evidence or native-control comparison. See `docs/FLEET_TRACE_CENSUS.md` and `docs/FLEET_OVERLAP_GATE.md`.
 
+### OpenTelemetry / OTLP substrate path
+
+If the workload already emits OpenTelemetry traces, you can feed an OTLP/JSON export into the same conservative census without integrating SeenRelay with a specific agent framework:
+
+```bash
+npx seenrelay otel-trace-census traces.otlp.json
+npx seenrelay otel-trace-census traces.otlp.json --json
+```
+
+The adapter does not infer safety from an HTTP/tool/CI span type. It admits only spans carrying an opaque `seenrelay.coordinate_hash` plus explicit SeenRelay policy attributes, and it does not copy raw tool arguments/results, prompts, URLs, headers or request bodies into the report. See `docs/OTEL_TRACE_CENSUS.md`.
+
 
 ## Shared CHECK assurance
 
