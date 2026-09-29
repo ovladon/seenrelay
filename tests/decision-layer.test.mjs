@@ -9,13 +9,14 @@ const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8');
 
 test('known-state decision layer is explicit without adding a protocol operation', () => {
   const landing = read('src', 'landing.ts');
+  const substrate = read('src', 'substrate.ts');
   const service = read('src', 'public.ts');
   const index = read('src', 'index.ts');
   const decision = read('docs', 'DECISION_LAYER.md');
 
-  assert.match(landing, /need to look again/i);
-  assert.match(landing, /known-state revalidation/i);
-  assert.match(landing, /authoritative source remains available/i);
+  assert.match(landing, /href="\/substrate"/);
+  assert.match(substrate, /read-only execution/i);
+  assert.match(substrate, /native state first|native control first/i);
   assert.match(service, /known external state needs fresh authoritative validation/i);
   assert.match(service, /starter_facts:/);
   assert.match(index, /app\.get\('\/starter-facts'/);
@@ -64,14 +65,11 @@ test('starter facts stay aligned with the bounded first-party public source set'
 });
 
 
-test('homepage live CHECK is an evidence trial, not a new operation or reuse authorization', () => {
+test('homepage stays out of the protocol demo while CHECK support remains bounded in the client script', () => {
   const landing = read('src', 'landing.ts');
   const script = read('public', 'revamp.js');
 
-  assert.match(landing, /id="live-check-form"/);
-  assert.match(landing, /data-catalog-endpoint="\/starter-facts\.json"/);
-  assert.match(landing, /data-check-endpoint="\/v1\/check"/);
-  assert.match(landing, /SAME_OBSERVED is not truth and does not by itself permit suppression/i);
+  assert.doesNotMatch(landing, /id="live-check-form"|data-check-endpoint="\/v1\/check"/);
   assert.match(script, /starter-facts\.json/);
   assert.match(script, /\/v1\/check/);
   assert.match(script, /web-starter-check/);

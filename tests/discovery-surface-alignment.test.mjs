@@ -30,9 +30,9 @@ test('README starts with the safe free audit and behavior-preserving proof', () 
 
 test('llms surface leads with measurement while preserving stable machine-contract markers', () => {
   const t = read('src/adoption.ts');
-  const audit = t.indexOf('decide whether a source-backed state it already knows needs fresh authoritative validation now');
-  const architecture = t.indexOf('SeenRelay is a provider-independent revalidation decision layer');
-  assert.ok(audit >= 0 && architecture > audit);
+  const architecture = t.indexOf('SeenRelay is a provider-independent execution-reuse and revalidation layer below individual agent frameworks');
+  const proof = t.indexOf('## First proof: measure without changing application behavior');
+  assert.ok(architecture >= 0 && proof > architecture);
   assert.match(t, /## First proof: measure without changing application behavior/);
   assert.match(t, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/);
   assert.match(t, /npx skills add \$\{origin\} --skill seenrelay --yes/);
@@ -43,7 +43,7 @@ test('llms surface leads with measurement while preserving stable machine-contra
   assert.match(t, /machinePublicFactsText\(origin\)/);
   assert.match(t, /Known-state decision boundary/);
   assert.match(t, /starter-facts\.json/);
-  assert.match(t, /revalidation decision layer for known external state/);
+  assert.match(t, /execution-reuse and revalidation layer below individual agent frameworks/);
   assert.match(t, /Shared CHECK is off by default/);
   assert.match(t, /provider-native cache when it solves the same semantics/);
   assert.match(t, /Free shadow audit: https:\/\/github\.com\/ovladon\/seenrelay\/blob\/main\/docs\/SHADOW_AUDIT\.md/);

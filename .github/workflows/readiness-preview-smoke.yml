@@ -38,6 +38,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.RELEASE_SHA }}
+          fetch-depth: 0
 
       - name: Resolve exact Preview URL
         id: preview
@@ -58,21 +59,46 @@ jobs:
           set -euo pipefail
           common=(-H "x-vercel-protection-bypass: $BYPASS_SECRET")
 
-          # The branch alias may briefly serve the prior deployment after a push.
-          # Do not probe application behavior until this exact PR head is live.
-          exact_preview=false
+          deployment_covers_release() {
+            local actual commit parent
+            actual="$(jq -r '.deployment_sha // ""' "$RUNNER_TEMP/readiness-health.json")"
+            [ -n "$actual" ] || return 1
+            [ "$actual" = "$RELEASE_SHA" ] && return 0
+
+            git cat-file -e "${actual}^{commit}" 2>/dev/null || return 1
+            git cat-file -e "${RELEASE_SHA}^{commit}" 2>/dev/null || return 1
+            git merge-base --is-ancestor "$actual" "$RELEASE_SHA" || return 1
+
+            while IFS= read -r commit; do
+              [ -n "$commit" ] || continue
+              parent="$(git rev-parse "${commit}^1")"
+              if ! VERCEL_GIT_PREVIOUS_SHA="$parent" VERCEL_GIT_COMMIT_SHA="$commit" bash scripts/vercel-ignore-main.sh; then
+                echo "Preview deployment $actual is missing runtime-changing commit $commit." >&2
+                return 1
+              fi
+            done < <(git rev-list --reverse --first-parent "${actual}..${RELEASE_SHA}")
+
+            echo "Preview deployment $actual is runtime-equivalent to PR head $RELEASE_SHA."
+            return 0
+          }
+
+          # The branch alias may serve the last runtime deployment when later commits
+          # touch only tests/docs/workflows. Accept that only when every intervening
+          # commit is explicitly Vercel-ignored by the repository's runtime classifier.
+          compatible_preview=false
           for _ in $(seq 1 60); do
             health_status="$(curl --silent --show-error --output "$RUNNER_TEMP/readiness-health.json" --write-out '%{http_code}' "${common[@]}" "$PREVIEW_URL/healthz" || true)"
             if [ "$health_status" = '200' ] \
-              && jq -e --arg sha "$RELEASE_SHA" '.ok == true and .environment == "preview" and .deployment_sha == $sha' "$RUNNER_TEMP/readiness-health.json" >/dev/null; then
-              exact_preview=true
+              && jq -e '.ok == true and .environment == "preview"' "$RUNNER_TEMP/readiness-health.json" >/dev/null \
+              && deployment_covers_release; then
+              compatible_preview=true
               break
             fi
             sleep 5
           done
-          if [ "$exact_preview" != true ]; then
+          if [ "$compatible_preview" != true ]; then
             cat "$RUNNER_TEMP/readiness-health.json" >&2 || true
-            echo "exact Preview deployment did not become ready" >&2
+            echo "runtime-equivalent Preview deployment did not become ready" >&2
             exit 1
           fi
 

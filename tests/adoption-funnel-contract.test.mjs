@@ -77,9 +77,9 @@ test('Developer path advances from Ambient screening to a deterministic falsifia
   const quickstartDoc = read('docs', 'QUICKSTART.md');
   const economicsLab = read('docs', 'ECONOMICS_LAB.md');
 
-  assert.match(landing, /href="\/quickstart#evaluate"/);
-  assert.match(landing, /npx seenrelay scan/);
-  assert.match(landing, /uploads nothing, changes nothing/);
+  assert.match(landing, /href="\/quickstart"/);
+  assert.match(landing, /publicProductFacts\.install\.scan_command/);
+  assert.match(landing, /One command\. No source upload\./);
   assert.match(quickstart, /id="scan"/);
   assert.match(quickstart, /npx seenrelay scan/);
   assert.match(quickstart, /id="evaluate"/);
@@ -137,9 +137,9 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /prediction_used_to_create_observation == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
   assert.match(gate, /seenrelay scan sample --json/);
+  assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'Pay less now\.'/);
+  assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'Run the free audit'/);
   assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'npx seenrelay scan'/);
-  assert.match(gate, /Audit my agent/);
-  assert.match(gate, /free shadow audit/);
   assert.match(gate, /Missing Production first-use invariant/);
   assert.match(gate, /seenrelay==\$VERSION/);
   assert.match(gate, /await import\('seenrelay\/economics'\)/);
@@ -148,12 +148,6 @@ test('adoption automation verifies the exact public path and external discovery 
     assert.match(gate, new RegExp(homepageAsset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
   assert.match(gate, /src\/quickstart\.ts/);
-  assert.match(gate, /rv-console rv-funnel-console/);
-  assert.match(gate, /rv-console-body/);
-  assert.match(gate, /developer-audit/);
-  assert.match(gate, /href="\/quickstart#evaluate"/);
-  assert.match(gate, /Integrate directly with the client\./);
-  assert.match(gate, /Install the npm or PyPI client/);
   assert.match(gate, /SeenRelayShadowProof/);
   assert.match(gate, /evaluateHostileBenchmark/);
   assert.match(gate, /evaluate_hostile_benchmark/);

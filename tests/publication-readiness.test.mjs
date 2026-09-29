@@ -160,8 +160,8 @@ test('Claude community plugin is validated by a pinned official CLI', () => {
   }
 });
 
-test('public website exposes the validated Claude direct-install path without approval overclaim', () => {
-  for (const parts of [['src', 'landing.ts'], ['src', 'integrations.ts'], ['src', 'quickstart.ts'], ['src', 'adoption.ts']]) {
+test('technical public surfaces expose the validated Claude direct-install path without approval overclaim', () => {
+  for (const parts of [['src', 'integrations.ts'], ['src', 'quickstart.ts'], ['src', 'adoption.ts']]) {
     const surface = read(...parts);
     assert.match(surface, /claude plugin marketplace add ovladon\/seenrelay/);
     assert.match(surface, /claude plugin install --scope user seenrelay@seenrelay/);

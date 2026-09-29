@@ -27,8 +27,8 @@ test('human and machine-facing surfaces advertise public package installation fr
   const publicSource = read('src', 'public.ts');
   assert.match(view, /f\.install\.npm_command/);
   assert.match(view, /f\.install\.pypi_command/);
-  assert.match(landing, /f\.install\.npm_command/);
-  assert.match(landing, /f\.install\.pypi_command/);
+  assert.match(landing, /publicProductFacts\.install\.client_version/);
+  assert.match(landing, /publicProductFacts\.install\.scan_command/);
   assert.match(adoption, /machinePublicFactsText\(origin\)/);
   assert.match(quickstart, /publicProductFacts\.install\.client_version/);
   assert.match(integrations, /publicProductFacts\.install\.client_version/);

@@ -7,21 +7,16 @@ const readinessClient = fs.readFileSync(new URL('../public/readiness.js', import
 const revampClient = fs.readFileSync(new URL('../public/revamp.js', import.meta.url), 'utf8');
 const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.url), 'utf8');
 
-test('homepage keeps the runtime primary while routing site owners to the separate diagnostic tool', () => {
-  assert.match(landing, /Run the free savings audit/);
-  assert.match(landing, /Find out if your agents are wasting money on repeated checks/);
-  assert.match(landing, /no-brainer to test, not an automatic deployment/i);
-  assert.match(landing, /START HERE/);
-  assert.match(landing, /npx seenrelay scan/);
-  assert.match(landing, /uploads nothing, changes nothing/);
-  assert.match(landing, /If it finds no plausible repeated expensive read-only validation, stop there/);
+test('homepage states the economic outcome immediately and keeps the audit as the primary action', () => {
+  assert.match(landing, /Pay less now\./);
+  assert.match(landing, /repeated expensive read-only work across agents and infrastructure/i);
+  assert.match(landing, /Run the free audit/);
+  assert.match(landing, /publicProductFacts\.install\.scan_command/);
+  assert.match(landing, /If the scan finds no plausible repeated expensive read-only validation, stop there/);
   assert.match(landing, /free shadow audit measures real traffic without suppressing a single authoritative call/);
-  assert.match(landing, /OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START/);
-  assert.match(landing, /SEPARATE FREE TOOL/);
-  assert.match(landing, /Own a site or API\?/);
-  assert.match(landing, /href="\/readiness"/);
-  assert.match(landing, /href="#start"/);
-  assert.match(landing, /It is separate from the SeenRelay runtime product/i);
+  assert.match(landing, /Every original authoritative call still runs/i);
+  assert.match(landing, /Customer ROI is measured, not assumed/i);
+  assert.match(landing, /Commercial pilot/);
 });
 
 test('readiness result handoff is conditional rather than a universal SeenRelay CTA', () => {
@@ -46,18 +41,11 @@ test('homepage hero typography is bounded by both viewport width and height', ()
   assert.match(funnelCss, /font-size:clamp\(32px,10vw,42px\)/);
 });
 
-test('Try it audit steps stay inside one explicit console body in both modes', () => {
-  assert.match(landing, /class="rv-console rv-funnel-console"[\s\S]*class="rv-console-body"[\s\S]*data-install-view="agent"[\s\S]*data-install-view="human"/);
-  assert.match(landing, /data-install-view="human" id="developer-audit"/);
-  assert.match(funnelCss, /\.rv-funnel-console\{[^}]*display:flex[^}]*flex-direction:column/);
-  assert.match(funnelCss, /\.rv-console-body\{[^}]*display:grid[^}]*flex:1 1 auto/);
-  assert.match(funnelCss, /\.rv-funnel-console \.rv-install-view\{[^}]*grid-area:1\/1[^}]*width:100%/);
-});
-
-test('Try it explanatory copy follows the selected installation mode', () => {
-  assert.match(revampClient, /modeContent=\{\s*agent:/);
-  assert.match(revampClient, /human:\{title:'Integrate directly with the client\.'/);
-  assert.match(revampClient, /Install the npm or PyPI client/);
-  assert.match(revampClient, /title\.textContent=copy\.title/);
-  assert.match(revampClient, /body\.textContent=copy\.body/);
+test('homepage keeps implementation detail off the human landing page', () => {
+  assert.doesNotMatch(landing, /data-install-view="agent"/);
+  assert.doesNotMatch(landing, /OPTIONAL PROTOCOL DEMO/);
+  assert.doesNotMatch(landing, /live-check-form/);
+  assert.match(landing, /href="\/quickstart"/);
+  assert.match(landing, /href="\/clients"/);
+  assert.match(revampClient, /navigator\.clipboard/);
 });

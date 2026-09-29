@@ -33,7 +33,7 @@ export function quickstartPage(origin: string): string {
 <a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/clients">Integrations</a><a href="/economics">Tests</a><a href="/trust">Trust</a><a href="/openapi.json">OpenAPI</a></nav>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/substrate">Platform</a><a href="/fleet">Evidence</a><a href="/clients">Integrations</a><a href="/economics">Economics</a><a href="/commercial">Commercial</a><a href="/trust">Trust</a></nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
     <nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/clients">Integrations</a><a href="/economics">Evidence</a><a href="/trust">Trust</a><a href="/openapi.json">OpenAPI</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>
@@ -43,9 +43,9 @@ export function quickstartPage(origin: string): string {
 <main id="main-content">
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">INTEGRATION QUICKSTART · CLIENT ${esc(clientVersion)}</div>
-  <h1>Start from what the application already knows.</h1>
-  <p>SeenRelay belongs before an eligible read-only revalidation. Keep local/private state, use source-native confirmation first, optionally consult compatible recent observations, and preserve the authoritative validation until Shadow Proof shows that a narrower shortcut is both safe and worthwhile.</p>
-  <div class="rv-actions"><a class="rv-button" href="#known-state">Known-state path</a><a class="rv-button" href="#scan">Scan first</a><a class="rv-button" href="#trace-census">Existing fleet traces</a><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
+  <h1>Start from the execution boundary you already have.</h1>
+  <p>SeenRelay can sit below an agent, service, CI worker or edge process at an eligible read-only execution boundary. Keep local/private state and native controls first, preserve the authoritative execution during measurement, and coordinate only after the workload proves that a narrower shortcut is safe and worthwhile.</p>
+  <div class="rv-actions"><a class="rv-button" href="#scan">Scan first</a><a class="rv-button" href="#trace-census">Existing traces</a><a class="rv-button" href="#otel-census">OpenTelemetry</a><a class="rv-button" href="#known-state">Known-state path</a><a class="rv-button" href="#agent">Coding agent</a><a class="rv-button" href="#manual">Manual integration</a><a class="rv-button" href="#evaluate">Evaluate a candidate</a><a class="rv-button" href="#fleet">Fleet path</a><a class="rv-button quiet" href="/clients">All supported surfaces →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="known-state">
@@ -70,6 +70,14 @@ export function quickstartPage(origin: string): string {
     <article class="rv-choice"><header><b>Run the census</b><span>NO ACCOUNT · NO API KEY</span></header><div class="rv-code"><pre>npx seenrelay trace-census fleet-trace.jsonl
 npx seenrelay trace-census fleet-trace.jsonl --json</pre></div><p>Use opaque SHA-256 coordinate hashes and omit raw prompts, tool arguments, URLs, headers and results. Include caller-provenanced marginal cost or provider units only when you have them.</p></article>
     <article class="rv-choice"><header><b>Interpret the result</b><span>PRE-ACTIVATION</span></header><p><code>gross_potential_avoided_cost_usd</code> and potential provider units describe overlap opportunity under the supplied trace and cost provenance. <code>actual_avoided_executions</code> and <code>actual_net_savings_usd</code> remain unknown until active coordination is measured.</p><p>Use a positive census to choose one workload for distributed shadow measurement; do not enable broad reuse from the census alone.</p></article>
+  </div>
+</section>
+
+<section class="rv-shell rv-section" id="otel-census">
+  <div class="rv-section-head"><div class="rv-eyebrow">OPENTELEMETRY / OTLP · LOCAL-ONLY</div><h2>Measure below the agent framework using traces you already collect.</h2><p>The OTLP adapter maps explicitly annotated spans into the same conservative fleet overlap census. It does not infer that HTTP, tool, CI or IoT spans are shareable merely from their span type.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice"><header><b>Run locally</b><span>CLIENT 0.2.22+</span></header><div class="rv-code"><pre>npx seenrelay otel-trace-census traces.otlp.json --json</pre></div><p>Supply an opaque <code>seenrelay.coordinate_hash</code> plus explicit side-effect/shareability policy at instrumentation time.</p></article>
+    <article class="rv-choice"><header><b>Keep telemetry private</b><span>ALLOWLISTED MAPPING</span></header><p>The adapter does not copy generic prompts, tool arguments/results, URLs, headers or request bodies into the report. Use the result only to rank workloads for shadow measurement.</p><a href="/substrate#otel">Execution-substrate guide →</a></article>
   </div>
 </section>
 

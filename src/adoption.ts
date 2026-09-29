@@ -9,6 +9,8 @@ export function robotsText(origin: string): string {
 const SITEMAP_PAGES = [
   { path: '/', lastmod: '2026-09-25' },
   { path: '/fleet', lastmod: '2026-09-29' },
+  { path: '/substrate', lastmod: '2026-09-29' },
+  { path: '/commercial', lastmod: '2026-09-29' },
   { path: '/readiness', lastmod: '2026-09-09' },
   { path: '/economics', lastmod: '2026-09-01' },
   { path: '/quickstart', lastmod: '2026-09-25' },
@@ -27,13 +29,13 @@ export function llmsText(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   return `# SeenRelay
 
-SeenRelay helps an agent or application decide whether a source-backed state it already knows needs fresh authoritative validation now. Start with the free shadow audit: keep every authoritative validation on, measure exact recurrence and stronger local/source/provider-native controls, compare hypothetical reuse with the authoritative outcome, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.
+SeenRelay is execution-reuse infrastructure for agents, services, CI workers, browser jobs, scheduled processes and selected IoT/edge reads. It measures exact repeated read-only work at the semantic execution boundary, keeps stronger native/local/source/provider controls first, and coordinates only reviewed paths whose own evidence shows value. Start with the free shadow audit: keep every authoritative validation on, measure exact recurrence and stronger local/source/provider-native controls, compare hypothetical reuse with the authoritative outcome, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.
 
 Site and API owners can also use ${origin}/readiness for a free native-first quick audit of one public HTTPS root response. That surface checks bounded HTTP freshness/validator evidence and recommends native fixes first; it cannot determine SeenRelay workload fit from a surface scan.
 
 SeenRelay is currently free and requires no SeenRelay account or API key. The strongest current product fit is a fleet of workers or agents that repeatedly validates the same deterministic state while browser sessions, scraping/extraction, model work, paid search, rate-limited capacity or multi-step validation is materially expensive. SeenRelay should stay out of cheap one-off paths and paths already solved by an equivalent authoritative cache.
 
-SeenRelay is a provider-independent revalidation decision layer for known external state. It coordinates recent source-backed evidence across compatible callers while keeping local/private state, source-native confirmation and the authoritative source ahead of optional shared CHECK. It reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
+SeenRelay is a provider-independent execution-reuse and revalidation layer below individual agent frameworks. It coordinates recent source-backed evidence across compatible callers while keeping local/private state, source-native confirmation and the authoritative source ahead of optional shared CHECK. It reports recent observations, not universal truth. It does not browse, search, externally verify arbitrary facts on demand, or use an LLM as a truth arbiter.
 
 ## Known-state decision boundary
 
@@ -112,7 +114,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 
 - the caller already retains a known source-backed value and naturally needs to decide whether to validate it again;
 - a repeated read-only validation has deterministic identity and meaningful cost or latency;
-- the same exact source-backed state repeats across runs, workers, agents or services;
+- the same exact source-backed state or read-only execution repeats across runs, workers, agents, services, CI jobs or edge gateways;
 - local/private/source-native reuse can avoid work before shared evidence exists;
 - the validation consumes browser/proxy work, metered scraping or extraction, model work, paid search, rate-limited API capacity or a multi-step chain;
 - the application can preserve the authoritative fallback and define an explicit freshness policy.
@@ -129,6 +131,8 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 - Website: ${origin}/
 - Free shadow audit: https://github.com/ovladon/seenrelay/blob/main/docs/SHADOW_AUDIT.md
 - Site/API owner quick readiness audit: ${origin}/readiness
+- Execution substrate: ${origin}/substrate
+- Commercial pilots: ${origin}/commercial
 - Fleet deployment: ${origin}/fleet
 - Quickstart: ${origin}/quickstart
 - Canonical starter facts for known-state revalidation: ${origin}/starter-facts.json

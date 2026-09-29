@@ -22,9 +22,9 @@ export function economicsPage(origin: string): string {
 <section class="hero">
 <div class="eyebrow">MEASURED COST AVOIDANCE</div>
 <h1>Prove the savings on your workload before you enable reuse.</h1>
-<p class="lead">SeenRelay targets one narrow economic problem: agents repeatedly paying money, latency or constrained capacity to validate the same deterministic read-only state. Shadow mode keeps every authoritative call enabled while you measure whether a cheaper safe path exists.</p>
-<div class="cta"><a class="primary" href="/quickstart">Run the shadow audit</a><a class="secondary" href="/fleet">See the runtime</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Economics Lab</a></div>
-<div class="contract"><span>Free until utility is demonstrated</span><b>$0</b><span>Do not enable reuse unless measured net economics are positive</span></div>
+<p class="lead">SeenRelay targets one economic problem across agents, services, CI, browser workers and selected IoT/edge reads: independent callers repeatedly paying money, latency or constrained capacity for the same exact read-only execution. Shadow mode keeps every authoritative call enabled while you measure whether a cheaper safe path exists.</p>
+<div class="cta"><a class="primary" href="/quickstart">Run the shadow audit</a><a class="secondary" href="/fleet">See measured evidence</a><a class="secondary" href="/commercial">Commercial pilot</a><a class="secondary" href="https://github.com/ovladon/seenrelay/blob/main/docs/ECONOMICS_LAB.md">Economics Lab</a></div>
+<div class="contract"><span>Hosted protocol remains free during bootstrap</span><b>$0</b><span>Commercial pilots are separate; do not enable reuse unless measured net economics are positive</span></div>
 </section>
 
 <section class="section split decision">

@@ -233,9 +233,6 @@ jobs:
           curl --fail --silent --show-error --location \
             --header 'Accept: text/html' https://seenrelay.com/quickstart \
             --output "$RUNNER_TEMP/quickstart.html"
-          curl --fail --silent --show-error --location \
-            https://seenrelay.com/revamp.js \
-            --output "$RUNNER_TEMP/revamp.js"
           assert_contains() {
             file="$1"
             needle="$2"
@@ -245,17 +242,14 @@ jobs:
             fi
           }
 
-          assert_contains "$RUNNER_TEMP/home.html" 'Audit my agent'
-          assert_contains "$RUNNER_TEMP/home.html" 'free shadow audit'
+          assert_contains "$RUNNER_TEMP/home.html" 'Pay less now.'
+          assert_contains "$RUNNER_TEMP/home.html" 'Run the free audit'
           assert_contains "$RUNNER_TEMP/home.html" 'npx seenrelay scan'
-          assert_contains "$RUNNER_TEMP/quickstart.html" 'npx seenrelay scan'
+          assert_contains "$RUNNER_TEMP/home.html" '18 → 9'
+          assert_contains "$RUNNER_TEMP/home.html" '5 → 1'
           assert_contains "$RUNNER_TEMP/home.html" 'USE / DO NOT USE / INSUFFICIENT EVIDENCE'
-          assert_contains "$RUNNER_TEMP/home.html" 'rv-console rv-funnel-console'
-          assert_contains "$RUNNER_TEMP/home.html" 'rv-console-body'
-          assert_contains "$RUNNER_TEMP/home.html" 'id="developer-audit"'
-          assert_contains "$RUNNER_TEMP/home.html" 'href="/quickstart#evaluate"'
-          assert_contains "$RUNNER_TEMP/revamp.js" 'Integrate directly with the client.'
-          assert_contains "$RUNNER_TEMP/revamp.js" 'Install the npm or PyPI client'
+          assert_contains "$RUNNER_TEMP/home.html" 'Commercial pilot'
+          assert_contains "$RUNNER_TEMP/quickstart.html" 'npx seenrelay scan'
           assert_contains "$RUNNER_TEMP/quickstart.html" 'id="evaluate"'
           assert_contains "$RUNNER_TEMP/quickstart.html" 'SeenRelayShadowProof'
           assert_contains "$RUNNER_TEMP/quickstart.html" 'evaluateHostileBenchmark'
@@ -266,4 +260,4 @@ jobs:
           assert_contains "$RUNNER_TEMP/quickstart.html" '<h3>DO NOT USE</h3>'
           assert_contains "$RUNNER_TEMP/quickstart.html" '<h3>INSUFFICIENT EVIDENCE</h3>'
           assert_contains "$RUNNER_TEMP/quickstart.html" 'Both the evaluator and verdict classifier leave automatic reuse disabled'
-          echo 'Production exposes the current first-use panel and deterministic Developer shadow-audit verdict path.'
+          echo 'Production exposes the concise savings-first homepage and deterministic quickstart evaluation path.'
