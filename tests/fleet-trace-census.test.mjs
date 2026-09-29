@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { analyzeFleetTrace, fleetTraceSchemaVersion } from '../clients/typescript/scripts/fleet-trace-census-lib.mjs';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const cli = path.join(here, '..', 'clients', 'typescript', 'scripts', 'seenrelay-cli.mjs');
 
 const H1 = 'sha256:' + 'a'.repeat(64);
 const H2 = 'sha256:' + 'b'.repeat(64);
@@ -121,6 +129,10 @@ test('raw prompts, URLs and arguments are rejected instead of retained', () => {
     () => analyzeFleetTrace([call({ arguments: { q: 'secret' } })]),
     /raw field "arguments" is not allowed/
   );
+  assert.throws(
+    () => analyzeFleetTrace([call({ metadata: { prompt: 'nested secret' } })]),
+    /raw field "metadata.prompt" is not allowed/
+  );
 });
 
 test('eligible records require a cryptographic opaque coordinate hash', () => {
@@ -128,4 +140,27 @@ test('eligible records require a cryptographic opaque coordinate hash', () => {
     () => analyzeFleetTrace([call({ coordinate_hash: 'same request' })]),
     /coordinate_hash must be sha256/
   );
+});
+
+
+test('trace-census CLI emits machine-readable local opportunity report', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'seenrelay-trace-census-'));
+  const trace = path.join(dir, 'trace.jsonl');
+  try {
+    fs.writeFileSync(trace, [
+      JSON.stringify(call({ call_id: 'a', worker_id: 'w1', started_at_ms: 0, ended_at_ms: 100 })),
+      JSON.stringify(call({ call_id: 'b', worker_id: 'w2', started_at_ms: 10, ended_at_ms: 90 }))
+    ].join('\n'));
+
+    const stdout = execFileSync(process.execPath, [cli, 'trace-census', trace, '--json'], {
+      encoding: 'utf8'
+    });
+    const report = JSON.parse(stdout);
+    assert.equal(report.schema_version, 'seenrelay-fleet-trace-census-v1');
+    assert.equal(report.observed_exact_overlap_starts, 1);
+    assert.equal(report.actual_avoided_executions, null);
+    assert.equal(report.actual_net_savings_usd, null);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
