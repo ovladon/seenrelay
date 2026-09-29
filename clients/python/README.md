@@ -92,6 +92,66 @@ The built-in codec requires exactly 32 key bytes and uses AES-256-GCM. Store/cod
 
 Coordinate fingerprints match the JavaScript Zero-State contract for interoperable JSON values. Python rejects integers that cannot be represented exactly by JavaScript numbers instead of silently changing the coordinate. The built-in encrypted payload formats intentionally do **not** claim mixed-language ciphertext interoperability. A mixed Python/JavaScript fleet that shares one private store must provide one caller-owned codec format understood by both languages.
 
+## Fleet exact in-flight coordination
+
+The repository now includes an opt-in Python fleet coordinator for exact simultaneous read-only work across processes or workers that share a caller-owned coordination store. This is separate from completed-result freshness reuse: when no equivalent call is currently in flight, the operation executes normally.
+
+```python
+import os
+
+from seenrelay_fleet import (
+    SeenRelayFleetCoordinator,
+    create_fleet_savings_ledger,
+    create_redis_rest_fleet_store,
+    fleet_codec_from_private_codec,
+)
+from seenrelay_zero_state import create_aes_gcm_private_codec
+
+store = create_redis_rest_fleet_store(
+    url=os.environ["UPSTASH_REDIS_REST_URL"],
+    token=os.environ["UPSTASH_REDIS_REST_TOKEN"],
+)
+
+key_bytes = bytes.fromhex(os.environ["SEENRELAY_FLEET_KEY_HEX"])
+fleet = SeenRelayFleetCoordinator(
+    store=store,
+    codec=fleet_codec_from_private_codec(
+        create_aes_gcm_private_codec(key_bytes)
+    ),
+    scope_key=os.environ["SEENRELAY_FLEET_SCOPE"],
+)
+
+savings = create_fleet_savings_ledger()
+
+result = await fleet.run(
+    coordinate={
+        "provider": "openai",
+        "operation": "responses.create",
+        "model": model,
+        "input": input_payload,
+    },
+    policy={
+        "side_effect_class": "read_only",
+        "exact_single_answer_shareable": True,
+        "independent_samples_required": False,
+    },
+    execute=expensive_read_only_call,
+    cost={
+        "marginal_cost_usd": 0.48,
+        "provenance": "provider_list_price",
+    },
+    on_receipt=savings.record,
+)
+```
+
+The coordinator activates only for explicitly eligible read-only/idempotent work that accepts one exact shared answer. Mutations, independent sampling, different fleet scopes, and underspecified policies pass through. If an equivalent zero-cost provider-native exact response cache already dominates, declare it and the fleet coordinator steps aside.
+
+The Redis REST adapter uses atomic claim/publish/fail operations. Shared results are sealed with the caller's codec before entering the store. Store errors, wait expiry and codec failures fail open to the original operation. A later sequential call is not treated as a cache hit.
+
+Savings receipts are deliberately conservative: only an actual follower reuse counts as an avoided execution. Dollar value appears only when the caller supplies or resolves a marginal cost with explicit provenance; unknown cost stays unknown. Receipt callback failures never change the application result.
+
+The built-in AES codec requires `pip install 'seenrelay[crypto]'`. Mixed-language fleets should use a caller-owned codec format understood by every participating runtime; the built-in Python and JavaScript ciphertext formats do not claim cross-language interoperability.
+
 ## Ambient MCP
 
 Python can start in local-only shadow mode with no SeenRelay network call and no result suppression:
