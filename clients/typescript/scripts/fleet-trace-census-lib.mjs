@@ -48,13 +48,20 @@ function parseJsonOrJsonl(text) {
   });
 }
 
-function assertSanitized(event, index) {
-  for (const key of Object.keys(event)) {
+function assertSanitized(value, index, trail = '') {
+  if (Array.isArray(value)) {
+    value.forEach((item, i) => assertSanitized(item, index, `${trail}[${i}]`));
+    return;
+  }
+  if (!isObject(value)) return;
+  for (const [key, nested] of Object.entries(value)) {
+    const field = trail ? `${trail}.${key}` : key;
     if (FORBIDDEN_RAW_KEYS.has(key.toLowerCase())) {
       throw new Error(
-        `event ${index}: raw field "${key}" is not allowed; export an opaque coordinate_hash instead`
+        `event ${index}: raw field "${field}" is not allowed; export an opaque coordinate_hash instead`
       );
     }
+    assertSanitized(nested, index, field);
   }
 }
 
@@ -246,8 +253,9 @@ export function analyzeFleetTrace(events) {
     actual_avoided_executions: null,
     actual_net_savings_usd: null,
     result_compatibility_proven: false,
+    clock_comparability_proven: false,
     disclaimer:
-      'Trace census only. Overlap and gross potential are pre-activation opportunity evidence, not actual savings. Actual avoided executions require active follower reuse receipts; net savings also require measured coordination overhead and the best existing native/local control.'
+      'Trace census only. Overlap and gross potential are pre-activation opportunity evidence, not actual savings. Caller-supplied clock_domain asserts which timestamps are comparable; SeenRelay does not prove clock synchronization. Actual avoided executions require active follower reuse receipts; net savings also require measured coordination overhead and the best existing native/local control.'
   };
 }
 
