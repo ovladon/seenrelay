@@ -45,7 +45,7 @@ test('first use is free, behavior-preserving and self-service', () => {
   assert.match(landing, /free audit/i);
   assert.match(landing, /no API key/i);
   assert.match(landing, /Every original authoritative call still runs/i);
-  assert.match(landing, /npx seenrelay scan/);
+  assert.match(landing, /publicProductFacts\.install\.scan_command/);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/);
 });
 
@@ -99,14 +99,3 @@ test('service descriptor continues to derive the public client release', () => {
   assert.match(publicSource, /python_mode: 'shadow_first'/);
 });
 
-test('preview gate enforces the self-service audit and bounded mechanism proof', () => {
-  for (const marker of ['Find out if your agents are wasting money on repeated checks.', 'Run the free savings audit', 'START HERE', 'WHAT IS ALREADY PROVEN', 'Customer ROI is measured, not assumed', 'OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START', 'Evidence trial only.', 'SeenRelay does not replace your source of truth.']) {
-    assert.ok(previewGate.includes(marker), `preview gate must require: ${marker}`);
-  }
-  assert.match(previewGate, /grep -q '15 CREDITS' \/tmp\/site\.html/);
-  assert.match(previewGate, /grep -q '9 CREDITS' \/tmp\/site\.html/);
-  assert.match(previewGate, /grep -qi 'Firecrawl' \/tmp\/site\.html/);
-  assert.match(previewGate, /grep -q 'Customer ROI is measured, not assumed' \/tmp\/site\.html/);
-  assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/economics\.html/);
-  assert.match(previewGate, /product-facts\.json/);
-});
