@@ -69,7 +69,7 @@ export function substratePage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-final">
-  <div><div class="rv-eyebrow">RULE</div><h2>Instrument broad. Coordinate narrow.</h2><p>Native control first. Natural exact recurrence second. Positive measured economics before activation.</p></div>
+  <div><div class="rv-eyebrow">RULE</div><h2>Instrument broad. Coordinate narrow.</h2><p>Native controls first. Natural exact recurrence second. Positive measured economics before activation.</p></div>
   <div class="rv-actions"><a class="rv-button primary" href="/#start">Run free audit</a><a class="rv-button" href="/commercial">Commercial pilot</a></div>
 </section>
 </main>
