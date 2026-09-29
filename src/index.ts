@@ -14,6 +14,8 @@ import { publicLandingPage } from './landing.js';
 import { quickstartPage } from './quickstart.js';
 import { fleetPage } from './fleet.js';
 import { economicsPage } from './economics.js';
+import { substratePage } from './substrate.js';
+import { commercialPage } from './commercial.js';
 import { trustDescriptor, trustPage } from './trust.js';
 import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
 import { getPublicStats } from './public-db.js';
@@ -121,6 +123,16 @@ app.get('/economics', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(economicsPage(new URL(c.req.url).origin));
+});
+app.get('/substrate', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(substratePage(new URL(c.req.url).origin));
+});
+app.get('/commercial', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(commercialPage(new URL(c.req.url).origin));
 });
 app.get('/clients', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
