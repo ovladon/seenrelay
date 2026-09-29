@@ -73,26 +73,28 @@ grep -q '"current_pricing":"free"' /tmp/root.json
 curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_URL/" -o /tmp/site.html
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
-# The homepage contract is customer-first: value, free trial, measured verdict, narrow fit, safe fallback.
-grep -q 'Stop paying twice to verify the same thing.' /tmp/site.html
-grep -q 'SeenRelay finds the repeat work and measures what you can safely avoid.' /tmp/site.html
-grep -q "CLIENT ${client_version}" /tmp/site.html
-grep -q 'Find my savings — free' /tmp/site.html
-grep -q 'Try one live CHECK' /tmp/site.html
+# The homepage contract is customer-first: one-command audit, bounded proof, explicit no-fit outcome, safe fallback.
+grep -q 'Find out if your agents are wasting money on repeated checks.' /tmp/site.html
+grep -q 'SeenRelay is a no-brainer to test, not an automatic deployment.' /tmp/site.html
+grep -q 'Run the free savings audit' /tmp/site.html
+grep -q 'START HERE' /tmp/site.html
+grep -q 'id="hero-scan-command"' /tmp/site.html
+grep -q 'npx seenrelay scan' /tmp/site.html
+grep -q 'WHAT IS ALREADY PROVEN' /tmp/site.html
+grep -q '15 CREDITS' /tmp/site.html
+grep -q '9 CREDITS' /tmp/site.html
+grep -qi 'Firecrawl' /tmp/site.html
+grep -q 'No independent customer ROI claim yet' /tmp/site.html
+grep -q 'designed to lose when something simpler is better' /tmp/site.html
+! grep -qi 'guaranteed savings' /tmp/site.html
+grep -q 'OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START' /tmp/site.html
 grep -q 'id="live-check-form"' /tmp/site.html
 grep -q 'data-catalog-endpoint="/starter-facts.json"' /tmp/site.html
 grep -q 'data-check-endpoint="/v1/check"' /tmp/site.html
 grep -q 'Evidence trial only.' /tmp/site.html
-grep -q 'WORKLOAD VERDICT' /tmp/site.html
 grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
-grep -q 'No guessed hit rate.' /tmp/site.html
-grep -q 'Your workload decides.' /tmp/site.html
-grep -q 'Before paying to look again, ask what you already know.' /tmp/site.html
-grep -q 'Scan a real workload. Measure the savings before changing behavior.' /tmp/site.html
-grep -q 'npx seenrelay scan' /tmp/site.html
-grep -q 'every authoritative call still runs' /tmp/site.html
-grep -q 'no account' /tmp/site.html
-grep -q 'no SeenRelay API key' /tmp/site.html
+grep -q 'Every original authoritative call still runs' /tmp/site.html
+grep -qi 'no SeenRelay API key' /tmp/site.html
 grep -q 'npm install seenrelay' /tmp/site.html
 grep -q 'pip install seenrelay' /tmp/site.html
 grep -q 'SeenRelay does not replace your source of truth.' /tmp/site.html
@@ -104,9 +106,6 @@ grep -q 'fetch(checkEndpoint' /tmp/revamp.js
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/starter-facts.json" -o /tmp/starter-facts.json
 jq -e '.schema == "seenrelay-starter-facts-v1" and (.facts | length) == 15 and .semantics.values_included == false and .semantics.freshness_policy_included == false and .semantics.automatic_reuse_authorized == false' /tmp/starter-facts.json
 grep -q 'When in doubt, validate normally.' /tmp/site.html
-! grep -qi 'first-party smoke' /tmp/site.html
-! grep -qi 'Firecrawl' /tmp/site.html
-! grep -qi 'provider calls avoided' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/economics" -o /tmp/economics.html
 grep -q 'Prove the savings on your workload' /tmp/economics.html
 grep -q 'Free until utility is demonstrated' /tmp/economics.html

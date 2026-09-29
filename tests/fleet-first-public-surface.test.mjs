@@ -30,14 +30,14 @@ test('fleet page exposes shadow-first distributed measurement before active coor
   assert.match(fleet, /CHECK and OBSERVE remain the only hosted SeenRelay domain operations/i);
 });
 
-test('homepage makes free evidence trial then safe workload measurement the activation path', () => {
-  assert.match(landing, /Try one live CHECK/i);
-  assert.match(landing, /Evidence trial only/i);
-  assert.match(landing, /every authoritative call still runs/i);
+test('homepage makes the free savings audit the primary activation path', () => {
+  assert.match(landing, /Run the free savings audit/i);
+  assert.match(landing, /OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START/i);
+  assert.match(landing, /Every original authoritative call still runs/i);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/i);
   assert.match(landing, /coding agent/i);
   assert.match(landing, /npx skills add/);
-  assert.match(landing, /FREE · NO ACCOUNT/);
+  assert.match(landing, /FREE SAVINGS AUDIT/i);
   assert.match(landing, /no SeenRelay API key/i);
   assert.match(auditGuide, /every authoritative validation stays enabled/i);
   assert.match(auditGuide, /active SeenRelay reuse stays disabled/i);
@@ -46,7 +46,7 @@ test('homepage makes free evidence trial then safe workload measurement the acti
 test('primary public surfaces describe fleet value without universal savings claims', () => {
   assert.match(landing, /Agent fleets/);
   assert.match(landing, /caller-owned private reuse/i);
-  assert.match(landing, /Your workload decides/i);
+  assert.match(landing, /your workload must prove or reject the economics/i);
   assert.match(quickstart, /FLEET PATH/);
   assert.match(quickstart, /seenrelay\/fleet/);
   assert.match(quickstart, /SeenRelayFleetShadowMeter/);

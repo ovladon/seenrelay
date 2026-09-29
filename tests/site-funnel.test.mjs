@@ -8,13 +8,15 @@ const revampClient = fs.readFileSync(new URL('../public/revamp.js', import.meta.
 const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.url), 'utf8');
 
 test('homepage keeps the runtime primary while routing site owners to the separate diagnostic tool', () => {
-  assert.match(landing, /Find my savings — free/);
-  assert.match(landing, /Try one live CHECK/);
-  assert.match(landing, /Scan a real workload\. Measure the savings before changing behavior\./);
+  assert.match(landing, /Run the free savings audit/);
+  assert.match(landing, /Find out if your agents are wasting money on repeated checks/);
+  assert.match(landing, /no-brainer to test, not an automatic deployment/i);
+  assert.match(landing, /START HERE/);
   assert.match(landing, /npx seenrelay scan/);
   assert.match(landing, /uploads nothing, changes nothing/);
-  assert.match(landing, /runtime shadow measurement then determines whether the candidate actually produces safe positive net savings/);
-  assert.match(landing, /Static scanning alone cannot return a USE verdict/);
+  assert.match(landing, /If it finds no plausible repeated expensive read-only validation, stop there/);
+  assert.match(landing, /free shadow audit measures real traffic without suppressing a single authoritative call/);
+  assert.match(landing, /OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START/);
   assert.match(landing, /SEPARATE FREE TOOL/);
   assert.match(landing, /Own a site or API\?/);
   assert.match(landing, /href="\/readiness"/);
