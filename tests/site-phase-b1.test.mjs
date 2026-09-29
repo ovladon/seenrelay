@@ -19,29 +19,35 @@ test('public route keeps HTML and machine surfaces separate', () => {
   assert.match(index, /accept\.includes\('text\/html'\)/);
 });
 
-test('homepage follows the customer journey from value to trial to safety', () => {
-  const ids = ['what', 'live-check', 'how', 'start', 'fit', 'safety', 'resources'].map((id) => landing.indexOf(`id="${id}"`));
+test('homepage follows the customer journey from value to proof to audit to safety', () => {
+  const ids = ['what', 'proof', 'how', 'start', 'live-check', 'fit', 'safety', 'resources'].map((id) => landing.indexOf(`id="${id}"`));
   assert.ok(ids.every((x) => x >= 0));
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
-  assert.match(landing, /Stop paying twice to verify the same thing/i);
-  assert.match(landing, /SeenRelay finds the repeat work and measures what you can safely avoid/i);
-  assert.match(landing, /Try one live CHECK/i);
+  assert.match(landing, /Find out if your agents are wasting money on repeated checks/i);
+  assert.match(landing, /SeenRelay is a no-brainer to test, not an automatic deployment/i);
+  assert.match(landing, /Run the free savings audit/i);
+  assert.match(landing, /START HERE/i);
   assert.match(landing, /Evidence trial only/i);
-  assert.match(landing, /No guessed hit rate/i);
-  assert.match(landing, /Your workload decides/i);
+  assert.match(landing, /your workload must prove or reject the economics/i);
 });
 
-test('homepage derives package facts but never promotes benchmark results', () => {
+test('homepage derives package facts and exposes bounded mechanism proof without universal ROI claims', () => {
   assert.match(landing, /publicProductFacts/);
   assert.match(landing, /f\.install\.client_version/);
   assert.match(landing, /f\.install\.npm_command/);
   assert.match(landing, /f\.install\.pypi_command/);
-  assert.doesNotMatch(landing, /verified_benchmarks|provider calls avoided|first-party smoke|Firecrawl/i);
+  assert.match(landing, /WHAT IS ALREADY PROVEN/);
+  assert.match(landing, /15 CREDITS/);
+  assert.match(landing, /9 CREDITS/);
+  assert.match(landing, /controlled first-party smoke tests/i);
+  assert.match(landing, /No independent customer ROI claim yet/i);
+  assert.match(landing, /designed to lose when something simpler is better/i);
+  assert.doesNotMatch(landing, /guaranteed savings|universal savings percentage/i);
   assert.doesNotMatch(landing, /client\s+0\.2\.\d+/i);
 });
 
 test('first use is free, behavior-preserving and self-service', () => {
-  assert.match(landing, /FREE · NO ACCOUNT/);
+  assert.match(landing, /FREE SAVINGS AUDIT/);
   assert.match(landing, /no SeenRelay API key/i);
   assert.match(landing, /every authoritative call still runs/i);
   assert.match(landing, /npx skills add \$\{origin\} --skill seenrelay --yes/);
@@ -95,15 +101,14 @@ test('service descriptor continues to derive the public client release', () => {
   assert.match(publicSource, /python_mode: 'shadow_first'/);
 });
 
-test('preview gate enforces the self-service homepage and keeps benchmark marketing off sales surfaces', () => {
-  for (const marker of ['Stop paying twice to verify the same thing.', 'Try one live CHECK', 'Evidence trial only.', 'No guessed hit rate.', 'Before paying to look again, ask what you already know.', 'SeenRelay does not replace your source of truth.']) {
-    assert.match(previewGate, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+test('preview gate enforces the self-service audit and bounded mechanism proof', () => {
+  for (const marker of ['Find out if your agents are wasting money on repeated checks.', 'Run the free savings audit', 'START HERE', 'WHAT IS ALREADY PROVEN', 'No independent customer ROI claim yet', 'OPTIONAL PROTOCOL DEMO — NOT REQUIRED TO START', 'Evidence trial only.', 'SeenRelay does not replace your source of truth.']) {
+    assert.ok(previewGate.includes(marker), `preview gate must require: ${marker}`);
   }
-  assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/site\.html/);
-  assert.match(previewGate, /! grep -qi 'Firecrawl' \/tmp\/site\.html/);
-  assert.match(previewGate, /! grep -qi 'provider calls avoided' \/tmp\/site\.html/);
+  assert.match(previewGate, /grep -q '15 CREDITS' \/tmp\/site\.html/);
+  assert.match(previewGate, /grep -q '9 CREDITS' \/tmp\/site\.html/);
+  assert.match(previewGate, /grep -qi 'Firecrawl' \/tmp\/site\.html/);
+  assert.match(previewGate, /grep -q 'No independent customer ROI claim yet' \/tmp\/site\.html/);
   assert.match(previewGate, /! grep -qi 'first-party smoke' \/tmp\/economics\.html/);
-  assert.match(previewGate, /! grep -qi 'Firecrawl' \/tmp\/economics\.html/);
-  assert.match(previewGate, /! grep -qi 'provider calls avoided' \/tmp\/economics\.html/);
   assert.match(previewGate, /product-facts\.json/);
 });
