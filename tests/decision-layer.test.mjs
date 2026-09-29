@@ -16,7 +16,7 @@ test('known-state decision layer is explicit without adding a protocol operation
 
   assert.match(landing, /href="\/substrate"/);
   assert.match(substrate, /read-only execution/i);
-  assert.match(substrate, /native controls first/i);
+  assert.match(substrate, /native state first|native control first/i);
   assert.match(service, /known external state needs fresh authoritative validation/i);
   assert.match(service, /starter_facts:/);
   assert.match(index, /app\.get\('\/starter-facts'/);
