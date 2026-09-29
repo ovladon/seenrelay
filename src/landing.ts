@@ -142,7 +142,7 @@ export function publicLandingPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section" id="how">
-  <div class="rv-section-head"><div class="rv-eyebrow">THE DECISION BOUNDARY</div><h2>Before paying to look again, ask what you already know.</h2><p>SeenRelay does not replace your agents, source of truth or provider. It coordinates the decision about when a known external state needs to look again through authoritative validation.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">THE DECISION BOUNDARY</div><h2>Before paying to look again, ask what you already know.</h2><p>SeenRelay does not replace your agents, source of truth or provider. It coordinates the decision about whether agents need to look again at known external state through authoritative validation.</p></div>
   <div class="rv-grid-3">
     <article class="rv-card accent"><span class="rv-number">01</span><h3>Retain the known state</h3><p>Your application already has a value from an earlier authoritative observation. SeenRelay does not need to become the source of truth.</p></article>
     <article class="rv-card"><span class="rv-number">02</span><h3>Decide whether to look again</h3><p>Local/private reuse and source-native validators go first. An optional CHECK can add recent compatible evidence for a deterministic source-backed fact.</p></article>
