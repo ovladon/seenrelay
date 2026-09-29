@@ -4,7 +4,7 @@
 
 Local-first, provider-independent client with zero third-party runtime dependencies. For eligible read-only work, reuse locally or privately first, use source-native checks when available, and keep the application's original validation as fallback.
 
-Client 0.2.18 adds conservative local savings receipts and an aggregation ledger to the fleet-level exact in-flight coordination surface. Only an actual follower reuse counts as an avoided execution; dollar savings require caller-supplied or caller-resolved marginal cost with explicit provenance, and unknown cost remains unknown. Receipt callbacks and cost metadata cannot authorize coordination or change the application result. Fleet coordination remains opt-in, fail-open, caller-scoped, and provider-native-control-first. Python remains behaviorally unchanged in 0.2.18. Shared evidence never authorizes reuse by itself.
+Client 0.2.19 adds distributed shadow overlap measurement to the JavaScript / TypeScript fleet surface. Multiple workers can classify exact eligible calls that begin while the same coordinate already has an active shadow leader, while every authoritative operation still executes and no result is shared. The report records observed overlap and explicit caller cost provenance without labeling shadow cost as avoided savings. Active coordination and conservative savings receipts remain opt-in, fail-open, caller-scoped, and provider-native-control-first. Python remains behaviorally unchanged in 0.2.19. Shared evidence never authorizes reuse by itself.
 
 ## Local zero-code prescreen
 
