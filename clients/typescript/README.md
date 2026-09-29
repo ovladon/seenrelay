@@ -44,6 +44,18 @@ npx seenrelay otel-trace-census traces.otlp.json --json
 
 The adapter does not infer safety from an HTTP/tool/CI span type. It admits only spans carrying an opaque `seenrelay.coordinate_hash` plus explicit SeenRelay policy attributes, and it does not copy raw tool arguments/results, prompts, URLs, headers or request bodies into the report. See `docs/OTEL_TRACE_CENSUS.md`.
 
+### Langfuse export census
+
+If production traces already live in Langfuse, export TOOL observations and run a local candidate census before adding runtime coordination:
+
+```bash
+npx seenrelay langfuse-census observations.json --json
+```
+
+The command canonicalizes and hashes exact tool name + input locally, counts exact recurrence and in-flight overlap, and reports Langfuse-recorded TOOL cost when present. Raw tool input/output is not copied into the report.
+
+This surface deliberately stops before a USE verdict: Langfuse recurrence does not prove read-only semantics, result compatibility, executor identity, freshness policy, or residual value after a native cache. See `docs/LANGFUSE_CENSUS.md`.
+
 
 ## Shared CHECK assurance
 
