@@ -26,6 +26,7 @@ export interface FleetCostInput<T = unknown> {
 export type FleetSavingsReceiptPath =
   | 'policy_passthrough'
   | 'native_control_passthrough'
+  | 'fail_open_coordinate'
   | 'fail_open_store_claim'
   | 'leader_codec_fail_local_result'
   | 'leader_oversize_local_result'
@@ -191,6 +192,7 @@ export interface FleetShadowOverlapReport {
   successfulExecutions: number;
   failedExecutions: number;
   storeFailures: number;
+  coordinateFailures: number;
   leaseReleaseMisses: number;
   costResolutionFailures: number;
   costedExecutions: number;
@@ -209,6 +211,28 @@ export declare class SeenRelayFleetShadowMeter {
   /** Always executes the authoritative operation and returns that call's own result. */
   measure<T>(options: FleetShadowMeasureOptions<T>): Promise<T>;
 }
+
+export interface FleetShadowCallWrapperOptions<TArgs extends unknown[] = unknown[], TResult = unknown> {
+  /** Explicit semantic eligibility; plumbing is automatic but shareability is never inferred. */
+  policy: FleetExecutionPolicy;
+  /**
+   * Optional exact coordinate builder. Defaults to the full argument list.
+   * Throwing or returning a non-JSON-serializable value leaves the call unclassified but never suppresses it.
+   */
+  coordinateFromArgs?: (...args: TArgs) => unknown;
+  /** Optional observed marginal cost metadata. It never authorizes coordination. */
+  cost?: number | FleetCostInput<TResult>;
+}
+
+/**
+ * Wrap one selected call in distributed shadow overlap measurement.
+ * The original function always executes and its receiver context is preserved.
+ */
+export declare function wrapFleetShadowCall<TArgs extends unknown[], TResult>(
+  meter: SeenRelayFleetShadowMeter,
+  fn: (...args: TArgs) => TResult | Promise<TResult>,
+  options: FleetShadowCallWrapperOptions<TArgs, Awaited<TResult>>
+): (...args: TArgs) => Promise<Awaited<TResult>>;
 
 export declare function fleetCodecFromPrivateCodec(privateCodec: PrivateCodec): FleetCodec;
 
@@ -251,6 +275,7 @@ export interface FleetTelemetry {
   followerReuses: number;
   failOpenExecutions: number;
   storeFailures: number;
+  coordinateFailures: number;
   codecFailures: number;
   followerTimeouts: number;
   oversizeResults: number;
