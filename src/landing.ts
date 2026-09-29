@@ -24,7 +24,7 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="SeenRelay helps agents decide when a known external state needs fresh validation, using local and source-native controls first and recent shared evidence only when it adds measured value.">
+<meta name="description" content="SeenRelay finds repeated expensive read-only validation in agent workloads and measures what can be safely avoided, with native controls first and authoritative fallback.">
 <link rel="canonical" href="${origin}/">
 <link rel="service-desc" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <link rel="service-desc" type="application/json" href="${origin}/openapi.json" title="SeenRelay OpenAPI description">
@@ -35,11 +35,11 @@ export function publicLandingPage(origin: string): string {
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — know when your agents need to look again">
-<meta property="og:description" content="Known state, recent evidence, native controls and authoritative fallback — one decision boundary before agents spend resources validating again.">
+<meta property="og:title" content="SeenRelay — stop paying twice for the same validation">
+<meta property="og:description" content="Find repeated expensive checks, measure the avoidable cost, and enable coordination only where your own workload proves positive net savings.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
-<title>SeenRelay — Know when agents need to validate again</title>
+<title>SeenRelay — Stop paying twice for the same validation</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
@@ -62,21 +62,21 @@ export function publicLandingPage(origin: string): string {
     <summary>Menu</summary>
     <nav aria-label="Mobile navigation"><a href="#how">How it works</a><a href="#live-check">Try it</a><a href="/fleet">Product</a><a href="/clients">Integrations</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a><a href="/readiness">Free site tool</a></nav>
   </details>
-  <div class="rv-nav-actions"><a class="rv-chip" href="/clients">Integrations</a><a class="rv-button primary" href="#live-check">Try SeenRelay free</a></div>
+  <div class="rv-nav-actions"><a class="rv-chip" href="/clients">Integrations</a><a class="rv-button primary" href="#start">Find savings free</a></div>
 </header>
 
 <main id="main-content">
 <section class="rv-shell rv-hero rv-funnel-hero" id="what">
   <div>
     <div class="rv-kicker"><i></i><span>FREE · NO ACCOUNT · CLIENT ${version}</span></div>
-    <h1>Your agents already know things. <em>SeenRelay helps decide when they need to look again.</em></h1>
-    <p class="rv-lead">Put one decision boundary before eligible read-only revalidation. Use local or caller-owned state first, source-native confirmation when available, compatible recent observations only when useful, and the authoritative source whenever evidence or policy is insufficient. Start in shadow mode: every authoritative call still runs until the real workload earns a narrower shortcut.</p>
+    <h1>Stop paying twice to verify the same thing. <em>SeenRelay finds the repeat work and measures what you can safely avoid.</em></h1>
+    <p class="rv-lead">Run SeenRelay in shadow mode first: every authoritative call still runs while it measures repeated expensive read-only validation, credits stronger local and provider-native controls, and calculates whether any narrower coordination path would produce positive net savings on your real workload. If the economics do not win, do not use it.</p>
     <div class="rv-actions rv-actions-spaced">
-      <a class="rv-button primary" href="#live-check">Try one live CHECK</a>
-      <a class="rv-button" href="#start">Audit my agent</a>
+      <a class="rv-button primary" href="#start">Find my savings — free</a>
+      <a class="rv-button" href="#live-check">Try one live CHECK</a>
     </div>
     <div class="rv-proofline" aria-label="Current product facts">
-      <span>free</span><span>no account</span><span>no SeenRelay API key</span><span>known-state revalidation</span><span>native-first</span><span>shadow-first</span><span>fail open</span><span>CHECK + OBSERVE</span>
+      <span>free</span><span>no account</span><span>no SeenRelay API key</span><span>measure first</span><span>native-first</span><span>save only when proven</span><span>fail open</span><span>CHECK + OBSERVE</span>
     </div>
   </div>
   <aside class="rv-demo rv-verdict-demo" aria-label="Example SeenRelay audit output">
@@ -152,9 +152,9 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-section" id="start">
   <div class="rv-section-head">
-    <div class="rv-eyebrow">TEST IT ON YOUR AGENT</div>
-    <h2>Then scan a real workload. Integrate only a real candidate.</h2>
-    <p><code>seenrelay scan</code> reads supported project files locally, uploads nothing, changes nothing and cannot return a USE verdict. If it finds a candidate, continue with a coding agent or the client directly.</p>
+    <div class="rv-eyebrow">FIND THE MONEY LEAK</div>
+    <h2>Scan a real workload. Measure the savings before changing behavior.</h2>
+    <p><code>seenrelay scan</code> reads supported project files locally, uploads nothing and changes nothing. It prescreens for repeated expensive read-only validation; runtime shadow measurement then determines whether the candidate actually produces safe positive net savings. Static scanning alone cannot return a USE verdict.</p>
     <div class="rv-code"><pre id="scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="scan-command">Copy</button></div>
   </div>
   <div class="rv-adopt">
