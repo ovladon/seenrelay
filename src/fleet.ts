@@ -18,12 +18,12 @@ export function fleetPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Use SeenRelay as a caller-owned validation reuse layer across agent workers while preserving source-native validation and the authoritative fallback.">
+<meta name="description" content="Coordinate exact eligible work across agent workers so one authoritative execution can satisfy simultaneous callers, while preserving caller-owned privacy, native controls and fail-open fallback.">
 <meta name="theme-color" content="#080a0e">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <link rel="canonical" href="${origin}/fleet">
-<title>SeenRelay — Validation reuse for agent fleets</title>
+<title>SeenRelay — Fleet-level execution coordination</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
@@ -40,70 +40,155 @@ export function fleetPage(origin: string): string {
   <div class="rv-nav-actions"><a class="rv-chip" href="/service.json">Machine JSON</a><a class="rv-button" href="/quickstart">Measure first</a></div>
 </header>
 <main id="main-content">
+
 <section class="rv-shell rv-page-hero">
-  <div class="rv-eyebrow">AGENT-FLEET VALIDATION REUSE · CLIENT ${version}</div>
-  <h1>Reuse expensive read-only validation across your agent fleet.</h1>
-  <p>SeenRelay can put caller-owned encrypted reuse in front of repeated validation work across workers or process restarts. Source-native validators stay ahead of optional shared CHECK, and the original validation remains the fallback whenever reuse is not justified.</p>
-  <div class="rv-actions"><a class="rv-button primary" href="#deploy">Fleet deployment</a><a class="rv-button" href="/quickstart">Shadow proof first</a><a class="rv-button quiet" href="/data-practices">Data practices →</a></div>
+  <div class="rv-eyebrow">FLEET COORDINATION · CLIENT ${version}</div>
+  <h1>Stop paying twice for the same expensive work that is already in flight.</h1>
+  <p>For an explicitly shareable read-only operation, SeenRelay can coordinate exact simultaneous calls across separate workers so one authoritative execution satisfies the followers. It does not turn the result into a sequential cache, and every failure path falls back to the original operation.</p>
+  <div class="rv-actions"><a class="rv-button primary" href="#coordinate">Coordinate one call</a><a class="rv-button" href="#measure">Measure savings</a><a class="rv-button quiet" href="/data-practices">Data practices →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="fit">
-  <div class="rv-section-head"><div class="rv-eyebrow">WHERE IT FITS</div><h2>Expensive pipes with repeated, deterministic, read-only work.</h2><p>The strongest current fit is a fleet in which multiple workers repeatedly validate the same bounded state and the authoritative path costs meaningful money, latency or constrained capacity.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">WHERE IT FITS</div><h2>High-cost calls that can safely share one answer.</h2><p>The strongest fit is a fleet where multiple workers may launch the same bounded operation at the same time and the operation allocates meaningful provider spend, browser time, container capacity or downstream tool work.</p></div>
   <div class="rv-grid-3">
-    <article class="rv-card"><span class="rv-number">01</span><h3>Browser and portal validation</h3><p>Repeated read-only checks that otherwise consume browser sessions, proxy time, CAPTCHA handling or multi-step navigation.</p></article>
-    <article class="rv-card"><span class="rv-number">02</span><h3>Metered extraction or model work</h3><p>Repeated source-backed extraction, parsing or model-assisted validation with deterministic identity and an explicit freshness policy.</p></article>
-    <article class="rv-card"><span class="rv-number">03</span><h3>Shared worker fleets</h3><p>Queues, agents or services that already share a caller-owned KV/store and should not independently repay for the same eligible validation.</p></article>
+    <article class="rv-card"><span class="rv-number">01</span><h3>Hosted tools and containers</h3><p>Read-only code execution, sandboxes, browser sessions or other separately billed resources where duplicate top-level calls allocate duplicate infrastructure.</p></article>
+    <article class="rv-card"><span class="rv-number">02</span><h3>Expensive deterministic work</h3><p>Extraction, parsing, model-assisted validation or other exact work where all callers explicitly accept the same result.</p></article>
+    <article class="rv-card"><span class="rv-number">03</span><h3>Parallel agent fleets</h3><p>Workers, queues or services that can encounter the same exact coordinate concurrently but should not independently repay for it.</p></article>
   </div>
 </section>
 
-<section class="rv-shell rv-section" id="deploy">
-  <div class="rv-section-head"><div class="rv-eyebrow">CALLER-OWNED FLEET MODE</div><h2>Use the store you control. SeenRelay keeps values sealed.</h2><p>The JavaScript/TypeScript client already supports private L1 across workers or restarts. The store receives only an opaque SHA-256 coordinate key and an encrypted payload. The encryption key remains in your own secret-management boundary.</p></div>
+<section class="rv-shell rv-section" id="coordinate">
+  <div class="rv-section-head"><div class="rv-eyebrow">EXACT IN-FLIGHT COORDINATION</div><h2>Keep your gateway. Add a caller-owned coordination store.</h2><p>The JavaScript/TypeScript client exports <code>seenrelay/fleet</code>. The store holds only opaque coordination metadata plus the caller-sealed result. Different fleet scopes never coordinate.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice">
-      <header><b>Private L1</b><span>AES-256-GCM</span></header>
+      <header><b>Fleet coordinator</b><span>OPT-IN · FAIL-OPEN</span></header>
+      <div class="rv-code"><pre>import {
+  SeenRelayFleetCoordinator,
+  createRedisRestFleetStore,
+  fleetCodecFromPrivateCodec
+} from 'seenrelay/fleet';
+import { createAesGcmPrivateCodec } from 'seenrelay/zero-state';
+
+const fleet = new SeenRelayFleetCoordinator({
+  store: createRedisRestFleetStore({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN
+  }),
+  codec: fleetCodecFromPrivateCodec(
+    createAesGcmPrivateCodec(keyBytes)
+  ),
+  scopeKey: process.env.SEENRELAY_FLEET_SCOPE
+});
+
+const result = await fleet.run({
+  coordinate: {
+    provider: 'openai',
+    operation: 'responses.create',
+    model,
+    input
+  },
+  policy: {
+    sideEffectClass: 'read_only',
+    exactSingleAnswerShareable: true,
+    independentSamplesRequired: false
+  },
+  execute: () => expensiveCall()
+});</pre></div>
+      <p>Every result-affecting qualifier belongs in the coordinate. If two calls differ in model, files, tools, tenant state, randomness contract or another relevant input, they must not collapse.</p>
+    </article>
+
+    <article class="rv-choice">
+      <header><b>What stays protected</b><span>SEMANTIC CONTRACT</span></header>
+      <div class="rv-stack">
+        <article><h3>Read-only only</h3><p>Mutations and destructive operations pass through unchanged.</p></article>
+        <article><h3>No forced sampling collapse</h3><p>If independent answers, diversity, voting or randomized testing are part of the goal, keep the required multiplicity.</p></article>
+        <article><h3>Native controls still win</h3><p>If a provider already supplies an equivalent zero-cost exact response cache, declare it and SeenRelay steps aside.</p></article>
+        <article><h3>Fail open</h3><p>Store errors, follower timeouts and codec failures execute the original authoritative operation rather than inventing a hit.</p></article>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="rv-shell rv-section" id="measure">
+  <div class="rv-section-head"><div class="rv-eyebrow">SAVINGS RECEIPTS</div><h2>Count only work that was actually avoided.</h2><p>Client ${version} can emit a local receipt when a follower reused an in-flight authoritative execution. Dollar value appears only when the caller provides or resolves a marginal cost with explicit provenance.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice">
+      <header><b>Local ledger</b><span>NO BILLING</span></header>
+      <div class="rv-code"><pre>import {
+  createFleetSavingsLedger
+} from 'seenrelay/fleet';
+
+const savings = createFleetSavingsLedger();
+
+await fleet.run({
+  coordinate,
+  policy,
+  execute: expensiveCall,
+  cost: {
+    marginalCostUsd: 0.48,
+    provenance: 'provider_list_price'
+  },
+  onReceipt: savings.record
+});
+
+console.log(savings.snapshot());</pre></div>
+      <p><code>avoidedExecutions</code> increases only on actual follower reuse. If cost is unknown, SeenRelay leaves the dollar value unknown instead of estimating it.</p>
+    </article>
+    <article class="rv-choice">
+      <header><b>What a receipt does not mean</b><span>CONSERVATIVE</span></header>
+      <p>A receipt is not a billing event, customer-spend claim or proof that every similar request is shareable. It reports the local coordination path that actually occurred and the caller-provided cost provenance.</p>
+      <p>Start with one expensive operation. If follower reuse is rare or absolute savings are immaterial, leave the rest of the application unchanged.</p>
+      <a href="https://github.com/ovladon/seenrelay/blob/main/docs/FLEET_COORDINATION_PREVIEW.md">Full fleet API and boundaries →</a>
+    </article>
+  </div>
+</section>
+
+<section class="rv-shell rv-section" id="completed-reuse">
+  <div class="rv-section-head"><div class="rv-eyebrow">SEPARATE POLICY · COMPLETED RESULTS</div><h2>In-flight coordination is not temporal caching.</h2><p>A later call does not inherit a completed fleet result merely because an earlier caller finished. If the application separately wants caller-owned completed-result reuse, <code>SeenRelayZeroState</code> provides private L1 under an explicit freshness window.</p></div>
+  <div class="rv-choice-grid">
+    <article class="rv-choice">
+      <header><b>Optional private L1</b><span>AES-256-GCM</span></header>
       <div class="rv-code"><pre>import {
   SeenRelayZeroState,
   createAesGcmPrivateCodec
 } from 'seenrelay/zero-state';
 
 const edge = new SeenRelayZeroState({
-  privateStore: fleetStore, // get(key) / set(key, sealedValue)
+  privateStore: fleetStore,
   privateCodec: createAesGcmPrivateCodec(keyBytes),
   privateMaxAgeMs: 30_000
 });</pre></div>
-      <p><code>privateMaxAgeMs</code> is an explicit caller freshness decision. Leave it at zero if a private completed result must not suppress live validation; retained ETag/Last-Modified state can still support conditional source confirmation.</p>
+      <p>A positive <code>privateMaxAgeMs</code> is a separate caller freshness decision. Keep it at zero when a completed result must never suppress live validation.</p>
     </article>
     <article class="rv-choice">
-      <header><b>Order of operations</b><span>LOCAL FIRST</span></header>
-      <div class="rv-stack">
-        <article><h3>1 · Local / in-flight</h3><p>Coalesce or reuse exact work inside the process when policy permits.</p></article>
-        <article><h3>2 · Private fleet L1</h3><p>Reuse caller-owned encrypted state across workers when the explicit freshness window permits it.</p></article>
-        <article><h3>3 · Source-native</h3><p>Prefer ETag, Last-Modified or a stronger authoritative mechanism when it answers the same question cheaply.</p></article>
-        <article><h3>4 · Optional shared CHECK</h3><p>Consult recent shared observations only for facts the caller is allowed to share and only when they add value.</p></article>
-        <article><h3>5 · Validate normally</h3><p>Fall through to the existing authoritative operation whenever a cheaper path is insufficient.</p></article>
-      </div>
+      <header><b>Keep layers distinct</b><span>NO HIDDEN TTL</span></header>
+      <p><b>Fleet coordination:</b> same eligible work is already running now.</p>
+      <p><b>Private L1:</b> a completed caller-owned result may still be fresh enough under an explicit policy.</p>
+      <p><b>Shared CHECK:</b> optional recent external evidence for compatible source-backed facts.</p>
+      <p><b>Fallback:</b> when any cheaper layer is insufficient, validate normally.</p>
     </article>
   </div>
 </section>
 
 <section class="rv-shell rv-section">
-  <div class="rv-section-head"><div class="rv-eyebrow">START WITHOUT TRUSTING REUSE</div><h2>Measure the fleet before enabling suppression.</h2><p>Ambient/Shadow Proof leaves every authoritative call enabled and reports exact repetition locally. Use that report to decide whether a specific workload is dense enough to justify private or shared reuse.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">START WITHOUT ASSUMING VALUE</div><h2>Measure one expensive call before broad rollout.</h2><p>Use the scanner and shadow/economics tools to identify a real candidate, then attach fleet coordination only where the call is exact-shareable and simultaneous repetition actually occurs.</p></div>
   <div class="rv-choice-grid">
-    <article class="rv-choice"><header><b>Coding agent</b><span>Agent Skills</span></header><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><div class="rv-code"><pre>Find repeated expensive read-only validations across this agent fleet. Integrate SeenRelay only through a supported adapter, start in shadow mode, preserve the authoritative call and stronger native controls, and report the exact workloads that repeat. Where workers already share a caller-owned store, evaluate encrypted private L1 before optional shared CHECK.</pre></div></article>
-    <article class="rv-choice"><header><b>Decision rule</b><span>FAIL CLOSED</span></header><p>If exact repetition is rare, the original operation is already cheap, a provider/source-native cache answers the same question, or policy requires fresh live validation every time, leave SeenRelay out of the path.</p><p>If repetition is material and expensive, use the narrowest bounded reuse layer that preserves the same user-relevant outcome.</p></article>
+    <article class="rv-choice"><header><b>Coding agent</b><span>Agent Skills</span></header><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><div class="rv-code"><pre>Find repeated expensive read-only calls in this agent fleet. Preserve the original operation and stronger native controls. If exact compatible calls overlap in flight, evaluate seenrelay/fleet for one-authoritative-execution coordination and report avoided executions with explicit cost provenance. Do not collapse mutations, independent sampling or tenant-specific work.</pre></div></article>
+    <article class="rv-choice"><header><b>Decision rule</b><span>MEASURED VALUE</span></header><p>If compatible overlap is rare, the operation is cheap, or a stronger native mechanism already removes the cost, leave SeenRelay out of that path.</p><p>If the overlap is material and expensive, keep the narrowest explicit policy that preserves the caller's intended result multiplicity.</p></article>
   </div>
 </section>
 
 <section class="rv-shell rv-section">
-  <div class="rv-section-head"><div class="rv-eyebrow">BOUNDARIES</div><h2>Fleet reuse is not a hosted tenant claim.</h2><p>Private L1 is caller-owned storage. SeenRelay does not claim that the public relay is a private tenant store. CHECK and OBSERVE remain the only hosted domain operations; they remain optional shared-evidence operations with their existing public protocol semantics.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">BOUNDARIES</div><h2>Fleet coordination is caller-scoped infrastructure.</h2><p>The coordination store is caller-owned. CHECK and OBSERVE remain the only hosted SeenRelay domain operations and are not required for fleet in-flight coordination.</p></div>
   <div class="rv-contract-list">
-    <article><b>No truth verdict</b><span>SeenRelay reports compatible recent observations; it does not decide reality.</span></article>
-    <article><b>No mutation suppression</b><span>Mutating or destructive operations are outside the reuse target.</span></article>
-    <article><b>No fake independence</b><span>A private/provider cache hit is never relabeled as a new independent OBSERVE.</span></article>
+    <article><b>No truth verdict</b><span>Coordination says who should execute compatible work, not whether the result is true.</span></article>
+    <article><b>No mutation suppression</b><span>Mutating or destructive operations remain outside the coordination target.</span></article>
+    <article><b>No cross-tenant assumption</b><span>Different fleet scopes do not coordinate, and sealed results stay inside the caller's encryption boundary.</span></article>
   </div>
 </section>
 
-<section class="rv-shell rv-final"><div><div class="rv-eyebrow">NEXT STEP</div><h2>Measure one expensive fleet validation today.</h2><p>Start shadow-only. If the workload repeats materially, connect the caller-owned private store and keep stronger native controls ahead of optional shared evidence.</p></div><div class="rv-actions"><a class="rv-button primary" href="/quickstart">Quickstart</a><a class="rv-button" href="/clients">Integration chooser</a></div></section>
+<section class="rv-shell rv-final"><div><div class="rv-eyebrow">NEXT STEP</div><h2>Measure one simultaneous expensive operation today.</h2><p>Install client ${version}, keep the original provider/gateway, attach <code>seenrelay/fleet</code> to one exact-shareable read-only call, and inspect the local savings ledger before expanding scope.</p></div><div class="rv-actions"><a class="rv-button primary" href="/quickstart#fleet">Quickstart</a><a class="rv-button" href="/clients">Integration chooser</a></div></section>
+
 </main>
 ${siteFooterHtml()}
 </body>

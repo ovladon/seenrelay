@@ -12,15 +12,18 @@ const index = read('src/index.ts');
 const skillSource = read('shared/agent-skill.mjs');
 const skill = read('skills/seenrelay/SKILL.md');
 
-test('fleet page exposes only current caller-owned fleet capability', () => {
-  assert.match(fleet, /Reuse expensive read-only validation across your agent fleet/i);
-  assert.match(fleet, /caller-owned/i);
-  assert.match(fleet, /AES-256-GCM/);
+test('fleet page exposes current distributed coordination and keeps temporal reuse separate', () => {
+  assert.match(fleet, /Stop paying twice for the same expensive work that is already in flight/i);
+  assert.match(fleet, /seenrelay\/fleet/);
+  assert.match(fleet, /SeenRelayFleetCoordinator/);
+  assert.match(fleet, /createRedisRestFleetStore/);
+  assert.match(fleet, /createFleetSavingsLedger/);
+  assert.match(fleet, /avoidedExecutions.*only on actual follower reuse/i);
+  assert.match(fleet, /In-flight coordination is not temporal caching/i);
   assert.match(fleet, /privateMaxAgeMs/);
-  assert.match(fleet, /source-native/i);
-  assert.match(fleet, /optional shared CHECK/i);
-  assert.match(fleet, /not a hosted tenant claim|does not claim[^.]*private tenant store/i);
-  assert.match(fleet, /original validation remains the fallback/i);
+  assert.match(fleet, /zero-cost exact response cache/i);
+  assert.match(fleet, /fail open/i);
+  assert.match(fleet, /CHECK and OBSERVE remain the only hosted SeenRelay domain operations/i);
 });
 
 test('homepage makes free evidence trial then safe workload measurement the activation path', () => {
@@ -41,7 +44,10 @@ test('primary public surfaces describe fleet value without universal savings cla
   assert.match(landing, /caller-owned private reuse/i);
   assert.match(landing, /Your workload decides/i);
   assert.match(quickstart, /FLEET PATH/);
-  assert.match(quickstart, /privateStore: fleetStore/);
+  assert.match(quickstart, /seenrelay\/fleet/);
+  assert.match(quickstart, /SeenRelayFleetCoordinator/);
+  assert.match(quickstart, /createFleetSavingsLedger/);
+  assert.match(quickstart, /Completed-result reuse is separate/i);
   assert.match(adoption, /provider-independent revalidation decision layer for known external state/i);
   assert.match(adoption, /\/fleet/);
   assert.match(index, /app\.get\('\/fleet'/);
@@ -60,6 +66,7 @@ test('Agent Skill stays byte-for-byte canonical and fleet-first', async () => {
 });
 
 test('fleet positioning preserves the two-operation hosted boundary', () => {
-  assert.match(fleet, /CHECK and OBSERVE remain the only hosted domain operations/i);
+  assert.match(fleet, /CHECK and OBSERVE remain the only hosted SeenRelay domain operations/i);
+  assert.match(fleet, /caller-owned/i);
   assert.doesNotMatch(fleet, /hosted tenant (?:store|cache|isolation) is (?:available|implemented)/i);
 });

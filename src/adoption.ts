@@ -8,7 +8,7 @@ export function robotsText(origin: string): string {
 
 const SITEMAP_PAGES = [
   { path: '/', lastmod: '2026-09-25' },
-  { path: '/fleet', lastmod: '2026-09-08' },
+  { path: '/fleet', lastmod: '2026-09-29' },
   { path: '/readiness', lastmod: '2026-09-09' },
   { path: '/economics', lastmod: '2026-09-01' },
   { path: '/quickstart', lastmod: '2026-09-25' },
