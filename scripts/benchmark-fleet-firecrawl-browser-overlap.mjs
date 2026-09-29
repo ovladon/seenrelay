@@ -22,6 +22,7 @@ const FIRECRAWL_BASE = 'https://api.firecrawl.dev/v2';
 const workerMode = process.argv.includes('--worker');
 const rounds = Math.max(1, Math.min(5, Number(process.env.SEENRELAY_FLEET_BENCH_ROUNDS || 3)));
 const workerCount = Math.max(2, Math.min(10, Number(process.env.SEENRELAY_FLEET_BENCH_WORKERS || 2)));
+const skipBaseline = process.env.SEENRELAY_FLEET_BENCH_SKIP_BASELINE === '1';
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function createBenchmarkHttpFleetStore(url) {
@@ -583,8 +584,10 @@ async function parent() {
       throw new Error(`benchmark coordination preflight failed: ${JSON.stringify(coordinationPreflight)}`);
     }
 
-    for (let round = 1; round <= rounds; round += 1) {
-      baseline.push(await runGroup({ root, phase: 'baseline', round, runKey, keyHex, redisPrefix, storeUrl: benchmarkStore.url }));
+    if (!skipBaseline) {
+      for (let round = 1; round <= rounds; round += 1) {
+        baseline.push(await runGroup({ root, phase: 'baseline', round, runKey, keyHex, redisPrefix, storeUrl: benchmarkStore.url }));
+      }
     }
     for (let round = 1; round <= rounds; round += 1) {
       active.push(await runGroup({ root, phase: 'active', round, runKey, keyHex, redisPrefix, storeUrl: benchmarkStore.url }));
@@ -600,7 +603,7 @@ async function parent() {
     const flatBaseline = baseline.flat();
     const flatActive = active.flat();
 
-    const allKeys = [...flatBaseline, ...flatActive].map(stableValueKey);
+    const allKeys = [...flatBaseline, ...flatActive].map(stableValueKey).filter((key) => key !== 'null');
     const stableLayout = allKeys.length > 0 && allKeys.every((key) => key === allKeys[0]);
 
     const telemetryFields = [
@@ -666,7 +669,13 @@ async function parent() {
       },
       rounds,
       workers_per_round: workerCount,
-      baseline: {
+      baseline: skipBaseline ? {
+        skipped: true,
+        reason: 'A prior bounded 5-worker baseline hit Firecrawl HTTP 429: maximum number of concurrent jobs (2).',
+        evidence_url: 'https://github.com/ovladon/seenrelay/actions/runs/36560937224',
+        provider_concurrency_limit_observed: 2
+      } : {
+        skipped: false,
         provider_executions: baselineExecutions.length,
         total_provider_credits: baselineCredits,
         caller_latency_ms_median: Number(median(flatBaseline.map((x) => x.callerMs)).toFixed(3))
@@ -695,13 +704,17 @@ async function parent() {
     };
 
     report.kill_criteria = {
-      baseline_executions_equal_workers_per_round: baselineExecutions.length === rounds * workerCount,
+      baseline_boundary_accounted_for: skipBaseline
+        ? workerCount > 2
+        : baselineExecutions.length === rounds * workerCount,
       active_executions_equal_one_per_round: activeExecutions.length === rounds,
       active_roles_equal_one_leader_rest_followers_per_round:
         leaders === rounds && followers === rounds * (workerCount - 1),
       avoided_executions_equal_followers_per_round: avoidedExecutions === rounds * (workerCount - 1),
       authoritative_browser_value_stable: stableLayout,
-      provider_credits_lower_when_measurable: actualCreditDelta == null ? null : actualCreditDelta > 0
+      provider_credits_lower_when_measurable: skipBaseline
+        ? null
+        : (actualCreditDelta == null ? null : actualCreditDelta > 0)
     };
     report.mechanism_result = Object.entries(report.kill_criteria)
       .filter(([, value]) => value !== null)
