@@ -70,7 +70,7 @@ export function publicLandingPage(origin: string): string {
   <div>
     <div class="rv-kicker"><i></i><span>FREE SAVINGS AUDIT · NO ACCOUNT · NO SEENRELAY API KEY</span></div>
     <h1>Find out if your agents are wasting money on repeated checks. <em>Test SeenRelay for free. Keep it only if it proves value.</em></h1>
-    <p class="rv-lead"><b>SeenRelay is a no-brainer to test, not an automatic deployment.</b> The shadow audit keeps every original authoritative call running while it measures exact repetition, stronger native controls and SeenRelay overhead. If your real workload does not show safe positive economics, the answer is <b>DO NOT USE</b>.</p>
+    <p class="rv-lead"><b>SeenRelay is a no-brainer to test, not an automatic deployment.</b> During the shadow audit, every authoritative call still runs while SeenRelay measures exact repetition, stronger native controls and its own overhead. If your real workload does not show safe positive economics, the answer is <b>DO NOT USE</b>.</p>
     <div class="rv-actions rv-actions-spaced">
       <a class="rv-button primary" href="#start">Run the free savings audit</a>
       <a class="rv-button" href="#proof">See what is already proven</a>
@@ -107,7 +107,7 @@ export function publicLandingPage(origin: string): string {
   <div class="rv-grid-3">
     <article class="rv-card accent"><span class="rv-number">15 CREDITS</span><h3>Structured extraction</h3><p>Across 3 repeated Firecrawl JSON validations, the measured reuse path made 0 Firecrawl calls and avoided 15 provider credits. Median reuse-path latency was 617.78 ms versus 1265.68 ms for the fresh provider path.</p><a href="https://github.com/ovladon/seenrelay/actions/runs/32953960787">Inspect the run →</a></article>
     <article class="rv-card"><span class="rv-number">9 CREDITS</span><h3>Browser interaction</h3><p>Across 3 repeated Firecrawl browser validations, the measured reuse path made 0 Firecrawl calls and avoided 9 provider credits. Median reuse-path latency was 661.37 ms versus 4385.02 ms for the measured browser path.</p><a href="https://github.com/ovladon/seenrelay/actions/runs/32965390611">Inspect the run →</a></article>
-    <article class="rv-card"><span class="rv-number">NO HYPE</span><h3>No independent customer ROI claim yet</h3><p>We do not yet have an independent customer workload that proves a general savings percentage. That is why the audit is free: your own traffic must prove or reject the economics before deployment.</p><a href="/product-facts.json">Inspect machine-readable evidence →</a></article>
+    <article class="rv-card"><span class="rv-number">NO HYPE</span><h3>No independent customer ROI claim yet</h3><p>We do not yet have an independent customer workload that proves a general savings percentage. That is why the audit is free: your workload must prove or reject the economics before deployment.</p><a href="/product-facts.json">Inspect machine-readable evidence →</a></article>
   </div>
   <div class="rv-trust-note"><b>The important negative result:</b> both synthetic examples also had a cheaper source-native route for the exact fact tested. The correct deployment decision there was to prefer the native route. SeenRelay is designed to lose when something simpler is better.</div>
 </section>
@@ -125,7 +125,7 @@ export function publicLandingPage(origin: string): string {
   <div class="rv-section-head">
     <div class="rv-eyebrow">START SAVING — OR PROVE YOU SHOULD NOT USE IT</div>
     <h2>Run this first. It is the shortest path to an answer.</h2>
-    <p><code>seenrelay scan</code> reads supported project files locally, uploads nothing and changes nothing. If it finds no plausible repeated expensive read-only validation, stop there. If it finds a candidate, the free shadow audit measures real traffic without suppressing a single authoritative call.</p>
+    <p><code>seenrelay scan</code> reads supported project files locally, uploads nothing, changes nothing. If it finds no plausible repeated expensive read-only validation, stop there. If it finds a candidate, the free shadow audit measures real traffic without suppressing a single authoritative call.</p>
     <div class="rv-code"><pre id="scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="scan-command">Copy</button></div>
   </div>
   <div class="rv-adopt">
@@ -206,7 +206,7 @@ export function publicLandingPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section" id="safety">
-  <div class="rv-section-head"><div class="rv-eyebrow">SAFE BY DEFAULT</div><h2>SeenRelay does not replace your source of truth.</h2><p>It sits in front of eligible read-only validation and gets out of the way whenever the evidence or policy is insufficient.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">SAFE BY DEFAULT</div><h2>SeenRelay does not replace your source of truth.</h2><p>It sits in front of eligible read-only validation and gets out of the way whenever the evidence or policy is insufficient. The authoritative source remains available as the fallback.</p></div>
   <div class="rv-contract">
     <article class="rv-contract-main"><div class="rv-eyebrow">DEFAULT</div><h3>When in doubt, validate normally.</h3><p>Unknown, stale, contested, unsupported or ineligible work falls through to the operation your application was already going to run.</p></article>
     <div class="rv-contract-list">
