@@ -10,7 +10,6 @@ const SITEMAP_PAGES = [
   { path: '/', lastmod: '2026-09-25' },
   { path: '/fleet', lastmod: '2026-09-29' },
   { path: '/substrate', lastmod: '2026-09-29' },
-  { path: '/commercial', lastmod: '2026-09-29' },
   { path: '/ai-agent-cost-optimization', lastmod: '2026-09-29' },
   { path: '/duplicate-tool-calls', lastmod: '2026-09-29' },
   { path: '/langfuse', lastmod: '2026-09-29' },
@@ -32,7 +31,7 @@ export function llmsText(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   return `# SeenRelay
 
-SeenRelay is execution-reuse infrastructure for agents, services, CI workers, browser jobs, scheduled processes and selected IoT/edge reads. It measures exact repeated read-only work at the semantic execution boundary, keeps stronger native/local/source/provider controls first, and coordinates only reviewed paths whose own evidence shows value. Start with the free shadow audit: keep every authoritative validation on, measure exact recurrence and stronger local/source/provider-native controls, compare hypothetical reuse with the authoritative outcome, and return USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.
+SeenRelay is execution-reuse infrastructure for agents, services, CI workers, browser jobs, scheduled processes and selected IoT/edge reads. Start locally: run the non-mutating prescreen, instrument only a plausible expensive read-only candidate, preserve every authoritative validation in shadow, prefer stronger native/local/source/provider controls, and keep SeenRelay only where the measured workload returns a justified USE rather than DO NOT USE or INSUFFICIENT EVIDENCE.
 
 Site and API owners can also use ${origin}/readiness for a free native-first quick audit of one public HTTPS root response. That surface checks bounded HTTP freshness/validator evidence and recommends native fixes first; it cannot determine SeenRelay workload fit from a surface scan.
 
@@ -132,10 +131,9 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 ## Canonical interfaces
 
 - Website: ${origin}/
-- Free shadow audit: https://github.com/ovladon/seenrelay/blob/main/docs/SHADOW_AUDIT.md
+- Shadow measurement method: https://github.com/ovladon/seenrelay/blob/main/docs/SHADOW_AUDIT.md
 - Site/API owner quick readiness audit: ${origin}/readiness
 - Execution substrate: ${origin}/substrate
-- Commercial pilots: ${origin}/commercial
 - AI agent cost optimization: ${origin}/ai-agent-cost-optimization
 - Duplicate tool calls / tool call deduplication: ${origin}/duplicate-tool-calls
 - Langfuse local TOOL census: ${origin}/langfuse
