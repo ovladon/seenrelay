@@ -4,11 +4,12 @@ import fs from 'node:fs';
 
 const read = (p) => fs.readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 
-test('README starts with the safe free audit and behavior-preserving proof', () => {
+test('README starts with outcome-first self-serve flow and preserves behavior-safe proof', () => {
   const t = read('README.md');
-  const audit = t.indexOf('Help agents decide when a known external state really needs fresh authoritative validation');
+  const outcome = t.indexOf('Stop paying twice for the same read-only work');
+  const scan = t.indexOf('npx seenrelay scan');
   const architecture = t.indexOf('SeenRelay is a provider-independent reuse layer');
-  assert.ok(audit >= 0 && architecture > audit);
+  assert.ok(outcome >= 0 && scan > outcome && architecture > scan);
   assert.match(t, /## What SeenRelay is deciding/);
   assert.match(t, /I already know X/);
   assert.match(t, /Stop paying twice for the same read-only work/);
