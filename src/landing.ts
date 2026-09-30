@@ -126,7 +126,7 @@ export function publicLandingPage(origin: string): string {
     <article class="rv-card accent">
       <span class="rv-number">18 → 9</span>
       <h3>Firecrawl credits</h3>
-      <p>Controlled cross-worker browser evidence reduced provider credits while matching authoritative results.</p>
+      <p>Controlled cross-worker browser evidence reduced provider credits while matching authoritative results. In the bounded browser overlap run, 6 browser jobs became 3 provider jobs + 3 follower reuses.</p>
       <a href="/fleet#measured-proof">Evidence →</a>
     </article>
     <article class="rv-card">
