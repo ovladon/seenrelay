@@ -11,6 +11,7 @@ const fleet = fs.readFileSync(new URL('../src/fleet.ts', import.meta.url), 'utf8
 const index = fs.readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8');
 const adoption = fs.readFileSync(new URL('../src/adoption.ts', import.meta.url), 'utf8');
 const supportTemplate = fs.readFileSync(new URL('../.github/ISSUE_TEMPLATE/deployment-support.yml', import.meta.url), 'utf8');
+const obsoletePilotTemplateExists = fs.existsSync(new URL('../.github/ISSUE_TEMPLATE/commercial-pilot.yml', import.meta.url));
 
 test('public positioning expands below agents without weakening the audit gate', () => {
   assert.match(landing, /Stop paying twice for the same read-only work/);
@@ -56,6 +57,7 @@ test('commercial route is optional noindex support rather than a required pilot 
   assert.match(supportTemplate, /\[Support\]/);
   assert.match(supportTemplate, /A recommendation to use a stronger native control or remove SeenRelay is a valid result/i);
   assert.doesNotMatch(supportTemplate, /Commercial pilot|\[Pilot\]|pilot commercially useful/i);
+  assert.equal(obsoletePilotTemplateExists, false);
 });
 
 test('secondary pages expose self-serve product paths while commercial support stays direct-only', () => {
