@@ -9,7 +9,7 @@ test('homepage exposes a compact bounded provider-unit proof and links to full e
   assert.match(landing, /18 → 9/);
   assert.match(landing, /6 browser jobs became 3 jobs \+ 3 follower reuses/i);
   assert.match(landing, /href="\/fleet#measured-proof"/);
-  assert.match(landing, /Customer ROI is measured, not assumed/i);
+  assert.match(landing, /Controlled proof is not customer savings/i);
 });
 
 test('durable evidence preserves the external-pattern and economics boundaries', () => {
