@@ -11,8 +11,11 @@ test('README starts with the safe free audit and behavior-preserving proof', () 
   assert.ok(audit >= 0 && architecture > audit);
   assert.match(t, /## What SeenRelay is deciding/);
   assert.match(t, /I already know X/);
+  assert.match(t, /Stop paying twice for the same read-only work/);
+  assert.match(t, /npx seenrelay scan/);
+  assert.match(t, /stronger native control already wins/);
   assert.match(t, /starter-facts\.json/);
-  assert.match(t, /## Fastest start: give the audit to your coding agent/);
+  assert.match(t, /## Fastest start: give SeenRelay to your coding agent/);
   assert.match(t, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/);
   assert.match(t, /preserve every authoritative call/);
   assert.match(t, /## Free shadow audit: measure without changing application behavior/);
