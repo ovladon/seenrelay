@@ -16,7 +16,7 @@ Client v0.2.24 was clean-install verified from both public registries on 2026-09
 
 SeenRelay helps an application decide whether a source-backed state it already knows needs fresh authoritative validation now. It preserves the application's existing validation policy and still has exactly two domain operations: **CHECK** and **OBSERVE**.
 
-The recommended 0.2.23 path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
+The recommended path is local-first in both JavaScript/TypeScript and Python for explicitly eligible read-only validation: use caller-side Zero-State reuse and source-native confirmation before considering shared evidence. Both languages include multi-signal shared-evidence assurance helpers and deterministic Fact Coordinate Kit v1. The classic Python API and Python Ambient adapters remain shadow-first by default. Shared evidence never establishes truth or independent real-world actors.
 
 ## Known-state revalidation
 
