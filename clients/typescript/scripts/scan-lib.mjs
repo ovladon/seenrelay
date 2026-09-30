@@ -78,6 +78,23 @@ const LITERAL_IDENTITY_PATTERNS = [
 function matchesAny(text, patterns) {
   return patterns.some((pattern) => pattern.test(text));
 }
+function detectsMcpCacheableFreshness(text) {
+  const hasFields = /\bttlMs\b/.test(text) && /\bcacheScope\b/.test(text);
+  if (!hasFields) return false;
+  const cacheableOperationPatterns = [
+    /\blistTools\s*\(/,
+    /\blistPrompts\s*\(/,
+    /\blistResources\s*\(/,
+    /\breadResource\s*\(/,
+    /\btools\/list\b/,
+    /\bprompts\/list\b/,
+    /\bresources\/list\b/,
+    /\bresources\/read\b/,
+    /\bresources\/templates\/list\b/
+  ];
+  return matchesAny(text, cacheableOperationPatterns);
+}
+
 
 function lineNumbers(text, patterns, limit = 4) {
   const lines = text.split(/\r?\n/);
@@ -155,6 +172,13 @@ export function scanText(text, rel = 'input') {
     label: control.label,
     lines: lineNumbers(text, control.patterns)
   }));
+  if (providerHits.some((hit) => hit.id === 'mcp') && detectsMcpCacheableFreshness(text)) {
+    controls.push({
+      id: 'mcp_cacheable_result_freshness',
+      label: 'MCP-native cacheable-result ttlMs/cacheScope freshness hints',
+      lines: lineNumbers(text, [/\bttlMs\b/, /\bcacheScope\b/, /\blistTools\s*\(/, /\blistPrompts\s*\(/, /\blistResources\s*\(/, /\breadResource\s*\(/, /\btools\/list\b/, /\bprompts\/list\b/, /\bresources\/list\b/, /\bresources\/read\b/, /\bresources\/templates\/list\b/])
+    });
+  }
   for (const hit of providerHits) {
     const implicit = PROVIDER_IMPLICIT_CONTROLS[hit.id];
     if (implicit && !controls.some((control) => control.id === implicit.id)) {
