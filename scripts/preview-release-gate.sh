@@ -74,9 +74,9 @@ curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_U
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
 # The homepage contract is immediate: clear cost outcome, bounded proof, one-command audit, safe fallback.
-grep -q 'Pay less now.' /tmp/site.html
-grep -q 'SeenRelay finds repeated expensive read-only work across agents and infrastructure' /tmp/site.html
-grep -q 'Run the free audit' /tmp/site.html
+grep -q 'Stop paying twice for the same read-only work.' /tmp/site.html
+grep -q 'SeenRelay sits around expensive read-only calls' /tmp/site.html
+grep -q 'Start locally' /tmp/site.html
 grep -q 'id="hero-scan-command"' /tmp/site.html
 grep -q 'npx seenrelay scan' /tmp/site.html
 grep -q '18 → 9' /tmp/site.html
@@ -157,7 +157,7 @@ code=$(curl -sS "${bypass[@]}" -o /tmp/billing.json -w '%{http_code}' "$PREVIEW_
 test "$code" = 404
 grep -q 'BILLING_DISABLED' /tmp/billing.json
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/admin" -o /tmp/admin.html
-grep -q 'SeenRelay Control Room' /tmp/admin.html
+grep -q 'SeenRelay Runtime Control Room' /tmp/admin.html
 code=$(curl -sS "${bypass[@]}" -o /tmp/admin-api.json -w '%{http_code}' "$PREVIEW_URL/admin/api/operations-export")
 test "$code" = 401
 grep -q 'ADMIN_UNAUTHORIZED' /tmp/admin-api.json
