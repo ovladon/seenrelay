@@ -5,9 +5,13 @@ const index=fs.readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
 const adoption=fs.readFileSync(new URL('../src/adoption.ts',import.meta.url),'utf8');
 const pub=fs.readFileSync(new URL('../src/public.ts',import.meta.url),'utf8');
 const skill=fs.readFileSync(new URL('../skills/seenrelay/SKILL.md',import.meta.url),'utf8');
-test('preferred and legacy Agent Skill discovery routes are additive and CORS-readable',()=>{
+test('preferred and legacy Agent Skill discovery routes are additive, CORS-readable and deployment-coherent',()=>{
   for(const route of ['/.well-known/agent-skills/index.json','/.well-known/skills/index.json','/.well-known/agent-skills/seenrelay/SKILL.md','/.well-known/skills/seenrelay/SKILL.md']) assert.match(index,new RegExp(route.replaceAll('/','\\/')));
-  assert.equal((index.match(/access-control-allow-origin','\*'/g)??[]).length,4);
+  assert.equal((index.match(/noStoreMachineDiscovery\(c\)/g)??[]).length,4);
+  assert.match(index,/access-control-allow-origin', '\*'/);
+  assert.match(index,/vercel-cdn-cache-control', 'no-store'/);
+  assert.match(index,/cdn-cache-control', 'no-store'/);
+  assert.match(index,/cache-control', 'no-store'/);
   assert.doesNotMatch(index,/app\.(?:get|post|all)\('\/v1\/(?:skill|capability|profile)/i);
 });
 test('llms surface advertises preferred skill discovery and legacy fallback',()=>{
