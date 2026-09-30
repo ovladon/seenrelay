@@ -2,7 +2,7 @@
   "name": "seenrelay",
   "version": "0.3.0",
   "private": true,
-  "description": "Cooperative fact-freshness signals for AI agents.",
+  "description": "Measure repeated expensive read-only execution and qualify native-first reuse for AI agents.",
   "type": "module",
   "scripts": {
     "public:sync": "node scripts/sync-public-surfaces.mjs --write",
