@@ -63,7 +63,7 @@ export function aiAgentCostOptimizationPage(origin: string): string {
 
 <section class="rv-shell rv-final">
   <div><div class="rv-eyebrow">START WITH EVIDENCE</div><h2>Find the repeated work before changing the runtime.</h2><p>Native caches, request coalescing and provider controls stay first. SeenRelay is for the residual exact work that still repeats.</p></div>
-  <div class="rv-actions"><a class="rv-button primary" href="/#start">Run free audit</a><a class="rv-button" href="/duplicate-tool-calls">Duplicate tool calls →</a></div>
+  <div class="rv-actions"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="/duplicate-tool-calls">Duplicate tool calls →</a></div>
 </section>`;
   return shell(
     'AI Agent Cost Optimization — SeenRelay',
