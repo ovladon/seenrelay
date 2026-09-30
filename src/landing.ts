@@ -97,7 +97,7 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-section" id="how">
   <div class="rv-section-head">
     <div><div class="rv-eyebrow">AUTOMATIC LOOP</div><h2>Observe. Learn. Decide. Receipt.</h2></div>
-    <p>The goal is one control loop, not a collection of manual benchmark steps.</p>
+    <p>The goal is one control loop, not a collection of manual benchmark steps. <a href="/substrate">Detailed execution model →</a></p>
   </div>
   <div class="rv-usecases">
     <article class="rv-usecase"><i>01</i><h3>Observe</h3><p>Run the application normally and measure exact read-only work without changing behavior.</p></article>
@@ -126,7 +126,7 @@ export function publicLandingPage(origin: string): string {
     <article class="rv-card accent">
       <span class="rv-number">18 → 9</span>
       <h3>Firecrawl credits</h3>
-      <p>Controlled cross-worker browser evidence reduced provider credits while matching authoritative results. In the bounded browser overlap run, 6 browser jobs became 3 provider jobs + 3 follower reuses.</p>
+      <p>Controlled cross-worker browser evidence reduced provider credits while matching authoritative results. In the bounded browser overlap run, 6 browser jobs became 3 jobs + 3 follower reuses.</p>
       <a href="/fleet#measured-proof">Evidence →</a>
     </article>
     <article class="rv-card">
