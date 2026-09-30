@@ -68,8 +68,13 @@ test('client and quickstart adoption guides are concrete and conservative', () =
   assert.match(adoption, /seenrelay\/mcp-auto/);
   assert.match(quickstart, /currently free/i);
   assert.ok(
-    quickstart.toLowerCase().includes(`recommended ${clientVersion} path is local-first in both javascript/typescript and python`),
-    `quickstart must identify verified client ${clientVersion} as the recommended cross-language local-first Zero-State path`
+    quickstart.includes(`Client v${clientVersion} was clean-install verified from both public registries`),
+    `quickstart generated install block must identify verified client ${clientVersion}`
+  );
+  assert.match(
+    quickstart,
+    /The recommended path is local-first in both JavaScript\/TypeScript and Python/i,
+    'quickstart must keep the cross-language local-first recommendation version-neutral'
   );
   assert.match(quickstart, /classic Python API and Python Ambient adapters remain shadow-first by default/i);
   assert.match(quickstart, /UNKNOWN/);
