@@ -16,7 +16,7 @@ const secondary=[
 ].map(read).join('\n');
 
 test('secondary public surfaces use the self-serve vNext funnel rather than pilot navigation',()=>{
-  assert.doesNotMatch(secondary,/href="\/commercial"|Commercial pilot|COMMERCIAL PILOT|Run free audit/i);
+  assert.doesNotMatch(secondary,/href="\/commercial"|\bpilot\b|Run free audit/i);
   assert.match(secondary,/Start locally/);
   assert.match(secondary,/href="\/clients"/);
   assert.match(secondary,/href="\/fleet"/);
