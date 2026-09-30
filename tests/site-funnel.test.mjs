@@ -7,16 +7,16 @@ const readinessClient = fs.readFileSync(new URL('../public/readiness.js', import
 const revampClient = fs.readFileSync(new URL('../public/revamp.js', import.meta.url), 'utf8');
 const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.url), 'utf8');
 
-test('homepage states the economic outcome immediately and keeps the audit as the primary action', () => {
-  assert.match(landing, /Pay less now\./);
-  assert.match(landing, /repeated expensive read-only work across agents and infrastructure/i);
-  assert.match(landing, /Run the free audit/);
+test('homepage states the economic outcome immediately and makes self-serve local adoption primary', () => {
+  assert.match(landing, /Stop paying twice for the same read-only work\./);
+  assert.match(landing, /measures what actually repeats/i);
+  assert.match(landing, /Start locally/);
+  assert.match(landing, /Install with an agent/);
   assert.match(landing, /publicProductFacts\.install\.scan_command/);
-  assert.match(landing, /If the scan finds no plausible repeated expensive read-only validation, stop there/);
-  assert.match(landing, /free shadow audit measures real traffic without suppressing a single authoritative call/);
-  assert.match(landing, /Every original authoritative call still runs/i);
-  assert.match(landing, /Customer ROI is measured, not assumed/i);
-  assert.match(landing, /Commercial pilot/);
+  assert.match(landing, /The scanner is a local prescreen, not a savings verdict/i);
+  assert.match(landing, /Shadow measurement keeps the original authoritative call/i);
+  assert.match(landing, /Controlled proof is not customer savings/i);
+  assert.doesNotMatch(landing, /Commercial pilot/);
 });
 
 test('readiness result handoff is conditional rather than a universal SeenRelay CTA', () => {
