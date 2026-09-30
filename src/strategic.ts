@@ -26,7 +26,7 @@ export function custodyTransferReadiness() {
       state: 'Neon Postgres',
       domain: 'seenrelay.com',
       build: 'package-lock.json + npm ci',
-      control_plane: 'SeenRelay Control Room'
+      control_plane: 'SeenRelay Runtime Control Room'
     },
     transfer_sequence: [
       'establish receiving administrative identities',
