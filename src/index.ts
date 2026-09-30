@@ -231,10 +231,10 @@ app.get('/llms.txt', (c) => {
   c.header('cache-control', 'public, max-age=3600');
   return c.body(llmsText(new URL(c.req.url).origin));
 });
-app.get('/.well-known/agent-skills/index.json', async (c) => { c.header('cache-control','public, max-age=300'); c.header('access-control-allow-origin','*'); return c.json(await agentSkillIndex(new URL(c.req.url).origin)); });
-app.get('/.well-known/skills/index.json', async (c) => { c.header('cache-control','public, max-age=300'); c.header('access-control-allow-origin','*'); return c.json(await agentSkillIndex(new URL(c.req.url).origin)); });
-app.get('/.well-known/agent-skills/seenrelay/SKILL.md', (c) => { c.header('content-type','text/markdown; charset=utf-8'); c.header('cache-control','public, max-age=300'); c.header('access-control-allow-origin','*'); return c.body(agentSkillMarkdown()); });
-app.get('/.well-known/skills/seenrelay/SKILL.md', (c) => { c.header('content-type','text/markdown; charset=utf-8'); c.header('cache-control','public, max-age=300'); c.header('access-control-allow-origin','*'); return c.body(agentSkillMarkdown()); });
+app.get('/.well-known/agent-skills/index.json', async (c) => { c.header('cache-control','no-store'); c.header('access-control-allow-origin','*'); return c.json(await agentSkillIndex(new URL(c.req.url).origin)); });
+app.get('/.well-known/skills/index.json', async (c) => { c.header('cache-control','no-store'); c.header('access-control-allow-origin','*'); return c.json(await agentSkillIndex(new URL(c.req.url).origin)); });
+app.get('/.well-known/agent-skills/seenrelay/SKILL.md', (c) => { c.header('content-type','text/markdown; charset=utf-8'); c.header('cache-control','no-store'); c.header('access-control-allow-origin','*'); return c.body(agentSkillMarkdown()); });
+app.get('/.well-known/skills/seenrelay/SKILL.md', (c) => { c.header('content-type','text/markdown; charset=utf-8'); c.header('cache-control','no-store'); c.header('access-control-allow-origin','*'); return c.body(agentSkillMarkdown()); });
 app.get('/privacy', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
