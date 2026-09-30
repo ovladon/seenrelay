@@ -24,9 +24,9 @@ function shell(title: string, description: string, canonical: string, body: stri
 <a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/substrate">Platform</a><a href="/fleet">Proof</a><a href="/clients">Integrations</a><a href="/commercial">Pilot</a></nav>
-  <details class="rv-mobile-nav"><summary>Menu</summary><nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/substrate">Platform</a><a href="/fleet">Proof</a><a href="/clients">Integrations</a><a href="/commercial">Pilot</a></nav></details>
-  <div class="rv-nav-actions"><a class="rv-button primary" href="/#start">Run free audit</a></div>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
+  <details class="rv-mobile-nav"><summary>Menu</summary><nav aria-label="Mobile navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav></details>
+  <div class="rv-nav-actions"><a class="rv-button primary" href="/#start">Start locally</a></div>
 </header>
 <main id="main-content">${body}</main>
 ${siteFooterHtml()}
@@ -40,7 +40,7 @@ export function aiAgentCostOptimizationPage(origin: string): string {
   <div class="rv-eyebrow">AI AGENT COST OPTIMIZATION</div>
   <h1>Cut the tool work your agents pay for twice.</h1>
   <p>Token optimization is only part of the bill. Agents also spend money and capacity on browser jobs, search, extraction, APIs and repeated validation. SeenRelay measures exact repeated read-only execution and coordinates only the paths that prove safe positive value.</p>
-  <div class="rv-actions"><a class="rv-button primary" href="/#start">Run free audit</a><a class="rv-button" href="/commercial">Commercial pilot</a></div>
+  <div class="rv-actions"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="/clients#instrument">Install with an agent</a></div>
 </section>
 
 <section class="rv-shell rv-section">
@@ -96,8 +96,8 @@ export function duplicateToolCallsPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-final">
-  <div><div class="rv-eyebrow">MEASURE FIRST</div><h2>Natural recurrence decides whether deduplication is worth it.</h2><p>The free audit keeps every authoritative execution on and returns USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.</p></div>
-  <div class="rv-actions"><a class="rv-button primary" href="/#start">Run free audit</a><a class="rv-button" href="/commercial">Commercial pilot</a></div>
+  <div><div class="rv-eyebrow">MEASURE FIRST</div><h2>Natural recurrence decides whether deduplication is worth it.</h2><p>Shadow measurement keeps every authoritative execution on and returns USE / DO NOT USE / INSUFFICIENT EVIDENCE for the measured workload.</p></div>
+  <div class="rv-actions"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="/clients">All integrations</a></div>
 </section>`;
   return shell(
     'Duplicate Tool Calls and Tool Call Deduplication — SeenRelay',
