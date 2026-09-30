@@ -14,6 +14,9 @@ Before changing application code, run a local static prescreen:
 npx seenrelay scan
 # or machine-readable output
 npx seenrelay scan . --json
+
+# machine-readable adoption plan; never modifies code or enables reuse
+npx seenrelay adopt-plan . --json
 ```
 
 The scanner reads supported text/source files locally, does not contact SeenRelay, does not upload source code, and does not modify the target project. It looks for metered or resource-intensive read-only work, recurring execution signals, stronger native/local controls, and supported integration boundaries.
