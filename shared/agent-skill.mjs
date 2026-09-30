@@ -52,19 +52,19 @@ Do not manufacture a shared fact identity merely to exercise the relay. If the w
 
 ## Follow the self-serve adoption state deliberately
 
-Use the same progression exposed in `service.json`:
+Use the same progression exposed in \`service.json\`:
 
-`PRESCREEN → SHADOW → QUALIFIED → ACTIVE → DEMOTED / REMOVE`
+\`PRESCREEN → SHADOW → QUALIFIED → ACTIVE → DEMOTED / REMOVE\`
 
 Rules:
 - **PRESCREEN:** run the local scanner first. If it returns no candidate, stop; do not install runtime coordination just to try SeenRelay.
-- **SHADOW:** preserve every authoritative call and measure the normal workload. `INSUFFICIENT EVIDENCE` means keep measuring, not enable reuse.
-- **QUALIFIED:** a `USE` verdict means the measured path may be worth considering. It does **not** give you permission to modify the project or enable active reuse. Caller/project authority and explicit policy are separate requirements.
+- **SHADOW:** preserve every authoritative call and measure the normal workload. \`INSUFFICIENT EVIDENCE\` means keep measuring, not enable reuse.
+- **QUALIFIED:** a \`USE\` verdict means the measured path may be worth considering. It does **not** give you permission to modify the project or enable active reuse. Caller/project authority and explicit policy are separate requirements.
 - **ACTIVE:** enable only the reviewed bounded path. Keep authoritative fallback, audit and value measurement.
 - **DEMOTED:** on audit mismatch, contested evidence, unsafe identity/freshness or non-positive measured net value, disable reuse and return to authoritative execution.
-- **REMOVE:** no candidate, stronger native control, `DO NOT USE`, or persistently negative economics are successful reasons to leave SeenRelay out.
+- **REMOVE:** no candidate, stronger native control, \`DO NOT USE\`, or persistently negative economics are successful reasons to leave SeenRelay out.
 
-Do not silently convert `USE` into project mutation authority. SeenRelay never grants itself that authority.
+Do not silently convert \`USE\` into project mutation authority. SeenRelay never grants itself that authority.
 
 ## Return a comparable first audit
 
