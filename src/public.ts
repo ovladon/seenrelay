@@ -59,6 +59,7 @@ export function serviceDescriptor(origin: string) {
         url: `${origin}/mcp`
       }
     },
+    // Metadata-only adoption contract; it never adds hosted operations or grants project mutation authority.
     self_serve_adoption: {
       schema: 'seenrelay-machine-adoption-contract-v1',
       goal: 'Reach a bounded evidence-backed keep/remove decision without contacting SeenRelay.',
