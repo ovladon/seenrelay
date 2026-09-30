@@ -52,6 +52,9 @@ Before editing application code, run the npm package's local static prescreen:
 npx seenrelay scan
 # machine-readable
 npx seenrelay scan . --json
+
+# machine-readable next action; still non-mutating and pre-activation
+npx seenrelay adopt-plan . --json
 ```
 
 The scanner reads supported source/configuration files locally and does not contact SeenRelay, upload source code or modify the target project. It can identify candidate metered/read-only operations, recurrence signals and stronger local/source/provider-native controls. Its output is deliberately pre-evidentiary and cannot return `USE`, authorize reuse or establish runtime economics.
