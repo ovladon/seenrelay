@@ -33,10 +33,11 @@ test('machine discovery no longer promotes commercial support as an adoption pat
 test('legacy commercial route remains direct-only optional support',()=>{
   const commercial=read('src/commercial.ts');
   assert.match(commercial,/noindex,nofollow,noarchive/);
-  assert.match(commercial,/SeenRelay does not require a pilot/i);
+  assert.match(commercial,/SeenRelay is self-serve by default/i);
   assert.match(commercial,/Start self-serve\. Ask for help only if useful\./);
   assert.match(commercial,/not required to use SeenRelay/i);
-  assert.doesNotMatch(commercial,/>Commercial pilot<|>Start pilot inquiry|>Open commercial-pilot/i);
+  assert.match(commercial,/deployment-support\.yml/);
+  assert.doesNotMatch(commercial,/pilot|commercial-pilot\.yml/i);
 });
 
 test('shared footer offers support without making pilot participation a product step',()=>{
