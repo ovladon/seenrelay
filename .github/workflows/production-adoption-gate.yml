@@ -144,10 +144,12 @@ jobs:
 
       - name: Verify canonical Agent Skill served by Production
         shell: bash
+        env:
+          RELEASE_SHA: ${{ steps.applicability.outputs.release_sha || github.sha }}
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location \
-            https://seenrelay.com/.well-known/agent-skills/seenrelay/SKILL.md \
+            "https://seenrelay.com/.well-known/agent-skills/seenrelay/SKILL.md?release=$RELEASE_SHA" \
             --output "$RUNNER_TEMP/seenrelay-production-skill.md"
           cmp "$RUNNER_TEMP/seenrelay-production-skill.md" skills/seenrelay/SKILL.md
           echo "Production serves the canonical repository skill."
