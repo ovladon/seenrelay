@@ -1,11 +1,13 @@
-name: Commercial pilot inquiry
-description: Public intake for a measured SeenRelay workload pilot. Do not include secrets or customer data.
-title: "[Pilot] "
+name: Optional deployment support
+description: Public intake for help with a measured SeenRelay candidate after local prescreen/shadow evidence. Do not include secrets or customer data.
+title: "[Support] "
 body:
   - type: markdown
     attributes:
       value: |
-        SeenRelay pilots begin with measurement, not a savings promise.
+        SeenRelay is self-serve by default. Start locally and use this issue only if a real measured candidate remains worth deeper engineering help.
+
+        A valid outcome may still be to keep a stronger native control or remove SeenRelay. Support is not a prerequisite for using SeenRelay.
 
         **This issue is public. Do not post credentials, customer data, private URLs, proprietary prompts, device identifiers, access tokens, or other secrets.** Describe the workload at a high level only. If private follow-up is required, state that without adding private material here.
 
@@ -71,6 +73,20 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: measured_state
+    attributes:
+      label: Current SeenRelay measurement state
+      description: Choose the closest current state. Support does not convert evidence into authority.
+      options:
+        - CANDIDATE_FOR_SHADOW_MEASUREMENT
+        - SHADOW / INSUFFICIENT EVIDENCE
+        - SHADOW / USE
+        - SHADOW / DO NOT USE
+        - Not measured yet
+    validations:
+      required: true
+
   - type: checkboxes
     id: public_boundary
     attributes:
@@ -80,10 +96,10 @@ body:
           required: true
 
   - type: textarea
-    id: success
+    id: support
     attributes:
-      label: What would make a pilot commercially useful?
-      description: State the measurable outcome you care about.
-      placeholder: "Example: reduce provider jobs without result mismatches and show positive net savings after coordination overhead."
+      label: What support would be useful?
+      description: State the bounded engineering question or measurable outcome you want help with. A recommendation to use a stronger native control or remove SeenRelay is a valid result.
+      placeholder: "Example: verify whether a distributed single-flight wrapper can reduce provider jobs without result mismatches after native controls are accounted for."
     validations:
       required: true

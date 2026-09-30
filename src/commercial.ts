@@ -1,7 +1,7 @@
 import { siteFooterHtml } from './public-facts-view.js';
 
 export function commercialPage(origin: string): string {
-  const supportIssueUrl = 'https://github.com/ovladon/seenrelay/issues/new?template=commercial-pilot.yml';
+  const supportIssueUrl = 'https://github.com/ovladon/seenrelay/issues/new?template=deployment-support.yml';
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -29,7 +29,7 @@ export function commercialPage(origin: string): string {
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">OPTIONAL DEPLOYMENT SUPPORT</div>
   <h1>Start self-serve. Ask for help only if useful.</h1>
-  <p>SeenRelay does not require a pilot. Measure locally first; use this public support path only when a real workload candidate remains worth deeper engineering help.</p>
+  <p>SeenRelay is self-serve by default. Measure locally first; use this public support path only when a real workload candidate remains worth deeper engineering help.</p>
   <div class="rv-actions"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="${supportIssueUrl}">Open public support inquiry</a></div>
   <p class="rv-small">The GitHub inquiry is public. Do not include secrets or customer data.</p>
 </section>
