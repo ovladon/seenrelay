@@ -35,7 +35,7 @@ test('homepage derives the verified client version and keeps proof bounded', () 
   assert.match(landing, /publicProductFacts\.install\.scan_command/);
   assert.match(landing, /18 → 9/);
   assert.match(landing, /5 → 1/);
-  assert.match(landing, /USE \\/ DO NOT USE/);
+  assert.match(landing, /USE \/ DO NOT USE/);
   assert.match(landing, /native controls first/i);
   assert.doesNotMatch(landing, /guaranteed savings|universal savings percentage/i);
   assert.doesNotMatch(landing, /client\s+0\.2\.\d+/i);
