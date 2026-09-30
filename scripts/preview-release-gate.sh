@@ -82,7 +82,7 @@ grep -q 'npx seenrelay scan' /tmp/site.html
 grep -q '18 → 9' /tmp/site.html
 grep -q '5 → 1' /tmp/site.html
 grep -qi 'Firecrawl' /tmp/site.html
-grep -q 'Customer ROI is measured, not assumed' /tmp/site.html
+grep -q 'Controlled proof is not customer savings' /tmp/site.html
 grep -q 'SeenRelay is recommended only where it is the cheapest safe option' /tmp/site.html
 ! grep -qi 'guaranteed savings' /tmp/site.html
 grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
