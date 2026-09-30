@@ -10,7 +10,9 @@ const secondary=[
   'src/quickstart.ts',
   'src/integrations.ts',
   'src/seo-pages.ts',
-  'src/economics.ts'
+  'src/economics.ts',
+  'src/fleet.ts',
+  'src/trust.ts'
 ].map(read).join('\n');
 
 test('secondary public surfaces use the self-serve vNext funnel rather than pilot navigation',()=>{
