@@ -41,7 +41,7 @@ test('OptiQ workflow pins the dataset and remains bounded/manual-or-PR only', ()
 
 
 test('OptiQ durable evidence retains the negative result instead of converting recurrence into ROI', () => {
-  assert.match(evidence, /866 sessions/);
+  assert.match(evidence, /866(?: sessions|-session corpus)/);
   assert.match(evidence, /437 recorded query calls produced zero within-session exact/i);
   assert.match(evidence, /204 URL fetches with only 2 extra exact repeats|URL fetch \| 204 \| 2 exact extra calls/i);
   assert.match(evidence, /dollar savings:\s*\*\*null\*\*/i);
