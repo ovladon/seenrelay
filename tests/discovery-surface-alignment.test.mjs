@@ -50,5 +50,5 @@ test('llms surface leads with measurement while preserving stable machine-contra
   assert.match(t, /execution-reuse and revalidation layer below individual agent frameworks/);
   assert.match(t, /Shared CHECK is off by default/);
   assert.match(t, /provider-native cache when it solves the same semantics/);
-  assert.match(t, /Free shadow audit: https:\/\/github\.com\/ovladon\/seenrelay\/blob\/main\/docs\/SHADOW_AUDIT\.md/);
+  assert.match(t, /Shadow measurement method: https:\/\/github\.com\/ovladon\/seenrelay\/blob\/main\/docs\/SHADOW_AUDIT\.md/);
 });
