@@ -101,3 +101,31 @@ test('npm package declares the local CLI entry point', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'clients', 'typescript', 'package.json'), 'utf8'));
   assert.equal(pkg.bin?.seenrelay, './scripts/seenrelay-cli.mjs');
 });
+
+
+test('static prescreen treats MCP cacheable-result ttlMs/cacheScope as native-control-first only on cacheable operations', () => {
+  const result = scanText(`
+    import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+    const schedule = 'hourly';
+    async function scheduled(client) {
+      const tools = await client.listTools();
+      return { ...tools, ttlMs: 300000, cacheScope: 'public' };
+    }
+  `, 'jobs/mcp-tools.ts');
+  assert.equal(result.status, 'NATIVE_CONTROL_FIRST');
+  assert.equal(result.stronger_controls_detected.some((x) => x.id === 'mcp_cacheable_result_freshness'), true);
+  assert.match(result.next_step, /native\/local control/i);
+});
+
+test('generic MCP callTool with ttlMs/cacheScope words does not create a false native freshness control', () => {
+  const result = scanText(`
+    import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+    const schedule = 'hourly';
+    const labels = { ttlMs: 300000, cacheScope: 'public' };
+    async function scheduled(client) {
+      return client.callTool({ name: 'read_status', arguments: { service: 'example' } });
+    }
+  `, 'jobs/mcp-call-tool.ts');
+  assert.equal(result.stronger_controls_detected.some((x) => x.id === 'mcp_cacheable_result_freshness'), false);
+  assert.equal(result.status, 'CANDIDATE_FOR_SHADOW_MEASUREMENT');
+});
