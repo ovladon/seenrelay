@@ -19,8 +19,8 @@ test('public route keeps HTML and machine surfaces separate', () => {
   assert.match(index, /accept\.includes\('text\/html'\)/);
 });
 
-test('homepage follows a short human journey from value to proof to audit', () => {
-  const ids = ['what', 'proof', 'where', 'start'].map((id) => landing.indexOf(`id="${id}"`));
+test('homepage follows a short human journey from outcome to automatic loop to proof to start', () => {
+  const ids = ['what', 'how', 'where', 'proof', 'start'].map((id) => landing.indexOf(`id="${id}"`));
   assert.ok(ids.every((x) => x >= 0));
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
   assert.match(landing, /Pay less now\./);
@@ -35,16 +35,16 @@ test('homepage derives the verified client version and keeps proof bounded', () 
   assert.match(landing, /publicProductFacts\.install\.scan_command/);
   assert.match(landing, /18 → 9/);
   assert.match(landing, /5 → 1/);
-  assert.match(landing, /15/);
-  assert.match(landing, /recommended only where it is the cheapest safe option/i);
+  assert.match(landing, /USE \\/ DO NOT USE/);
+  assert.match(landing, /native controls first/i);
   assert.doesNotMatch(landing, /guaranteed savings|universal savings percentage/i);
   assert.doesNotMatch(landing, /client\s+0\.2\.\d+/i);
 });
 
-test('first use is free, behavior-preserving and self-service', () => {
-  assert.match(landing, /free audit/i);
-  assert.match(landing, /no API key/i);
-  assert.match(landing, /Every original authoritative call still runs/i);
+test('first use is local, behavior-preserving and self-service', () => {
+  assert.match(landing, /Start locally/i);
+  assert.match(landing, /no SeenRelay API key currently required/i);
+  assert.match(landing, /Shadow measurement keeps the original authoritative call/i);
   assert.match(landing, /publicProductFacts\.install\.scan_command/);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/);
 });
@@ -86,7 +86,7 @@ test('homepage visual system remains responsive, accessible and dependency free'
 });
 
 test('preview gate enforces the concise savings homepage and bounded proof', () => {
-  for (const marker of ['Pay less now.', 'Run the free audit', '18 → 9', '5 → 1', 'Customer ROI is measured, not assumed', 'Every original authoritative call still runs']) {
+  for (const marker of ['Stop paying twice for the same read-only work.', 'Start locally', '18 → 9', '5 → 1', 'Controlled proof is not customer savings', 'Shadow measurement keeps the original authoritative call']) {
     assert.ok(previewGate.includes(marker), `preview gate must require: ${marker}`);
   }
   assert.match(previewGate, /grep -qi 'Firecrawl' \/tmp\/site\.html/);
