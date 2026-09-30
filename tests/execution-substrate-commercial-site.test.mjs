@@ -37,28 +37,34 @@ test('execution substrate page names expanded surfaces and stays native-control-
   assert.match(substrate, /otel-trace-census/);
 });
 
-test('commercial surface creates a measured pilot path without silently enabling usage billing', () => {
-  assert.match(commercial, /Buy a measured result, not a savings promise/);
+test('commercial route is optional noindex support rather than a required pilot funnel', () => {
+  assert.match(commercial, /noindex,nofollow,noarchive/);
+  assert.match(commercial, /SeenRelay does not require a pilot/i);
+  assert.match(commercial, /Start locally/);
   assert.match(commercial, /hosted CHECK\/OBSERVE service remains free during bootstrap/i);
   assert.match(commercial, /self-serve service billing is disabled/i);
+  assert.match(commercial, /not required to use SeenRelay/i);
   assert.match(commercial, /commercial-pilot\.yml/);
   assert.match(commercial, /Do not include secrets or customer data/i);
+  assert.doesNotMatch(commercial, />Commercial pilot<|>Start pilot inquiry</i);
   assert.match(pilotTemplate, /This issue is public/i);
   assert.match(pilotTemplate, /Current cost or constrained capacity/);
   assert.match(pilotTemplate, /Native\/local controls already available/);
   assert.match(pilotTemplate, /IoT \/ edge read-only validation/);
 });
 
-test('secondary pages and machine discovery expose substrate and commercial routes', () => {
+test('secondary pages expose self-serve product paths while commercial support stays direct-only', () => {
   assert.match(index, /app\.get\('\/substrate'/);
   assert.match(index, /app\.get\('\/commercial'/);
   assert.match(adoption, /path: '\/substrate'/);
-  assert.match(adoption, /path: '\/commercial'/);
+  assert.doesNotMatch(adoption, /path: '\/commercial'|Commercial pilots:/);
+  assert.match(adoption, /Start locally:/);
   assert.match(adoption, /execution-reuse/i);
   assert.match(integrations, /OpenTelemetry \/ OTLP/);
   assert.match(integrations, /IoT \/ edge/);
-  assert.match(quickstart, /CLIENT 0\.2\.22\+/);
+  assert.match(quickstart, /CLIENT \$\{esc\(clientVersion\)\}/);
   assert.match(quickstart, /otel-trace-census/);
+  assert.doesNotMatch(substrate + integrations + quickstart, /href="\/commercial"/);
   assert.match(fleet, /Distributed callers/);
   assert.match(fleet, /OPENTELEMETRY DISCOVERY/);
 });
