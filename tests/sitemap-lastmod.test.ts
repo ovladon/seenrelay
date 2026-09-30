@@ -6,7 +6,6 @@ const expected = [
   ['https://seenrelay.com/', '2026-09-25'],
   ['https://seenrelay.com/fleet', '2026-09-29'],
   ['https://seenrelay.com/substrate', '2026-09-29'],
-  ['https://seenrelay.com/commercial', '2026-09-29'],
   ['https://seenrelay.com/ai-agent-cost-optimization', '2026-09-29'],
   ['https://seenrelay.com/duplicate-tool-calls', '2026-09-29'],
   ['https://seenrelay.com/langfuse', '2026-09-29'],
@@ -28,5 +27,6 @@ test('sitemap exposes verified significant lastmod dates for every public human 
   assert.deepEqual(entries, expected);
   assert.equal((xml.match(/<url>/g) ?? []).length, expected.length);
   assert.equal((xml.match(/<lastmod>/g) ?? []).length, expected.length);
+  assert.doesNotMatch(xml, /https:\/\/seenrelay\.com\/commercial/);
   assert.doesNotMatch(xml, /<changefreq>|<priority>/);
 });
