@@ -59,6 +59,38 @@ export function serviceDescriptor(origin: string) {
         url: `${origin}/mcp`
       }
     },
+    // Metadata-only adoption contract; it never adds hosted operations or grants project mutation authority.
+    self_serve_adoption: {
+      schema: 'seenrelay-machine-adoption-contract-v1',
+      goal: 'Reach a bounded evidence-backed keep/remove decision without contacting SeenRelay.',
+      project_mutation_authority: 'caller_or_project_owned_never_granted_by_seenrelay',
+      states: ['PRESCREEN', 'SHADOW', 'QUALIFIED', 'ACTIVE', 'DEMOTED', 'REMOVE'],
+      start: {
+        state: 'PRESCREEN',
+        command: publicProductFacts.install.scan_command,
+        uploads_source: publicProductFacts.install.scan_uploads_source,
+        modifies_project: publicProductFacts.install.scan_modifies_project,
+        can_authorize_reuse: publicProductFacts.install.scan_can_authorize_reuse
+      },
+      transitions: [
+        { from: 'PRESCREEN', when: 'no_candidate', to: 'REMOVE', action: 'do_not_install' },
+        { from: 'PRESCREEN', when: 'candidate_for_shadow_measurement', to: 'SHADOW', action: 'instrument_narrowest_supported_shadow_path' },
+        { from: 'SHADOW', when: 'verdict_do_not_use', to: 'REMOVE', action: 'remove_or_leave_uninstalled' },
+        { from: 'SHADOW', when: 'verdict_insufficient_evidence', to: 'SHADOW', action: 'continue_normal_workload_measurement' },
+        { from: 'SHADOW', when: 'verdict_use', to: 'QUALIFIED', action: 'require_project_authority_and_explicit_policy_before_active_reuse' },
+        { from: 'QUALIFIED', when: 'project_authority_and_policy_allow', to: 'ACTIVE', action: 'enable_only_the_bounded_qualified_path' },
+        { from: 'ACTIVE', when: 'audit_mismatch_or_contested_evidence', to: 'DEMOTED', action: 'disable_reuse_and_execute_authoritatively' },
+        { from: 'ACTIVE', when: 'measured_net_value_non_positive', to: 'DEMOTED', action: 'disable_active_mode_and_remove_if_persistent' },
+        { from: 'DEMOTED', when: 'explicit_requalification', to: 'SHADOW', action: 'remeasure_before_any_reactivation' }
+      ],
+      negative_result_is_success: true,
+      native_control_first: true,
+      fail_open: true,
+      machine_audit_schema: 'seenrelay-shadow-audit-v1',
+      verdicts: ['USE', 'DO NOT USE', 'INSUFFICIENT EVIDENCE'],
+      agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`,
+      quickstart: `${origin}/quickstart`
+    },
     economics: {
       target_workloads: ['known_state_revalidation', 'paid_web_search', 'metered_scraping', 'browser_or_extraction', 'multi_step_validation', 'rate_limited_api'],
       poor_fit: ['mutating_or_destructive_operation', 'cheap_one_off_fetch', 'fact_with_low_repeat_probability', 'policy_requires_live_authoritative_source_on_every_call'],

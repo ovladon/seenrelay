@@ -50,6 +50,22 @@ Use **shared-evidence shadow** only when the candidate has a stable source-nativ
 
 Do not manufacture a shared fact identity merely to exercise the relay. If the workload cannot support a deterministic shareable fact descriptor, stay on local/Ambient measurement. If shared-evidence shadow produces too little eligible repetition or no economic advantage over stronger existing controls, report that result and leave shared reuse disabled.
 
+## Follow the self-serve adoption state deliberately
+
+Use the same progression exposed in \`service.json\`:
+
+\`PRESCREEN → SHADOW → QUALIFIED → ACTIVE → DEMOTED / REMOVE\`
+
+Rules:
+- **PRESCREEN:** run the local scanner first. If it returns no candidate, stop; do not install runtime coordination just to try SeenRelay.
+- **SHADOW:** preserve every authoritative call and measure the normal workload. \`INSUFFICIENT EVIDENCE\` means keep measuring, not enable reuse.
+- **QUALIFIED:** a \`USE\` verdict means the measured path may be worth considering. It does **not** give you permission to modify the project or enable active reuse. Caller/project authority and explicit policy are separate requirements.
+- **ACTIVE:** enable only the reviewed bounded path. Keep authoritative fallback, audit and value measurement.
+- **DEMOTED:** on audit mismatch, contested evidence, unsafe identity/freshness or non-positive measured net value, disable reuse and return to authoritative execution.
+- **REMOVE:** no candidate, stronger native control, \`DO NOT USE\`, or persistently negative economics are successful reasons to leave SeenRelay out.
+
+Do not silently convert \`USE\` into project mutation authority. SeenRelay never grants itself that authority.
+
 ## Return a comparable first audit
 
 After measurement, always return a short human-readable decision plus a machine-readable object with \`schema_version: "seenrelay-shadow-audit-v1"\`. Use the fields defined by \`docs/schemas/shadow-audit-report.schema.json\` in the SeenRelay repository: workload identity, protected-call count, exact-repeat count, stronger native-control measurements, shared-CHECK outcomes when measured, hypothetical-reuse mismatches, baseline units, SeenRelay overhead/economics, safety state, reasons and verdict.
