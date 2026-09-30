@@ -30,20 +30,20 @@ test('fleet page exposes shadow-first distributed measurement before active coor
   assert.match(fleet, /CHECK and OBSERVE remain the only hosted SeenRelay domain operations/i);
 });
 
-test('homepage makes the free audit the primary activation path without duplicating agent docs', () => {
-  assert.match(landing, /Pay less now/i);
-  assert.match(landing, /Run the free audit/i);
-  assert.match(landing, /Every original authoritative call still runs/i);
+test('homepage makes self-serve local adoption primary without duplicating agent docs', () => {
+  assert.match(landing, /Stop paying twice for the same read-only work/i);
+  assert.match(landing, /Start locally/i);
+  assert.match(landing, /Shadow measurement keeps the original authoritative call/i);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/i);
-  assert.match(landing, /no API key/i);
+  assert.match(landing, /no SeenRelay API key/i);
   assert.doesNotMatch(landing, /npx skills add|OPTIONAL PROTOCOL DEMO|live-check-form/i);
   assert.match(auditGuide, /every authoritative validation stays enabled/i);
   assert.match(auditGuide, /active SeenRelay reuse stays disabled/i);
 });
 
 test('primary public surfaces describe fleet value without universal savings claims', () => {
-  assert.match(landing, /Agents are only the beginning/i);
-  assert.match(landing, /Customer ROI is measured, not assumed/i);
+  assert.match(landing, /Optimize execution, not just tokens/i);
+  assert.match(landing, /Controlled proof is not customer savings/i);
   assert.match(quickstart, /FLEET PATH/);
   assert.match(quickstart, /seenrelay\/fleet/);
   assert.match(quickstart, /SeenRelayFleetShadowMeter/);

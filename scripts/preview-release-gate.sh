@@ -74,22 +74,22 @@ curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_U
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
 # The homepage contract is immediate: clear cost outcome, bounded proof, one-command audit, safe fallback.
-grep -q 'Pay less now.' /tmp/site.html
-grep -q 'SeenRelay finds repeated expensive read-only work across agents and infrastructure' /tmp/site.html
-grep -q 'Run the free audit' /tmp/site.html
+grep -q 'Stop paying twice for the same read-only work.' /tmp/site.html
+grep -q 'SeenRelay sits around expensive read-only calls' /tmp/site.html
+grep -q 'Start locally' /tmp/site.html
 grep -q 'id="hero-scan-command"' /tmp/site.html
 grep -q 'npx seenrelay scan' /tmp/site.html
 grep -q '18 → 9' /tmp/site.html
 grep -q '5 → 1' /tmp/site.html
 grep -qi 'Firecrawl' /tmp/site.html
-grep -q 'Customer ROI is measured, not assumed' /tmp/site.html
-grep -q 'SeenRelay is recommended only where it is the cheapest safe option' /tmp/site.html
+grep -q 'Controlled proof is not customer savings' /tmp/site.html
+grep -q 'Sometimes the right answer is not to use SeenRelay' /tmp/site.html
 ! grep -qi 'guaranteed savings' /tmp/site.html
 grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
-grep -q 'Every original authoritative call still runs' /tmp/site.html
+grep -q 'Shadow measurement keeps the original authoritative call' /tmp/site.html
 grep -qi 'no SeenRelay API key' /tmp/site.html
-grep -q 'Agents are only the beginning.' /tmp/site.html
-grep -q 'IoT / edge' /tmp/site.html
+grep -q 'Agent tool calls' /tmp/site.html
+grep -q 'Polling / CI / monitors' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/revamp.js" -o /tmp/revamp.js
 grep -q 'web-starter-check' /tmp/revamp.js
 grep -q 'fetch(catalogEndpoint' /tmp/revamp.js
@@ -157,7 +157,7 @@ code=$(curl -sS "${bypass[@]}" -o /tmp/billing.json -w '%{http_code}' "$PREVIEW_
 test "$code" = 404
 grep -q 'BILLING_DISABLED' /tmp/billing.json
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/admin" -o /tmp/admin.html
-grep -q 'SeenRelay Control Room' /tmp/admin.html
+grep -q 'SeenRelay Runtime Control Room' /tmp/admin.html
 code=$(curl -sS "${bypass[@]}" -o /tmp/admin-api.json -w '%{http_code}' "$PREVIEW_URL/admin/api/operations-export")
 test "$code" = 401
 grep -q 'ADMIN_UNAUTHORIZED' /tmp/admin-api.json

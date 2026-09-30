@@ -18,7 +18,7 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="SeenRelay reduces redundant expensive read-only execution across agents, services, browsers, CI and IoT.">
+<meta name="description" content="SeenRelay measures repeated expensive read-only execution, keeps stronger native controls first, and avoids only the work that proves safe positive value.">
 <link rel="canonical" href="${origin}/">
 <link rel="service-desc" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <link rel="service-desc" type="application/json" href="${origin}/openapi.json" title="SeenRelay OpenAPI description">
@@ -29,11 +29,11 @@ export function publicLandingPage(origin: string): string {
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — Pay less now.">
-<meta property="og:description" content="Stop repeating expensive read-only work across agents and infrastructure.">
+<meta property="og:title" content="SeenRelay — Stop paying twice for the same read-only work.">
+<meta property="og:description" content="Measure what repeats, keep native controls first, and skip only the calls that earn a safe economic shortcut.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
-<title>SeenRelay — Pay less now.</title>
+<title>SeenRelay — Stop paying twice for the same read-only work.</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
@@ -46,105 +46,129 @@ export function publicLandingPage(origin: string): string {
 <header class="rv-nav">
   <a class="rv-brand" href="/" aria-label="SeenRelay home"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
   <nav class="rv-nav-links" aria-label="Primary navigation">
-    <a href="/substrate">Platform</a>
-    <a href="/fleet">Proof</a>
+    <a href="#how">How it works</a>
     <a href="/clients">Integrations</a>
-    <a href="/commercial">Pilot</a>
+    <a href="/fleet">Proof</a>
     <a href="/trust">Trust</a>
     <a href="/quickstart">Docs</a>
   </nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
-    <nav aria-label="Mobile navigation"><a href="/substrate">Platform</a><a href="/fleet">Proof</a><a href="/clients">Integrations</a><a href="/commercial">Pilot</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
+    <nav aria-label="Mobile navigation"><a href="#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
   </details>
-  <div class="rv-nav-actions"><a class="rv-button primary" href="#start">Run free audit</a></div>
+  <div class="rv-nav-actions"><a class="rv-button primary" href="#start">Start locally</a></div>
 </header>
 
 <main id="main-content">
 
 <section class="rv-shell rv-hero rv-funnel-hero" id="what">
   <div>
-    <div class="rv-kicker"><i></i><span>EXECUTION REUSE · CLIENT ${version}</span></div>
-    <h1>Pay less now.</h1>
-    <p class="rv-lead">SeenRelay finds repeated expensive read-only work across agents and infrastructure, then lets one safe result satisfy compatible callers instead of paying to run the work again.</p>
+    <div class="rv-kicker"><i></i><span>EXECUTION ECONOMICS · CLIENT ${version}</span></div>
+    <h1>Stop paying twice for the same read-only work.</h1>
+    <p class="rv-lead">SeenRelay sits around expensive read-only calls, measures what actually repeats, keeps stronger native controls first, and avoids only the work that proves worth avoiding.</p>
     <div class="rv-actions rv-actions-spaced">
-      <a class="rv-button primary" href="#start">Run the free audit</a>
-      <a class="rv-button" href="/commercial">Commercial pilot</a>
+      <a class="rv-button primary" href="#start">Start locally</a>
+      <a class="rv-button" href="/clients#instrument">Install with an agent</a>
     </div>
-    <div class="rv-proofline" aria-label="Audit safety">
-      <span>free audit</span><span>no account</span><span>no API key</span><span>no suppression during audit</span><span>fail open</span>
+    <div class="rv-proofline" aria-label="SeenRelay operating boundary">
+      <span>local first</span><span>native controls first</span><span>fail open</span><span>exact read-only paths</span><span>remove if net value ≤ 0</span>
     </div>
   </div>
 
-  <aside class="rv-demo rv-verdict-demo" aria-label="SeenRelay value">
-    <div class="rv-demo-head"><span>ONE PATTERN</span><b>duplicate expensive execution</b></div>
+  <aside class="rv-demo rv-verdict-demo" aria-label="SeenRelay execution decision">
+    <div class="rv-demo-head"><span>ONE DECISION</span><b>execute again or reuse safely?</b></div>
     <div class="rv-verdict-card">
-      <div class="rv-verdict-top"><span>WITHOUT</span><strong>5 callers → repeated work</strong></div>
-      <div class="rv-verdict-top"><span>WITH SEENRELAY</span><strong>1 execution → compatible reuses</strong></div>
-      <p>Every original authoritative call still runs during the free audit. Active reuse is enabled only on a measured eligible path.</p>
+      <div class="rv-verdict-top"><span>BASELINE</span><strong>repeat the provider work</strong></div>
+      <div class="rv-verdict-top"><span>SEENRELAY</span><strong>execute only when the shortcut has not earned trust</strong></div>
+      <p>Shadow measurement keeps the original authoritative call. Active protection is bounded, reversible and audited.</p>
     </div>
   </aside>
 </section>
 
 <section class="rv-band" aria-label="SeenRelay value">
   <div class="rv-band-inner">
-    <div><b>Spend less</b><span>avoid repeated metered work</span></div>
-    <div><b>Need less capacity</b><span>reduce duplicate provider jobs</span></div>
-    <div><b>Scale cleaner</b><span>share exact work across callers</span></div>
-    <div><b>Stay safe</b><span>read-only · exact · fail open</span></div>
+    <div><b>Measure first</b><span>find real recurrence</span></div>
+    <div><b>Prefer native</b><span>keep cheaper built-in controls</span></div>
+    <div><b>Protect narrowly</b><span>skip only qualified work</span></div>
+    <div><b>Prove value</b><span>record avoided execution and overhead</span></div>
+  </div>
+</section>
+
+<section class="rv-shell rv-section" id="how">
+  <div class="rv-section-head">
+    <div><div class="rv-eyebrow">AUTOMATIC LOOP</div><h2>Observe. Learn. Decide. Receipt.</h2></div>
+    <p>The goal is one control loop, not a collection of manual benchmark steps. <a href="/substrate">Detailed execution model →</a></p>
+  </div>
+  <div class="rv-usecases">
+    <article class="rv-usecase"><i>01</i><h3>Observe</h3><p>Run the application normally and measure exact read-only work without changing behavior.</p></article>
+    <article class="rv-usecase"><i>02</i><h3>Learn</h3><p>Compare recurrence, provider cost, native controls, freshness and authoritative agreement.</p></article>
+    <article class="rv-usecase"><i>03</i><h3>Qualify</h3><p>Only a bounded path with positive measured economics can advance beyond shadow.</p></article>
+    <article class="rv-usecase"><i>04</i><h3>Execute or skip</h3><p>Unsafe, stale, changing or native-dominated work still executes normally. Qualified work can avoid the repeated call.</p></article>
+  </div>
+</section>
+
+<section class="rv-shell rv-section" id="where">
+  <div class="rv-section-head"><div><div class="rv-eyebrow">WHERE COST HIDES</div><h2>Optimize execution, not just tokens.</h2></div></div>
+  <div class="rv-usecases">
+    <article class="rv-usecase"><i>WEB</i><h3>Browser / scrape / extract</h3><p>Metered rendering and extraction jobs.</p></article>
+    <article class="rv-usecase"><i>TOOL</i><h3>Agent tool calls</h3><p>Exact read-only calls across workers and runtimes.</p></article>
+    <article class="rv-usecase"><i>API</i><h3>Paid APIs</h3><p>Repeated status, metadata, search and validation reads.</p></article>
+    <article class="rv-usecase"><i>OPS</i><h3>Polling / CI / monitors</h3><p>Recurring deterministic checks where native controls do not already win.</p></article>
   </div>
 </section>
 
 <section class="rv-shell rv-section" id="proof">
   <div class="rv-section-head">
-    <div><div class="rv-eyebrow">MEASURED</div><h2>It already reduces real provider work.</h2></div>
-    <p>Controlled mechanics evidence. Customer ROI is measured, not assumed.</p>
+    <div><div class="rv-eyebrow">CONTROLLED MECHANICS PROOF</div><h2>We can reduce provider work when exact overlap exists.</h2></div>
+    <p>These are bounded first-party mechanism tests, not customer ROI or a universal savings claim.</p>
   </div>
   <div class="rv-grid-3">
     <article class="rv-card accent">
       <span class="rv-number">18 → 9</span>
       <h3>Firecrawl credits</h3>
-      <p>6 browser jobs became 3 jobs + 3 follower reuses with matching results.</p>
+      <p>Controlled cross-worker browser evidence reduced provider credits while matching authoritative results. In the bounded browser overlap run, 6 browser jobs became 3 jobs + 3 follower reuses.</p>
       <a href="/fleet#measured-proof">Evidence →</a>
     </article>
     <article class="rv-card">
       <span class="rv-number">5 → 1</span>
-      <h3>Provider jobs</h3>
-      <p>Five simultaneous callers shared one browser job with four reuses and zero coordination failures.</p>
+      <h3>Concurrent provider jobs</h3>
+      <p>Five simultaneous compatible callers shared one provider execution in a controlled test.</p>
       <a href="/fleet#measured-proof">Evidence →</a>
     </article>
     <article class="rv-card">
-      <span class="rv-number">15</span>
-      <h3>Credits avoided</h3>
-      <p>Controlled repeated extraction avoided 15 provider credits.</p>
-      <a href="/product-facts.json">Verified facts →</a>
+      <span class="rv-number">USE / DO NOT USE</span>
+      <h3>SeenRelay may reject itself</h3>
+      <p>If recurrence is weak, native controls win, safety fails or economics are negative, the correct result is not to deploy it.</p>
+      <a href="/quickstart">Decision path →</a>
     </article>
   </div>
-  <div class="rv-trust-note"><b>SeenRelay is recommended only where it is the cheapest safe option.</b> Native/local controls are measured first. Savings claims require measured workloads.</div>
+  <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> Net value requires a measured workload, explicit provider-cost provenance and SeenRelay overhead.</div>
 </section>
 
-<section class="rv-shell rv-section" id="where">
-  <div class="rv-section-head"><div><div class="rv-eyebrow">ONE LAYER</div><h2>Agents are only the beginning.</h2></div></div>
-  <div class="rv-usecases">
-    <article class="rv-usecase"><i>AI</i><h3>Agents</h3><p>MCP tools, search, browser and validation.</p></article>
-    <article class="rv-usecase"><i>API</i><h3>Services</h3><p>HTTP/RPC reads and repeated checks.</p></article>
-    <article class="rv-usecase"><i>CI</i><h3>CI / tests</h3><p>Repeated deterministic validation.</p></article>
-    <article class="rv-usecase"><i>IOT</i><h3>IoT / edge</h3><p>Eligible read-only state and metadata checks.</p></article>
+<section class="rv-shell rv-section" id="reject">
+  <div class="rv-section-head">
+    <div><div class="rv-eyebrow">SELF-REJECTING BY DESIGN</div><h2>Sometimes the right answer is not to use SeenRelay.</h2></div>
+    <p>That is a valid result, not a failed sale.</p>
   </div>
-  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/substrate">See the execution layer</a><a class="rv-button quiet" href="/clients">Integrations →</a></div>
+  <div class="rv-stack">
+    <article><h3>Native control already wins</h3><p>Provider cache, ETag / 304, batching or a local exact cache removes the same cost more cheaply.</p></article>
+    <article><h3>The calls do not actually repeat</h3><p>Structural traffic is not enough. Exact compatible recurrence must exist.</p></article>
+    <article><h3>The operation must stay independent</h3><p>Mutations and required independent samples remain outside generic reuse.</p></article>
+    <article><h3>Audit disagrees</h3><p>A mismatch, contested evidence or unsafe freshness state keeps the original authoritative execution.</p></article>
+  </div>
 </section>
 
 <section class="rv-shell rv-final" id="start">
   <div>
-    <div class="rv-eyebrow">FIND THE WASTE</div>
+    <div class="rv-eyebrow">START LOCALLY</div>
     <h2>One command. No source upload.</h2>
-    <p>If the scan finds no plausible repeated expensive read-only validation, stop there. If it finds a candidate, the free shadow audit measures real traffic without suppressing a single authoritative call.</p>
+    <p>The scanner is a local prescreen, not a savings verdict. If it finds a plausible candidate, instrument the narrowest supported path, run normal traffic in shadow, then keep SeenRelay only when the measured verdict and economics justify it.</p>
     <div class="rv-code"><pre id="hero-scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="hero-scan-command">Copy</button></div>
-    <p class="rv-small">USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key required · static scan cannot authorize reuse.</p>
+    <p class="rv-small">USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key currently required · static scan cannot authorize reuse.</p>
   </div>
   <div class="rv-actions">
-    <a class="rv-button primary" href="/quickstart">Run the free savings audit</a>
-    <a class="rv-button" href="/commercial">Start a commercial pilot</a>
+    <a class="rv-button primary" href="/quickstart">Start locally</a>
+    <a class="rv-button" href="/clients#instrument">Install with an agent</a>
   </div>
 </section>
 

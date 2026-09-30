@@ -13,12 +13,12 @@ const adoption = fs.readFileSync(new URL('../src/adoption.ts', import.meta.url),
 const pilotTemplate = fs.readFileSync(new URL('../.github/ISSUE_TEMPLATE/commercial-pilot.yml', import.meta.url), 'utf8');
 
 test('public positioning expands below agents without weakening the audit gate', () => {
-  assert.match(landing, /Pay less now/);
-  assert.match(landing, /repeated expensive read-only work across agents and infrastructure/i);
-  assert.match(landing, /Every original authoritative call still runs/);
+  assert.match(landing, /Stop paying twice for the same read-only work/);
+  assert.match(landing, /measures what actually repeats/i);
+  assert.match(landing, /Shadow measurement keeps the original authoritative call/);
   assert.match(landing, /DO NOT USE/);
-  assert.match(landing, /Agents are only the beginning/);
-  assert.match(landing, /Commercial pilot/);
+  assert.match(landing, /Optimize execution, not just tokens/);
+  assert.doesNotMatch(landing, /Commercial pilot/);
   assert.doesNotMatch(landing, /live-check-form|data-install-view="agent"/);
 });
 

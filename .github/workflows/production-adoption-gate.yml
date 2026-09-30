@@ -242,13 +242,13 @@ jobs:
             fi
           }
 
-          assert_contains "$RUNNER_TEMP/home.html" 'Pay less now.'
-          assert_contains "$RUNNER_TEMP/home.html" 'Run the free audit'
+          assert_contains "$RUNNER_TEMP/home.html" 'Stop paying twice for the same read-only work.'
+          assert_contains "$RUNNER_TEMP/home.html" 'Start locally'
           assert_contains "$RUNNER_TEMP/home.html" 'npx seenrelay scan'
           assert_contains "$RUNNER_TEMP/home.html" '18 → 9'
           assert_contains "$RUNNER_TEMP/home.html" '5 → 1'
           assert_contains "$RUNNER_TEMP/home.html" 'USE / DO NOT USE / INSUFFICIENT EVIDENCE'
-          assert_contains "$RUNNER_TEMP/home.html" 'Commercial pilot'
+          assert_contains "$RUNNER_TEMP/home.html" 'Controlled proof is not customer savings'
           assert_contains "$RUNNER_TEMP/quickstart.html" 'npx seenrelay scan'
           assert_contains "$RUNNER_TEMP/quickstart.html" 'id="evaluate"'
           assert_contains "$RUNNER_TEMP/quickstart.html" 'SeenRelayShadowProof'
