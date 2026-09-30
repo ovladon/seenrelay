@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-09-29T15:36:08Z",
+  "updated_at": "2026-09-30T20:57:36Z",
   "positioning": {
     "category": "execution reuse and validation cost avoidance for distributed software and AI agents",
     "headline": "Avoid redundant expensive execution",
-    "subheadline": "Client 0.2.23 is published on npm and PyPI. JavaScript / TypeScript adds a local Langfuse TOOL-observation opportunity census for exact recurrence, in-flight overlap and recorded TOOL cost from exported observations; raw tool inputs are hashed locally and the census cannot authorize reuse or claim actual savings. OpenTelemetry/OTLP census remains available. Python remains behaviorally unchanged in 0.2.23.",
+    "subheadline": "Client 0.2.24 is published on npm and PyPI. JavaScript / TypeScript static prescreen now recognizes MCP 2026-07-28 cacheable-result ttlMs/cacheScope freshness only when a compatible cacheable MCP operation is visible; generic callTool workloads are not promoted to native-control-first by those words alone. Python remains behaviorally unchanged in 0.2.24.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.23",
+    "client_version": "0.2.24",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-09-29T15:36:08Z",
-    "verification": "Client 0.2.23 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only scan CLI, OTLP trace-census CLI and Langfuse opportunity-census CLI, validates package entry targets, and repacks the installed package. Langfuse recurrence remains candidate evidence only: policy review, native-control comparison and shadow measurement are required before active reuse.",
+    "registry_install_verified_at": "2026-09-30T20:57:36Z",
+    "verification": "Client 0.2.24 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only scan CLI, verifies conservative MCP cacheable-result ttlMs/cacheScope native-control detection without generic callTool false positives, validates package entry targets, and repacks the installed package. Python remains behaviorally unchanged.",
     "scan_command": "npx seenrelay scan",
     "scan_mode": "local_static_prescreen",
     "scan_uploads_source": false,
@@ -172,6 +172,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-09-30",
+      "title": "Public client 0.2.24",
+      "summary": "SeenRelay 0.2.24 is published through trusted publishing on npm and PyPI. JavaScript / TypeScript static prescreen recognizes MCP 2026-07-28 cacheable-result ttlMs/cacheScope freshness only alongside compatible cacheable MCP operations; generic callTool code with the same words remains a shadow-measurement candidate. Python remains behaviorally unchanged."
+    },
     {
       "date": "2026-09-29",
       "title": "Public client 0.2.23",
