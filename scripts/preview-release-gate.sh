@@ -83,13 +83,13 @@ grep -q '18 → 9' /tmp/site.html
 grep -q '5 → 1' /tmp/site.html
 grep -qi 'Firecrawl' /tmp/site.html
 grep -q 'Controlled proof is not customer savings' /tmp/site.html
-grep -q 'SeenRelay is recommended only where it is the cheapest safe option' /tmp/site.html
+grep -q 'Sometimes the right answer is not to use SeenRelay' /tmp/site.html
 ! grep -qi 'guaranteed savings' /tmp/site.html
 grep -q 'USE / DO NOT USE / INSUFFICIENT EVIDENCE' /tmp/site.html
-grep -q 'Every original authoritative call still runs' /tmp/site.html
+grep -q 'Shadow measurement keeps the original authoritative call' /tmp/site.html
 grep -qi 'no SeenRelay API key' /tmp/site.html
-grep -q 'Agents are only the beginning.' /tmp/site.html
-grep -q 'IoT / edge' /tmp/site.html
+grep -q 'Agent tool calls' /tmp/site.html
+grep -q 'Polling / CI / monitors' /tmp/site.html
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/revamp.js" -o /tmp/revamp.js
 grep -q 'web-starter-check' /tmp/revamp.js
 grep -q 'fetch(catalogEndpoint' /tmp/revamp.js
