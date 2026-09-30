@@ -1,8 +1,8 @@
 # SeenRelay
 
-**Help agents decide when a known external state really needs fresh authoritative validation.**
+**Stop paying twice for the same read-only work.**
 
-SeenRelay sits at the revalidation decision boundary. Keep the state your application already knows, prefer local/private and source-native controls first, consult compatible recent shared observations only when useful, and fall through to the authoritative source whenever evidence or policy is insufficient. Start with a free shadow audit while every authoritative validation remains enabled. Keep SeenRelay only where the result is `USE`; accept `DO NOT USE` or `INSUFFICIENT EVIDENCE` everywhere else.
+SeenRelay measures repeated expensive read-only execution around agents and distributed software. It prefers local/private and source/provider-native controls first, preserves authoritative execution while measuring, and keeps only paths that earn a `USE` verdict. Start locally with `npx seenrelay scan`; if no candidate exists or a stronger native control already wins, stop there. `DO NOT USE` and `INSUFFICIENT EVIDENCE` are valid outcomes.
 
 Currently free · no account · no SeenRelay API key required.
 
@@ -17,7 +17,7 @@ CHECK is not a lookup for somebody else's raw result. The caller supplies the kn
 
 For a small public set of source-backed facts, use the canonical starter descriptors at `https://seenrelay.com/starter-facts.json`. They publish identity metadata only — no observed values, no recommended TTL and no reuse authorization. Full decision-layer rationale: [`docs/DECISION_LAYER.md`](docs/DECISION_LAYER.md).
 
-## Fastest start: give the audit to your coding agent
+## Fastest start: give SeenRelay to your coding agent
 
 Claude Code can install SeenRelay persistently from this repository's validated self-hosted marketplace:
 
