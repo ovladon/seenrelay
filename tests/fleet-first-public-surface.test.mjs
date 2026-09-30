@@ -35,7 +35,7 @@ test('homepage makes self-serve local adoption primary without duplicating agent
   assert.match(landing, /Start locally/i);
   assert.match(landing, /Shadow measurement keeps the original authoritative call/i);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/i);
-  assert.match(landing, /no API key/i);
+  assert.match(landing, /no SeenRelay API key/i);
   assert.doesNotMatch(landing, /npx skills add|OPTIONAL PROTOCOL DEMO|live-check-form/i);
   assert.match(auditGuide, /every authoritative validation stays enabled/i);
   assert.match(auditGuide, /active SeenRelay reuse stays disabled/i);
