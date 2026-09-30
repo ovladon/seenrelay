@@ -4,18 +4,17 @@ import { sitemapXml } from '../src/adoption.js';
 
 const expected = [
   ['https://seenrelay.com/', '2026-09-25'],
-  ['https://seenrelay.com/fleet', '2026-09-29'],
-  ['https://seenrelay.com/substrate', '2026-09-29'],
-  ['https://seenrelay.com/commercial', '2026-09-29'],
-  ['https://seenrelay.com/ai-agent-cost-optimization', '2026-09-29'],
-  ['https://seenrelay.com/duplicate-tool-calls', '2026-09-29'],
-  ['https://seenrelay.com/langfuse', '2026-09-29'],
+  ['https://seenrelay.com/fleet', '2026-09-30'],
+  ['https://seenrelay.com/substrate', '2026-09-30'],
+  ['https://seenrelay.com/ai-agent-cost-optimization', '2026-09-30'],
+  ['https://seenrelay.com/duplicate-tool-calls', '2026-09-30'],
+  ['https://seenrelay.com/langfuse', '2026-09-30'],
   ['https://seenrelay.com/readiness', '2026-09-09'],
-  ['https://seenrelay.com/economics', '2026-09-01'],
-  ['https://seenrelay.com/quickstart', '2026-09-25'],
+  ['https://seenrelay.com/economics', '2026-09-30'],
+  ['https://seenrelay.com/quickstart', '2026-09-30'],
   ['https://seenrelay.com/starter-facts', '2026-09-25'],
-  ['https://seenrelay.com/clients', '2026-09-24'],
-  ['https://seenrelay.com/trust', '2026-09-24'],
+  ['https://seenrelay.com/clients', '2026-09-30'],
+  ['https://seenrelay.com/trust', '2026-09-30'],
   ['https://seenrelay.com/data-practices', '2026-08-30'],
   ['https://seenrelay.com/privacy', '2026-09-25'],
 ] as const;
@@ -28,5 +27,6 @@ test('sitemap exposes verified significant lastmod dates for every public human 
   assert.deepEqual(entries, expected);
   assert.equal((xml.match(/<url>/g) ?? []).length, expected.length);
   assert.equal((xml.match(/<lastmod>/g) ?? []).length, expected.length);
+  assert.doesNotMatch(xml, /https:\/\/seenrelay\.com\/commercial/);
   assert.doesNotMatch(xml, /<changefreq>|<priority>/);
 });

@@ -30,8 +30,8 @@ export function langfusePage(origin: string): string {
 <a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/commercial">Pilot</a><a href="/trust">Trust</a></nav>
-  <div class="rv-nav-actions"><a class="rv-button primary" href="/commercial">Commercial pilot</a></div>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
+  <div class="rv-nav-actions"><a class="rv-button primary" href="/#start">Start locally</a></div>
 </header>
 <main id="main-content">
 <section class="rv-shell rv-page-hero">
@@ -51,7 +51,7 @@ export function langfusePage(origin: string): string {
 
 <section class="rv-shell rv-final">
   <div><div class="rv-eyebrow">LOCAL-FIRST</div><h2>No Langfuse API key goes to SeenRelay.</h2><p>The command reads your local export. Raw tool input is hashed locally and does not appear in the report. Any repeat candidate remains NEEDS_POLICY_REVIEW until read-only semantics, native controls and shadow economics are verified.</p></div>
-  <div class="rv-actions"><a class="rv-button primary" href="/commercial">Turn a candidate into a measured pilot</a><a class="rv-button" href="/clients">All integrations</a></div>
+  <div class="rv-actions"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="/clients">All integrations</a></div>
 </section>
 </main>
 ${siteFooterHtml()}

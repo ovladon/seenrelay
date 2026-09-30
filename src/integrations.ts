@@ -37,7 +37,7 @@ export function clientsPage(origin: string): string {
 <a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/substrate">Platform</a><a href="/quickstart">Quickstart</a><a href="/economics">Evidence</a><a href="/commercial">Commercial</a><a href="/trust">Trust</a></nav>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
     <nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/quickstart">Quickstart</a><a href="/economics">Evidence</a><a href="/trust">Trust</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>

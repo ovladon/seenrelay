@@ -33,7 +33,7 @@ export function quickstartPage(origin: string): string {
 <a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/">Home</a><a href="/substrate">Platform</a><a href="/fleet">Evidence</a><a href="/clients">Integrations</a><a href="/economics">Economics</a><a href="/commercial">Commercial</a><a href="/trust">Trust</a></nav>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
     <nav aria-label="Mobile navigation"><a href="/">Home</a><a href="/fleet">Fleet</a><a href="/clients">Integrations</a><a href="/economics">Evidence</a><a href="/trust">Trust</a><a href="/openapi.json">OpenAPI</a><a href="/service.json">Machine JSON</a><a href="/.well-known/agent-skills/index.json">Agent Skills</a></nav>
@@ -76,7 +76,7 @@ npx seenrelay trace-census fleet-trace.jsonl --json</pre></div><p>Use opaque SHA
 <section class="rv-shell rv-section" id="otel-census">
   <div class="rv-section-head"><div class="rv-eyebrow">OPENTELEMETRY / OTLP · LOCAL-ONLY</div><h2>Measure below the agent framework using traces you already collect.</h2><p>The OTLP adapter maps explicitly annotated spans into the same conservative fleet overlap census. It does not infer that HTTP, tool, CI or IoT spans are shareable merely from their span type.</p></div>
   <div class="rv-choice-grid">
-    <article class="rv-choice"><header><b>Run locally</b><span>CLIENT 0.2.22+</span></header><div class="rv-code"><pre>npx seenrelay otel-trace-census traces.otlp.json --json</pre></div><p>Supply an opaque <code>seenrelay.coordinate_hash</code> plus explicit side-effect/shareability policy at instrumentation time.</p></article>
+    <article class="rv-choice"><header><b>Run locally</b><span>CLIENT ${esc(clientVersion)}</span></header><div class="rv-code"><pre>npx seenrelay otel-trace-census traces.otlp.json --json</pre></div><p>Supply an opaque <code>seenrelay.coordinate_hash</code> plus explicit side-effect/shareability policy at instrumentation time.</p></article>
     <article class="rv-choice"><header><b>Keep telemetry private</b><span>ALLOWLISTED MAPPING</span></header><p>The adapter does not copy generic prompts, tool arguments/results, URLs, headers or request bodies into the report. Use the result only to rank workloads for shadow measurement.</p><a href="/substrate#otel">Execution-substrate guide →</a></article>
   </div>
 </section>
