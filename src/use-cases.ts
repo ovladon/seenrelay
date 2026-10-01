@@ -75,10 +75,20 @@ export const publicUseCaseAtlas = {
     {
       id:'news',
       name:'News & event-driven monitoring',
-      status:'EXPERIMENTAL',
-      value:'Coordinate bursty search/retrieval around the same event and avoid reprocessing an unchanged event state.',
+      status:'VALIDATED_VERTICAL',
+      value:'Use a native event identity to avoid repeating paid downstream search/briefing while the event is unchanged, and force a fresh briefing on event transition.',
       native_first:'Feeds, webhooks, publisher updates and search-provider cache.',
-      integration:'Search/retrieval middleware'
+      integration:'Event-state fingerprint + search/retrieval middleware',
+      proof:'/proof'
+    },
+    {
+      id:'ai-gateway-cold-misses',
+      name:'AI gateway cold concurrent cache misses',
+      status:'VALIDATED_VERTICAL',
+      value:'Coalesce exact simultaneous requests before a downstream response cache becomes warm, then let the native cache handle subsequent requests.',
+      native_first:'Exact/semantic response cache remains first-class; SeenRelay targets only the residual in-flight miss window.',
+      integration:'Single-flight wrapper immediately in front of the AI gateway/cache',
+      proof:'/proof'
     },
     {
       id:'sports',
