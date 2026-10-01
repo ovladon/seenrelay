@@ -66,10 +66,11 @@ export const publicUseCaseAtlas = {
     {
       id:'inventory',
       name:'Inventory & availability monitoring',
-      status:'EXPERIMENTAL',
-      value:'Avoid repeated extraction/analysis on unchanged inventory state while forcing refresh on stock transitions.',
-      native_first:'Retailer/webhook/feed/API inventory events.',
-      integration:'State monitor + extraction/analysis guard'
+      status:'VALIDATED_VERTICAL',
+      value:'Avoid repeated paid extraction/analysis while the authoritative inventory state is unchanged; force fresh work when the state token changes.',
+      native_first:'Retailer Product API, webhook/feed events and provider cache. If the native state endpoint fully answers the need, SeenRelay should self-reject.',
+      integration:'State monitor + extraction/analysis guard',
+      proof:'/proof'
     },
     {
       id:'news',
