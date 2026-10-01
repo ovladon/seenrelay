@@ -102,6 +102,7 @@ export function serviceDescriptor(origin: string) {
       direct_usage_formula: 'gross provider spend avoided ~= protected_calls * measured_reusable_rate * marginal_full_validation_cost',
       pricing_snapshots: publicProductFacts.pricing_snapshots,
       verified_benchmarks: publicProductFacts.verified_benchmarks,
+      controlled_proof_atlas: origin + '/proof.json',
       caveat: 'Measured benchmark results are first-party smoke evidence, not a promised reuse rate. Actual savings depend on caller policy, repeat probability, provider plan structure and client/network overhead.'
     },
     external_verification: false,
