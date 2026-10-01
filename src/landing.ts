@@ -115,6 +115,7 @@ export function publicLandingPage(origin: string): string {
     <article class="rv-usecase"><i>API</i><h3>Paid APIs</h3><p>Repeated status, metadata, search and validation reads.</p></article>
     <article class="rv-usecase"><i>OPS</i><h3>Polling / CI / monitors</h3><p>Recurring deterministic checks where native controls do not already win.</p></article>
   </div>
+  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/use-cases">Explore the full use-case atlas</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="proof">
