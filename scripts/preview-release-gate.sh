@@ -74,7 +74,7 @@ curl -fsS "${bypass[@]}" -H 'accept: text/html' -D /tmp/site.headers "$PREVIEW_U
 grep -qi '^content-security-policy:' /tmp/site.headers
 client_version=$(node -p "require('./public/product-facts.json').install.client_version")
 # The homepage contract is immediate: clear cost outcome, bounded proof, one-command audit, safe fallback.
-grep -q 'Stop paying twice for the same read-only work.' /tmp/site.html
+grep -q 'Decide when you actually need to look again.' /tmp/site.html
 grep -q 'SeenRelay sits around expensive read-only calls' /tmp/site.html
 grep -q 'Start locally' /tmp/site.html
 grep -q 'id="hero-scan-command"' /tmp/site.html
