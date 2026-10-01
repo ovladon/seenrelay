@@ -140,6 +140,45 @@ export const controlledProofAtlas = {
       note: 'Controlled A,A,B,B stock/availability transition. Each changed state forced a new paid analysis before reuse resumed; gross modeled reduction ranged from 50% to 53.1%. This is not a live retailer stock-change claim.'
     },
     {
+      id: 'litellm-cold-concurrency',
+      surface: 'AI gateway cold concurrent cache misses',
+      baseline: '4 upstream executions',
+      seenrelay: '1 upstream execution',
+      avoided: '3 upstream executions',
+      reduction: '74.84%',
+      executions: '4 → 1',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/clients',
+      note: 'Compared against LiteLLM Proxy 1.103.2 + Redis exact response cache. On cold concurrent exact misses LiteLLM issued 4 upstream executions; SeenRelay single-flight issued 1. Warm sequential cache correctly issued 1 upstream execution, so no warm-cache advantage is claimed.'
+    },
+    {
+      id: 'news-live-event',
+      surface: 'News / event downstream briefing',
+      baseline: '4 paid briefings',
+      seenrelay: '1 paid briefing',
+      avoided: '$0.0546–$0.1010 modeled',
+      reduction: '79.61% mean',
+      executions: '4 → 1',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/use-cases',
+      note: 'Live Hacker News event authority; native feed remained authoritative. Gross modeled reduction ranged 70.95%–90.00%. This is downstream paid briefing/search savings, not a replacement for the feed.'
+    },
+    {
+      id: 'news-transition',
+      surface: 'News / event state transition',
+      baseline: '4 paid briefings',
+      seenrelay: '2 paid briefings',
+      avoided: '$0.0116–$0.0664 modeled',
+      reduction: '49.93% mean',
+      executions: '4 → 2',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/use-cases',
+      note: 'Controlled A,A,B,B transition using two real current Hacker News events. The changed event forced a fresh briefing before reuse resumed; naturally observed rank transition is not claimed.'
+    },
+    {
       id: 'shared-image-artifact',
       surface: 'Shared generated image artifact',
       baseline: '≥$0.212',
