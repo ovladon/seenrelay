@@ -8,6 +8,7 @@ export function robotsText(origin: string): string {
 
 const SITEMAP_PAGES = [
   { path: '/', lastmod: '2026-09-25' },
+  { path: '/proof', lastmod: '2026-10-01' },
   { path: '/fleet', lastmod: '2026-09-30' },
   { path: '/substrate', lastmod: '2026-09-30' },
   { path: '/ai-agent-cost-optimization', lastmod: '2026-09-30' },
@@ -141,7 +142,7 @@ Python ${clientVersion} includes an explicit provider-independent Zero-State pat
 - Quickstart: ${origin}/quickstart
 - Canonical starter facts for known-state revalidation: ${origin}/starter-facts.json
 - Client integrations: ${origin}/clients
-- Economics and measured examples: ${origin}/economics
+- Controlled Proof Atlas: ${origin}/proof\n- Machine-readable Proof Atlas: ${origin}/proof.json\n- Economics and measured examples: ${origin}/economics
 - Product facts: ${origin}/product-facts.json
 - Client source: https://github.com/ovladon/seenrelay/tree/main/clients
 - Machine descriptor: ${origin}/service.json
