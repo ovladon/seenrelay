@@ -119,6 +119,8 @@ export function serviceDescriptor(origin: string) {
       economics: `${origin}/economics`,
       proof: origin + '/proof',
       proof_atlas: origin + '/proof.json',
+      use_cases: origin + '/use-cases',
+      use_case_atlas: origin + '/use-cases.json',
       quickstart: `${origin}/quickstart`,
       clients: `${origin}/clients`,
       starter_facts: `${origin}/starter-facts.json`,
