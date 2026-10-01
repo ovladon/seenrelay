@@ -13,9 +13,11 @@ const useCases=read('src/use-cases.ts');
 test('Proof Atlas exposes repeated controlled results without customer ROI claims',()=>{
   assert.match(proof,/controlled_first_party_benchmark/);
   assert.match(proof,/74\.95%/);
-  assert.match(proof,/66\.88% mean/);
+  assert.match(proof,/74\.84%/);
   assert.match(proof,/Retail price monitoring/);
   assert.match(proof,/Inventory \/ availability downstream extraction/);
+  assert.match(proof,/AI gateway cold concurrent cache misses/);
+  assert.match(proof,/79\.61% mean/);
   assert.match(proof,/provider-native maxAge also stayed at 4 calls \/ 4 credits/);
   assert.match(proof,/51\.58% mean/);
   assert.match(proof,/repeatability: '3\/3'/);
@@ -37,7 +39,7 @@ test('homepage leads with measured controlled proof rather than try-and-see clai
   assert.match(landing,/We have already run both sides of the experiment against real providers/);
   assert.match(landing,/\$1\.44/);
   assert.match(landing,/75%/);
-  assert.match(landing,/66\.88%/);
+  assert.match(landing,/74\.84%/);
   assert.match(landing,/Controlled proof is not customer savings|first-party mechanism\/unit-economics/i);
   assert.doesNotMatch(landing,/guaranteed savings|always saves|customer ROI proven/i);
 });
@@ -47,6 +49,7 @@ test('Use-case Atlas separates validated verticals from experimental and researc
   assert.match(useCases,/VALIDATED_VERTICAL/);
   assert.match(useCases,/Retail prices & product monitoring/);
   assert.match(useCases,/Weather-driven downstream analysis/);
+  assert.match(useCases,/News & event-driven monitoring/);
   assert.match(useCases,/Inventory & availability monitoring/);
   assert.match(useCases,/native state endpoint fully answers the need, SeenRelay should self-reject/);
   assert.match(useCases,/Large-scale IoT \/ edge analytics/);
