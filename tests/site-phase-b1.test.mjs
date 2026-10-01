@@ -33,8 +33,8 @@ test('homepage derives the verified client version and keeps proof bounded', () 
   assert.match(landing, /publicProductFacts/);
   assert.match(landing, /publicProductFacts\.install\.client_version/);
   assert.match(landing, /publicProductFacts\.install\.scan_command/);
-  assert.match(landing, /18 → 9/);
-  assert.match(landing, /5 → 1/);
+  assert.match(landing, /\$1\.44/);
+  assert.match(landing, /66\.88%/);
   assert.match(landing, /USE \/ DO NOT USE/);
   assert.match(landing, /native controls first/i);
   assert.doesNotMatch(landing, /guaranteed savings|universal savings percentage/i);
@@ -84,7 +84,7 @@ test('homepage visual system remains responsive, accessible and dependency free'
 });
 
 test('preview gate enforces the concise savings homepage and bounded proof', () => {
-  for (const marker of ['Stop paying twice for the same read-only work.', 'Start locally', '18 → 9', '5 → 1', 'Controlled proof is not customer savings', 'Shadow measurement keeps the original authoritative call']) {
+  for (const marker of ['Stop paying twice for the same read-only work.', 'Start locally', '$1.44', '75%', '66.88%', 'Controlled proof is not customer savings', 'Shadow measurement keeps the original authoritative call']) {
     assert.ok(previewGate.includes(marker), `preview gate must require: ${marker}`);
   }
   assert.match(previewGate, /grep -qi 'Firecrawl' \/tmp\/site\.html/);
