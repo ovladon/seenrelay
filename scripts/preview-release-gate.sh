@@ -80,7 +80,7 @@ grep -q 'Start locally' /tmp/site.html
 grep -q 'id="hero-scan-command"' /tmp/site.html
 grep -q 'npx seenrelay scan' /tmp/site.html
 grep -q '\$1.44' /tmp/site.html
-grep -q '66.88%' /tmp/site.html
+grep -q '74.84%' /tmp/site.html
 grep -q '75%' /tmp/site.html\ngrep -qi 'Firecrawl' /tmp/site.html
 grep -q 'Controlled proof is not customer savings' /tmp/site.html
 grep -q 'Sometimes the right answer is not to use SeenRelay' /tmp/site.html
