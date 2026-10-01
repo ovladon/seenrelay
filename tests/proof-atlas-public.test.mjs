@@ -17,6 +17,11 @@ test('Proof Atlas exposes repeated controlled results without customer ROI claim
   assert.match(proof,/Retail price monitoring/);
   assert.match(proof,/Inventory \/ availability downstream extraction/);
   assert.match(proof,/provider-native maxAge also stayed at 4 calls \/ 4 credits/);
+  assert.match(proof,/79\.61% mean/);
+  assert.match(proof,/49\.93% mean/);
+  assert.match(proof,/LiteLLM Proxy 1\.103\.2 \+ Redis exact response cache/);
+  assert.match(proof,/cold concurrent miss window/);
+  assert.match(proof,/semantic cache was not tested/);
   assert.match(proof,/51\.58% mean/);
   assert.match(proof,/repeatability: '3\/3'/);
   assert.match(proof,/customer_roi_claim: false/);
@@ -48,6 +53,9 @@ test('Use-case Atlas separates validated verticals from experimental and researc
   assert.match(useCases,/Retail prices & product monitoring/);
   assert.match(useCases,/Weather-driven downstream analysis/);
   assert.match(useCases,/Inventory & availability monitoring/);
+  assert.match(useCases,/News & event-driven monitoring/);
+  assert.match(useCases,/AI gateway cold concurrent cache misses/);
+  assert.match(useCases,/response cache remains first-class/);
   assert.match(useCases,/native state endpoint fully answers the need, SeenRelay should self-reject/);
   assert.match(useCases,/Large-scale IoT \/ edge analytics/);
   assert.match(useCases,/Blockchain RPC & agentic chain reads/);
