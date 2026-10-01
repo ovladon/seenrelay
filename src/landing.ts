@@ -119,7 +119,7 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-section" id="proof">
   <div class="rv-section-head">
-    <div><div class="rv-eyebrow">CONTROLLED PROOF ATLAS</div><h2>We have already paid both sides of the experiment.</h2></div>
+    <div><div class="rv-eyebrow">CONTROLLED PROOF ATLAS</div><h2>We have already run both sides of the experiment against real providers.</h2></div>
     <p>Real provider execution, frozen semantic contracts and repeatability gates. These are first-party mechanism/unit-economics results, not customer ROI.</p>
   </div>
   <div class="rv-grid-3">
