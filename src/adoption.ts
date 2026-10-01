@@ -7,7 +7,7 @@ export function robotsText(origin: string): string {
 }
 
 const SITEMAP_PAGES = [
-  { path: '/', lastmod: '2026-09-25' },
+  { path: '/', lastmod: '2026-10-01' },
   { path: '/proof', lastmod: '2026-10-01' },
   { path: '/use-cases', lastmod: '2026-10-01' },
   { path: '/fleet', lastmod: '2026-09-30' },
