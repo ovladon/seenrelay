@@ -139,7 +139,7 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /prediction_used_to_create_observation == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
   assert.match(gate, /seenrelay scan sample --json/);
-  assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'Stop paying twice for the same read-only work\.'/);
+  assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'Decide when you actually need to look again\.'/);
   assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'Start locally'/);
   assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'npx seenrelay scan'/);
   assert.match(gate, /Missing Production first-use invariant/);
