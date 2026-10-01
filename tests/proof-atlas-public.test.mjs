@@ -14,7 +14,7 @@ test('Proof Atlas exposes repeated controlled results without customer ROI claim
   assert.match(proof,/controlled_first_party_benchmark/);
   assert.match(proof,/74\.95%/);
   assert.match(proof,/74\.84%/);
-  assert.match(proof,/Retail price monitoring/);
+  assert.match(proof,/Retail extraction guarded by price state/);
   assert.match(proof,/Inventory \/ availability downstream extraction/);
   assert.match(proof,/AI gateway cold concurrent cache misses/);
   assert.match(proof,/79\.61% mean/);
@@ -23,6 +23,11 @@ test('Proof Atlas exposes repeated controlled results without customer ROI claim
   assert.match(proof,/repeatability: '3\/3'/);
   assert.match(proof,/customer_roi_claim: false/);
   assert.match(proof,/natural_prevalence_claim: false/);
+  assert.match(proof,/best_available_baseline_claim: false/);
+  assert.match(proof,/tool_necessity_is_separate_gate: true/);
+  assert.match(proof,/baseline_quality: 'MECHANISM_ONLY_LOCAL_WINS'/);
+  assert.match(proof,/baseline_quality: 'MECHANISM_ONLY_SOURCE_NATIVE_WINS'/);
+  assert.match(proof,/baseline_quality: 'NATIVE_FIRST_CONDITIONAL'/);
   assert.match(proof,/OCR.*NO PASS|NO PASS[\s\S]*OCR/i);
 });
 
@@ -35,12 +40,14 @@ test('Proof Atlas is available to humans and machines',()=>{
   assert.match(adoption,/Machine-readable Proof Atlas/);
 });
 
-test('homepage leads with measured controlled proof rather than try-and-see claims',()=>{
-  assert.match(landing,/We have already run both sides of the experiment against real providers/);
+test('homepage leads with measured mechanism proof and exposes baseline quality',()=>{
+  assert.match(landing,/controlled mechanism comparisons against real providers/i);
   assert.match(landing,/\$1\.44/);
   assert.match(landing,/75%/);
   assert.match(landing,/74\.84%/);
-  assert.match(landing,/Controlled proof is not customer savings|first-party mechanism\/unit-economics/i);
+  assert.match(landing,/Mechanism proof is not best-baseline proof/i);
+  assert.match(landing,/Mechanism-only:/i);
+  assert.match(landing,/Native-first conditional:/i);
   assert.doesNotMatch(landing,/guaranteed savings|always saves|customer ROI proven/i);
 });
 

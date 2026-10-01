@@ -6,11 +6,14 @@ export const controlledProofAtlas = {
     customer_roi_claim: false,
     natural_prevalence_claim: false,
     net_customer_savings_claim: false,
+    best_available_baseline_claim: false,
+    tool_necessity_is_separate_gate: true,
     native_controls_first: true
   },
   rows: [
     {
       id: 'hosted-compute-64gb',
+      baseline_quality: 'MECHANISM_ONLY_LOCAL_WINS',
       surface: 'Hosted compute / 64 GB tool session',
       baseline: '$1.9241253',
       seenrelay: '$0.4820025',
@@ -20,10 +23,11 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '3/3',
       adoption_path: '/clients',
-      note: 'Same deterministic task; one provider execution was sufficient for all compatible callers.'
+      note: 'Mechanism-only benchmark: the exact task was deterministic SHA-256 and could be done locally. This row proves duplicate hosted-resource coalescing, not that a 64 GB container was necessary for SHA-256.'
     },
     {
       id: 'agentic-search',
+      baseline_quality: 'MECHANISM_ONLY_SOURCE_NATIVE_WINS',
       surface: 'Agentic web search — explicit shared-snapshot contract',
       baseline: '4 top-level executions',
       seenrelay: '1 top-level execution',
@@ -33,10 +37,11 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '3/3',
       adoption_path: '/ai-agent-cost-optimization',
-      note: 'Only the tested contract is authorized: all callers explicitly accepted one shared fresh provider-search snapshot and did not require independent search plans. Other agentic-search workloads may require k>1 or k=N.'
+      note: 'Mechanism-only benchmark for this exact task: all callers accepted one shared fresh provider-search snapshot, but the requested latest PyPI package version is available from PyPI directly. This proves shared-search coordination, not web-search necessity. Other agentic-search workloads may require k>1 or k=N.'
     },
     {
       id: 'freshness-firewall',
+      baseline_quality: 'BEST_BASELINE_UNPROVEN',
       surface: 'Decision-time freshness',
       baseline: '6 provider reads',
       seenrelay: '2 provider reads',
@@ -50,6 +55,7 @@ export const controlledProofAtlas = {
     },
     {
       id: 'exact-web-extraction',
+      baseline_quality: 'BEST_BASELINE_UNPROVEN',
       surface: 'Exact web extraction',
       baseline: '4 Firecrawl credits',
       seenrelay: '1 Firecrawl credit',
@@ -63,6 +69,7 @@ export const controlledProofAtlas = {
     },
     {
       id: 'weather-dynamic-state',
+      baseline_quality: 'MECHANISM_ONLY_LOCAL_WINS',
       surface: 'Weather downstream analysis',
       baseline: '4 paid analyses',
       seenrelay: '1 paid analysis',
@@ -72,10 +79,11 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '3/3',
       adoption_path: '/quickstart',
-      note: 'Real Open-Meteo state stayed unchanged. This is downstream-analysis savings, not raw weather API savings.'
+      note: 'Mechanism-only benchmark: real Open-Meteo state stayed unchanged, but the paid classifier applied fixed rules that the harness itself could compute locally. This proves state-keyed recomputation control, not best-baseline weather economics.'
     },
     {
       id: 'weather-transition',
+      baseline_quality: 'BEST_BASELINE_UNPROVEN',
       surface: 'Weather state transition',
       baseline: '4 paid analyses',
       seenrelay: '2 paid analyses',
@@ -89,7 +97,8 @@ export const controlledProofAtlas = {
     },
     {
       id: 'retail-real-page',
-      surface: 'Retail price monitoring',
+      baseline_quality: 'NATIVE_FIRST_CONDITIONAL',
+      surface: 'Retail extraction guarded by price state',
       baseline: '4 Firecrawl credits',
       seenrelay: '1 Firecrawl credit',
       avoided: '3 Firecrawl credits',
@@ -98,10 +107,11 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '3/3',
       adoption_path: '/clients',
-      note: 'Real Apple Store product page; unchanged commercial state detected by a cheap direct read. Live price-transition evidence is not claimed yet.'
+      note: 'Native-first conditional: the direct Apple read already resolves the monitored price/capacity state. Paid Firecrawl extraction is relevant only when the caller needs the richer extraction artifact; if state alone is sufficient, SeenRelay should self-reject.'
     },
     {
       id: 'retail-transition',
+      baseline_quality: 'BEST_BASELINE_UNPROVEN',
       surface: 'Retail price / availability transition',
       baseline: '4 paid analyses',
       seenrelay: '2 paid analyses',
@@ -115,6 +125,7 @@ export const controlledProofAtlas = {
     },
     {
       id: 'inventory-native-comparison',
+      baseline_quality: 'NATIVE_FIRST_CONDITIONAL',
       surface: 'Inventory / availability downstream extraction',
       baseline: '4 Firecrawl credits',
       seenrelay: '1 Firecrawl credit',
@@ -128,6 +139,7 @@ export const controlledProofAtlas = {
     },
     {
       id: 'inventory-transition',
+      baseline_quality: 'BEST_BASELINE_UNPROVEN',
       surface: 'Inventory state transition',
       baseline: '4 paid analyses',
       seenrelay: '2 paid analyses',
@@ -141,6 +153,7 @@ export const controlledProofAtlas = {
     },
     {
       id: 'litellm-cold-concurrency',
+      baseline_quality: 'MECHANISM_ONLY_LOCAL_WINS',
       surface: 'AI gateway cold concurrent cache misses',
       baseline: '4 upstream executions',
       seenrelay: '1 upstream execution',
@@ -150,10 +163,11 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '3/3',
       adoption_path: '/clients',
-      note: 'Compared against LiteLLM Proxy 1.103.2 + Redis exact response cache. On cold concurrent exact misses LiteLLM issued 4 upstream executions; SeenRelay single-flight issued 1. Warm sequential cache correctly issued 1 upstream execution, so no warm-cache advantage is claimed.'
+      note: 'Mechanism-only benchmark: against LiteLLM Proxy 1.103.2 + Redis exact cache, four cold concurrent misses caused four upstream executions and SeenRelay single-flight caused one. The exact benchmark output was a fixed constant, so this isolates the cold-concurrency gap rather than proving model-call necessity.'
     },
     {
       id: 'news-live-event',
+      baseline_quality: 'BEST_BASELINE_UNPROVEN',
       surface: 'News / event downstream briefing',
       baseline: '4 paid briefings',
       seenrelay: '1 paid briefing',
@@ -167,6 +181,7 @@ export const controlledProofAtlas = {
     },
     {
       id: 'news-transition',
+      baseline_quality: 'BEST_BASELINE_UNPROVEN',
       surface: 'News / event state transition',
       baseline: '4 paid briefings',
       seenrelay: '2 paid briefings',
@@ -180,6 +195,7 @@ export const controlledProofAtlas = {
     },
     {
       id: 'shared-image-artifact',
+      baseline_quality: 'CONTRACT_DEPENDENT',
       surface: 'Shared generated image artifact',
       baseline: '≥$0.212',
       seenrelay: '≥$0.053',
@@ -232,7 +248,7 @@ export function proofAtlasPage(origin: string): string {
       <h3>${esc(r.surface)}</h3>
       <p><b>${esc(r.executions)} provider executions</b><br>${esc(r.baseline)} → ${esc(r.seenrelay)} · avoided ${esc(r.avoided)}</p>
       <p>${esc(r.note)}</p>
-      <p class="rv-small">Controlled first-party benchmark · semantic ${esc(r.semantic)} · repeatability ${esc(r.repeatability)}</p>
+      <p class="rv-small">Controlled first-party benchmark · baseline quality ${esc(r.baseline_quality)} · semantic ${esc(r.semantic)} · repeatability ${esc(r.repeatability)}</p>
       <a href="${esc(r.adoption_path)}">Integration path →</a>
     </article>`).join('');
 
@@ -270,11 +286,11 @@ export function proofAtlasPage(origin: string): string {
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">CONTROLLED PROOF ATLAS</div>
   <h1>Here is where SeenRelay has already reduced real provider work.</h1>
-  <p>Every row below is a bounded first-party benchmark with real provider execution, a frozen semantic contract and repeatability gates. These are mechanism/unit-economics results — not customer ROI or a claim that every workload has the same recurrence.</p>
+  <p>Every row below is a bounded first-party benchmark with real provider execution, a frozen semantic contract and repeatability gates. A mechanism can pass even when a cheaper local or source-native path would solve that exact benchmark task, so each row now exposes baseline quality separately. These are not customer ROI.</p>
   <div class="rv-actions"><a class="rv-button primary" href="/clients">Choose an integration</a><a class="rv-button" href="/proof.json">Machine-readable proof</a></div>
 </section>
 <section class="rv-shell rv-section">
-  <div class="rv-section-head"><div><div class="rv-eyebrow">MEASURED POSITIVE RESULTS</div><h2>Provider work actually avoided.</h2></div><p>Native controls remain first. A benchmark passes only when provider execution falls and the frozen semantic contract still passes.</p></div>
+  <div class="rv-section-head"><div><div class="rv-eyebrow">MEASURED MECHANISM RESULTS</div><h2>Provider work avoided under the frozen comparator.</h2></div><p>Native/local alternatives remain first. A high reduction proves coordination only when baseline quality says so; it does not automatically prove the expensive tool was necessary.</p></div>
   <div class="rv-grid-3">${rows}</div>
 </section>
 <section class="rv-shell rv-section">
@@ -286,7 +302,7 @@ export function proofAtlasPage(origin: string): string {
   <div class="rv-actions"><a class="rv-button primary" href="/clients">Integrations</a><a class="rv-button" href="/quickstart">Quickstart</a></div>
 </section>
 </main>
-<footer><span>Controlled benchmarks, not customer ROI.</span><span><a href="/">SeenRelay</a> · <a href="/trust">Trust</a> · <a href="/proof.json">Proof JSON</a></span></footer>
+<footer><span>Controlled mechanism benchmarks · baseline quality shown separately · not customer ROI.</span><span><a href="/">SeenRelay</a> · <a href="/trust">Trust</a> · <a href="/proof.json">Proof JSON</a></span></footer>
 </body>
 </html>`;
 }

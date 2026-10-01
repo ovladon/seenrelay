@@ -18,7 +18,7 @@ The controlled Proof Atlas shows where SeenRelay has already reduced real provid
 - agentic web search under an explicit shared-snapshot contract: **42.84%–85.73% gross reduction**, **66.88% mean** across 3/3 paired trials; all tested callers accepted one fresh shared provider-search snapshot and did not require independent search plans;
 - decision-time freshness: **6 → 2 provider reads** across 3/3 controlled trials (**66.7% reduction**).
 
-These are controlled first-party mechanism/unit-economics results, not customer ROI or a promise that every workload has the same recurrence. Negative evidence is published too.
+These are controlled first-party **mechanism** results, not customer ROI or a promise that every workload has the same recurrence. A high reduction does not automatically mean the expensive tool was the best baseline: Proof Atlas now exposes baseline quality separately. For example, the 64 GB SHA-256, fixed-rule weather, fixed-string LiteLLM, and PyPI-version web-search tests are mechanism-only because cheaper local/source-native solutions exist for those exact benchmark tasks. Negative evidence is published too.
 
 Human-readable proof: https://seenrelay.com/proof  
 Machine-readable proof: https://seenrelay.com/proof.json
