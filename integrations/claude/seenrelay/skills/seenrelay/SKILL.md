@@ -1,6 +1,6 @@
 ---
 name: seenrelay
-description: Find repeated expensive read-only checks, duplicate tool calls, and cold concurrent misses across AI agent fleets. Measure native-first local/private reuse or single-flight before policy-gated activation.
+description: Find repeated expensive read-only checks, duplicate tool calls, and cold concurrent misses across AI agent fleets. Start in shadow mode; measure native-first single-flight and prefer private reuse before optional shared evidence.
 license: SEE LICENSE IN REPOSITORY
 compatibility: Requires a project that can call HTTP/MCP or use the SeenRelay TypeScript/Python client; never use this skill to suppress mutating or destructive operations.
 metadata:
