@@ -120,30 +120,30 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-section" id="proof">
   <div class="rv-section-head">
-    <div><div class="rv-eyebrow">CONTROLLED PROOF ATLAS</div><h2>We have already run both sides of the experiment against real providers.</h2></div>
-    <p>Real provider execution, frozen semantic contracts and repeatability gates. These are first-party mechanism/unit-economics results, not customer ROI.</p>
+    <div><div class="rv-eyebrow">CONTROLLED PROOF ATLAS</div><h2>We have run controlled mechanism comparisons against real providers.</h2></div>
+    <p>Real provider execution, frozen semantic contracts and repeatability gates. Baseline quality is separate: some tests intentionally isolate coordination even when a cheaper local or source-native solution exists for the exact benchmark task.</p>
   </div>
   <div class="rv-grid-3">
     <article class="rv-card accent">
       <span class="rv-number">$1.44</span>
-      <h3>Hosted compute avoided</h3>
-      <p>Four compatible 64 GB hosted-compute sessions became one: $1.9241253 baseline → $0.4820025 SeenRelay, $1.4421228 avoided (74.95% gross reduction).</p>
+      <h3>Hosted-resource coalescing</h3>
+      <p>Four compatible 64 GB sessions became one: $1.9241253 → $0.4820025, $1.4421228 avoided. <b>Mechanism-only:</b> the exact SHA-256 benchmark could be done locally; this isolates duplicate resource allocation.</p>
       <a href="/proof">Full benchmark →</a>
     </article>
     <article class="rv-card">
       <span class="rv-number">75%</span>
-      <h3>Retail extraction credits avoided</h3>
-      <p>On a real Apple Store product page, four unchanged-state Firecrawl extractions became one in 3/3 controlled repeats.</p>
+      <h3>Retail extraction after native state check</h3>
+      <p>Four unchanged-state Firecrawl extractions became one in 3/3 repeats, but the direct Apple read already supplies price/capacity state. <b>Native-first conditional:</b> use paid extraction only when richer content is actually needed.</p>
       <a href="/proof">Retail evidence →</a>
     </article>
     <article class="rv-card">
       <span class="rv-number">74.84%</span>
-      <h3>Cold cache-miss gap closed</h3>
-      <p>Against LiteLLM 1.103.2 + Redis exact cache, four concurrent cold misses produced four upstream executions; SeenRelay single-flight produced one, repeated 3/3. Warm-cache advantage is not claimed.</p>
+      <h3>Cold cache-miss gap isolated</h3>
+      <p>LiteLLM 1.103.2 + Redis issued four upstream executions on four cold concurrent misses; SeenRelay single-flight issued one, 3/3. <b>Mechanism-only:</b> the benchmark output was a fixed constant; warm-cache advantage is not claimed.</p>
       <a href="/proof">Comparator evidence →</a>
     </article>
   </div>
-  <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> We also publish NO PASS results: structured JSON extraction and OCR did not earn a promoted claim. <a href="/proof">See the complete Proof Atlas →</a></div>
+  <div class="rv-trust-note"><b>Mechanism proof is not best-baseline proof, and neither is customer savings.</b> Proof Atlas now labels whether the tested expensive tool itself survived local/source/native alternatives. We also publish NO PASS results. <a href="/proof">See the complete Proof Atlas →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="reject">
