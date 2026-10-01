@@ -84,7 +84,7 @@ test('homepage visual system remains responsive, accessible and dependency free'
 });
 
 test('preview gate enforces the concise savings homepage and bounded proof', () => {
-  for (const marker of ['Stop paying twice for the same read-only work.', 'Start locally', '$1.44', '75%', '66.88%', 'Controlled proof is not customer savings', 'Shadow measurement keeps the original authoritative call']) {
+  for (const marker of ['Decide when you actually need to look again.', 'Start locally', '$1.44', '75%', '66.88%', 'Controlled proof is not customer savings', 'Shadow measurement keeps the original authoritative call']) {
     assert.ok(previewGate.includes(marker), `preview gate must require: ${marker}`);
   }
   assert.match(previewGate, /grep -qi 'Firecrawl' \/tmp\/site\.html/);
