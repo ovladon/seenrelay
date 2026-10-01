@@ -13,9 +13,9 @@ SeenRelay itself requires no account or API key. A third-party client, directory
 
 The controlled Proof Atlas shows where SeenRelay has already reduced real provider work under frozen semantic contracts and repeatability gates:
 
-- 64 GB hosted compute: **$1.923993 → $0.481974** for four compatible intents (**74.95% gross reduction**);
+- 64 GB hosted compute: **$1.9241253 → $0.4820025** for four compatible intents (**$1.4421228 avoided; 74.95% gross reduction**);
 - real retail monitoring: **4 → 1 Firecrawl credits** across 3/3 unchanged-state trials (**75% reduction**);
-- agentic web search: **42.84%–85.73% gross reduction**, **66.88% mean** across 3/3 paired trials;
+- agentic web search under an explicit shared-snapshot contract: **42.84%–85.73% gross reduction**, **66.88% mean** across 3/3 paired trials; all tested callers accepted one fresh shared provider-search snapshot and did not require independent search plans;
 - decision-time freshness: **6 → 2 provider reads** across 3/3 controlled trials (**66.7% reduction**).
 
 These are controlled first-party mechanism/unit-economics results, not customer ROI or a promise that every workload has the same recurrence. Negative evidence is published too.
