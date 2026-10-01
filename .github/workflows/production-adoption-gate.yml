@@ -244,7 +244,7 @@ jobs:
             fi
           }
 
-          assert_contains "$RUNNER_TEMP/home.html" 'Stop paying twice for the same read-only work.'
+          assert_contains "$RUNNER_TEMP/home.html" 'Decide when you actually need to look again.'
           assert_contains "$RUNNER_TEMP/home.html" 'Start locally'
           assert_contains "$RUNNER_TEMP/home.html" 'npx seenrelay scan'
           assert_contains "$RUNNER_TEMP/home.html" '18 → 9'
