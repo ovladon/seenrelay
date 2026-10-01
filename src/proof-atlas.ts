@@ -46,7 +46,7 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '3/3',
       adoption_path: '/quickstart',
-      note: 'Hard max-age policy remained satisfied; no claim of hidden source-change detection inside the allowed age window.'
+      note: 'Compared with Firecrawl provider-native maxAge on the same controlled schedule: native path stayed at 6 calls / 6 credits, while SeenRelay used 2 calls / 2 credits in 3/3 runs. Hard max-age policy remained satisfied; no claim of hidden source-change detection inside the allowed age window.'
     },
     {
       id: 'exact-web-extraction',
