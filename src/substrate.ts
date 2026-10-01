@@ -31,8 +31,8 @@ export function substratePage(origin: string): string {
 <a class="rv-skip" href="#main-content">Skip to content</a>
 <header class="rv-nav">
   <a class="rv-brand" href="/"><span class="rv-mark" aria-hidden="true"></span>SeenRelay</a>
-  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
-  <details class="rv-mobile-nav"><summary>Menu</summary><nav aria-label="Mobile navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav></details>
+  <nav class="rv-nav-links" aria-label="Primary navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/proof">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
+  <details class="rv-mobile-nav"><summary>Menu</summary><nav aria-label="Mobile navigation"><a href="/#how">How it works</a><a href="/clients">Integrations</a><a href="/proof">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav></details>
   <div class="rv-nav-actions"><a class="rv-button primary" href="/#start">Start locally</a></div>
 </header>
 
