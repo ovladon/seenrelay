@@ -167,7 +167,8 @@ export const controlledProofAtlas = {
     },
     {
       id: 'news-live-event',
-      baseline_quality: 'BEST_BASELINE_UNPROVEN',
+      baseline_quality: 'TOOL_NECESSITY_PASS_BEST_BASELINE_UNPROVEN',
+      tool_necessity: 'PASS_DERIVED_BRIEFING',
       surface: 'News / event downstream briefing',
       baseline: '4 paid briefings',
       seenrelay: '1 paid briefing',
@@ -177,11 +178,12 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '3/3',
       adoption_path: '/use-cases',
-      note: 'Live Hacker News event authority; native feed remained authoritative. Gross modeled reduction ranged 70.95%–90.00%. This is downstream paid briefing/search savings, not a replacement for the feed.'
+      note: 'Real Hacker News event authority plus real OpenAI web-search briefing. In 3/3 stable-state runs, four paid briefings became one and gross avoided cost was $0.05462206–$0.10098029 per group (70.95%–90.00%). HN remained the native state authority; independent customer prevalence is not claimed.'
     },
     {
       id: 'news-transition',
-      baseline_quality: 'BEST_BASELINE_UNPROVEN',
+      baseline_quality: 'TOOL_NECESSITY_PASS_BEST_BASELINE_UNPROVEN',
+      tool_necessity: 'PASS_DERIVED_BRIEFING',
       surface: 'News / event state transition',
       baseline: '4 paid briefings',
       seenrelay: '2 paid briefings',
