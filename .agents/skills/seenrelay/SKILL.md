@@ -1,6 +1,6 @@
 ---
 name: seenrelay
-description: Find duplicate expensive read-only tool calls, cold concurrent misses, and repeated validation across AI agent fleets. Measure whether native-first local/private reuse or single-flight saves real cost before policy-gated activation.
+description: Find repeated expensive read-only checks, duplicate tool calls, and cold concurrent misses across AI agent fleets. Measure native-first local/private reuse or single-flight before policy-gated activation.
 license: SEE LICENSE IN REPOSITORY
 compatibility: Requires a project that can call HTTP/MCP or use the SeenRelay TypeScript/Python client; never use this skill to suppress mutating or destructive operations.
 metadata:
