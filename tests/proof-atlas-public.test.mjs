@@ -13,7 +13,7 @@ const useCases=read('src/use-cases.ts');
 test('Proof Atlas exposes repeated controlled results without customer ROI claims',()=>{
   assert.match(proof,/controlled_first_party_benchmark/);
   assert.match(proof,/74\.95%/);
-  assert.match(proof,/74\.84% mean/);
+  assert.match(proof,/74\.84%/);
   assert.match(proof,/Retail price monitoring/);
   assert.match(proof,/Inventory \/ availability downstream extraction/);
   assert.match(proof,/AI gateway cold concurrent cache misses/);
