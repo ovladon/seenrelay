@@ -23,7 +23,7 @@ test('homepage follows a short human journey from outcome to automatic loop to p
   const ids = ['what', 'how', 'where', 'proof', 'start'].map((id) => landing.indexOf(`id="${id}"`));
   assert.ok(ids.every((x) => x >= 0));
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
-  assert.match(landing, /Stop paying twice for the same read-only work\./);
+  assert.match(landing, /Decide when you actually need to look again\./);
   assert.match(landing, /Start locally/i);
   assert.match(landing, /Observe\. Learn\. Decide\. Receipt\./i);
   assert.match(landing, /Controlled proof is not customer savings/i);
