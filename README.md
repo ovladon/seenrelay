@@ -9,6 +9,20 @@ Currently free · no account · no SeenRelay API key required.
 SeenRelay itself requires no account or API key. A third-party client, directory, gateway, or assistant may require its own account to use that third-party service; that is not a SeenRelay access requirement. The canonical direct MCP endpoint is `https://seenrelay.com/mcp`.
 
 
+## See measured proof before you install
+
+The controlled Proof Atlas shows where SeenRelay has already reduced real provider work under frozen semantic contracts and repeatability gates:
+
+- 64 GB hosted compute: **$1.923993 → $0.481974** for four compatible intents (**74.95% gross reduction**);
+- real retail monitoring: **4 → 1 Firecrawl credits** across 3/3 unchanged-state trials (**75% reduction**);
+- agentic web search: **42.84%–85.73% gross reduction**, **66.88% mean** across 3/3 paired trials;
+- decision-time freshness: **6 → 2 provider reads** across 3/3 controlled trials (**66.7% reduction**).
+
+These are controlled first-party mechanism/unit-economics results, not customer ROI or a promise that every workload has the same recurrence. Negative evidence is published too.
+
+Human-readable proof: https://seenrelay.com/proof  
+Machine-readable proof: https://seenrelay.com/proof.json
+
 ## What SeenRelay is deciding
 
 SeenRelay is designed around one question: **“I already know X — do I need to pay to validate X again now?”**
