@@ -1,6 +1,6 @@
 # SeenRelay
 
-**Stop paying twice for the same read-only work.**
+**Decide when you actually need to look again.**
 
 SeenRelay measures repeated expensive read-only execution around agents and distributed software. It prefers local/private and source/provider-native controls first, preserves authoritative execution while measuring, and keeps only paths that earn a `USE` verdict. Start locally with `npx seenrelay scan`; if no candidate exists or a stronger native control already wins, stop there. `DO NOT USE` and `INSUFFICIENT EVIDENCE` are valid outcomes.
 
