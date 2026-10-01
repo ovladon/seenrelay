@@ -31,7 +31,7 @@ test('fleet page exposes shadow-first distributed measurement before active coor
 });
 
 test('homepage makes self-serve local adoption primary without duplicating agent docs', () => {
-  assert.match(landing, /Stop paying twice for the same read-only work/i);
+  assert.match(landing, /Decide when you actually need to look again/i);
   assert.match(landing, /Start locally/i);
   assert.match(landing, /Shadow measurement keeps the original authoritative call/i);
   assert.match(landing, /USE \/ DO NOT USE \/ INSUFFICIENT EVIDENCE/i);
