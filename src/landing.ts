@@ -75,12 +75,13 @@ export function publicLandingPage(origin: string): string {
     </div>
   </div>
 
-  <aside class="rv-demo rv-verdict-demo" aria-label="SeenRelay execution decision">
-    <div class="rv-demo-head"><span>ONE DECISION</span><b>execute again or reuse safely?</b></div>
+  <aside class="rv-demo rv-verdict-demo" aria-label="SeenRelay real live monitoring proof">
+    <div class="rv-demo-head"><span>REAL LIVE MONITORING TEST</span><b>same event state · paid briefing fan-out</b></div>
     <div class="rv-verdict-card">
-      <div class="rv-verdict-top"><span>BASELINE</span><strong>repeat the provider work</strong></div>
-      <div class="rv-verdict-top"><span>SEENRELAY</span><strong>execute only when the shortcut has not earned trust</strong></div>
-      <p>Shadow measurement keeps the original authoritative call. Active protection is bounded, reversible and audited.</p>
+      <div class="rv-verdict-top"><span>BASELINE</span><strong>4 paid OpenAI web-search briefings · $0.11220531</strong></div>
+      <div class="rv-verdict-top"><span>SEENRELAY</span><strong>1 paid briefing · $0.01122502</strong></div>
+      <div class="rv-verdict-top"><span>AVOIDED</span><strong>$0.10098029 · 89.996%</strong></div>
+      <p>Real Hacker News event state, controlled first-party run. Across 3/3 repeats the gross reduction was 70.95%–90.00%. When the event fingerprint changed, a fresh paid briefing was forced before reuse resumed.</p>
     </div>
   </aside>
 </section>
@@ -120,27 +121,27 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-section" id="proof">
   <div class="rv-section-head">
-    <div><div class="rv-eyebrow">CONTROLLED PROOF ATLAS</div><h2>We have run controlled mechanism comparisons against real providers.</h2></div>
-    <p>Real provider execution, frozen semantic contracts and repeatability gates. Baseline quality is separate: some tests intentionally isolate coordination even when a cheaper local or source-native solution exists for the exact benchmark task.</p>
+    <div><div class="rv-eyebrow">REAL PROVIDER PROOF</div><h2>Lead with the workload where the expensive downstream work was actually needed.</h2></div>
+    <p>Our strongest current adoption example uses live event state plus real OpenAI web search. Mechanism-only tests remain in the full Proof Atlas and are labeled separately from workload fit and customer ROI.</p>
   </div>
   <div class="rv-grid-3">
     <article class="rv-card accent">
+      <span class="rv-number">79.61%</span>
+      <h3>Real live event monitoring</h3>
+      <p>Across 3/3 runs on a real current Hacker News event, four paid OpenAI web-search briefings became one while the event fingerprint stayed unchanged. Gross avoided cost was $0.05462206–$0.10098029 per four-observation group.</p>
+      <a href="/proof">Live-event evidence →</a>
+    </article>
+    <article class="rv-card">
+      <span class="rv-number">3/3</span>
+      <h3>Refresh when the event changes</h3>
+      <p>Using two real current HN events in A,A,B,B order, the changed fingerprint forced a fresh paid briefing before reuse resumed. Four paid briefings became two; mean gross reduction was 49.93%.</p>
+      <a href="/proof">Transition evidence →</a>
+    </article>
+    <article class="rv-card">
       <span class="rv-number">$1.44</span>
       <h3>Hosted-resource coalescing</h3>
-      <p>Four compatible 64 GB sessions became one: $1.9241253 → $0.4820025, $1.4421228 avoided. <b>Mechanism-only:</b> the exact SHA-256 benchmark could be done locally; this isolates duplicate resource allocation.</p>
-      <a href="/proof">Full benchmark →</a>
-    </article>
-    <article class="rv-card">
-      <span class="rv-number">75%</span>
-      <h3>Retail extraction after native state check</h3>
-      <p>Four unchanged-state Firecrawl extractions became one in 3/3 repeats, but the direct Apple read already supplies price/capacity state. <b>Native-first conditional:</b> use paid extraction only when richer content is actually needed.</p>
-      <a href="/proof">Retail evidence →</a>
-    </article>
-    <article class="rv-card">
-      <span class="rv-number">74.84%</span>
-      <h3>Cold cache-miss gap isolated</h3>
-      <p>LiteLLM 1.103.2 + Redis issued four upstream executions on four cold concurrent misses; SeenRelay single-flight issued one, 3/3. <b>Mechanism-only:</b> the benchmark output was a fixed constant; warm-cache advantage is not claimed.</p>
-      <a href="/proof">Comparator evidence →</a>
+      <p>Four compatible 64 GB sessions became one: $1.9241253 → $0.4820025. <b>Mechanism-only:</b> the exact SHA-256 benchmark could be done locally, so this card isolates resource coalescing rather than workload fit.</p>
+      <a href="/proof">Mechanism evidence →</a>
     </article>
   </div>
   <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> Mechanism proof is not best-baseline proof either. Proof Atlas now labels whether the tested expensive tool itself survived local/source/native alternatives. We also publish NO PASS results. <a href="/proof">See the complete Proof Atlas →</a></div>
