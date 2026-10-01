@@ -43,7 +43,7 @@ export function commercialPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section">
-  <div class="rv-trust-note"><b>Current billing boundary:</b> the hosted CHECK/OBSERVE service remains free during bootstrap and self-serve service billing is disabled. Any optional engineering/evaluation support is separately agreed and is not required to use SeenRelay.</div>
+  <div class="rv-trust-note"><b>Current billing boundary:</b> the hosted CHECK/OBSERVE service remains free during bootstrap and self-serve service billing is disabled. No paid deployment-support or engineering service is currently activated. The public GitHub support path is optional, non-commercial during this bootstrap phase, and not required to use SeenRelay.</div>
   <div class="rv-actions rv-actions-spaced"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="/economics">Economics method</a></div>
 </section>
 </main>

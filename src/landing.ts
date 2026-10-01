@@ -127,7 +127,7 @@ export function publicLandingPage(origin: string): string {
     <article class="rv-card accent">
       <span class="rv-number">$1.44</span>
       <h3>Hosted compute avoided</h3>
-      <p>Four compatible 64 GB hosted-compute sessions became one: $1.923993 baseline → $0.481974 SeenRelay, 74.95% gross reduction.</p>
+      <p>Four compatible 64 GB hosted-compute sessions became one: $1.9241253 baseline → $0.4820025 SeenRelay, $1.4421228 avoided (74.95% gross reduction).</p>
       <a href="/proof">Full benchmark →</a>
     </article>
     <article class="rv-card">
