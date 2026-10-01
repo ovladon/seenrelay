@@ -31,8 +31,8 @@ export const publicUseCaseAtlas = {
       id:'agentic-search',
       name:'AI agent search & research',
       status:'PROVEN_MECHANISM_APPLICABLE',
-      value:'Coordinate compatible top-level paid search/tool executions across agents.',
-      native_first:'Provider caching, framework single-flight and explicit shared-artifact semantics.',
+      value:'Coordinate compatible top-level paid search/tool executions only when the caller contract explicitly permits shared fresh results; otherwise preserve the required execution multiplicity.',
+      native_first:'Provider caching, framework single-flight, provider request coalescing where available, and the caller\'s required multiplicity/diversity contract.',
       integration:'Agent/tool middleware, MCP or SDK wrapper',
       proof:'/proof'
     },
