@@ -19,7 +19,7 @@ test('secondary public surfaces use the self-serve vNext funnel rather than pilo
   assert.doesNotMatch(secondary,/href="\/commercial"|\bpilot\b|Run free audit/i);
   assert.match(secondary,/Start locally/);
   assert.match(secondary,/href="\/clients"/);
-  assert.match(secondary,/href="\/fleet"/);
+  assert.match(secondary,/href="\/proof"/);
   assert.match(secondary,/href="\/trust"/);
 });
 
