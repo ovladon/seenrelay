@@ -7,7 +7,7 @@ const evidence = readFileSync('docs/VERIFIED_FLEET_BROWSER_OVERLAP_2026-09-29.md
 
 test('homepage exposes a compact bounded provider-unit proof and links to full evidence', () => {
   assert.match(landing, /75%/);
-  assert.match(landing, /Retail extraction credits avoided/i);
+  assert.match(landing, /Retail extraction after native state check/i);
   assert.match(landing, /href="\/proof"/);
   assert.match(landing, /Controlled proof is not customer savings/i);
 });
