@@ -137,10 +137,10 @@ export function publicLandingPage(origin: string): string {
       <a href="/proof">Retail evidence →</a>
     </article>
     <article class="rv-card">
-      <span class="rv-number">66.88%</span>
-      <h3>Mean agentic-search reduction</h3>
-      <p>Across 3/3 paired trials, four compatible top-level search executions became one; gross reduction ranged from 42.84% to 85.73%.</p>
-      <a href="/proof">Search evidence →</a>
+      <span class="rv-number">74.84%</span>
+      <h3>Cold cache-miss gap closed</h3>
+      <p>Against LiteLLM 1.103.2 + Redis exact cache, four concurrent cold misses produced four upstream executions; SeenRelay single-flight produced one, repeated 3/3. Warm-cache advantage is not claimed.</p>
+      <a href="/proof">Comparator evidence →</a>
     </article>
   </div>
   <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> We also publish NO PASS results: structured JSON extraction and OCR did not earn a promoted claim. <a href="/proof">See the complete Proof Atlas →</a></div>
