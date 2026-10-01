@@ -117,6 +117,8 @@ export function serviceDescriptor(origin: string) {
       mcp: `${origin}/mcp`,
       openapi: `${origin}/openapi.json`,
       economics: `${origin}/economics`,
+      proof: origin + '/proof',
+      proof_atlas: origin + '/proof.json',
       quickstart: `${origin}/quickstart`,
       clients: `${origin}/clients`,
       starter_facts: `${origin}/starter-facts.json`,
