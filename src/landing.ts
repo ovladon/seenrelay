@@ -29,11 +29,11 @@ export function publicLandingPage(origin: string): string {
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — Stop paying twice for the same read-only work.">
+<meta property="og:title" content="SeenRelay — Decide when you actually need to look again.">
 <meta property="og:description" content="Measure what repeats, keep native controls first, and skip only the calls that earn a safe economic shortcut.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
-<title>SeenRelay — Stop paying twice for the same read-only work.</title>
+<title>SeenRelay — Decide when you actually need to look again.</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
@@ -64,7 +64,7 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-hero rv-funnel-hero" id="what">
   <div>
     <div class="rv-kicker"><i></i><span>EXECUTION ECONOMICS · CLIENT ${version}</span></div>
-    <h1>Stop paying twice for the same read-only work.</h1>
+    <h1>Decide when you actually need to look again.</h1>
     <p class="rv-lead">SeenRelay sits around expensive read-only calls, measures what actually repeats, keeps stronger native controls first, and avoids only the work that proves worth avoiding.</p>
     <div class="rv-actions rv-actions-spaced">
       <a class="rv-button primary" href="#start">Start locally</a>
