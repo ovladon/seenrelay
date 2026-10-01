@@ -1,4 +1,4 @@
-export const SEENRELAY_SKILL_DESCRIPTION = "Find repeated expensive read-only checks, duplicate tool calls, and cold concurrent misses across AI agent fleets. Measure native-first local/private reuse or single-flight before policy-gated activation.";
+export const SEENRELAY_SKILL_DESCRIPTION = "Find repeated expensive read-only checks, duplicate tool calls, and cold concurrent misses across AI agent fleets. Start in shadow mode; measure native-first single-flight and prefer private reuse before optional shared evidence.";
 
 export function agentSkillMarkdown(){
 return `---
