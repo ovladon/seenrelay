@@ -143,7 +143,7 @@ export function publicLandingPage(origin: string): string {
       <a href="/proof">Comparator evidence →</a>
     </article>
   </div>
-  <div class="rv-trust-note"><b>Mechanism proof is not best-baseline proof, and neither is customer savings.</b> Proof Atlas now labels whether the tested expensive tool itself survived local/source/native alternatives. We also publish NO PASS results. <a href="/proof">See the complete Proof Atlas →</a></div>
+  <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> Mechanism proof is not best-baseline proof either. Proof Atlas now labels whether the tested expensive tool itself survived local/source/native alternatives. We also publish NO PASS results. <a href="/proof">See the complete Proof Atlas →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="reject">
