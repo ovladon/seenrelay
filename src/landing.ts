@@ -143,7 +143,7 @@ export function publicLandingPage(origin: string): string {
       <a href="/proof">Search evidence →</a>
     </article>
   </div>
-  <div class="rv-trust-note"><b>We also publish NO PASS results.</b> Structured JSON extraction and OCR did not earn a promoted claim. <a href="/proof">See the complete Proof Atlas →</a></div>
+  <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> We also publish NO PASS results: structured JSON extraction and OCR did not earn a promoted claim. <a href="/proof">See the complete Proof Atlas →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="reject">
