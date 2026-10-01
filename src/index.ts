@@ -18,6 +18,7 @@ import { substratePage } from './substrate.js';
 import { commercialPage } from './commercial.js';
 import { aiAgentCostOptimizationPage, duplicateToolCallsPage } from './seo-pages.js';
 import { proofAtlasDescriptor, proofAtlasPage } from './proof-atlas.js';
+import { useCaseAtlasDescriptor, useCaseAtlasPage } from './use-cases.js';
 import { langfusePage } from './langfuse.js';
 import { trustDescriptor, trustPage } from './trust.js';
 import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
@@ -107,6 +108,16 @@ app.get('/quickstart', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(quickstartPage(new URL(c.req.url).origin));
+});
+app.get('/use-cases', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(useCaseAtlasPage(new URL(c.req.url).origin));
+});
+app.get('/use-cases.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  c.header('access-control-allow-origin', '*');
+  return c.json(useCaseAtlasDescriptor(new URL(c.req.url).origin));
 });
 app.get('/proof', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
