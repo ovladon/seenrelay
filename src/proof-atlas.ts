@@ -140,6 +140,45 @@ export const controlledProofAtlas = {
       note: 'Controlled A,A,B,B stock/availability transition. Each changed state forced a new paid analysis before reuse resumed; gross modeled reduction ranged from 50% to 53.1%. This is not a live retailer stock-change claim.'
     },
     {
+      id: 'news-live-event',
+      surface: 'News / event downstream briefing',
+      baseline: '4 paid briefings',
+      seenrelay: '1 paid briefing',
+      avoided: '70.95%–90.00%',
+      reduction: '79.61% mean',
+      executions: '4 → 1',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/use-cases',
+      note: 'Hacker News Firebase API supplied the live event identity; SeenRelay reused one paid OpenAI web-search briefing only while that event fingerprint stayed unchanged. The native feed is not replaced.'
+    },
+    {
+      id: 'news-event-transition',
+      surface: 'News event transition',
+      baseline: '4 paid briefings',
+      seenrelay: '2 paid briefings',
+      avoided: '25.85%–74.87%',
+      reduction: '49.93% mean',
+      executions: '4 → 2',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/use-cases',
+      note: 'Two real current Hacker News stories were used in controlled A,A,B,B order. The B event forced a new paid briefing before reuse resumed. Naturally observed ranking transitions are not claimed.'
+    },
+    {
+      id: 'litellm-cold-concurrency',
+      surface: 'Cold concurrent exact cache misses',
+      baseline: '4 upstream executions · $0.0001224',
+      seenrelay: '1 upstream execution · $0.0000308',
+      avoided: '3 upstream executions',
+      reduction: '74.84%',
+      executions: '4 → 1',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/use-cases',
+      note: 'Controlled comparator: LiteLLM Proxy 1.103.2 + Redis exact response cache. Four identical simultaneous requests on a cold cache produced four upstream executions; SeenRelay single-flight in front of the same proxy produced one. LiteLLM warm sequential cache already produced one, so this claim is only about the cold concurrent miss window; semantic cache was not tested.'
+    },
+    {
       id: 'shared-image-artifact',
       surface: 'Shared generated image artifact',
       baseline: '≥$0.212',
