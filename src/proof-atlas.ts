@@ -12,9 +12,9 @@ export const controlledProofAtlas = {
     {
       id: 'hosted-compute-64gb',
       surface: 'Hosted compute / 64 GB tool session',
-      baseline: '$1.923993',
-      seenrelay: '$0.481974',
-      avoided: '$1.442019',
+      baseline: '$1.9241253',
+      seenrelay: '$0.4820025',
+      avoided: '$1.4421228',
       reduction: '74.95%',
       executions: '4 → 1',
       semantic: 'PASS',
@@ -24,7 +24,7 @@ export const controlledProofAtlas = {
     },
     {
       id: 'agentic-search',
-      surface: 'Agentic web search',
+      surface: 'Agentic web search — explicit shared-snapshot contract',
       baseline: '4 top-level executions',
       seenrelay: '1 top-level execution',
       avoided: '42.84%–85.73%',
@@ -33,7 +33,7 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '3/3',
       adoption_path: '/ai-agent-cost-optimization',
-      note: 'Provider search subcall count varied naturally; tested callers explicitly accepted one shared fresh search snapshot.'
+      note: 'Only the tested contract is authorized: all callers explicitly accepted one shared fresh provider-search snapshot and did not require independent search plans. Other agentic-search workloads may require k>1 or k=N.'
     },
     {
       id: 'freshness-firewall',
