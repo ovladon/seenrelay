@@ -114,6 +114,32 @@ export const controlledProofAtlas = {
       note: 'Controlled authoritative A,A,B,B retail fixture. The changed price/availability fingerprint forced a new analysis before reuse resumed; this is not a live Apple price-change claim.'
     },
     {
+      id: 'inventory-native-comparison',
+      surface: 'Inventory / availability downstream extraction',
+      baseline: '4 Firecrawl credits',
+      seenrelay: '1 Firecrawl credit',
+      avoided: '3 Firecrawl credits',
+      reduction: '75%',
+      executions: '4 → 1',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/use-cases',
+      note: 'Real Adafruit inventory state. Firecrawl provider-native maxAge also stayed at 4 calls / 4 credits; SeenRelay used the retailer Product API as a cheap opaque state token and performed one paid extraction. If that native API already answers the entire need, SeenRelay should not be used.'
+    },
+    {
+      id: 'inventory-transition',
+      surface: 'Inventory state transition',
+      baseline: '4 paid analyses',
+      seenrelay: '2 paid analyses',
+      avoided: '2 paid analyses',
+      reduction: '51.58% mean',
+      executions: '4 → 2',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/use-cases',
+      note: 'Controlled A,A,B,B stock/availability transition. Each changed state forced a new paid analysis before reuse resumed; gross modeled reduction ranged from 50% to 53.1%. This is not a live retailer stock-change claim.'
+    },
+    {
       id: 'shared-image-artifact',
       surface: 'Shared generated image artifact',
       baseline: '≥$0.212',
