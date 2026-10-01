@@ -75,10 +75,11 @@ export const publicUseCaseAtlas = {
     {
       id:'news',
       name:'News & event-driven monitoring',
-      status:'EXPERIMENTAL',
+      status:'VALIDATED_VERTICAL',
       value:'Coordinate bursty search/retrieval around the same event and avoid reprocessing an unchanged event state.',
       native_first:'Feeds, webhooks, publisher updates and search-provider cache.',
-      integration:'Search/retrieval middleware'
+      integration:'Search/retrieval middleware',
+      proof:'/proof'
     },
     {
       id:'sports',
