@@ -6,9 +6,9 @@ const landing = readFileSync('src/landing.ts', 'utf8');
 const evidence = readFileSync('docs/VERIFIED_FLEET_BROWSER_OVERLAP_2026-09-29.md', 'utf8');
 
 test('homepage exposes a compact bounded provider-unit proof and links to full evidence', () => {
-  assert.match(landing, /18 → 9/);
-  assert.match(landing, /6 browser jobs became 3 jobs \+ 3 follower reuses/i);
-  assert.match(landing, /href="\/fleet#measured-proof"/);
+  assert.match(landing, /75%/);
+  assert.match(landing, /Retail extraction credits avoided/i);
+  assert.match(landing, /href="\/proof"/);
   assert.match(landing, /Controlled proof is not customer savings/i);
 });
 

@@ -79,9 +79,9 @@ grep -q 'SeenRelay sits around expensive read-only calls' /tmp/site.html
 grep -q 'Start locally' /tmp/site.html
 grep -q 'id="hero-scan-command"' /tmp/site.html
 grep -q 'npx seenrelay scan' /tmp/site.html
-grep -q '18 → 9' /tmp/site.html
-grep -q '5 → 1' /tmp/site.html
-grep -qi 'Firecrawl' /tmp/site.html
+grep -q '\$1.44' /tmp/site.html
+grep -q '66.88%' /tmp/site.html
+grep -q '75%' /tmp/site.html\ngrep -qi 'Firecrawl' /tmp/site.html
 grep -q 'Controlled proof is not customer savings' /tmp/site.html
 grep -q 'Sometimes the right answer is not to use SeenRelay' /tmp/site.html
 ! grep -qi 'guaranteed savings' /tmp/site.html

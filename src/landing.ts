@@ -48,13 +48,13 @@ export function publicLandingPage(origin: string): string {
   <nav class="rv-nav-links" aria-label="Primary navigation">
     <a href="#how">How it works</a>
     <a href="/clients">Integrations</a>
-    <a href="/fleet">Proof</a>
+    <a href="/proof">Proof</a>
     <a href="/trust">Trust</a>
     <a href="/quickstart">Docs</a>
   </nav>
   <details class="rv-mobile-nav">
     <summary>Menu</summary>
-    <nav aria-label="Mobile navigation"><a href="#how">How it works</a><a href="/clients">Integrations</a><a href="/fleet">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
+    <nav aria-label="Mobile navigation"><a href="#how">How it works</a><a href="/clients">Integrations</a><a href="/proof">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
   </details>
   <div class="rv-nav-actions"><a class="rv-button primary" href="#start">Start locally</a></div>
 </header>
@@ -115,34 +115,35 @@ export function publicLandingPage(origin: string): string {
     <article class="rv-usecase"><i>API</i><h3>Paid APIs</h3><p>Repeated status, metadata, search and validation reads.</p></article>
     <article class="rv-usecase"><i>OPS</i><h3>Polling / CI / monitors</h3><p>Recurring deterministic checks where native controls do not already win.</p></article>
   </div>
+  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/use-cases">Explore the full use-case atlas</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="proof">
   <div class="rv-section-head">
-    <div><div class="rv-eyebrow">CONTROLLED MECHANICS PROOF</div><h2>We can reduce provider work when exact overlap exists.</h2></div>
-    <p>These are bounded first-party mechanism tests, not customer ROI or a universal savings claim.</p>
+    <div><div class="rv-eyebrow">CONTROLLED PROOF ATLAS</div><h2>We have already run both sides of the experiment against real providers.</h2></div>
+    <p>Real provider execution, frozen semantic contracts and repeatability gates. These are first-party mechanism/unit-economics results, not customer ROI.</p>
   </div>
   <div class="rv-grid-3">
     <article class="rv-card accent">
-      <span class="rv-number">18 → 9</span>
-      <h3>Firecrawl credits</h3>
-      <p>Controlled cross-worker browser evidence reduced provider credits while matching authoritative results. In the bounded browser overlap run, 6 browser jobs became 3 jobs + 3 follower reuses.</p>
-      <a href="/fleet#measured-proof">Evidence →</a>
+      <span class="rv-number">$1.44</span>
+      <h3>Hosted compute avoided</h3>
+      <p>Four compatible 64 GB hosted-compute sessions became one: $1.923993 baseline → $0.481974 SeenRelay, 74.95% gross reduction.</p>
+      <a href="/proof">Full benchmark →</a>
     </article>
     <article class="rv-card">
-      <span class="rv-number">5 → 1</span>
-      <h3>Concurrent provider jobs</h3>
-      <p>Five simultaneous compatible callers shared one provider execution in a controlled test.</p>
-      <a href="/fleet#measured-proof">Evidence →</a>
+      <span class="rv-number">75%</span>
+      <h3>Retail extraction credits avoided</h3>
+      <p>On a real Apple Store product page, four unchanged-state Firecrawl extractions became one in 3/3 controlled repeats.</p>
+      <a href="/proof">Retail evidence →</a>
     </article>
     <article class="rv-card">
-      <span class="rv-number">USE / DO NOT USE</span>
-      <h3>SeenRelay may reject itself</h3>
-      <p>If recurrence is weak, native controls win, safety fails or economics are negative, the correct result is not to deploy it.</p>
-      <a href="/quickstart">Decision path →</a>
+      <span class="rv-number">66.88%</span>
+      <h3>Mean agentic-search reduction</h3>
+      <p>Across 3/3 paired trials, four compatible top-level search executions became one; gross reduction ranged from 42.84% to 85.73%.</p>
+      <a href="/proof">Search evidence →</a>
     </article>
   </div>
-  <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> Net value requires a measured workload, explicit provider-cost provenance and SeenRelay overhead.</div>
+  <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> We also publish NO PASS results: structured JSON extraction and OCR did not earn a promoted claim. <a href="/proof">See the complete Proof Atlas →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="reject">

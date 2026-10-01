@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { sitemapXml } from '../src/adoption.js';
 
 const expected = [
-  ['https://seenrelay.com/', '2026-09-25'],
+  ['https://seenrelay.com/', '2026-10-01'],
+  ['https://seenrelay.com/proof', '2026-10-01'],
+  ['https://seenrelay.com/use-cases', '2026-10-01'],
   ['https://seenrelay.com/fleet', '2026-09-30'],
   ['https://seenrelay.com/substrate', '2026-09-30'],
   ['https://seenrelay.com/ai-agent-cost-optimization', '2026-09-30'],
