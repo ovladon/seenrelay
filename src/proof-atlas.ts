@@ -101,6 +101,19 @@ export const controlledProofAtlas = {
       note: 'Real Apple Store product page; unchanged commercial state detected by a cheap direct read. Live price-transition evidence is not claimed yet.'
     },
     {
+      id: 'retail-transition',
+      surface: 'Retail price / availability transition',
+      baseline: '4 paid analyses',
+      seenrelay: '2 paid analyses',
+      avoided: '2 paid analyses',
+      reduction: '50%',
+      executions: '4 → 2',
+      semantic: 'PASS',
+      repeatability: '3/3',
+      adoption_path: '/clients',
+      note: 'Controlled authoritative A,A,B,B retail fixture. The changed price/availability fingerprint forced a new analysis before reuse resumed; this is not a live Apple price-change claim.'
+    },
+    {
       id: 'shared-image-artifact',
       surface: 'Shared generated image artifact',
       baseline: '≥$0.212',
