@@ -8,7 +8,7 @@ const revampClient = fs.readFileSync(new URL('../public/revamp.js', import.meta.
 const funnelCss = fs.readFileSync(new URL('../public/funnel.css', import.meta.url), 'utf8');
 
 test('homepage states the economic outcome immediately and makes self-serve local adoption primary', () => {
-  assert.match(landing, /Stop paying twice for the same read-only work\./);
+  assert.match(landing, /Decide when you actually need to look again\./);
   assert.match(landing, /measures what actually repeats/i);
   assert.match(landing, /Start locally/);
   assert.match(landing, /Install with an agent/);

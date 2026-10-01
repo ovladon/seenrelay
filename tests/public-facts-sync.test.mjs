@@ -26,7 +26,7 @@ test('runtime consumes canonical facts and homepage may surface bounded benchmar
   assert.match(integrations,/publicProductFacts\.install\.client_version/);
   assert.match(q,/siteFooterHtml\(\)/); assert.match(integrations,/siteFooterHtml\(\)/);
   assert.match(e,/Use your invoice, not a public benchmark/); assert.match(e,/Provider spend/); assert.doesNotMatch(e,/verifiedBenchmarkHtml\(|pricing_snapshots/); assert.match(i,/\/product-facts\.json/);
-  assert.match(landing,/Stop paying twice for the same read-only work\./); assert.match(landing,/Firecrawl/); assert.match(landing,/Controlled proof is not customer savings/i);
+  assert.match(landing,/Decide when you actually need to look again\./); assert.match(landing,/Firecrawl/); assert.match(landing,/Controlled proof is not customer savings/i);
   assert.doesNotMatch(e,/first-party smoke|provider calls avoided|Firecrawl|OpenAI Web Search/i);
   assert.doesNotMatch(pub+ad+q+landing+integrations+e,/Firecrawl Pay As You Go/);
 });

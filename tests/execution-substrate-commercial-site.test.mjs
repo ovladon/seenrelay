@@ -14,7 +14,7 @@ const supportTemplate = fs.readFileSync(new URL('../.github/ISSUE_TEMPLATE/deplo
 const obsoletePilotTemplateExists = fs.existsSync(new URL('../.github/ISSUE_TEMPLATE/commercial-pilot.yml', import.meta.url));
 
 test('public positioning expands below agents without weakening the audit gate', () => {
-  assert.match(landing, /Stop paying twice for the same read-only work/);
+  assert.match(landing, /Decide when you actually need to look again/);
   assert.match(landing, /measures what actually repeats/i);
   assert.match(landing, /Shadow measurement keeps the original authoritative call/);
   assert.match(landing, /DO NOT USE/);
