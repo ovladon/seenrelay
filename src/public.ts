@@ -92,9 +92,7 @@ export function serviceDescriptor(origin: string) {
       agent_adoption: `${origin}/agent-adoption.json`,
       agents_page: `${origin}/agents`,
       trust: `${origin}/trust.json`,
-      quickstart: `${origin}/quickstart`,
-      agent_adoption: `${origin}/agent-adoption.json`,
-      trust: `${origin}/trust.json`
+      quickstart: `${origin}/quickstart`
     },
     economics: {
       target_workloads: ['known_state_revalidation', 'paid_web_search', 'metered_scraping', 'browser_or_extraction', 'multi_step_validation', 'rate_limited_api'],
@@ -138,7 +136,10 @@ export function serviceDescriptor(origin: string) {
       service_descriptor: `${origin}/service.json`,
       product_facts: `${origin}/product-facts.json`,
       agent_skills_index: `${origin}/.well-known/agent-skills/index.json`,
-      agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`
+      agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`,
+      agent_adoption: `${origin}/agent-adoption.json`,
+      agents_page: `${origin}/agents`,
+      trust: `${origin}/trust.json`
     },
     public_product_facts: productFactsForOrigin(origin),
     latest_verified_updates: publicProductFacts.latest_verified_updates
