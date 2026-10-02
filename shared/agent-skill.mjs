@@ -72,7 +72,7 @@ Do not silently convert \`USE\` into project mutation authority. SeenRelay never
 
 If the user or project explicitly authorizes adding a CI workflow, you may propose the local-only SeenRelay Cost Prescreen Action:
 
-`ovladon/seenrelay/actions/cost-prescreen@main`
+\`ovladon/seenrelay/actions/cost-prescreen@main\`
 
 The action runs the published static scanner and non-mutating adoption planner on the GitHub runner. It does not contact the SeenRelay service, upload source code to SeenRelay, enable reuse, or return a USE verdict.
 
