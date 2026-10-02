@@ -40,7 +40,7 @@ test('case study is discoverable by humans and agents',()=>{
   assert.match(index,/app\.get\('\/case-studies\/company-fleet'/);
   assert.match(index,/app\.get\('\/case-studies\/company-fleet\.json'/);
   assert.match(adoption,/path: '\/case-studies\/company-fleet'/);
-  assert.match(adoption,/Machine-readable receipt: \$\{origin\}\/case-studies\/company-fleet\.json/);
+  assert.match(adoption,/Machine-readable verified savings record: \${origin}\/case-studies\/company-fleet\.json/);
   assert.match(landing,/href="\/case-studies\/company-fleet"/);
   assert.match(proof,/adoption_path: '\/case-studies\/company-fleet'/);
   assert.match(proof,/link_label: 'Case study →'/);
