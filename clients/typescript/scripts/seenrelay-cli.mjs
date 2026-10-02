@@ -7,6 +7,7 @@ import { buildGuidedAdoption, renderGuidedAdoption } from './guided-adoption-lib
 import { analyzeFleetTraceFile, renderFleetTraceReport } from './fleet-trace-census-lib.mjs';
 import { analyzeOtelFleetTraceFile } from './otel-trace-census-lib.mjs';
 import { analyzeLangfuseObservationsFile, renderLangfuseCensusReport } from './langfuse-census-lib.mjs';
+import { buildSavingsReportFromFile, renderSavingsReport } from './savings-report-lib.mjs';
 
 function help() {
   return `SeenRelay CLI
@@ -18,6 +19,7 @@ Usage:
   seenrelay trace-census <trace.json|trace.jsonl> [--json]
   seenrelay otel-trace-census <otlp.json> [--json]
   seenrelay langfuse-census <observations.json|observations.jsonl> [--json]
+  seenrelay savings-report <ledger.json|receipts.jsonl> [--overhead-usd N] [--json]
 
 Commands:
   scan               Local-only static prescreen for recurring expensive read-only validation candidates.
@@ -26,8 +28,9 @@ Commands:
   trace-census       Local-only census of exact eligible in-flight overlap from sanitized call traces.
   otel-trace-census  Local-only adapter from OTLP/JSON spans into the same conservative census.
   langfuse-census    Local-only candidate census over exported Langfuse TOOL observations.
+  savings-report     Local-only measured Savings Report from active fleet ledger/receipts; never an invoice, payment receipt, USE verdict or customer-ROI claim.
 
-None of these commands contacts SeenRelay. Static scan cannot return a USE verdict. Trace and Langfuse census report pre-activation opportunity, not actual savings.
+None of these commands contacts SeenRelay. Static scan cannot return a USE verdict. Trace and Langfuse census report pre-activation opportunity, not actual savings. Savings Report can count actual follower reuse but cannot establish native/SOTA superiority or customer ROI by itself.
 `;
 }
 
@@ -39,7 +42,17 @@ if (!args.length || args.includes('--help') || args.includes('-h')) {
 
 const command = args[0];
 const json = args.includes('--json');
-const positional = args.slice(1).filter((arg) => !arg.startsWith('-'));
+const positional = args.slice(1).filter((arg, index, arr) => {
+  if (arg.startsWith('-')) return false;
+  if (index > 0 && arr[index - 1] === '--overhead-usd') return false;
+  return true;
+});
+function optionValue(name) {
+  const i=args.indexOf(name);
+  if(i<0) return null;
+  if(i===args.length-1 || args[i+1].startsWith('-')) throw new TypeError(name+' requires a value');
+  return args[i+1];
+}
 
 if (command === 'scan') {
   const root = path.resolve(positional[0] ?? process.cwd());
@@ -75,6 +88,18 @@ if (command === 'scan') {
   }
   const report = await analyzeLangfuseObservationsFile(path.resolve(positional[0]));
   process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : renderLangfuseCensusReport(report));
+} else if (command === 'savings-report') {
+  if (!positional[0]) {
+    process.stderr.write(`savings-report requires a fleet ledger JSON or receipt JSONL file\n\n${help()}`);
+    process.exit(2);
+  }
+  const overheadRaw=optionValue('--overhead-usd');
+  const overheadUsd=overheadRaw===null?null:Number(overheadRaw);
+  if(overheadRaw!==null && (!Number.isFinite(overheadUsd)||overheadUsd<0)) {
+    throw new TypeError('--overhead-usd must be a non-negative finite number');
+  }
+  const report=buildSavingsReportFromFile(path.resolve(positional[0]),{overheadUsd});
+  process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : renderSavingsReport(report));
 } else {
   process.stderr.write(`Unknown command: ${command}\n\n${help()}`);
   process.exit(2);
