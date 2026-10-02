@@ -11,14 +11,14 @@ SeenRelay itself requires no account or API key. A third-party client, directory
 
 ## See measured proof before you install
 
-The controlled Proof Atlas shows where SeenRelay has already reduced real provider work under frozen semantic contracts and repeatability gates:
+The Proof Atlas shows where SeenRelay has already reduced real provider work under frozen semantic contracts:
 
-- 64 GB hosted compute: **$1.9241253 → $0.4820025** for four compatible intents (**$1.4421228 avoided; 74.95% gross reduction**);
-- real retail monitoring: **4 → 1 Firecrawl credits** across 3/3 unchanged-state trials (**75% reduction**);
-- agentic web search under an explicit shared-snapshot contract: **42.84%–85.73% gross reduction**, **66.88% mean** across 3/3 paired trials; all tested callers accepted one fresh shared provider-search snapshot and did not require independent search plans;
-- decision-time freshness: **6 → 2 provider reads** across 3/3 controlled trials (**66.7% reduction**).
+- **8-agent first-party operating workload:** eight department agents across two tenant identities kept their independent role analyses while sharing approved current evidence. Paid web-search actions fell **13 → 4** and measured provider cost fell **$0.16499684 → $0.05560972** (**$0.10938712 gross avoided; 66.30% reduction for this run**). One tenant was real SeenRelay operating work; the second was an explicitly synthetic external-client rehearsal with real provider execution.
+- real live-event monitoring: four paid downstream briefings became one on unchanged event state across 3/3 paired runs (**79.61% mean gross reduction**), while a changed event fingerprint forced fresh work;
+- 64 GB hosted compute: **$1.9241253 → $0.4820025** for four compatible intents (**$1.4421228 avoided; 74.95% gross reduction**) — mechanism-only for the exact SHA-256 task because local computation wins Tool Necessity;
+- real retail monitoring: **4 → 1 Firecrawl credits** across 3/3 unchanged-state trials (**75% reduction**) under its bounded contract.
 
-These are controlled first-party **mechanism** results, not customer ROI or a promise that every workload has the same recurrence. A high reduction does not automatically mean the expensive tool was the best baseline: Proof Atlas now exposes baseline quality separately. For example, the 64 GB SHA-256, fixed-rule weather, fixed-string LiteLLM, and PyPI-version web-search tests are mechanism-only because cheaper local/source-native solutions exist for those exact benchmark tasks. Negative evidence is published too.
+The 8-agent result is first-party operating evidence, not external customer adoption, customer ROI or net customer savings; local coordination/integration overhead was not monetized. Other Proof Atlas rows include controlled mechanism results, and a high reduction does not automatically mean the expensive tool was the best baseline. Proof Atlas exposes baseline quality separately. For example, the 64 GB SHA-256, fixed-rule weather, fixed-string LiteLLM, and PyPI-version web-search tests are mechanism-only because cheaper local/source-native solutions exist for those exact benchmark tasks. Negative evidence is published too.
 
 Human-readable proof: https://seenrelay.com/proof  
 Machine-readable proof: https://seenrelay.com/proof.json
