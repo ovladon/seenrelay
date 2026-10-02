@@ -108,10 +108,18 @@ jobs:
               raise SystemExit("PyPI project 'seenrelay' does not identify the SeenRelay repository.")
 
           generic_version = str(info.get('version') or '')
-          if not (parse(public_version) <= parse(generic_version) <= parse(release_version)):
+          generic_parsed = parse(generic_version)
+          public_parsed = parse(public_version)
+          release_parsed = parse(release_version)
+          if generic_parsed > release_parsed:
               raise SystemExit(
-                  f"Unexpected PyPI version during staged rollout: {generic_version} "
-                  f"(expected between {public_version} and {release_version} inclusive)"
+                  f"Unexpected newer PyPI generic version during staged rollout: {generic_version} "
+                  f"(release manifest is {release_version})"
+              )
+          if generic_parsed < public_parsed:
+              print(
+                  f"PyPI generic latest is temporarily lagging the exact promoted release: "
+                  f"generic={generic_version}, public={public_version}. Exact-version verification remains authoritative."
               )
 
           def verify_exact(version):

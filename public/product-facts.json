@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-09-30T21:02:39Z",
+  "updated_at": "2026-10-02T10:19:04Z",
   "positioning": {
     "category": "execution reuse and validation cost avoidance for distributed software and AI agents",
     "headline": "Avoid redundant expensive execution",
-    "subheadline": "Client 0.2.24 is published on npm and PyPI. JavaScript / TypeScript static prescreen now recognizes MCP 2026-07-28 cacheable-result ttlMs/cacheScope freshness only when a compatible cacheable MCP operation is visible; generic callTool workloads are not promoted to native-control-first by those words alone. Python remains behaviorally unchanged in 0.2.24.",
+    "subheadline": "Client 0.2.25 is published on npm and PyPI. JavaScript / TypeScript adds `seenrelay guide`, a local-only combined prescreen + adoption-plan entry point for agents/operators; it does not upload source, modify the project, contact SeenRelay, enable reuse or return a USE verdict. Python remains behaviorally unchanged in 0.2.25.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,15 +14,21 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.24",
+    "client_version": "0.2.25",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-09-30T21:02:39Z",
-    "verification": "Client 0.2.24 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only scan CLI, verifies conservative MCP cacheable-result ttlMs/cacheScope native-control detection without generic callTool false positives, validates package entry targets, and repacks the installed package. Python remains behaviorally unchanged.",
+    "registry_install_verified_at": "2026-10-02T10:19:04Z",
+    "verification": "Client 0.2.25 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only scan and guide CLI paths, verifies native-first and non-mutating adoption semantics, validates package entry targets, and repacks the installed package. Python remains behaviorally unchanged.",
     "scan_command": "npx seenrelay scan",
     "scan_mode": "local_static_prescreen",
     "scan_uploads_source": false,
     "scan_modifies_project": false,
-    "scan_can_authorize_reuse": false
+    "scan_can_authorize_reuse": false,
+    "guide_command": "npx seenrelay guide",
+    "guide_mode": "local_prescreen_plus_adoption_plan",
+    "guide_uploads_source": false,
+    "guide_modifies_project": false,
+    "guide_contacts_seenrelay": false,
+    "guide_can_authorize_reuse": false
   },
   "fit": {
     "use_when": [
@@ -172,6 +178,11 @@
     }
   },
   "latest_verified_updates": [
+    {
+      "date": "2026-10-02",
+      "title": "Public client 0.2.25",
+      "summary": "SeenRelay 0.2.25 is published through trusted publishing on npm and PyPI. JavaScript / TypeScript adds `seenrelay guide`, which combines the local static prescreen and non-mutating adoption plan into one machine-readable next-action surface for agents/operators. It uploads no source, contacts no SeenRelay service, modifies no project, enables no reuse and cannot return a USE verdict. Python remains behaviorally unchanged."
+    },
     {
       "date": "2026-09-30",
       "title": "Public client 0.2.24",

@@ -65,6 +65,7 @@ test('PyPI registry readiness distinguishes verified public artifacts from stage
   assert.match(readiness, /except urllib\.error\.HTTPError as exc/);
   assert.match(readiness, /exc\.code != 404/);
   assert.match(readiness, /awaiting_trusted_publish/);
-  assert.match(readiness, /expected between \{public_version\} and \{release_version\} inclusive/);
+  assert.match(readiness, /generic latest is temporarily lagging the exact promoted release/);
+  assert.match(readiness, /Unexpected newer PyPI generic version during staged rollout/);
   assert.doesNotMatch(readiness, /for version in sorted\(\{public_version, release_version\}\)/);
 });
