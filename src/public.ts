@@ -67,7 +67,8 @@ export function serviceDescriptor(origin: string) {
       states: ['PRESCREEN', 'SHADOW', 'QUALIFIED', 'ACTIVE', 'DEMOTED', 'REMOVE'],
       start: {
         state: 'PRESCREEN',
-        command: publicProductFacts.install.scan_command,
+        command: 'npx seenrelay adopt-plan . --json',
+        underlying_scan_command: publicProductFacts.install.scan_command,
         uploads_source: publicProductFacts.install.scan_uploads_source,
         modifies_project: publicProductFacts.install.scan_modifies_project,
         can_authorize_reuse: publicProductFacts.install.scan_can_authorize_reuse
