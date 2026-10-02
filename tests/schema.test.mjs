@@ -24,7 +24,7 @@ test('Hive migrations contain lease, useful-reuse, telemetry and conservative in
 test('MCP uses the official v2 server SDK', () => {
   const text = fs.readFileSync(new URL('../src/mcp.ts', import.meta.url), 'utf8');
   const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.equal(pkg.dependencies['@modelcontextprotocol/server'], '2.1.0');
+  assert.equal(pkg.dependencies['@modelcontextprotocol/server'], '2.2.0');
   assert.match(text, /createMcpHandler/);
   assert.match(text, /McpServer/);
   assert.doesNotMatch(text, /notifications\/initialized/);
