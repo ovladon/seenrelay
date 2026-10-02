@@ -43,14 +43,6 @@ export const companyFleetCaseStudy = {
   }
 } as const;
 
-function esc(v: unknown): string {
-  return String(v)
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;');
-}
-
 export function companyFleetCaseStudyDescriptor(origin: string) {
   return {
     ...companyFleetCaseStudy,
