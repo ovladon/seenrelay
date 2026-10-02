@@ -20,7 +20,7 @@ metadata:
 
 Run:
 
-`npx seenrelay adopt-plan . --json`
+\`npx seenrelay adopt-plan . --json\`
 
 This command is local-only. It performs the static prescreen and returns the next pre-activation action. It does not modify the project, contact SeenRelay, enable reuse, or produce a USE verdict by itself.
 
