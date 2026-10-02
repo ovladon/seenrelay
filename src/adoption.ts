@@ -11,6 +11,7 @@ const SITEMAP_PAGES = [
   { path: '/proof', lastmod: '2026-10-02' },
   { path: '/case-studies/company-fleet', lastmod: '2026-10-02' },
   { path: '/agents', lastmod: '2026-10-02' },
+  { path: '/updates', lastmod: '2026-10-02' },
   { path: '/use-cases', lastmod: '2026-10-01' },
   { path: '/fleet', lastmod: '2026-09-30' },
   { path: '/substrate', lastmod: '2026-09-30' },
@@ -48,6 +49,14 @@ SeenRelay is a provider-independent execution-reuse and revalidation layer below
 The core question is: \`I already know X — do I need to validate X again now?\`
 
 CHECK is not a lookup for somebody else's raw answer. The caller supplies the known value, deterministic source-backed fact identity and its own freshness window. Canonical starter fact descriptors are published at ${origin}/starter-facts.json; they contain no observed values, no recommended TTL and no reuse authorization.
+
+## Owned verified update stream
+
+Human updates: ${origin}/updates
+Machine JSON: ${origin}/updates.json
+Atom feed: ${origin}/updates.atom
+
+This is generated from canonical SeenRelay public facts and verified public evidence so agents and operators can follow changes without relying on a social platform or third-party scheduler.
 
 ## Machine-first agent adoption
 
