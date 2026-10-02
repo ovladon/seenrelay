@@ -70,6 +70,17 @@ npx seenrelay scan
 
 The scan is local-only: it does not contact SeenRelay, upload source code or modify the project. It reports only pre-evidentiary states such as `CANDIDATE_FOR_SHADOW_MEASUREMENT`, `NATIVE_CONTROL_FIRST`, `NEEDS_RUNTIME_EVIDENCE` and `NO_ELIGIBLE_CANDIDATE_FOUND`. Static analysis cannot return `USE` or authorize reuse.
 
+## Optional GitHub Actions cost prescreen
+
+Teams can expose the same local-only static prescreen in CI without a SeenRelay account or API key:
+
+~~~yaml
+- id: seenrelay
+  uses: ovladon/seenrelay/actions/cost-prescreen@main
+~~~
+
+The action runs on the GitHub runner, does not contact the SeenRelay service, does not upload source code to SeenRelay, and cannot enable reuse or return a `USE` verdict. It produces a team-visible job summary plus machine outputs for the static status and next non-mutating decision.
+
 ## Free shadow audit: measure without changing application behavior
 
 Ambient wraps an existing MCP-style client in local shadow mode. The authoritative call still runs; SeenRelay measures exact repetition and produces a local report.
