@@ -40,14 +40,15 @@ test('Proof Atlas is available to humans and machines',()=>{
   assert.match(adoption,/Machine-readable Proof Atlas/);
 });
 
-test('homepage leads with measured mechanism proof and exposes baseline quality',()=>{
-  assert.match(landing,/controlled mechanism comparisons against real providers/i);
+test('homepage leads with workload-relevant live proof while preserving mechanism/baseline boundaries',()=>{
+  assert.match(landing,/REAL PROVIDER PROOF/i);
+  assert.match(landing,/Real live event monitoring/i);
+  assert.match(landing,/79\.61%/);
+  assert.match(landing,/Refresh when the event changes/i);
   assert.match(landing,/\$1\.44/);
-  assert.match(landing,/75%/);
-  assert.match(landing,/74\.84%/);
+  assert.match(landing,/Controlled proof is not customer savings/i);
   assert.match(landing,/Mechanism proof is not best-baseline proof/i);
   assert.match(landing,/Mechanism-only:/i);
-  assert.match(landing,/Native-first conditional:/i);
   assert.doesNotMatch(landing,/guaranteed savings|always saves|customer ROI proven/i);
 });
 
