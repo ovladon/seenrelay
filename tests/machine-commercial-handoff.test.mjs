@@ -11,7 +11,7 @@ const publicSource=read('src/public.ts');
 const issue=read('.github/ISSUE_TEMPLATE/commercial-interest.yml');
 
 test('commercial descriptor remains non-binding with billing off',()=>{
-  assert.match(commercial,/schema: 'seenrelay-commercial-readiness-v1'/);
+  assert.match(commercial,/schema: 'seenrelay-value-handoff-v1'/);
   assert.match(commercial,/billing_enabled: false/);
   assert.match(commercial,/purchase_available: false/);
   assert.match(commercial,/commercial_activation_authorized: false/);
@@ -26,7 +26,7 @@ test('machine discovery exposes the commercial handoff without a payment surface
   assert.match(index,/app\.get\('\/commercial\.json'/);
   assert.match(index,/commercial\.json.*service-meta/);
   assert.match(publicSource,/commercial: .*commercial\.json/);
-  assert.match(adoption,/Commercial readiness after measured value/);
+  assert.match(adoption,/Value handoff after measured savings/);
   assert.match(adoption,/billing is OFF/);
   assert.match(adoption,/may not create a payment or activate billing/);
 });
