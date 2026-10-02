@@ -5,7 +5,7 @@ const commercialInterestUrl = 'https://github.com/ovladon/seenrelay/issues/new?t
 
 export function commercialDescriptor(origin: string) {
   return {
-    schema: 'seenrelay-commercial-readiness-v1',
+    schema: 'seenrelay-value-handoff-v1',
     updated_at: '2026-10-02',
     billing_enabled: false,
     purchase_available: false,
