@@ -1,7 +1,51 @@
 import { siteFooterHtml } from './public-facts-view.js';
 
+const supportIssueUrl = 'https://github.com/ovladon/seenrelay/issues/new?template=deployment-support.yml';
+const commercialInterestUrl = 'https://github.com/ovladon/seenrelay/issues/new?template=commercial-interest.yml';
+
+export function commercialDescriptor(origin: string) {
+  return {
+    schema: 'seenrelay-commercial-readiness-v1',
+    updated_at: '2026-10-02',
+    billing_enabled: false,
+    purchase_available: false,
+    commercial_activation_authorized: false,
+    current_hosted_service_price_usd: 0,
+    objective: 'Record independent willingness-to-pay or procurement intent only after measured workload evidence exists.',
+    qualification: {
+      evidence_first: true,
+      acceptable_verdicts: ['USE','INSUFFICIENT EVIDENCE_WITH_PROCUREMENT_INTEREST'],
+      prerequisites: [
+        'normal_workload_measured',
+        'stronger_native_controls_considered',
+        'read_only_or_explicitly_eligible_operation',
+        'positive_or_plausibly_material_net_value',
+        'no_secrets_in_public_handoff'
+      ]
+    },
+    handoff: {
+      commercial_interest: commercialInterestUrl,
+      deployment_support: supportIssueUrl,
+      public_issue_warning: 'Do not include secrets, customer data, private URLs, proprietary prompts, tokens or confidential invoices.',
+      binding_order: false,
+      payment_obligation_created: false
+    },
+    future_automation_boundary: {
+      may_expose_entitlement_after_lawful_activation: true,
+      current_checkout_url: null,
+      current_payment_provider: null,
+      current_price_offer: null
+    },
+    discovery: {
+      economics: `${origin}/economics`,
+      agent_adoption: `${origin}/agent-adoption.json`,
+      proof: `${origin}/proof.json`,
+      trust: `${origin}/trust.json`
+    }
+  };
+}
+
 export function commercialPage(origin: string): string {
-  const supportIssueUrl = 'https://github.com/ovladon/seenrelay/issues/new?template=deployment-support.yml';
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -30,7 +74,7 @@ export function commercialPage(origin: string): string {
   <div class="rv-eyebrow">OPTIONAL DEPLOYMENT SUPPORT</div>
   <h1>Start self-serve. Ask for help only if useful.</h1>
   <p>SeenRelay is self-serve by default. Measure locally first; use this public support path only when a real workload candidate remains worth deeper engineering help.</p>
-  <div class="rv-actions"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="${supportIssueUrl}">Open public support inquiry</a></div>
+  <div class="rv-actions"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="${commercialInterestUrl}">Record commercial interest</a><a class="rv-button" href="${supportIssueUrl}">Deployment support</a><a class="rv-button" href="/commercial.json">Machine handoff</a></div>
   <p class="rv-small">The GitHub inquiry is public. Do not include secrets or customer data.</p>
 </section>
 
@@ -43,7 +87,7 @@ export function commercialPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section">
-  <div class="rv-trust-note"><b>Current billing boundary:</b> the hosted CHECK/OBSERVE service remains free during bootstrap and self-serve service billing is disabled. No paid deployment-support or engineering service is currently activated. The public GitHub support path is optional, non-commercial during this bootstrap phase, and not required to use SeenRelay.</div>
+  <div class="rv-trust-note"><b>Current billing boundary:</b> the hosted CHECK/OBSERVE service remains free during bootstrap and self-serve service billing is disabled. Commercial-interest intake records non-binding willingness-to-pay/procurement evidence only; it is not an order form, does not activate payment, and is not required to use SeenRelay.</div>
   <div class="rv-actions rv-actions-spaced"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="/economics">Economics method</a></div>
 </section>
 </main>
