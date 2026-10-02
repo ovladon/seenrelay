@@ -13,6 +13,7 @@ SeenRelay itself requires no account or API key. A third-party client, directory
 
 The controlled Proof Atlas shows where SeenRelay has already reduced real provider work under frozen semantic contracts and repeatability gates:
 
+- first-party operating fleet: **$0.16499684 → $0.05560972** while eight department agents kept independent reasoning; paid web-search actions fell **13 → 4** (**$0.10938712 avoided; 66.30% gross provider-cost reduction**). One evidence packet was acquired per tenant with no cross-tenant reuse. This includes a clearly synthetic external-client rehearsal and is **not customer ROI or external adoption**; best alternative orchestration remains unproven;
 - 64 GB hosted compute: **$1.9241253 → $0.4820025** for four compatible intents (**$1.4421228 avoided; 74.95% gross reduction**);
 - real retail monitoring: **4 → 1 Firecrawl credits** across 3/3 unchanged-state trials (**75% reduction**);
 - agentic web search under an explicit shared-snapshot contract: **42.84%–85.73% gross reduction**, **66.88% mean** across 3/3 paired trials; all tested callers accepted one fresh shared provider-search snapshot and did not require independent search plans;
