@@ -15,7 +15,7 @@ import { quickstartPage } from './quickstart.js';
 import { fleetPage } from './fleet.js';
 import { economicsPage } from './economics.js';
 import { substratePage } from './substrate.js';
-import { commercialPage } from './commercial.js';
+import { commercialDescriptor, commercialPage } from './commercial.js';
 import { aiAgentCostOptimizationPage, duplicateToolCallsPage } from './seo-pages.js';
 import { proofAtlasDescriptor, proofAtlasPage } from './proof-atlas.js';
 import { companyFleetCaseStudyDescriptor, companyFleetCaseStudyPage } from './company-fleet-case-study.js';
@@ -49,6 +49,7 @@ function publicDiscoveryLinks(origin: string): string {
     `<${origin}/product-facts.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/agent-adoption.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/trust.json>; rel="service-meta"; type="application/json"`,
+    `<${origin}/commercial.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/quickstart>; rel="service-doc"; type="text/html"`,
     `<${origin}/updates.atom>; rel="alternate"; type="application/atom+xml"`
   ].join(', ');
@@ -198,6 +199,11 @@ app.get('/commercial', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
   c.header('cache-control', 'public, max-age=300');
   return c.html(commercialPage(new URL(c.req.url).origin));
+});
+app.get('/commercial.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  c.header('access-control-allow-origin', '*');
+  return c.json(commercialDescriptor(new URL(c.req.url).origin));
 });
 
 app.get('/ai-agent-cost-optimization', (c) => {

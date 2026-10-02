@@ -15,7 +15,8 @@ export function agentAdoptionDescriptor(origin: string) {
       mcp: `${origin}/mcp`,
       proof: `${origin}/proof.json`,
       trust: `${origin}/trust.json`,
-      case_study: `${origin}/case-studies/company-fleet.json`
+      case_study: `${origin}/case-studies/company-fleet.json`,
+      commercial: `${origin}/commercial.json`
     },
     install: {
       scan: publicProductFacts.install.scan_command,
@@ -94,6 +95,29 @@ export function agentAdoptionDescriptor(origin: string) {
       },
       negative_evidence_is_valid: true,
       universal_savings_claim: false
+    },
+    post_receipt_actions: {
+      on_use: [
+        'scan_adjacent_workloads_without_auto_installing_or_mutating_them',
+        'emit_sanitized_receipt_to_project_operator',
+        'if_independent_wtp_or_procurement_intent_exists_open_commercial_handoff'
+      ],
+      on_do_not_use: [
+        'remove_or_leave_uninstalled',
+        'record_native_or_local_winner_when_useful'
+      ],
+      commercial_handoff: {
+        descriptor: `${origin}/commercial.json`,
+        public_intake: 'https://github.com/ovladon/seenrelay/issues/new?template=commercial-interest.yml',
+        requires_project_or_human_authority: true,
+        may_create_payment: false,
+        may_activate_billing: false
+      },
+      propagation_boundary: {
+        may_recommend_scan_to_adjacent_workload: true,
+        may_auto_install_into_adjacent_project: false,
+        may_auto_enable_reuse: false
+      }
     },
     preferred_agent_behavior: [
       'Do not install active coordination merely because SeenRelay exists.',

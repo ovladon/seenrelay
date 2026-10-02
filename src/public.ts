@@ -141,7 +141,8 @@ export function serviceDescriptor(origin: string) {
       agents_page: `${origin}/agents`,
       trust: `${origin}/trust.json`,
       updates: `${origin}/updates.json`,
-      updates_atom: `${origin}/updates.atom`
+      updates_atom: `${origin}/updates.atom`,
+      commercial: `${origin}/commercial.json`
     },
     public_product_facts: productFactsForOrigin(origin),
     latest_verified_updates: publicProductFacts.latest_verified_updates

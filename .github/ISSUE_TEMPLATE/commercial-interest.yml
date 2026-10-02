@@ -1,0 +1,89 @@
+name: Commercial interest after measured savings
+description: Public non-binding WTP/procurement signal after a real SeenRelay measurement. Do not include secrets, customer data or confidential invoices.
+title: "[Commercial interest] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this only after a real SeenRelay measurement produces a positive workload result or a concrete procurement question.
+
+        **Current state:** SeenRelay billing and purchase activation are OFF. This form records non-binding demand/WTP evidence only; it is not an order form and does not create a payment obligation.
+
+        **This issue is public. Do not include credentials, private URLs, customer data, proprietary prompts, invoice screenshots, access tokens or other secrets.**
+
+  - type: dropdown
+    id: evidence_state
+    attributes:
+      label: Evidence state
+      options:
+        - External workload / USE
+        - External workload / INSUFFICIENT EVIDENCE but procurement interest exists
+        - First-party or internal workload / USE
+        - Other measured positive economics
+    validations:
+      required: true
+
+  - type: dropdown
+    id: annual_value_band
+    attributes:
+      label: Approximate annual value protected
+      description: Use a broad band only; do not post confidential invoices.
+      options:
+        - Under $120/year
+        - $120–$600/year
+        - $600–$3,000/year
+        - $3,000–$15,000/year
+        - Over $15,000/year
+        - Unknown / not annualized
+    validations:
+      required: true
+
+  - type: dropdown
+    id: buying_motion
+    attributes:
+      label: If a paid layer becomes available, what would fit?
+      options:
+        - Low-friction self-serve
+        - Team / centralized policy and receipts
+        - Enterprise / offline / air-gapped
+        - OEM / embedded licensing
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: wtp_signal
+    attributes:
+      label: Current intent
+      options:
+        - I would evaluate a paid version if pricing is below measured value
+        - I want a procurement/security discussion when commercial activation is available
+        - I am only providing product feedback, not purchase intent
+    validations:
+      required: true
+
+  - type: textarea
+    id: workload
+    attributes:
+      label: Workload summary
+      description: High-level only. Include the read-only surface, recurrence pattern, native controls already considered, and the measured verdict.
+      placeholder: "Example: 12 legitimate workers repeat the same paid read-only evidence acquisition; provider cache remains enabled; shadow verdict USE."
+    validations:
+      required: true
+
+  - type: textarea
+    id: receipt
+    attributes:
+      label: Sanitized receipt summary
+      description: Optional. Paste only non-sensitive totals or a public receipt URL.
+      placeholder: "Example: baseline $X, optimized $Y, net positive after measured overhead; public receipt URL if available."
+
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Public issue boundary
+      options:
+        - label: I understand this is a public, non-binding demand signal and not a purchase or payment agreement.
+          required: true
+        - label: I have not included credentials, confidential invoices, private URLs, customer data, proprietary prompts, tokens or other secrets.
+          required: true
