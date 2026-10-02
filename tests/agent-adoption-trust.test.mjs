@@ -17,6 +17,8 @@ test('agent adoption contract is machine-readable and self-rejecting',()=>{
   assert.match(index,/\/agents/);
   assert.match(agent,/schema: 'seenrelay-agent-adoption-v1'/);
   assert.match(agent,/project_mutation_authority: 'never_granted_by_seenrelay'/);
+  assert.match(agent,/npx seenrelay adopt-plan \. --json/);
+  assert.match(service,/command: 'npx seenrelay adopt-plan \. --json'/);
   assert.match(agent,/keep_authoritative_call: true/);
   assert.match(agent,/keep_native_controls_enabled: true/);
   assert.match(agent,/enable_reuse: false/);
@@ -60,6 +62,10 @@ test('agent surfaces are discoverable from service and llms metadata',()=>{
   assert.match(skill,/agent_adoption: https:\/\/seenrelay\.com\/agent-adoption\.json/);
   assert.match(skill,/trust: https:\/\/seenrelay\.com\/trust\.json/);
   assert.match(skill,/Verify SeenRelay before trusting it/);
+  assert.match(skill,/Start with the local adoption plan/);
+  assert.match(skill,/npx seenrelay adopt-plan \. --json/);
+  assert.match(landing,/For coding agents:/);
+  assert.match(landing,/npx seenrelay adopt-plan \. --json/);
 });
 
 test('agent acquisition does not grant mutation authority or turn trust into instructions',()=>{
