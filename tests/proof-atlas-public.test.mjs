@@ -12,6 +12,11 @@ const useCases=read('src/use-cases.ts');
 
 test('Proof Atlas exposes repeated controlled results without customer ROI claims',()=>{
   assert.match(proof,/controlled_first_party_benchmark/);
+  assert.match(proof,/Multi-agent operating intelligence — shared evidence, independent reasoning/);
+  assert.match(proof,/66\.30%/);
+  assert.match(proof,/13→4|13 → 4/);
+  assert.match(proof,/not customer ROI/i);
+  assert.match(proof,/synthetic external-client rehearsal/i);
   assert.match(proof,/74\.95%/);
   assert.match(proof,/74\.84%/);
   assert.match(proof,/Retail extraction guarded by price state/);
@@ -42,6 +47,10 @@ test('Proof Atlas is available to humans and machines',()=>{
 
 test('homepage leads with workload-relevant live proof while preserving mechanism/baseline boundaries',()=>{
   assert.match(landing,/REAL PROVIDER PROOF/i);
+  assert.match(landing,/Real operating agent fleet/i);
+  assert.match(landing,/66\.30%/);
+  assert.match(landing,/13 → 4/);
+  assert.match(landing,/not customer ROI/i);
   assert.match(landing,/Real live event monitoring/i);
   assert.match(landing,/79\.61%/);
   assert.match(landing,/Refresh when the event changes/i);
