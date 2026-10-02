@@ -1,6 +1,6 @@
 export const controlledProofAtlas = {
   schema: 'seenrelay-controlled-proof-atlas-v1',
-  updated_at: '2026-10-01',
+  updated_at: '2026-10-02',
   evidence_boundary: {
     evidence_type: 'controlled_first_party_benchmark',
     customer_roi_claim: false,
@@ -11,6 +11,21 @@ export const controlledProofAtlas = {
     native_controls_first: true
   },
   rows: [
+    {
+      id: 'company-fleet-real-ops',
+      baseline_quality: 'FIRST_PARTY_REAL_WORKLOAD_BEST_BASELINE_UNPROVEN',
+      tool_necessity: 'PASS_CURRENT_RESEARCH_WORKLOAD',
+      surface: 'Multi-agent operating intelligence — shared evidence, independent reasoning',
+      baseline: '$0.16499684',
+      seenrelay: '$0.05560972',
+      avoided: '$0.10938712 gross',
+      reduction: '66.30%',
+      executions: '13 → 4',
+      semantic: 'PASS',
+      repeatability: '1 complete paid run',
+      adoption_path: '/clients',
+      note: 'First-party real operating workload plus a clearly synthetic external-client rehearsal. Eight department agents kept independent role reasoning; SeenRelay coordinated only same-tenant evidence acquisition. Billable web-search actions fell 13→4 while top-level model Responses increased 8→10. Exactly one evidence packet was acquired per tenant, with no cross-tenant reuse and all frozen role contracts passing. This is gross provider-cost reduction for this run, not customer ROI, net customer savings, external adoption or proof that SeenRelay beats every custom shared-research/orchestration baseline.'
+    },
     {
       id: 'hosted-compute-64gb',
       baseline_quality: 'MECHANISM_ONLY_LOCAL_WINS',
