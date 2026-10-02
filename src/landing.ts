@@ -154,6 +154,23 @@ export function publicLandingPage(origin: string): string {
   <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> First-party operating proof is not external customer ROI either. Mechanism proof is not best-baseline proof either. Proof Atlas now labels whether the tested expensive tool itself survived local/source/native alternatives. We also publish NO PASS results. <a href="/proof">See the complete Proof Atlas →</a></div>
 </section>
 
+<section class="rv-shell rv-section" id="trust">
+  <div class="rv-section-head">
+    <div><div class="rv-eyebrow">SAFE TO TRY · VERIFY BEFORE YOU TRUST</div><h2>Start with zero authority over your workload.</h2></div>
+    <p>SeenRelay is designed so evaluation does not require a trust leap.</p>
+  </div>
+  <div class="rv-grid-3">
+    <article class="rv-card"><span class="rv-number">01</span><h3>Shadow first</h3><p>Measurement keeps every authoritative operation running. Installing SeenRelay does not automatically authorize reuse.</p></article>
+    <article class="rv-card"><span class="rv-number">02</span><h3>Fail open</h3><p>If the wrapper, private store or relay fails, execution falls back to the validation your application already intended to perform.</p></article>
+    <article class="rv-card"><span class="rv-number">03</span><h3>No hidden source access</h3><p>The SeenRelay service does not browse your source, fetch the fact for you, or use an LLM as a truth oracle. Credential-bearing source identities are rejected.</p></article>
+    <article class="rv-card"><span class="rv-number">04</span><h3>Local scan uploads nothing</h3><p><code>npx seenrelay scan</code> runs locally, does not upload source code, does not modify the project and cannot enable reuse.</p></article>
+    <article class="rv-card"><span class="rv-number">05</span><h3>Mutations stay authoritative</h3><p>Generic SeenRelay does not infer that destructive or mutating work is safe to suppress. Only explicitly reviewed read-only paths can qualify.</p></article>
+    <article class="rv-card"><span class="rv-number">06</span><h3>Easy to remove</h3><p>Remove the wrapper/preflight and keep the original call. No application-state export is required to leave.</p></article>
+  </div>
+  <div class="rv-trust-note"><b>Security claim boundary:</b> these are verifiable technical controls, not a claim that vulnerabilities are impossible or a third-party security certification. Inspect <a href="/trust">Trust</a>, <a href="/trust.json">Trust JSON</a>, <a href="/data-practices">Data Practices</a>, the public <a href="https://github.com/ovladon/seenrelay/blob/main/SECURITY.md">security policy</a> and <a href="https://github.com/ovladon/seenrelay/blob/main/docs/THREAT_MODEL.md">threat model</a>.</div>
+  <div class="rv-actions rv-actions-spaced"><a class="rv-button" href="/agents">For autonomous agents</a><a class="rv-button" href="/trust">Verify the security posture</a></div>
+</section>
+
 <section class="rv-shell rv-section" id="reject">
   <div class="rv-section-head">
     <div><div class="rv-eyebrow">SELF-REJECTING BY DESIGN</div><h2>Sometimes the right answer is not to use SeenRelay.</h2></div>
