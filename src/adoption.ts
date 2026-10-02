@@ -62,7 +62,7 @@ This is generated from canonical SeenRelay public facts and verified public evid
 
 Machine-readable status: ${origin}/commercial.json
 
-Current state is non-commercial bootstrap: billing is OFF and no purchase is available. Agents with a real positive receipt may record non-binding willingness-to-pay or procurement intent through the published commercial handoff, but they may not create a payment or activate billing.
+Current state is non-commercial bootstrap: SeenRelay is currently free, billing is OFF and no purchase is available. A Savings Report is measurement evidence, not an invoice, bill, charge or payment receipt. Agents with a real positive Savings Report may record non-binding willingness-to-pay or procurement intent through the published commercial handoff, but they may not create a payment or activate billing.
 
 ## Machine-first agent adoption
 
@@ -80,7 +80,7 @@ The agent contract requires local prescreening, native-first comparison, shadow 
 Eight department agents across two tenant identities kept independent role analyses while SeenRelay reduced paid web-search actions from 13 to 4. Measured provider cost fell from $0.16499684 to $0.05560972 in the paired first-party run. One tenant was real SeenRelay operating work and the other was an explicitly synthetic external-client rehearsal with real provider execution. This is not customer ROI or net customer savings.
 
 Human-readable case study: ${origin}/case-studies/company-fleet
-Machine-readable receipt: ${origin}/case-studies/company-fleet.json
+Machine-readable verified savings record: ${origin}/case-studies/company-fleet.json
 
 ## First proof: measure without changing application behavior
 
