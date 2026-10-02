@@ -1,8 +1,9 @@
 export const controlledProofAtlas = {
   schema: 'seenrelay-controlled-proof-atlas-v1',
-  updated_at: '2026-10-01',
+  updated_at: '2026-10-02',
   evidence_boundary: {
     evidence_type: 'controlled_first_party_benchmark',
+    includes_first_party_real_operating_workload: true,
     customer_roi_claim: false,
     natural_prevalence_claim: false,
     net_customer_savings_claim: false,
@@ -11,6 +12,23 @@ export const controlledProofAtlas = {
     native_controls_first: true
   },
   rows: [
+    {
+      id: 'company-fleet-shared-evidence',
+      evidence_label: 'First-party real operating workload + synthetic external-client rehearsal',
+      baseline_quality: 'TOOL_NECESSITY_PASS_BEST_BASELINE_UNPROVEN',
+      tool_necessity: 'PASS_CURRENT_EXTERNAL_EVIDENCE',
+      surface: 'Multi-agent shared evidence / independent reasoning',
+      baseline: '$0.16499684',
+      seenrelay: '$0.05560972',
+      avoided: '$0.10938712 gross',
+      reduction: '66.30%',
+      executions: '13 → 4 paid web-search actions',
+      execution_label: '13 → 4 paid web-search actions · 8 → 10 model Responses',
+      semantic: 'PASS',
+      repeatability: '1 complete paired run',
+      adoption_path: '/ai-agent-cost-optimization',
+      note: 'Eight department agents across two tenant identities performed useful current ecosystem research. SeenRelay shared one same-tenant evidence packet per organization while preserving all eight independent role analyses. Gross provider cost fell from $0.16499684 to $0.05560972. SeenRelay OpsCo was first-party real operating work; the second tenant was explicitly synthetic. Local coordination/integration overhead was not monetized, so this is not customer ROI, net customer savings, external adoption or a universal 66% claim.'
+    },
     {
       id: 'hosted-compute-64gb',
       baseline_quality: 'MECHANISM_ONLY_LOCAL_WINS',
@@ -248,9 +266,9 @@ export function proofAtlasPage(origin: string): string {
     <article class="rv-card">
       <span class="rv-number">${esc(r.reduction)}</span>
       <h3>${esc(r.surface)}</h3>
-      <p><b>${esc(r.executions)} provider executions</b><br>${esc(r.baseline)} → ${esc(r.seenrelay)} · avoided ${esc(r.avoided)}</p>
+      <p><b>${esc('execution_label' in r ? r.execution_label : r.executions + ' provider executions')}</b><br>${esc(r.baseline)} → ${esc(r.seenrelay)} · avoided ${esc(r.avoided)}</p>
       <p>${esc(r.note)}</p>
-      <p class="rv-small">Controlled first-party benchmark · baseline quality ${esc(r.baseline_quality)} · semantic ${esc(r.semantic)} · repeatability ${esc(r.repeatability)}</p>
+      <p class="rv-small">${esc('evidence_label' in r ? r.evidence_label : 'Controlled first-party benchmark')} · baseline quality ${esc(r.baseline_quality)} · semantic ${esc(r.semantic)} · repeatability ${esc(r.repeatability)}</p>
       <a href="${esc(r.adoption_path)}">Integration path →</a>
     </article>`).join('');
 
@@ -288,7 +306,7 @@ export function proofAtlasPage(origin: string): string {
 <section class="rv-shell rv-page-hero">
   <div class="rv-eyebrow">CONTROLLED PROOF ATLAS</div>
   <h1>Here is where SeenRelay has already reduced real provider work.</h1>
-  <p>Every row below is a bounded first-party benchmark with real provider execution, a frozen semantic contract and repeatability gates. A mechanism can pass even when a cheaper local or source-native path would solve that exact benchmark task, so each row now exposes baseline quality separately. These are not customer ROI.</p>
+  <p>Every row below is bounded first-party evidence with real provider execution and a frozen semantic contract. A mechanism can pass even when a cheaper local or source-native path would solve that exact benchmark task, so each row now exposes baseline quality separately. These are not customer ROI.</p>
   <div class="rv-actions"><a class="rv-button primary" href="/clients">Choose an integration</a><a class="rv-button" href="/proof.json">Machine-readable proof</a></div>
 </section>
 <section class="rv-shell rv-section">
@@ -304,7 +322,7 @@ export function proofAtlasPage(origin: string): string {
   <div class="rv-actions"><a class="rv-button primary" href="/clients">Integrations</a><a class="rv-button" href="/quickstart">Quickstart</a></div>
 </section>
 </main>
-<footer><span>Controlled mechanism benchmarks · baseline quality shown separately · not customer ROI.</span><span><a href="/">SeenRelay</a> · <a href="/trust">Trust</a> · <a href="/proof.json">Proof JSON</a></span></footer>
+<footer><span>First-party provider evidence · baseline quality shown separately · not customer ROI.</span><span><a href="/">SeenRelay</a> · <a href="/trust">Trust</a> · <a href="/proof.json">Proof JSON</a></span></footer>
 </body>
 </html>`;
 }
