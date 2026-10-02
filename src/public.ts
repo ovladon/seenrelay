@@ -60,6 +60,7 @@ export function serviceDescriptor(origin: string) {
       }
     },
     // Metadata-only adoption contract; it never adds hosted operations or grants project mutation authority.
+    // Agent discovery links below are factual metadata, not runtime authorization.
     self_serve_adoption: {
       schema: 'seenrelay-machine-adoption-contract-v1',
       goal: 'Reach a bounded evidence-backed keep/remove decision without contacting SeenRelay.',
