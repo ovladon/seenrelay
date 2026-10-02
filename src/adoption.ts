@@ -64,7 +64,7 @@ Autonomous and coding agents do not need to scrape marketing copy to decide whet
 
 Preferred local entry for a coding agent:
 
-`npx seenrelay adopt-plan . --json`
+\`npx seenrelay adopt-plan . --json\`
 
 This runs the local prescreen and returns a machine-readable next action without modifying the project or enabling reuse.
 
