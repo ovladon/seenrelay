@@ -22,7 +22,7 @@
     "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "2.1.0",
+    "@modelcontextprotocol/server": "2.2.0",
     "@neondatabase/serverless": "^1.0.2",
     "hono": "^4.9.8",
     "zod": "^4.4.2"
