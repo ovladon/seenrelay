@@ -31,9 +31,9 @@ test('machine discovery exposes the commercial handoff without a payment surface
   assert.match(adoption,/may not create a payment or activate billing/);
 });
 
-test('agent post-receipt growth loop recommends adjacent scans without auto-mutation',()=>{
+test('agent post-Savings-Report growth loop recommends adjacent scans without auto-mutation',()=>{
   assert.match(agent,/scan_adjacent_workloads_without_auto_installing_or_mutating_them/);
-  assert.match(agent,/emit_sanitized_receipt_to_project_operator/);
+  assert.match(agent,/emit_sanitized_savings_report_to_project_operator/);
   assert.match(agent,/if_independent_wtp_or_procurement_intent_exists_open_commercial_handoff/);
   assert.match(agent,/requires_project_or_human_authority: true/);
   assert.match(agent,/may_create_payment: false/);

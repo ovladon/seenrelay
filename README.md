@@ -6,6 +6,8 @@ SeenRelay measures repeated expensive read-only execution around agents and dist
 
 Currently free · no account · no SeenRelay API key required.
 
+**Terminology:** a **Savings Report** (machine label: **Verified Savings Record**) is measurement evidence for avoided work and cost provenance. It is **not** an invoice, bill, charge or payment receipt. Some SDK/API identifiers retain `receipt` wording for backward compatibility only.
+
 SeenRelay itself requires no account or API key. A third-party client, directory, gateway, or assistant may require its own account to use that third-party service; that is not a SeenRelay access requirement. The canonical direct MCP endpoint is `https://seenrelay.com/mcp`.
 
 

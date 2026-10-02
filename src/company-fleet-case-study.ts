@@ -88,10 +88,11 @@ export function companyFleetCaseStudyPage(origin: string): string {
   <div class="rv-eyebrow">FIRST-PARTY OPERATING CASE STUDY · 2026-10-02</div>
   <h1>Eight agents kept thinking independently. They stopped paying to rediscover the same approved evidence.</h1>
   <p>SeenRelay coordinated one same-tenant evidence packet per organization, then every department still produced its own analysis. In this paired run, paid web-search actions fell from <b>13 to 4</b> and measured provider cost fell from <b>$0.16499684 to $0.05560972</b>.</p>
-  <div class="rv-actions"><a class="rv-button primary" href="/quickstart">Test your workload</a><a class="rv-button" href="/case-studies/company-fleet.json">Machine-readable receipt</a></div>
+  <div class="rv-actions"><a class="rv-button primary" href="/quickstart">Test your workload</a><a class="rv-button" href="/case-studies/company-fleet.json">Machine-readable savings record</a></div>
 </section>
 
 <section class="rv-shell rv-section">
+  <div class="rv-trust-note"><b>Currently free:</b> this savings record documents measured provider-cost reduction. It is not an invoice, bill, charge or payment receipt, and it creates no payment obligation.</div>
   <div class="rv-section-head"><div><div class="rv-eyebrow">THE RESULT</div><h2>Shared evidence. Independent reasoning.</h2></div><p>The saving came from repeated paid evidence collection, not from deleting agents or forcing a single answer.</p></div>
   <div class="rv-grid-3">
     <article class="rv-card accent"><span class="rv-number">66.30%</span><h3>Gross provider-cost reduction</h3><p><b>$0.16499684 → $0.05560972</b><br>$0.10938712 gross provider cost avoided in the completed paired run.</p></article>
@@ -114,7 +115,7 @@ export function companyFleetCaseStudyPage(origin: string): string {
   <div class="rv-stack">
     <article><h3>Proven for this run</h3><p>Real provider execution, published SeenRelay Zero-State client, one authoritative packet per tenant, distinct tenant coordinates, no cross-tenant reuse, frozen output contracts and positive gross provider-cost reduction.</p></article>
     <article><h3>First-party operating evidence</h3><p>SeenRelay OpsCo was real project work. Northstar AgentOps was an explicitly synthetic external-client rehearsal with real provider execution. It remains synthetic permanently for this evidence stream.</p></article>
-    <article><h3>Not customer ROI</h3><p>This does not establish external customer adoption, independent demand, net customer savings or universal 66% savings. Local coordination, engineering and integration overhead were not monetized in the receipt.</p></article>
+    <article><h3>Not customer ROI</h3><p>This does not establish external customer adoption, independent demand, net customer savings or universal 66% savings. Local coordination, engineering and integration overhead were not monetized in the savings record.</p></article>
     <article><h3>Native-first still applies</h3><p>A customer workload must still beat cheaper local, source-native and provider-native controls. If normal traffic does not contain compatible expensive recurrence, SeenRelay should be removed.</p></article>
   </div>
 </section>

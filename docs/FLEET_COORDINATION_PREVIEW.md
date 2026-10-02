@@ -217,9 +217,11 @@ The repository tests require:
 
 A separate remote-store proof workflow tests the same primitive through a temporary Redis REST instance.
 
-## Savings receipts
+## Savings Reports
 
-Coordination can now emit conservative local receipts. A follower reuse is the only path that counts as an avoided execution.
+SeenRelay is currently free. A Savings Report is measurement evidence, not an invoice, bill, charge or payment receipt. Legacy API names such as `onReceipt` remain for backward compatibility only.
+
+Coordination can now emit conservative local Savings Reports. A follower reuse is the only path that counts as an avoided execution.
 
 ```js
 import {
@@ -250,7 +252,7 @@ const result = await fleet.run({
 console.log(savings.snapshot());
 ```
 
-A receipt separates two facts:
+A Savings Report separates two facts:
 
 - `avoidedExecutions`: whether one authoritative execution was actually avoided;
 - `grossAvoidedCostUsd`: the caller-supplied or caller-resolved marginal cost, when available.

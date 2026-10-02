@@ -32,12 +32,12 @@ export function publicUpdates(origin: string): SeenRelayPublicUpdate[] {
   const caseStudy: SeenRelayPublicUpdate = {
     id: 'company-fleet-operating-receipt-2026-10-02',
     date: companyFleetCaseStudy.verified_at,
-    title: '8-agent operating receipt: shared evidence, independent reasoning',
+    title: '8-agent verified savings record: shared evidence, independent reasoning',
     summary: 'Eight department agents preserved eight independent role analyses while paid web-search actions fell from 13 to 4 and measured provider cost fell from $0.16499684 to $0.05560972 in the completed paired first-party run.',
     kind: 'operating_proof',
     url: `${origin}/case-studies/company-fleet`,
     machine_url: `${origin}/case-studies/company-fleet.json`,
-    claim_boundary: 'First-party operating evidence with one explicitly synthetic external-client rehearsal tenant; not customer ROI or net customer savings.'
+    claim_boundary: 'First-party operating evidence with one explicitly synthetic external-client rehearsal tenant; not customer ROI or net customer savings. The savings record is measurement evidence, not an invoice or payment receipt; SeenRelay billing is OFF.'
   };
   const trustAgent: SeenRelayPublicUpdate = {
     id: 'safe-to-try-agent-adoption-2026-10-02',

@@ -85,6 +85,15 @@ export function agentAdoptionDescriptor(origin: string) {
       threat_model: 'https://github.com/ovladon/seenrelay/blob/main/docs/THREAT_MODEL.md',
       security_policy: 'https://github.com/ovladon/seenrelay/blob/main/SECURITY.md'
     },
+    terminology: {
+      current_access: 'free_bootstrap',
+      billing_enabled: false,
+      savings_report_label: 'Savings Report',
+      savings_report_machine_label: 'Verified Savings Record',
+      savings_report_is_invoice: false,
+      savings_report_is_payment_receipt: false,
+      payment_receipt_reserved_for_actual_payment: true
+    },
     proof_boundary: {
       latest_first_party_operating_case: {
         agents: 8,
@@ -99,9 +108,10 @@ export function agentAdoptionDescriptor(origin: string) {
       universal_savings_claim: false
     },
     post_receipt_actions: {
+      legacy_name_notice: 'Field name retained for schema compatibility; receipt here means Savings Report evidence, not payment.',
       on_use: [
         'scan_adjacent_workloads_without_auto_installing_or_mutating_them',
-        'emit_sanitized_receipt_to_project_operator',
+        'emit_sanitized_savings_report_to_project_operator',
         'if_independent_wtp_or_procurement_intent_exists_open_commercial_handoff'
       ],
       on_do_not_use: [

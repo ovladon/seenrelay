@@ -87,7 +87,7 @@ npx seenrelay trace-census fleet-trace.jsonl --json</pre></div>
     <article class="rv-choice">
       <header><b>What the report means</b><span>OPPORTUNITY · NOT SAVINGS</span></header>
       <p><code>successful_leader_overlap_opportunities</code> counts eligible calls that began behind an exact leader that later succeeded. When the caller supplied cost provenance, the report can total <code>gross_potential_avoided_cost_usd</code> and potential provider units.</p>
-      <p><b>Actual avoided executions remain unknown at this stage.</b> They become factual only after active coordination produces follower-reuse receipts. Net savings additionally require measured coordination/store overhead.</p>
+      <p><b>Actual avoided executions remain unknown at this stage.</b> They become factual only after active coordination produces verified follower-reuse savings records. Net savings additionally require measured coordination/store overhead.</p>
       <a href="https://github.com/ovladon/seenrelay/blob/main/docs/FLEET_TRACE_CENSUS.md">Trace schema and evidence boundary →</a>
     </article>
   </div>
@@ -143,7 +143,7 @@ console.log(meter.getReport());</pre></div>
     <article class="rv-choice">
       <header><b>What the shadow result decides</b><span>NO AUTO-ACTIVATION</span></header>
       <p>If exact compatible overlap is rare, the call is cheap, or a zero-cost provider-native exact cache already dominates, leave coordination off.</p>
-      <p>If overlap is frequent and materially expensive, move that one reviewed operation to active fleet coordination and measure actual avoided executions with savings receipts.</p>
+      <p>If overlap is frequent and materially expensive, move that one reviewed operation to active fleet coordination and measure actual avoided executions with Savings Reports.</p>
       <p>Mutations and independent sampling are excluded from overlap candidacy. Store or cost-metadata failures cannot change the application result.</p>
     </article>
   </div>
@@ -202,7 +202,7 @@ const result = await fleet.run({
 </section>
 
 <section class="rv-shell rv-section" id="measure">
-  <div class="rv-section-head"><div class="rv-eyebrow">SAVINGS RECEIPTS</div><h2>Count only work that was actually avoided.</h2><p>Client ${version} can emit a local receipt when a follower reused an in-flight authoritative execution. Dollar value appears only when the caller provides or resolves a marginal cost with explicit provenance.</p></div>
+  <div class="rv-section-head"><div class="rv-eyebrow">SAVINGS REPORTS</div><h2>Count only work that was actually avoided.</h2><p>Client ${version} can emit a local Savings Report when a follower reused an in-flight authoritative execution. Dollar value appears only when the caller provides or resolves a marginal cost with explicit provenance. SeenRelay is currently free; this report is not a bill or payment receipt.</p></div>
   <div class="rv-choice-grid">
     <article class="rv-choice">
       <header><b>Local ledger</b><span>NO BILLING</span></header>
@@ -227,8 +227,9 @@ console.log(savings.snapshot());</pre></div>
       <p><code>avoidedExecutions</code> increases only on actual follower reuse. If cost is unknown, SeenRelay leaves the dollar value unknown instead of estimating it.</p>
     </article>
     <article class="rv-choice">
-      <header><b>What a receipt does not mean</b><span>CONSERVATIVE</span></header>
-      <p>A receipt is not a billing event, customer-spend claim or proof that every similar request is shareable. It reports the local coordination path that actually occurred and the caller-provided cost provenance.</p>
+      <header><b>What a Savings Report does not mean</b><span>NO BILLING</span></header>
+      <p>A Savings Report is not an invoice, bill, charge, payment receipt, customer-spend claim or proof that every similar request is shareable. It reports the local coordination path that actually occurred and the caller-provided cost provenance.</p>
+      <p><code>onReceipt</code> remains the callback name for API compatibility; it records savings evidence, not a payment event.</p>
       <p>Start with one expensive operation. If follower reuse is rare or absolute savings are immaterial, leave the rest of the application unchanged.</p>
       <a href="https://github.com/ovladon/seenrelay/blob/main/docs/FLEET_COORDINATION_PREVIEW.md">Full fleet API and boundaries →</a>
     </article>

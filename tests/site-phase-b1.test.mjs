@@ -25,7 +25,7 @@ test('homepage follows a short human journey from outcome to automatic loop to p
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
   assert.match(landing, /Decide when you actually need to look again\./);
   assert.match(landing, /Start locally/i);
-  assert.match(landing, /Observe\. Learn\. Decide\. Receipt\./i);
+  assert.match(landing, /Observe\. Learn\. Decide\. Savings Report\./i);
   assert.match(landing, /Controlled proof is not customer savings/i);
 });
 

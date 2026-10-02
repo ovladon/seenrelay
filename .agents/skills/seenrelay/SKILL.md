@@ -41,7 +41,7 @@ Ambient starts as measurement, not authorization. Keep the original authoritativ
 
 ## Choose the measurement lane explicitly
 
-Use **distributed fleet shadow** when the candidate is an expensive JavaScript/TypeScript operation that may collide across separate workers or replicas. Prefer `SeenRelayFleetShadowMeter` from `seenrelay/fleet` with a caller-owned coordination store before active fleet coordination. Every authoritative operation must still run, no result may be shared in shadow mode, and observed overlap cost is incurred measurement rather than avoided savings. If exact eligible overlap is rare or a stronger zero-cost provider-native exact cache already wins, leave active coordination off. If measured overlap is material, evaluate `SeenRelayFleetCoordinator` only for that reviewed operation and count actual follower reuse separately with savings receipts.
+Use **distributed fleet shadow** when the candidate is an expensive JavaScript/TypeScript operation that may collide across separate workers or replicas. Prefer `SeenRelayFleetShadowMeter` from `seenrelay/fleet` with a caller-owned coordination store before active fleet coordination. Every authoritative operation must still run, no result may be shared in shadow mode, and observed overlap cost is incurred measurement rather than avoided savings. If exact eligible overlap is rare or a stronger zero-cost provider-native exact cache already wins, leave active coordination off. If measured overlap is material, evaluate `SeenRelayFleetCoordinator` only for that reviewed operation and count actual follower reuse separately with Savings Reports (machine label: Verified Savings Records).
 
 Use **local/Ambient shadow** first when the goal is to find exact repetition and stronger local or source-native controls. This lane can remain entirely local and may produce no hosted SeenRelay activity; that is expected and must not be treated as failed integration.
 
@@ -64,6 +64,8 @@ Rules:
 - **REMOVE:** no candidate, stronger native control, `DO NOT USE`, or persistently negative economics are successful reasons to leave SeenRelay out.
 
 Do not silently convert `USE` into project mutation authority. SeenRelay never grants itself that authority.
+
+A Savings Report is measurement evidence for avoided work and cost provenance, not an invoice, bill, charge or payment receipt. SeenRelay is currently free; legacy SDK/API `receipt` names do not imply billing.
 
 ## Optional team-visible GitHub prescreen
 
