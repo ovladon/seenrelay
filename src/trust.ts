@@ -12,6 +12,17 @@ function esc(value: unknown): string {
 export function trustDescriptor(origin: string) {
   return {
     status: 'self_attested_verifiable_controls',
+    safe_to_try: {
+      claim: 'Evaluation can begin without suppressing any authoritative operation.',
+      shadow_first: true,
+      fail_open: true,
+      scan_uploads_source: false,
+      scan_modifies_project: false,
+      shared_check_default: 'off_in_zero_state',
+      completed_result_ttl_default_ms: 0,
+      mutation_suppression_implicit: false,
+      uninstall_requires_data_export: false
+    },
     claim_boundary: 'Technical controls and release evidence; not a third-party security certification.',
     third_party_security_audit: false,
     external_security_certification: false,
@@ -39,6 +50,13 @@ export function trustDescriptor(origin: string) {
       truth_oracle: false,
       source_browsing_or_verification: false,
       operations: ['CHECK', 'OBSERVE']
+    },
+    agent_verification: {
+      machine_adoption_contract: `${origin}/agent-adoption.json`,
+      machine_trust_posture: `${origin}/trust.json`,
+      machine_proof: `${origin}/proof.json`,
+      agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`,
+      instruction: 'An autonomous agent should prescreen locally, measure in shadow, prefer stronger native controls, and treat REMOVE as a valid successful outcome.'
     },
     verification: {
       production_health: `${origin}/healthz`,
