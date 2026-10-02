@@ -332,6 +332,15 @@ console.log(savings.snapshot());
 // grossAvoidedCostUsd is null/absent from the savings record when cost is unknown.
 ```
 
+You can turn the saved ledger or JSONL receipt stream into a conservative local Savings Report:
+
+```bash
+npx seenrelay savings-report fleet-savings-ledger.json --json
+npx seenrelay savings-report fleet-receipts.jsonl --overhead-usd 0.14 --json
+```
+
+The command contacts nobody. It can confirm measured follower reuse and, when cost provenance exists, gross avoided cost. Net savings remain unknown unless measured SeenRelay overhead is supplied. Even a positive local net value does **not** emit a USE verdict or prove native/SOTA superiority, external customer adoption, customer ROI, or any payment obligation.
+
 Cost metadata never authorizes coordination. If cost is unknown, SeenRelay reports avoided executions without inventing dollars. Receipt callback failures never change the application result.
 
 
