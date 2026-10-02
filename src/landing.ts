@@ -122,10 +122,17 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-section" id="proof">
   <div class="rv-section-head">
     <div><div class="rv-eyebrow">REAL PROVIDER PROOF</div><h2>Lead with the workload where the expensive downstream work was actually needed.</h2></div>
-    <p>Our strongest current adoption example uses live event state plus real OpenAI web search. Mechanism-only tests remain in the full Proof Atlas and are labeled separately from workload fit and customer ROI.</p>
+    <p>Current first-party evidence now includes a real operating fleet where eight department agents kept independent reasoning while shared evidence acquisition cut provider spend. Live-event and mechanism-only tests remain separately labeled from customer ROI and best-baseline claims.</p>
   </div>
   <div class="rv-grid-3">
     <article class="rv-card accent">
+      <span class="rv-number">66.30%</span>
+      <h3>Real operating agent fleet</h3>
+      <p>Eight department agents kept independent reasoning. SeenRelay coordinated only same-tenant evidence acquisition: paid web searches fell 13 → 4 and provider cost fell $0.16499684 → $0.05560972 in the completed run.</p>
+      <p class="rv-small">First-party real workload + synthetic external-client rehearsal · gross provider-cost reduction · not customer ROI · best alternative orchestration baseline not yet proven.</p>
+      <a href="/proof">Fleet economic receipt →</a>
+    </article>
+    <article class="rv-card">
       <span class="rv-number">79.61%</span>
       <h3>Real live event monitoring</h3>
       <p>Across 3/3 runs on a real current Hacker News event, four paid OpenAI web-search briefings became one while the event fingerprint stayed unchanged. Gross avoided cost was $0.05462206–$0.10098029 per four-observation group.</p>
