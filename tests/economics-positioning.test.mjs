@@ -42,7 +42,8 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.doesNotMatch(economics, /verifiedBenchmarkHtml\(|MEASURED · FIRST-PARTY SMOKE BENCHMARK|Firecrawl|OpenAI Web Search|provider calls avoided/i);
   assert.match(landing, /Decide when you actually need to look again\./);
   assert.match(landing, /\$1\.44/);
-  assert.match(landing, /74\.84%/);
+  assert.match(landing, /79\.61%/);
+  assert.match(landing, /Real live event monitoring/i);
   assert.match(landing, /Controlled proof is not customer savings/i);
   assert.match(landing, /native controls first/i);
   assert.match(landing, /Sometimes the right answer is not to use SeenRelay/i);
