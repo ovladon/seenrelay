@@ -17,6 +17,9 @@ npx seenrelay scan . --json
 
 # machine-readable adoption plan; never modifies code or enables reuse
 npx seenrelay adopt-plan . --json
+
+# combined prescreen + plan + next action for agents/operators
+npx seenrelay guide . --json
 ```
 
 The scanner reads supported text/source files locally, does not contact SeenRelay, does not upload source code, and does not modify the target project. It looks for metered or resource-intensive read-only work, recurring execution signals, stronger native/local controls, and supported integration boundaries.
