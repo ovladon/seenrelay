@@ -316,5 +316,18 @@ export const publicProductFacts = {
       "summary": "In a first-party n=3 Firecrawl browser-interaction smoke benchmark, bounded reuse avoided 3/3 equivalent provider calls, 9 reported provider credits, and reduced median validation latency from 4.385 s to 0.661 s."
     }
   ],
-  "service_release": "0.3.10"
+  "service_release": "0.3.10",
+  "terminology": {
+    "savings_report_human_label": "Savings Report",
+    "savings_report_machine_label": "Verified Savings Record",
+    "meaning": "measurement evidence for avoided work and cost provenance",
+    "current_access": "free",
+    "billing_enabled": false,
+    "is_invoice": false,
+    "is_bill": false,
+    "is_charge": false,
+    "is_payment_receipt": false,
+    "payment_receipt_reserved_for_actual_payment": true,
+    "legacy_api_note": "Some SDK/API identifiers retain receipt wording for backward compatibility; they record savings evidence, not payment."
+  }
 } as const;
