@@ -15,13 +15,15 @@ export function agentAdoptionDescriptor(origin: string) {
       mcp: `${origin}/mcp`,
       proof: `${origin}/proof.json`,
       trust: `${origin}/trust.json`,
-      case_study: `${origin}/case-studies/company-fleet.json`
+      case_study: `${origin}/case-studies/company-fleet.json`,
+      github_cost_prescreen_action: 'ovladon/seenrelay/actions/cost-prescreen@main'
     },
     install: {
       scan: publicProductFacts.install.scan_command,
       npm: publicProductFacts.install.npm_command,
       pypi: publicProductFacts.install.pypi_command,
       agent_skill: `npx skills add ${origin} --skill seenrelay --yes`,
+      github_action: 'ovladon/seenrelay/actions/cost-prescreen@main',
       claude_code: [
         'claude plugin marketplace add ovladon/seenrelay',
         'claude plugin install --scope user seenrelay@seenrelay'
@@ -98,6 +100,7 @@ export function agentAdoptionDescriptor(origin: string) {
     preferred_agent_behavior: [
       'Do not install active coordination merely because SeenRelay exists.',
       'Run the local prescreen first.',
+      'If project authority permits CI changes, the optional GitHub Cost Prescreen Action may expose the same pre-evidentiary scan to the team; adding the workflow still requires project authority.',
       'Prefer local, caller-owned, source-native and provider-native controls before shared coordination.',
       'Preserve every authoritative call in shadow.',
       'Never suppress mutation or destructive operations.',
