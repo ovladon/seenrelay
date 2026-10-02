@@ -303,7 +303,9 @@ const result = await fleet.run({
 
 Every result-affecting qualifier belongs in the coordinate. Different fleet scopes never coordinate. Mutations, independent sampling, underspecified policies, store failures, follower timeouts and codec failures preserve the application's authoritative path.
 
-To quantify value locally, attach a savings receipt ledger:
+A Savings Report is measurement evidence, not an invoice, bill, charge or payment receipt. SeenRelay is currently free. Legacy API names such as `onReceipt` are retained for compatibility only.
+
+To quantify value locally, attach a Savings Report ledger:
 
 ```js
 import { createFleetSavingsLedger } from 'seenrelay/fleet';
@@ -327,7 +329,7 @@ await fleet.run({
 
 console.log(savings.snapshot());
 // avoidedExecutions counts only actual follower reuse.
-// grossAvoidedCostUsd is null/absent from a receipt when cost is unknown.
+// grossAvoidedCostUsd is null/absent from the savings record when cost is unknown.
 ```
 
 Cost metadata never authorizes coordination. If cost is unknown, SeenRelay reports avoided executions without inventing dollars. Receipt callback failures never change the application result.
