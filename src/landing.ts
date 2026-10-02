@@ -97,7 +97,7 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-section" id="how">
   <div class="rv-section-head">
-    <div><div class="rv-eyebrow">AUTOMATIC LOOP</div><h2>Observe. Learn. Decide. Receipt.</h2></div>
+    <div><div class="rv-eyebrow">AUTOMATIC LOOP</div><h2>Observe. Learn. Decide. Savings Report.</h2></div>
     <p>The goal is one control loop, not a collection of manual benchmark steps. <a href="/substrate">Detailed execution model →</a></p>
   </div>
   <div class="rv-usecases">
@@ -106,6 +106,10 @@ export function publicLandingPage(origin: string): string {
     <article class="rv-usecase"><i>03</i><h3>Qualify</h3><p>Only a bounded path with positive measured economics can advance beyond shadow.</p></article>
     <article class="rv-usecase"><i>04</i><h3>Execute or skip</h3><p>Unsafe, stale, changing or native-dominated work still executes normally. Qualified work can avoid the repeated call.</p></article>
   </div>
+</section>
+
+<section class="rv-shell rv-section" id="savings-report-terms">
+  <div class="rv-trust-note"><b>Currently free:</b> SeenRelay billing is OFF and there is no checkout or payment obligation. A <b>Savings Report</b> is measurement evidence showing avoided work and its cost provenance; it is <b>not</b> an invoice, bill, charge or payment receipt.</div>
 </section>
 
 <section class="rv-shell rv-section" id="where">
