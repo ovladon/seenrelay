@@ -49,6 +49,7 @@ function publicDiscoveryLinks(origin: string): string {
     `<${origin}/product-facts.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/agent-adoption.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/trust.json>; rel="service-meta"; type="application/json"`,
+    `<${origin}/commercial.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/quickstart>; rel="service-doc"; type="text/html"`,
     `<${origin}/updates.atom>; rel="alternate"; type="application/atom+xml"`
   ].join(', ');
