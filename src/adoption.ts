@@ -58,7 +58,7 @@ Atom feed: ${origin}/updates.atom
 
 This is generated from canonical SeenRelay public facts and verified public evidence so agents and operators can follow changes without relying on a social platform or third-party scheduler.
 
-## Commercial readiness after measured value
+## Value handoff after measured savings
 
 Machine-readable status: ${origin}/commercial.json
 
