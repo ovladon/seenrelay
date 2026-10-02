@@ -64,6 +64,7 @@ test('packaged CLI exposes guide and returns machine JSON',()=>{
   assert.equal(r.status,0,r.stderr);
   const x=JSON.parse(r.stdout);
   assert.equal(x.schema_version,'seenrelay-guided-adoption-v1');
-  assert.equal(x.scan.overall_status,'NEEDS_RUNTIME_EVIDENCE');
+  assert.equal(x.scan.overall_status,'CANDIDATE_FOR_SHADOW_MEASUREMENT');
+  assert.equal(x.decision,'INSTRUMENT_SHADOW_ONLY');
   assert.equal(x.authority.modifies_project,false);
 });
