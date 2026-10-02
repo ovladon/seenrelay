@@ -18,6 +18,7 @@ export function agentAdoptionDescriptor(origin: string) {
       case_study: `${origin}/case-studies/company-fleet.json`
     },
     install: {
+      adopt_plan: 'npx seenrelay adopt-plan . --json',
       scan: publicProductFacts.install.scan_command,
       npm: publicProductFacts.install.npm_command,
       pypi: publicProductFacts.install.pypi_command,
@@ -31,8 +32,9 @@ export function agentAdoptionDescriptor(origin: string) {
       project_mutation_authority: 'never_granted_by_seenrelay',
       states: ['PRESCREEN','SHADOW','QUALIFIED','ACTIVE','DEMOTED','REMOVE'],
       prescreen: {
-        action: 'run_local_scan',
-        command: publicProductFacts.install.scan_command,
+        action: 'run_local_adoption_plan',
+        command: 'npx seenrelay adopt-plan . --json',
+        underlying_scan_command: publicProductFacts.install.scan_command,
         uploads_source: false,
         modifies_project: false,
         can_authorize_reuse: false
@@ -97,7 +99,7 @@ export function agentAdoptionDescriptor(origin: string) {
     },
     preferred_agent_behavior: [
       'Do not install active coordination merely because SeenRelay exists.',
-      'Run the local prescreen first.',
+      'Run npx seenrelay adopt-plan . --json first; it performs the local prescreen and returns the next pre-activation action without modifying code.',
       'Prefer local, caller-owned, source-native and provider-native controls before shared coordination.',
       'Preserve every authoritative call in shadow.',
       'Never suppress mutation or destructive operations.',
@@ -112,10 +114,11 @@ export function agentsPage(origin: string): string {
 <header class="nav"><a class="brand" href="/">SeenRelay<span class="pulse"></span></a><nav><a href="/proof">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a><a href="/agent-adoption.json">Agent JSON</a></nav></header>
 <main>
 <section class="hero compact"><div class="eyebrow">FOR AUTONOMOUS AND CODING AGENTS</div><h1>Measure before you modify.</h1><p class="lead">An agent should be able to discover SeenRelay, test whether it belongs on a workload, preserve the existing authoritative path, and remove SeenRelay when stronger native controls or measured economics win.</p><div class="cta"><a class="primary" href="/agent-adoption.json">Read the machine contract</a><a class="secondary" href="/.well-known/agent-skills/seenrelay/SKILL.md">Agent Skill</a><a class="secondary" href="/trust.json">Trust JSON</a></div></section>
-<section class="section decision"><div class="section-head"><div><div class="eyebrow">AUTONOMOUS FUNNEL</div><h2>PRESCREEN → SHADOW → QUALIFY → KEEP OR REMOVE</h2></div><p>No active reuse is authorized merely because the package is installed.</p></div><div class="proof-grid"><article><b>PRESCREEN</b><span><code>npx seenrelay scan</code> is local-only, uploads no source and modifies no project files.</span></article><article><b>SHADOW</b><span>Keep every authoritative call and stronger local/provider-native mechanism enabled.</span></article><article><b>QUALIFY</b><span>Return only USE, DO NOT USE or INSUFFICIENT EVIDENCE under measured economics and safety constraints.</span></article><article><b>REMOVE IS SUCCESS</b><span>If the path is cheap, rare, unsafe, native-controlled or net-negative, leave SeenRelay out.</span></article></div></section>
-<section class="section split"><div><div class="eyebrow">SAFE TO TRY</div><h2>No trust leap is required for the first measurement.</h2><p>Zero-State shared CHECK is off by default. Completed-result TTL defaults to zero. Shadow mode keeps the original operation authoritative. If the wrapper, private store or relay fails, execution falls back to the call the application already intended to make.</p><p>SeenRelay does not browse the source or use an LLM as a truth oracle. Mutating or destructive operations are never implicitly eligible.</p><p><a href="/trust">Inspect the complete trust posture →</a></p></div><div class="terminal"><pre>npx seenrelay scan
+<section class="section decision"><div class="section-head"><div><div class="eyebrow">AUTONOMOUS FUNNEL</div><h2>PRESCREEN → SHADOW → QUALIFY → KEEP OR REMOVE</h2></div><p>No active reuse is authorized merely because the package is installed.</p></div><div class="proof-grid"><article><b>PRESCREEN</b><span><code>npx seenrelay adopt-plan . --json</code> runs the local scan and returns the next pre-activation action; it uploads no source and modifies no project files.</span></article><article><b>SHADOW</b><span>Keep every authoritative call and stronger local/provider-native mechanism enabled.</span></article><article><b>QUALIFY</b><span>Return only USE, DO NOT USE or INSUFFICIENT EVIDENCE under measured economics and safety constraints.</span></article><article><b>REMOVE IS SUCCESS</b><span>If the path is cheap, rare, unsafe, native-controlled or net-negative, leave SeenRelay out.</span></article></div></section>
+<section class="section split"><div><div class="eyebrow">SAFE TO TRY</div><h2>No trust leap is required for the first measurement.</h2><p>Zero-State shared CHECK is off by default. Completed-result TTL defaults to zero. Shadow mode keeps the original operation authoritative. If the wrapper, private store or relay fails, execution falls back to the call the application already intended to make.</p><p>SeenRelay does not browse the source or use an LLM as a truth oracle. Mutating or destructive operations are never implicitly eligible.</p><p><a href="/trust">Inspect the complete trust posture →</a></p></div><div class="terminal"><pre>npx seenrelay adopt-plan . --json
 
-# then only if a candidate exists:
+# the plan may stop with REMOVE,
+# or recommend the narrowest shadow path:
 shadow measurement
   ↓
 USE / DO NOT USE / INSUFFICIENT EVIDENCE
