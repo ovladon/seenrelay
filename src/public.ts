@@ -89,6 +89,9 @@ export function serviceDescriptor(origin: string) {
       machine_audit_schema: 'seenrelay-shadow-audit-v1',
       verdicts: ['USE', 'DO NOT USE', 'INSUFFICIENT EVIDENCE'],
       agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`,
+      agent_adoption: `${origin}/agent-adoption.json`,
+      agents_page: `${origin}/agents`,
+      trust: `${origin}/trust.json`,
       quickstart: `${origin}/quickstart`
     },
     economics: {
@@ -133,7 +136,10 @@ export function serviceDescriptor(origin: string) {
       service_descriptor: `${origin}/service.json`,
       product_facts: `${origin}/product-facts.json`,
       agent_skills_index: `${origin}/.well-known/agent-skills/index.json`,
-      agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`
+      agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`,
+      agent_adoption: `${origin}/agent-adoption.json`,
+      agents_page: `${origin}/agents`,
+      trust: `${origin}/trust.json`
     },
     public_product_facts: productFactsForOrigin(origin),
     latest_verified_updates: publicProductFacts.latest_verified_updates

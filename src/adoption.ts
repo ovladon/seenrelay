@@ -10,6 +10,7 @@ const SITEMAP_PAGES = [
   { path: '/', lastmod: '2026-10-01' },
   { path: '/proof', lastmod: '2026-10-02' },
   { path: '/case-studies/company-fleet', lastmod: '2026-10-02' },
+  { path: '/agents', lastmod: '2026-10-02' },
   { path: '/use-cases', lastmod: '2026-10-01' },
   { path: '/fleet', lastmod: '2026-09-30' },
   { path: '/substrate', lastmod: '2026-09-30' },
@@ -47,6 +48,17 @@ SeenRelay is a provider-independent execution-reuse and revalidation layer below
 The core question is: \`I already know X — do I need to validate X again now?\`
 
 CHECK is not a lookup for somebody else's raw answer. The caller supplies the known value, deterministic source-backed fact identity and its own freshness window. Canonical starter fact descriptors are published at ${origin}/starter-facts.json; they contain no observed values, no recommended TTL and no reuse authorization.
+
+## Machine-first agent adoption
+
+Autonomous and coding agents do not need to scrape marketing copy to decide whether SeenRelay belongs on a project.
+
+Human-readable agent contract: ${origin}/agents
+Machine-readable adoption contract: ${origin}/agent-adoption.json
+Machine-readable trust posture: ${origin}/trust.json
+Machine-readable proof: ${origin}/proof.json
+
+The agent contract requires local prescreening, native-first comparison, shadow measurement with every authoritative call preserved, and explicit project authority before any active reuse. REMOVE is a valid successful outcome.
 
 ## First-party operating case study
 

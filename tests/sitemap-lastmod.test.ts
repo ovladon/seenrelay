@@ -6,6 +6,7 @@ const expected = [
   ['https://seenrelay.com/', '2026-10-01'],
   ['https://seenrelay.com/proof', '2026-10-02'],
   ['https://seenrelay.com/case-studies/company-fleet', '2026-10-02'],
+  ['https://seenrelay.com/agents', '2026-10-02'],
   ['https://seenrelay.com/use-cases', '2026-10-01'],
   ['https://seenrelay.com/fleet', '2026-09-30'],
   ['https://seenrelay.com/substrate', '2026-09-30'],
