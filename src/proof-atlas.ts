@@ -24,7 +24,7 @@ export const controlledProofAtlas = {
       semantic: 'PASS',
       repeatability: '1 complete paid run',
       adoption_path: '/clients',
-      note: 'First-party real operating workload plus a clearly synthetic external-client rehearsal. Eight department agents kept independent role reasoning; SeenRelay coordinated only same-tenant evidence acquisition. Billable web-search actions fell 13→4 while top-level model Responses increased 8→10. Exactly one evidence packet was acquired per tenant, with no cross-tenant reuse and all frozen role contracts passing. This is gross provider-cost reduction for this run, not customer ROI, net customer savings, external adoption or proof that SeenRelay beats every custom shared-research/orchestration baseline.'
+      note: 'First-party real operating workload plus a clearly synthetic external-client rehearsal. Eight department agents kept independent role reasoning; SeenRelay coordinated only same-tenant evidence lookup. Billable web-search actions fell 13→4 while top-level model Responses increased 8→10. Exactly one evidence packet was acquired per tenant, with no cross-tenant reuse and all frozen role contracts passing. This is gross provider-cost reduction for this run, not customer ROI, net customer savings, external adoption or proof that SeenRelay beats every custom shared-research/orchestration baseline.'
     },
     {
       id: 'hosted-compute-64gb',
