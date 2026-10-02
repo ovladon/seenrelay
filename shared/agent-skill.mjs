@@ -16,6 +16,14 @@ metadata:
 
 # SeenRelay integration skill
 
+## Start with the local adoption plan
+
+Run:
+
+`npx seenrelay adopt-plan . --json`
+
+This command is local-only. It performs the static prescreen and returns the next pre-activation action. It does not modify the project, contact SeenRelay, enable reuse, or produce a USE verdict by itself.
+
 Use this skill first to determine whether SeenRelay belongs on a repeated expensive read-only validation path. Start with measurement, preserve every authoritative call and stronger native validator, and do not enable reuse merely because exact repeats exist.
 
 ## Keep behavioral guidance local and explicit
