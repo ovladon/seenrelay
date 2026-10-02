@@ -89,7 +89,12 @@ export function serviceDescriptor(origin: string) {
       machine_audit_schema: 'seenrelay-shadow-audit-v1',
       verdicts: ['USE', 'DO NOT USE', 'INSUFFICIENT EVIDENCE'],
       agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`,
-      quickstart: `${origin}/quickstart`
+      agent_adoption: `${origin}/agent-adoption.json`,
+      agents_page: `${origin}/agents`,
+      trust: `${origin}/trust.json`,
+      quickstart: `${origin}/quickstart`,
+      agent_adoption: `${origin}/agent-adoption.json`,
+      trust: `${origin}/trust.json`
     },
     economics: {
       target_workloads: ['known_state_revalidation', 'paid_web_search', 'metered_scraping', 'browser_or_extraction', 'multi_step_validation', 'rate_limited_api'],
