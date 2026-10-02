@@ -26,7 +26,8 @@ export const controlledProofAtlas = {
       execution_label: '13 → 4 paid web-search actions · 8 → 10 model Responses',
       semantic: 'PASS',
       repeatability: '1 complete paired run',
-      adoption_path: '/ai-agent-cost-optimization',
+      adoption_path: '/case-studies/company-fleet',
+      link_label: 'Case study →',
       note: 'Eight department agents across two tenant identities performed useful current ecosystem research. SeenRelay shared one same-tenant evidence packet per organization while preserving all eight independent role analyses. Gross provider cost fell from $0.16499684 to $0.05560972. SeenRelay OpsCo was first-party real operating work; the second tenant was explicitly synthetic. Local coordination/integration overhead was not monetized, so this is not customer ROI, net customer savings, external adoption or a universal 66% claim.'
     },
     {
@@ -269,7 +270,7 @@ export function proofAtlasPage(origin: string): string {
       <p><b>${esc('execution_label' in r ? r.execution_label : r.executions + ' provider executions')}</b><br>${esc(r.baseline)} → ${esc(r.seenrelay)} · avoided ${esc(r.avoided)}</p>
       <p>${esc(r.note)}</p>
       <p class="rv-small">${esc('evidence_label' in r ? r.evidence_label : 'Controlled first-party benchmark')} · baseline quality ${esc(r.baseline_quality)} · semantic ${esc(r.semantic)} · repeatability ${esc(r.repeatability)}</p>
-      <a href="${esc(r.adoption_path)}">Integration path →</a>
+      <a href="${esc(r.adoption_path)}">${esc('link_label' in r ? r.link_label : 'Integration path →')}</a>
     </article>`).join('');
 
   const negatives=controlledProofAtlas.negative_results.map(r=>`
