@@ -191,6 +191,7 @@ export function publicLandingPage(origin: string): string {
     <p>The scanner is a local prescreen, not a savings verdict. Shadow measurement keeps the original authoritative call. If it finds a plausible candidate, instrument the narrowest supported path, run normal traffic in shadow, then keep SeenRelay only when the measured verdict and economics justify it.</p>
     <div class="rv-code"><pre id="hero-scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="hero-scan-command">Copy</button></div>
     <p class="rv-small">USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key currently required · static scan cannot authorize reuse.</p>
+    <p class="rv-small"><b>For coding agents:</b> <code>npx seenrelay adopt-plan . --json</code> combines the local prescreen with a machine-readable next action and still cannot modify the project or authorize reuse.</p>
   </div>
   <div class="rv-actions">
     <a class="rv-button primary" href="/quickstart">Start locally</a>
