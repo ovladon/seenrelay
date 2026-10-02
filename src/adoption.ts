@@ -58,6 +58,12 @@ Atom feed: ${origin}/updates.atom
 
 This is generated from canonical SeenRelay public facts and verified public evidence so agents and operators can follow changes without relying on a social platform or third-party scheduler.
 
+## Commercial readiness after measured value
+
+Machine-readable status: ${origin}/commercial.json
+
+Current state is non-commercial bootstrap: billing is OFF and no purchase is available. Agents with a real positive receipt may record non-binding willingness-to-pay or procurement intent through the published commercial handoff, but they may not create a payment or activate billing.
+
 ## Machine-first agent adoption
 
 Autonomous and coding agents do not need to scrape marketing copy to decide whether SeenRelay belongs on a project.
