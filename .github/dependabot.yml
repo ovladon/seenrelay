@@ -9,6 +9,13 @@ updates:
       timezone: Europe/Bucharest
     open-pull-requests-limit: 10
     versioning-strategy: increase-if-necessary
+    ignore:
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
     groups:
       safe-npm-updates:
         update-types:
