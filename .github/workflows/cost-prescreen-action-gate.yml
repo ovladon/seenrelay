@@ -1,0 +1,50 @@
+name: Cost Prescreen Action Gate
+
+on:
+  pull_request:
+    paths:
+      - 'actions/cost-prescreen/**'
+      - 'clients/typescript/scripts/seenrelay-cli.mjs'
+      - 'clients/typescript/scripts/adoption-plan-lib.mjs'
+      - 'public/product-facts.json'
+      - 'shared/agent-skill.mjs'
+      - 'skills/seenrelay/SKILL.md'
+      - 'src/agent-adoption.ts'
+      - 'tests/github-cost-prescreen-action.test.mjs'
+      - '.github/workflows/cost-prescreen-action-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-action:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Structural action tests
+        run: node --test tests/github-cost-prescreen-action.test.mjs
+      - name: Exercise local composite action
+        id: seenrelay
+        uses: ./actions/cost-prescreen
+        with:
+          path: .
+      - name: Verify machine outputs
+        env:
+          STATUS: ${{ steps.seenrelay.outputs.static_status }}
+          CANDIDATES: ${{ steps.seenrelay.outputs.candidate_files }}
+          DECISION: ${{ steps.seenrelay.outputs.decision }}
+          REPORT: ${{ steps.seenrelay.outputs.report_path }}
+          PLAN: ${{ steps.seenrelay.outputs.plan_path }}
+        run: |
+          set -euo pipefail
+          test -n "$STATUS"
+          test -n "$CANDIDATES"
+          test -n "$DECISION"
+          test -s "$REPORT"
+          test -s "$PLAN"
+          echo "status=$STATUS candidates=$CANDIDATES decision=$DECISION"

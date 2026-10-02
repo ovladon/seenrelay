@@ -1,0 +1,90 @@
+name: 'SeenRelay Cost Prescreen'
+description: 'Local-only prescreen for repeated expensive read-only work. Produces a non-mutating adoption plan; never enables reuse.'
+author: 'SeenRelay'
+
+inputs:
+  path:
+    description: 'Repository path to scan'
+    required: false
+    default: '.'
+
+outputs:
+  static_status:
+    description: 'Static SeenRelay prescreen state'
+    value: ${{ steps.result.outputs.static_status }}
+  candidate_files:
+    description: 'Number of candidate files'
+    value: ${{ steps.result.outputs.candidate_files }}
+  decision:
+    description: 'Machine next decision from the non-mutating adoption plan'
+    value: ${{ steps.result.outputs.decision }}
+  report_path:
+    description: 'Absolute path to the local scan JSON for later steps in this job'
+    value: ${{ steps.result.outputs.report_path }}
+  plan_path:
+    description: 'Absolute path to the local adoption-plan JSON for later steps in this job'
+    value: ${{ steps.result.outputs.plan_path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Verify local runtime
+      shell: bash
+      run: |
+        set -euo pipefail
+        node --version
+        npm --version
+
+    - name: Run local SeenRelay prescreen
+      id: prescreen
+      shell: bash
+      env:
+        SR_PATH: ${{ inputs.path }}
+      run: |
+        set -euo pipefail
+        out="$RUNNER_TEMP/seenrelay-cost-prescreen"
+        mkdir -p "$out"
+        npx --yes seenrelay@0.2.25 scan "$SR_PATH" --json > "$out/scan.json"
+        npx --yes seenrelay@0.2.25 adopt-plan "$SR_PATH" --json > "$out/adopt-plan.json"
+        echo "report_path=$out/scan.json" >> "$GITHUB_OUTPUT"
+        echo "plan_path=$out/adopt-plan.json" >> "$GITHUB_OUTPUT"
+
+    - name: Publish bounded job summary
+      id: result
+      shell: bash
+      env:
+        REPORT_PATH: ${{ steps.prescreen.outputs.report_path }}
+        PLAN_PATH: ${{ steps.prescreen.outputs.plan_path }}
+      run: |
+        set -euo pipefail
+        node <<'NODE'
+        const fs=require('node:fs');
+        const scan=JSON.parse(fs.readFileSync(process.env.REPORT_PATH,'utf8'));
+        const plan=JSON.parse(fs.readFileSync(process.env.PLAN_PATH,'utf8'));
+        const output=[
+          ['static_status',scan.overall_status],
+          ['candidate_files',String(scan.candidate_files ?? 0)],
+          ['decision',plan.decision],
+          ['report_path',process.env.REPORT_PATH],
+          ['plan_path',process.env.PLAN_PATH]
+        ];
+        for(const [k,v] of output) fs.appendFileSync(process.env.GITHUB_OUTPUT,k+'='+String(v).replace(/[\r\n]/g,' ')+'\n');
+        const lines=[
+          '### SeenRelay Cost Prescreen',
+          '',
+          '| Field | Result |',
+          '| --- | --- |',
+          '| Static status | '+scan.overall_status+' |',
+          '| Candidate files | '+String(scan.candidate_files ?? 0)+' |',
+          '| Next decision | '+plan.decision+' |',
+          '',
+          '**Safety boundary:** local static prescreen only. It does not contact SeenRelay, upload source code, modify the repository, enable reuse, suppress any authoritative call, or return a USE verdict.',
+          '',
+          plan.machine_next_action?.instruction ? '**Next:** '+plan.machine_next_action.instruction : ''
+        ];
+        fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
+        NODE
+
+branding:
+  icon: 'search'
+  color: 'gray-dark'
