@@ -68,7 +68,7 @@ runs:
           ['report_path',process.env.REPORT_PATH],
           ['plan_path',process.env.PLAN_PATH]
         ];
-        for(const [k,v] of output) fs.appendFileSync(process.env.GITHUB_OUTPUT,k+'='+String(v).replace(/[\\r\\n]/g,' ')+'\\n');
+        for(const [k,v] of output) fs.appendFileSync(process.env.GITHUB_OUTPUT,k+'='+String(v).replace(/[\r\n]/g,' ')+'\n');
 
         const lines=[
           '### SeenRelay Cost Prescreen',
@@ -83,7 +83,7 @@ runs:
           '',
           plan.machine_next_action?.instruction ? '**Next:** '+plan.machine_next_action.instruction : ''
         ];
-        fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\\n')+'\\n');
+        fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
         NODE
 
 branding:
