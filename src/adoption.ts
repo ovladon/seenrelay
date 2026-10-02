@@ -8,7 +8,8 @@ export function robotsText(origin: string): string {
 
 const SITEMAP_PAGES = [
   { path: '/', lastmod: '2026-10-01' },
-  { path: '/proof', lastmod: '2026-10-01' },
+  { path: '/proof', lastmod: '2026-10-02' },
+  { path: '/case-studies/company-fleet', lastmod: '2026-10-02' },
   { path: '/use-cases', lastmod: '2026-10-01' },
   { path: '/fleet', lastmod: '2026-09-30' },
   { path: '/substrate', lastmod: '2026-09-30' },
@@ -46,6 +47,13 @@ SeenRelay is a provider-independent execution-reuse and revalidation layer below
 The core question is: \`I already know X — do I need to validate X again now?\`
 
 CHECK is not a lookup for somebody else's raw answer. The caller supplies the known value, deterministic source-backed fact identity and its own freshness window. Canonical starter fact descriptors are published at ${origin}/starter-facts.json; they contain no observed values, no recommended TTL and no reuse authorization.
+
+## First-party operating case study
+
+Eight department agents across two tenant identities kept independent role analyses while SeenRelay reduced paid web-search actions from 13 to 4. Measured provider cost fell from $0.16499684 to $0.05560972 in the paired first-party run. One tenant was real SeenRelay operating work and the other was an explicitly synthetic external-client rehearsal with real provider execution. This is not customer ROI or net customer savings.
+
+Human-readable case study: ${origin}/case-studies/company-fleet
+Machine-readable receipt: ${origin}/case-studies/company-fleet.json
 
 ## First proof: measure without changing application behavior
 

@@ -18,6 +18,7 @@ import { substratePage } from './substrate.js';
 import { commercialPage } from './commercial.js';
 import { aiAgentCostOptimizationPage, duplicateToolCallsPage } from './seo-pages.js';
 import { proofAtlasDescriptor, proofAtlasPage } from './proof-atlas.js';
+import { companyFleetCaseStudyDescriptor, companyFleetCaseStudyPage } from './company-fleet-case-study.js';
 import { useCaseAtlasDescriptor, useCaseAtlasPage } from './use-cases.js';
 import { langfusePage } from './langfuse.js';
 import { trustDescriptor, trustPage } from './trust.js';
@@ -128,6 +129,16 @@ app.get('/proof.json', (c) => {
   c.header('cache-control', 'public, max-age=300');
   c.header('access-control-allow-origin', '*');
   return c.json(proofAtlasDescriptor(new URL(c.req.url).origin));
+});
+app.get('/case-studies/company-fleet', (c) => {
+  c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
+  c.header('cache-control', 'public, max-age=300');
+  return c.html(companyFleetCaseStudyPage(new URL(c.req.url).origin));
+});
+app.get('/case-studies/company-fleet.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  c.header('access-control-allow-origin', '*');
+  return c.json(companyFleetCaseStudyDescriptor(new URL(c.req.url).origin));
 });
 app.get('/fleet', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");

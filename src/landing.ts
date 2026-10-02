@@ -130,7 +130,7 @@ export function publicLandingPage(origin: string): string {
       <h3>8-agent operating workload</h3>
       <p>Eight department agents across two tenant identities performed useful current ecosystem research. Baseline provider cost was $0.16499684. The SeenRelay arm preserved all eight role analyses, reduced paid web-search actions from 13 to 4, and cost $0.05560972 — $0.10938712 gross avoided.</p>
       <p class="rv-small">First-party real operating workload + explicitly synthetic external-client rehearsal. Not customer ROI or net customer savings; local coordination/integration overhead was not monetized.</p>
-      <a href="/proof">Operating receipt →</a>
+      <a href="/case-studies/company-fleet">Read the 8-agent case study →</a>
     </article>
     <article class="rv-card accent">
       <span class="rv-number">79.61%</span>
