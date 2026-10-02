@@ -68,6 +68,16 @@ Rules:
 
 Do not silently convert \`USE\` into project mutation authority. SeenRelay never grants itself that authority.
 
+## Optional team-visible GitHub prescreen
+
+If the user or project explicitly authorizes adding a CI workflow, you may propose the local-only SeenRelay Cost Prescreen Action:
+
+`ovladon/seenrelay/actions/cost-prescreen@main`
+
+The action runs the published static scanner and non-mutating adoption planner on the GitHub runner. It does not contact the SeenRelay service, upload source code to SeenRelay, enable reuse, or return a USE verdict.
+
+Do not add or modify a GitHub workflow without caller/project authority. A candidate found by the action still requires normal-workload shadow measurement before any active protection.
+
 ## Return a comparable first audit
 
 After measurement, always return a short human-readable decision plus a machine-readable object with \`schema_version: "seenrelay-shadow-audit-v1"\`. Use the fields defined by \`docs/schemas/shadow-audit-report.schema.json\` in the SeenRelay repository: workload identity, protected-call count, exact-repeat count, stronger native-control measurements, shared-CHECK outcomes when measured, hypothetical-reuse mismatches, baseline units, SeenRelay overhead/economics, safety state, reasons and verdict.
