@@ -121,10 +121,17 @@ export function publicLandingPage(origin: string): string {
 
 <section class="rv-shell rv-section" id="proof">
   <div class="rv-section-head">
-    <div><div class="rv-eyebrow">REAL PROVIDER PROOF</div><h2>Lead with the workload where the expensive downstream work was actually needed.</h2></div>
-    <p>Our strongest current adoption example uses live event state plus real OpenAI web search. Mechanism-only tests remain in the full Proof Atlas and are labeled separately from workload fit and customer ROI.</p>
+    <div><div class="rv-eyebrow">REAL PROVIDER PROOF</div><h2>Shared evidence. Independent reasoning. Lower provider spend.</h2></div>
+    <p>Our strongest current first-party operating example keeps all department analyses independent while sharing the expensive evidence acquisition they are explicitly allowed to rely on. Live event monitoring remains the repeatability/freshness proof. Mechanism-only tests stay labeled separately from workload fit and customer ROI.</p>
   </div>
   <div class="rv-grid-3">
+    <article class="rv-card accent">
+      <span class="rv-number">66.30%</span>
+      <h3>8-agent operating workload</h3>
+      <p>Eight department agents across two tenant identities performed useful current ecosystem research. Baseline provider cost was $0.16499684. The SeenRelay arm preserved all eight role analyses, reduced paid web-search actions from 13 to 4, and cost $0.05560972 — $0.10938712 gross avoided.</p>
+      <p class="rv-small">First-party real operating workload + explicitly synthetic external-client rehearsal. Not customer ROI or net customer savings; local coordination/integration overhead was not monetized.</p>
+      <a href="/proof">Operating receipt →</a>
+    </article>
     <article class="rv-card accent">
       <span class="rv-number">79.61%</span>
       <h3>Real live event monitoring</h3>
@@ -144,7 +151,7 @@ export function publicLandingPage(origin: string): string {
       <a href="/proof">Mechanism evidence →</a>
     </article>
   </div>
-  <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> Mechanism proof is not best-baseline proof either. Proof Atlas now labels whether the tested expensive tool itself survived local/source/native alternatives. We also publish NO PASS results. <a href="/proof">See the complete Proof Atlas →</a></div>
+  <div class="rv-trust-note"><b>Controlled proof is not customer savings.</b> First-party operating proof is not external customer ROI either. Mechanism proof is not best-baseline proof either. Proof Atlas now labels whether the tested expensive tool itself survived local/source/native alternatives. We also publish NO PASS results. <a href="/proof">See the complete Proof Atlas →</a></div>
 </section>
 
 <section class="rv-shell rv-section" id="reject">
