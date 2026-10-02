@@ -11,7 +11,9 @@ export function commercialDescriptor(origin: string) {
     purchase_available: false,
     commercial_activation_authorized: false,
     current_hosted_service_price_usd: 0,
-    objective: 'Record independent willingness-to-pay or procurement intent only after measured workload evidence exists.',
+    current_access: 'free_bootstrap',
+    savings_report_is_payment_receipt: false,
+    objective: 'Record independent willingness-to-pay or procurement intent only after measured workload evidence exists. A Savings Report is value evidence, not an invoice or payment receipt.',
     qualification: {
       evidence_first: true,
       acceptable_verdicts: ['USE','INSUFFICIENT EVIDENCE_WITH_PROCUREMENT_INTEREST'],
@@ -87,7 +89,7 @@ export function commercialPage(origin: string): string {
 </section>
 
 <section class="rv-shell rv-section">
-  <div class="rv-trust-note"><b>Current billing boundary:</b> the hosted CHECK/OBSERVE service remains free during bootstrap and self-serve service billing is disabled. Commercial-interest intake records non-binding willingness-to-pay/procurement evidence only; it is not an order form, does not activate payment, and is not required to use SeenRelay.</div>
+  <div class="rv-trust-note"><b>Current billing boundary:</b> the hosted CHECK/OBSERVE service remains free during bootstrap and self-serve service billing is disabled. A <b>Savings Report</b> is measurement evidence, not an invoice, bill, charge or payment receipt. Commercial-interest intake records non-binding willingness-to-pay/procurement evidence only; it is not an order form, does not activate payment, and is not required to use SeenRelay.</div>
   <div class="rv-actions rv-actions-spaced"><a class="rv-button primary" href="/#start">Start locally</a><a class="rv-button" href="/economics">Economics method</a></div>
 </section>
 </main>
