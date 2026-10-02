@@ -122,7 +122,7 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-section" id="proof">
   <div class="rv-section-head">
     <div><div class="rv-eyebrow">REAL PROVIDER PROOF</div><h2>Shared evidence. Independent reasoning. Lower provider spend.</h2></div>
-    <p>Our strongest current first-party operating example keeps all department analyses independent while sharing the expensive evidence acquisition they are explicitly allowed to rely on. Live event monitoring remains the repeatability/freshness proof. Mechanism-only tests stay labeled separately from workload fit and customer ROI.</p>
+    <p>Our strongest current first-party operating example keeps all department analyses independent while sharing the expensive evidence collection they are explicitly allowed to rely on. Live event monitoring remains the repeatability/freshness proof. Mechanism-only tests stay labeled separately from workload fit and customer ROI.</p>
   </div>
   <div class="rv-grid-3">
     <article class="rv-card accent">
