@@ -187,6 +187,16 @@ export async function getAdminAdoptionData() {
       (SELECT COALESCE(SUM(h.check_count),0)::int FROM hive_leases h WHERE ${meaningfulExternalLease}) AS checks_external_retained,
       (SELECT COALESCE(SUM(h.observe_count),0)::int FROM hive_leases h WHERE ${meaningfulExternalLease}) AS observe_attempts_external_retained,
       (SELECT COUNT(*)::int FROM useful_reuse_events e WHERE EXISTS (SELECT 1 FROM hive_leases h WHERE h.lease_id=e.consumer_lease_id AND ${meaningfulExternalLease})) AS reuse_external_total,
+      (SELECT COUNT(*)::int FROM useful_reuse_events e
+        WHERE EXISTS (SELECT 1 FROM hive_leases h WHERE h.lease_id=e.consumer_lease_id AND ${meaningfulExternalLease})
+          AND EXISTS (SELECT 1 FROM hive_leases h WHERE h.lease_id=e.contributor_lease_id AND ${meaningfulExternalLease})
+          AND NOT EXISTS (SELECT 1 FROM facts f WHERE f.fact_key=e.fact_key AND ${internalBenchmarkFact})
+      ) AS reuse_external_qualified_cross_client_total,
+      (SELECT COUNT(DISTINCT e.consumer_lease_id)::int FROM useful_reuse_events e
+        WHERE EXISTS (SELECT 1 FROM hive_leases h WHERE h.lease_id=e.consumer_lease_id AND ${meaningfulExternalLease})
+          AND EXISTS (SELECT 1 FROM hive_leases h WHERE h.lease_id=e.contributor_lease_id AND ${meaningfulExternalLease})
+          AND NOT EXISTS (SELECT 1 FROM facts f WHERE f.fact_key=e.fact_key AND ${internalBenchmarkFact})
+      ) AS reuse_external_qualified_consumer_leases,
       (SELECT MIN(h.issued_at)::text FROM hive_leases h WHERE ${meaningfulExternalLease}) AS first_external_activity_at,
       (SELECT MAX(h.last_seen_at)::text FROM hive_leases h WHERE ${meaningfulExternalLease}) AS last_external_activity_at,
       (SELECT MAX(received_at)::text FROM observations_recent WHERE ${firstPartyObservation}) AS first_party_last_seen_at`, adoptionParams),
