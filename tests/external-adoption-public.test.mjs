@@ -18,7 +18,7 @@ test('external adoption endpoint exposes aggregates only with strict claim bound
   assert.match(publicAdoption, /qualified_cross_client_reuse_events/);
   assert.match(publicAdoption, /unique_humans_or_companies:\s*false/);
   assert.match(publicAdoption, /customer_monetary_savings:\s*false/);
-  assert.match(publicAdoption, /recurring_revenue:\s*false/);
+  assert.match(publicAdoption, /recurring_paid_income:\s*false/);
   assert.doesNotMatch(publicAdoption, /lease_id|client_key|independence_key|fact_key|source_url|observer_key/i);
   assert.match(index, /\/external-adoption\.json/);
 });
