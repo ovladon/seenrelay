@@ -15,7 +15,7 @@ function optionalText(value: unknown): string | null {
  * This endpoint deliberately exposes no lease IDs, client keys, network buckets,
  * fact keys, source URLs, observer keys, IP-derived material, or raw observations.
  * It is technical usage evidence only; it is not a unique-human/company, ROI,
- * willingness-to-pay, procurement, or revenue metric.
+ * willingness-to-pay, procurement, or paid income metric.
  */
 export async function getPublicExternalAdoptionSnapshot() {
   const adoption = await getAdminAdoptionData();
@@ -39,7 +39,7 @@ export async function getPublicExternalAdoptionSnapshot() {
       net_roi: false,
       willingness_to_pay: false,
       procurement: false,
-      recurring_revenue: false,
+      recurring_paid_income: false,
       market_liquidity: false,
       geography: false,
       client_only_local_first_usage_visible: false
