@@ -26,6 +26,7 @@ import { langfusePage } from './langfuse.js';
 import { trustDescriptor, trustPage } from './trust.js';
 import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
 import { getPublicStats } from './public-db.js';
+import { getPublicExternalAdoptionSnapshot } from './external-adoption.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
 import { dataPracticesDescriptor, dataPracticesPage } from './data-practices.js';
 import { privacyPage } from './privacy.js';
@@ -328,6 +329,11 @@ app.get('/data-practices.json', (c) => {
 app.get('/public-stats.json', async (c) => {
   c.header('cache-control', 'public, max-age=15, stale-while-revalidate=45');
   return c.json(await getPublicStats());
+});
+app.get('/external-adoption.json', async (c) => {
+  c.header('cache-control', 'public, max-age=30, stale-while-revalidate=90');
+  c.header('access-control-allow-origin', '*');
+  return c.json(await getPublicExternalAdoptionSnapshot());
 });
 app.get('/healthz', (c) => {
   const deploymentSha = process.env.VERCEL_GIT_COMMIT_SHA || null;
