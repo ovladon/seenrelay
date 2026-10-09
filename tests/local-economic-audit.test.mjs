@@ -35,7 +35,7 @@ test('local economic audit keeps a measured ledger non-commercial',async()=>{
     assert.equal(r.kind,'savings-ledger');
     assert.equal(r.status,'NO_AVOIDED_EXECUTIONS');
     assert.equal(r.evidence_boundary.independent_customer_roi_proven,false);
-    assert.equal(r.evidence_boundary.may_activate_billing,false);
+    assert.equal(r.evidence_boundary.may_enable_billing,false);
     assert.equal(r.report.access_and_billing.billing_enabled,false);
     assert.match(renderLocalEconomicAudit(r),/No customer ROI/);
   } finally { await fs.rm(tmp,{recursive:true,force:true}); }
