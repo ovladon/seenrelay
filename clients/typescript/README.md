@@ -1,3 +1,17 @@
+## One-command local economic audit (experimental source workflow)
+
+Use one command for a project or a **previously collected real trace**:
+
+```bash
+npx seenrelay audit . --json
+npx seenrelay audit exported-traces.otlp.json --json
+npx seenrelay audit exported-tool-observations.jsonl --json
+npx seenrelay audit fleet-savings-ledger.json --overhead-usd 0.14 --json
+```
+
+The command selects the existing guided static prescreen, strict OpenTelemetry/trace/     
+Langfuse census, or savings-ledger reporter based on explicit input format. It runs locally and uploads nothing. It does **not** generate paid traffic, invent repetition, prove external customer savings, automatically enable reuse, or activate billing. For unknown formats it fails closed and asks you to use a specific command. A trace census reports possible work, not verified net savings. Always compare local/source/provider-native solutions first.
+
 # SeenRelay JavaScript / TypeScript client
 
 **Avoid redundant expensive validation.**
