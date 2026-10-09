@@ -11,7 +11,7 @@ function esc(value: unknown): string {
 
 export function publicLandingPage(origin: string): string {
   const version = esc(publicProductFacts.install.client_version);
-  const scanCommand = esc(publicProductFacts.install.scan_command);
+  const auditCommand = esc('npx seenrelay audit .');
 
   return `<!doctype html>
 <html lang="en">
@@ -192,9 +192,9 @@ export function publicLandingPage(origin: string): string {
   <div>
     <div class="rv-eyebrow">START LOCALLY</div>
     <h2>One command. No source upload.</h2>
-    <p>The scanner is a local prescreen, not a savings verdict. Shadow measurement keeps the original authoritative call. If it finds a plausible candidate, instrument the narrowest supported path, run normal traffic in shadow, then keep SeenRelay only when the measured verdict and economics justify it.</p>
-    <div class="rv-code"><pre id="hero-scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="hero-scan-command">Copy</button></div>
-    <p class="rv-small">USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key currently required · static scan cannot authorize reuse.</p>
+    <p>The audit command scans a project locally or evaluates an existing compatible trace or savings ledger. A project scan is only a prescreen, and trace candidates are not proven savings. Keep the original authoritative calls during shadow measurement and deploy SeenRelay only if it beats the strongest applicable native control after overhead.</p>
+    <div class="rv-code"><pre id="hero-audit-command">${auditCommand}</pre><button class="rv-copy" type="button" data-copy-target="hero-audit-command">Copy</button></div>
+    <p class="rv-small">USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key currently required · local audit cannot authorize reuse.</p>
   </div>
   <div class="rv-actions">
     <a class="rv-button primary" href="/quickstart">Start locally</a>
