@@ -181,7 +181,7 @@ export function publicLandingPage(origin: string): string {
     <p>That is a valid result, not a failed sale.</p>
   </div>
   <div class="rv-stack">
-    <article><h3>Native control already wins</h3><p>Provider cache, ETag / 304, batching or a local exact cache removes the same cost more cheaply.</p></article>
+    <article><h3>Native control already wins</h3><p>When a source validator, local cache, provider feature or batch operation really removes the same cost more cheaply, leave SeenRelay out. A provider cache hit may still be billed.</p></article>
     <article><h3>The calls do not actually repeat</h3><p>Structural traffic is not enough. Exact compatible recurrence must exist.</p></article>
     <article><h3>The operation must stay independent</h3><p>Mutations and required independent samples remain outside generic reuse.</p></article>
     <article><h3>Audit disagrees</h3><p>A mismatch, contested evidence or unsafe freshness state keeps the original authoritative execution.</p></article>
