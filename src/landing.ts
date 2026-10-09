@@ -11,7 +11,7 @@ function esc(value: unknown): string {
 
 export function publicLandingPage(origin: string): string {
   const version = esc(publicProductFacts.install.client_version);
-  const scanCommand = esc(publicProductFacts.install.scan_command);
+  const auditCommand = esc(publicProductFacts.install.scan_command.replace(' scan', ' audit .'));
 
   return `<!doctype html>
 <html lang="en">
@@ -181,7 +181,7 @@ export function publicLandingPage(origin: string): string {
     <p>That is a valid result, not a failed sale.</p>
   </div>
   <div class="rv-stack">
-    <article><h3>Native control already wins</h3><p>Provider cache, ETag / 304, batching or a local exact cache removes the same cost more cheaply.</p></article>
+    <article><h3>Native control already wins</h3><p>When a source validator, local cache, provider feature or batch operation really removes the same cost more cheaply, leave SeenRelay out. A provider cache hit may still be billed.</p></article>
     <article><h3>The calls do not actually repeat</h3><p>Structural traffic is not enough. Exact compatible recurrence must exist.</p></article>
     <article><h3>The operation must stay independent</h3><p>Mutations and required independent samples remain outside generic reuse.</p></article>
     <article><h3>Audit disagrees</h3><p>A mismatch, contested evidence or unsafe freshness state keeps the original authoritative execution.</p></article>
@@ -192,9 +192,9 @@ export function publicLandingPage(origin: string): string {
   <div>
     <div class="rv-eyebrow">START LOCALLY</div>
     <h2>One command. No source upload.</h2>
-    <p>The scanner is a local prescreen, not a savings verdict. Shadow measurement keeps the original authoritative call. If it finds a plausible candidate, instrument the narrowest supported path, run normal traffic in shadow, then keep SeenRelay only when the measured verdict and economics justify it.</p>
-    <div class="rv-code"><pre id="hero-scan-command">${scanCommand}</pre><button class="rv-copy" type="button" data-copy-target="hero-scan-command">Copy</button></div>
-    <p class="rv-small">USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key currently required · static scan cannot authorize reuse.</p>
+    <p>The audit command scans a project locally or evaluates an existing compatible trace or savings ledger. A project scan is only a prescreen, and trace candidates are not proven savings. Shadow measurement keeps the original authoritative call. Deploy SeenRelay only if it beats the strongest applicable native control after overhead.</p>
+    <div class="rv-code"><pre id="hero-audit-command">${auditCommand}</pre><button class="rv-copy" type="button" data-copy-target="hero-audit-command">Copy</button></div>
+    <p class="rv-small">USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key currently required · local audit cannot authorize reuse.</p>
   </div>
   <div class="rv-actions">
     <a class="rv-button primary" href="/quickstart">Start locally</a>

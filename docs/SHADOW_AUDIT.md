@@ -111,6 +111,9 @@ Measure the best equivalent path first, including where applicable:
 
 If one of these answers the same user-relevant question more cheaply or more strongly, it wins.
 
+**Cost nuance: a provider cache hit is not always a free call.** For Firecrawl, its official [Fast Scraping](https://docs.firecrawl.dev/features/fast-scraping) guide states that a cached scrape response still consumes **1 credit per page**. Its [Billing](https://docs.firecrawl.dev/billing) rules list 1 base credit per returned scrape page, with additional charges for some options. Therefore compare: source-native direct retrieval; local or caller-owned artifact caching; Firecrawl provider cache with its *actual billed credits*; and any optional SeenRelay coordination. Do not assume a cached provider response avoids billed credits, and do not bypass mandatory fresh observations or protected cache-bypass semantics. A valid SeenRelay saving requires a naturally repeated identical, safely reusable result and costed provider calls that the best eligible native/local mechanism did not already eliminate.
+
+
 ### 3. Would hypothetical reuse preserve the authoritative outcome?
 
 During Shadow Proof every original validation still runs. Any genuine mismatch is a safety failure for that workload/policy and blocks admission.

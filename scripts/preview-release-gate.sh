@@ -77,8 +77,8 @@ client_version=$(node -p "require('./public/product-facts.json').install.client_
 grep -q 'Decide when you actually need to look again.' /tmp/site.html
 grep -q 'SeenRelay sits around expensive read-only calls' /tmp/site.html
 grep -q 'Start locally' /tmp/site.html
-grep -q 'id="hero-scan-command"' /tmp/site.html
-grep -q 'npx seenrelay scan' /tmp/site.html
+grep -q 'id="hero-audit-command"' /tmp/site.html
+grep -q 'npx seenrelay audit .' /tmp/site.html
 grep -q '\$1.44' /tmp/site.html
 grep -q '79.61%' /tmp/site.html
 grep -q 'Real live event monitoring' /tmp/site.html
