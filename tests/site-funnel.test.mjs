@@ -14,7 +14,7 @@ test('homepage states the economic outcome immediately and makes self-serve loca
   assert.match(landing, /Install with an agent/);
   assert.match(landing, /publicProductFacts\.install\.scan_command/);
   assert.match(landing, /project scan is only a prescreen/i);
-  assert.match(landing, /original authoritative calls during shadow measurement/i);
+  assert.match(landing, /Shadow measurement keeps the original authoritative call/i);
   assert.match(landing, /Controlled proof is not customer savings/i);
   assert.match(landing, /Currently free/i);
   assert.match(landing, /Savings Report/i);\n  assert.match(landing, /hero-audit-command/);
