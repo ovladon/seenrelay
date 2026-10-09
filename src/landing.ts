@@ -11,7 +11,7 @@ function esc(value: unknown): string {
 
 export function publicLandingPage(origin: string): string {
   const version = esc(publicProductFacts.install.client_version);
-  const auditCommand = esc(publicProductFacts.install.scan_command.replace(/\\bscan\\b/, 'audit .'));
+  const auditCommand = esc(publicProductFacts.install.scan_command.replace(' scan', ' audit .'));
 
   return `<!doctype html>
 <html lang="en">
