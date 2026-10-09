@@ -17,7 +17,8 @@ test('homepage states the economic outcome immediately and makes self-serve loca
   assert.match(landing, /Shadow measurement keeps the original authoritative call/i);
   assert.match(landing, /Controlled proof is not customer savings/i);
   assert.match(landing, /Currently free/i);
-  assert.match(landing, /Savings Report/i);\n  assert.match(landing, /hero-audit-command/);
+  assert.match(landing, /Savings Report/i);
+  assert.match(landing, /hero-audit-command/);
   assert.match(landing, /invoice, bill, charge or payment receipt/i);
   assert.doesNotMatch(landing, /Commercial pilot/);
 });
