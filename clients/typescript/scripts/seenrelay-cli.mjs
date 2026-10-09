@@ -8,12 +8,13 @@ import { analyzeFleetTraceFile, renderFleetTraceReport } from './fleet-trace-cen
 import { analyzeOtelFleetTraceFile } from './otel-trace-census-lib.mjs';
 import { analyzeLangfuseObservationsFile, renderLangfuseCensusReport } from './langfuse-census-lib.mjs';
 import { buildSavingsReportFromFile, renderSavingsReport } from './savings-report-lib.mjs';
+import { runLocalEconomicAudit, renderLocalEconomicAudit } from './local-economic-audit-lib.mjs';
 
 function help() {
   return `SeenRelay CLI
 
 Usage:
-  seenrelay scan [path] [--json]
+  seenrelay audit [project-path|trace.json|trace.jsonl|otel.json|langfuse.json|ledger.json] [--json] [--overhead-usd N]\n  seenrelay scan [path] [--json]
   seenrelay adopt-plan [path] [--json]
   seenrelay guide [path] [--json]
   seenrelay trace-census <trace.json|trace.jsonl> [--json]
@@ -54,7 +55,16 @@ function optionValue(name) {
   return args[i+1];
 }
 
-if (command === 'scan') {
+if (command === 'audit') {
+  const inputPath=path.resolve(positional[0]??process.cwd());
+  const overheadRaw=optionValue('--overhead-usd');
+  const overheadUsd=overheadRaw===null?null:Number(overheadRaw);
+  if(overheadRaw!==null && (!Number.isFinite(overheadUsd)||overheadUsd<0)) {
+    throw new TypeError('--overhead-usd must be a non-negative finite number');
+  }
+  const report=await runLocalEconomicAudit(inputPath,{overheadUsd});
+  process.stdout.write(json?`${JSON.stringify(report,null,2)}\\n`:renderLocalEconomicAudit(report));
+} else if (command === 'scan') {
   const root = path.resolve(positional[0] ?? process.cwd());
   const report = await scanRepository(root);
   process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : renderHumanReport(report));
