@@ -6,13 +6,13 @@ const read = (p) => fs.readFileSync(new URL(`../${p}`, import.meta.url), 'utf8')
 
 test('README starts with outcome-first self-serve flow and preserves behavior-safe proof', () => {
   const t = read('README.md');
-  const outcome = t.indexOf('Decide when you actually need to look again');
+  const outcome = t.indexOf('Find wasted AI spending before you pay again');
   const scan = t.indexOf('npx seenrelay scan');
   const architecture = t.indexOf('SeenRelay is a provider-independent reuse layer');
   assert.ok(outcome >= 0 && scan > outcome && architecture > scan);
   assert.match(t, /## What SeenRelay is deciding/);
   assert.match(t, /I already know X/);
-  assert.match(t, /Decide when you actually need to look again/);
+  assert.match(t, /Find wasted AI spending before you pay again/);
   assert.match(t, /npx seenrelay scan/);
   assert.match(t, /stronger native control already wins/);
   assert.match(t, /starter-facts\.json/);
