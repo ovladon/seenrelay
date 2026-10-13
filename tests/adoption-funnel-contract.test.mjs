@@ -79,7 +79,7 @@ test('Developer path advances from Ambient screening to a deterministic falsifia
 
   assert.match(landing, /href="\/quickstart"/);
   assert.match(landing, /publicProductFacts\.install\.scan_command/);
-  assert.match(landing, /One command\. No source upload\./);
+  assert.ok(landing.includes('One command. Realized savings start at $0.'));
   assert.match(landing, /Start locally/);
   assert.match(landing, /Install with an agent/);
   assert.match(quickstart, /id="scan"/);
