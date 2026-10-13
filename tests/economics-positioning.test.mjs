@@ -40,7 +40,7 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.match(economics, /Operational overhead/);
   assert.match(economics, /Outside the target:/);
   assert.doesNotMatch(economics, /verifiedBenchmarkHtml\(|MEASURED · FIRST-PARTY SMOKE BENCHMARK|Firecrawl|OpenAI Web Search|provider calls avoided/i);
-  assert.match(landing, /Decide when you actually need to look again\./);
+  assert.match(landing, /Find wasted AI spending before you pay again\./);
   assert.match(landing, /\$1\.44/);
   assert.match(landing, /79\.61%/);
   assert.match(landing, /Real live event monitoring/i);

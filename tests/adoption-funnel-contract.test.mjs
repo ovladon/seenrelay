@@ -79,7 +79,7 @@ test('Developer path advances from Ambient screening to a deterministic falsifia
 
   assert.match(landing, /href="\/quickstart"/);
   assert.match(landing, /publicProductFacts\.install\.scan_command/);
-  assert.match(landing, /One command\. No source upload\./);
+  assert.ok(landing.includes('One command. Realized savings start at $0.'));
   assert.match(landing, /Start locally/);
   assert.match(landing, /Install with an agent/);
   assert.match(quickstart, /id="scan"/);
@@ -139,7 +139,7 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(gate, /prediction_used_to_create_observation == false/);
   assert.match(gate, /npm install .*seenrelay@\$VERSION/);
   assert.match(gate, /seenrelay scan sample --json/);
-  assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'Decide when you actually need to look again\.'/);
+  assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'Find wasted AI spending before you pay again\.'/);
   assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'Start locally'/);
   assert.match(gate, /assert_contains "\$RUNNER_TEMP\/home\.html" 'npx seenrelay scan'/);
   assert.match(gate, /Missing Production first-use invariant/);
