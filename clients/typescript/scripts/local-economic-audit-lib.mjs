@@ -111,7 +111,7 @@ export function renderLocalEconomicAudit(result) {
   } else if(result.kind==='otlp'||result.kind==='fleet-trace') {
     const opportunities=report.successful_leader_overlap_opportunities??0;
     const priced=report.potential_avoided_costed_events??0;
-    evidence.push('Observed safe in-flight overlap opportunities: '+opportunities);
+    evidence.push('Observed model-eligible in-flight overlap opportunities: '+opportunities);
     evidence.push('Gross potential on costed opportunities: '+(priced>0?money(report.gross_potential_avoided_cost_usd):'unknown (no priced eligible overlap)'));
     evidence.push('Priced opportunity coverage: '+priced+'/'+opportunities);
     evidence.push('Actual savings: not measured (trace analysis never skips calls)');
