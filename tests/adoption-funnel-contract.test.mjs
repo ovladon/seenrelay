@@ -173,3 +173,9 @@ test('adoption automation verifies the exact public path and external discovery 
   assert.match(radar, /registry\.npmjs\.org\/seenrelay/);
   assert.match(radar, /pypi\.org\/pypi\/seenrelay/);
 });
+test('distribution radar checks the actual Anthropic community marketplace', () => {
+  const radar = read('scripts', 'distribution-radar.mjs');
+  const http = read('scripts', 'distribution-radar-http.mjs');
+  assert.match(radar, /lookupClaudeCommunityMarketplace/);
+  assert.match(http, /raw\\.githubusercontent\\.com\\/anthropics\\/claude-plugins-community/);
+});
