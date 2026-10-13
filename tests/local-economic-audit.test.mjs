@@ -49,3 +49,54 @@ test('do not silently reinterpret an unsupported file as a zero-savings audit',a
     await assert.rejects(runLocalEconomicAudit(file),/unsupported audit format/);
   } finally { await fs.rm(tmp,{recursive:true,force:true}); }
 });
+
+test('first-value meter separates detected opportunity from realized savings',()=>{
+  const common={status:'POTENTIAL_REQUIRES_NATIVE_AND_SHADOW_EVIDENCE',next_action:'Measure native controls first.'};
+  const project=renderLocalEconomicAudit({...common,kind:'project-prescreen',report:{scan:{candidate_files:3}}});
+  assert.ok(project.includes('Candidate files: 3'));
+  assert.ok(project.includes('Cost opportunity: not measured'));
+  assert.ok(!project.includes('Measured net savings:'));
+
+  const fleet=renderLocalEconomicAudit({...common,kind:'fleet-trace',report:{
+    successful_leader_overlap_opportunities:4,
+    potential_avoided_costed_events:2,
+    gross_potential_avoided_cost_usd:1.25
+  }});
+  assert.ok(fleet.includes('Gross potential on costed opportunities: $1.250000'));
+  assert.ok(fleet.includes('Priced opportunity coverage: 2/4'));
+  assert.ok(fleet.includes('Actual savings: not measured'));
+  assert.ok(fleet.includes('before native/local alternatives'));
+
+  const unpriced=renderLocalEconomicAudit({...common,kind:'otlp',report:{
+    successful_leader_overlap_opportunities:3,
+    potential_avoided_costed_events:0,
+    gross_potential_avoided_cost_usd:0
+  }});
+  assert.ok(unpriced.includes('unknown (no priced eligible overlap)'));
+  assert.ok(!unpriced.includes('Gross potential on costed opportunities: $0.000000'));
+
+  const langfuse=renderLocalEconomicAudit({...common,kind:'langfuse',report:{
+    exact_repeat_starts:5,recorded_cost_on_exact_repeat_starts_usd:0.75
+  }});
+  assert.ok(langfuse.includes('Recorded spend on exact repeat starts: $0.750000'));
+  assert.ok(langfuse.includes('repeat spend is not avoidable spend'));
+});
+
+test('first-value meter displays actual saved work but unknown net when overhead is absent',()=>{
+  const r=renderLocalEconomicAudit({
+    kind:'savings-ledger',
+    status:'GROSS_SAVINGS_MEASURED_NET_UNKNOWN',
+    next_action:'Compare best native baseline.',
+    report:{evidence:{
+      actual_avoided_executions:3,
+      gross_avoided_cost_usd:0.42,
+      gross_cost_coverage:'full',
+      seenrelay_overhead_usd:null,
+      net_savings_usd:null
+    }}
+  });
+  assert.ok(r.includes('Actual avoided executions: 3'));
+  assert.ok(r.includes('Measured gross avoided cost: $0.420000'));
+  assert.ok(r.includes('Measured net savings: unknown'));
+  assert.ok(!r.includes('Measured net savings: $0.420000'));
+});

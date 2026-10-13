@@ -9,6 +9,8 @@ npx seenrelay audit exported-tool-observations.jsonl --json
 npx seenrelay audit fleet-savings-ledger.json --overhead-usd 0.14 --json
 ```
 
+The first-value meter in the human-readable audit output shows candidate files or observed repeated work immediately. Exported traces show **gross potential** only when the underlying cost is explicitly provided; a measured active savings ledger shows actual avoided executions and gross avoided cost, with **net savings unknown until overhead is measured**. It never attributes savings merely to installing SeenRelay. Use `--json` for the underlying evidence and exact claim boundaries.
+
 The command selects the existing guided static prescreen, strict OpenTelemetry/trace/     
 Langfuse census, or savings-ledger reporter based on explicit input format. It runs locally and uploads nothing. It does **not** generate paid traffic, invent repetition, prove external customer savings, automatically enable reuse, or activate billing. For unknown formats it fails closed and asks you to use a specific command. A trace census reports possible work, not verified net savings. Always compare local/source/provider-native solutions first.
 
