@@ -134,3 +134,37 @@ export async function lookupOfficialMcpRegistryVersion({
     }
   );
 }
+
+/** Check public Anthropic directory mirror, independently of dashboard Published status. */
+export async function lookupClaudeCommunityMarketplace({
+  name = 'seenrelay', repository = 'ovladon/seenrelay', request = requestWithRetry
+} = {}) {
+  const url = 'https://raw.githubusercontent.com/anthropics/claude-plugins-community/main/.claude-plugin/marketplace.json';
+  let body;
+  try {
+    body = await request(url, { json: true, attempts: 2, timeoutMs: 20000 });
+  } catch (error) {
+    throw new RegistryProbeError('upstream_unavailable',
+      `Claude community marketplace index could not be read: ${errorMessage(error)}`);
+  }
+  if (!Array.isArray(body?.plugins)) {
+    throw new RegistryProbeError('upstream_unavailable',
+      'Claude community marketplace index returned an unrecognized shape');
+  }
+  const matches = body.plugins.filter((entry) => entry?.name === name);
+  if (matches.length === 0) {
+    throw new RegistryProbeError('semantic_drift',
+      `Published plugin ${name} is not in the public Claude community marketplace mirror`);
+  }
+  const correct = matches.find((entry) => {
+    const src = entry?.source;
+    const locators = [typeof src === 'string' ? src : '', src?.url, src?.repo, entry?.repository, entry?.homepage];
+    return locators.some((value) => typeof value === 'string' &&
+      (value === repository || value.includes(`github.com/${repository}`)));
+  });
+  if (!correct) {
+    throw new RegistryProbeError('semantic_drift',
+      `Claude community plugin ${name} exists but does not point to ${repository}`);
+  }
+  return { mode: 'community-mirror', detail: `${name} indexed with canonical ${repository} source` };
+}

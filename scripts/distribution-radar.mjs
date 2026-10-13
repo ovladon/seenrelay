@@ -3,6 +3,7 @@ import {
   RegistryProbeError,
   containsObject,
   lookupOfficialMcpRegistryVersion,
+  lookupClaudeCommunityMarketplace,
   requestWithRetry as request
 } from './distribution-radar-http.mjs';
 
@@ -128,6 +129,22 @@ await run('glama', 'Glama connector discovery', 'advisory', async () => {
     ? 'canonical listing reachable and SeenRelay remains discoverable in Glama connector search'
     : 'canonical listing reachable; SeenRelay remains discoverable in Glama connector search despite hydrated canonical HTML';
 });
+
+
+try {
+  const result = await lookupClaudeCommunityMarketplace({});
+  checks.push({ id: 'claude-community-marketplace',
+    label: 'Anthropic Claude Community marketplace', severity: 'advisory',
+    status: 'ok', detail: result.detail });
+} catch (error) {
+  const upstreamUnavailable = error instanceof RegistryProbeError && error.kind === 'upstream_unavailable';
+  checks.push({ id: 'claude-community-marketplace',
+    label: 'Anthropic Claude Community marketplace', severity: 'advisory',
+    status: 'fail',
+    detail: upstreamUnavailable
+      ? `inconclusive upstream availability; listing absence not inferred: ${error.message}`
+      : (error instanceof Error ? error.message : String(error)) });
+}
 
 await run('agent-plugins-directory', 'Agent Plugins Directory', 'advisory', async () => {
   const text = await request('https://agent-plugins.directory/ovladon/seenrelay');

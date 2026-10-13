@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   RegistryProbeError,
   lookupOfficialMcpRegistryVersion,
+  lookupClaudeCommunityMarketplace,
   requestWithRetry
 } from '../scripts/distribution-radar-http.mjs';
 
@@ -118,4 +119,38 @@ test('dual transport failure is upstream unavailable, not SeenRelay semantic dri
       return true;
     }
   );
+});
+
+test('Claude marketplace exact listing is a positive signal, not an adoption claim', async () => {
+  const found = await lookupClaudeCommunityMarketplace({
+    request: async (url, options) => {
+      assert.match(url, /claude-plugins-community/);
+      assert.equal(options.json, true);
+      return { plugins: [
+        { name: 'other', source: { url: 'https://github.com/other/other' } },
+        { name: 'seenrelay', source: { url: 'https://github.com/ovladon/seenrelay', sha: 'a'.repeat(40) } }
+      ] };
+    }
+  });
+  assert.equal(found.mode, 'community-mirror');
+});
+
+test('valid community index with missing SeenRelay means semantic drift', async () => {
+  await assert.rejects(lookupClaudeCommunityMarketplace({
+    request: async () => ({ plugins: [{ name: 'unrelated' }] })
+  }), (e) => e instanceof RegistryProbeError && e.kind === 'semantic_drift');
+});
+
+test('community index with same name and wrong source is not a pass', async () => {
+  await assert.rejects(lookupClaudeCommunityMarketplace({
+    request: async () => ({ plugins: [{ name: 'seenrelay',
+      source: { url: 'https://github.com/other/seenrelay' } }] })
+  }), (e) => e instanceof RegistryProbeError && e.kind === 'semantic_drift');
+});
+
+test('upstream failure or unrecognized shape does not imply absent listing', async () => {
+  for (const request of [async () => { throw new Error('timeout'); }, async () => ({ metadata: {} })]) {
+    await assert.rejects(lookupClaudeCommunityMarketplace({ request }),
+      (e) => e instanceof RegistryProbeError && e.kind === 'upstream_unavailable');
+  }
 });
