@@ -98,13 +98,46 @@ export async function runLocalEconomicAudit(path, {overheadUsd=null}={}) {
 }
 
 export function renderLocalEconomicAudit(result) {
+  const report=result.report;
+  const money=(v)=>typeof v==='number'&&Number.isFinite(v)?'$'+v.toFixed(6):'unknown';
+  const evidence=[
+    '',
+    'First-value meter (local evidence; not a bill):'
+  ];
+  if(result.kind==='project-prescreen') {
+    evidence.push('Candidate files: '+(report.scan?.candidate_files??'unknown'));
+    evidence.push('Cost opportunity: not measured (static project scan only)');
+    evidence.push('Actual savings: not measured (no provider execution analyzed)');
+  } else if(result.kind==='otlp'||result.kind==='fleet-trace') {
+    const opportunities=report.successful_leader_overlap_opportunities??0;
+    const priced=report.potential_avoided_costed_events??0;
+    evidence.push('Observed safe in-flight overlap opportunities: '+opportunities);
+    evidence.push('Gross potential on costed opportunities: '+(priced>0?money(report.gross_potential_avoided_cost_usd):'unknown (no priced eligible overlap)'));
+    evidence.push('Priced opportunity coverage: '+priced+'/'+opportunities);
+    evidence.push('Actual savings: not measured (trace analysis never skips calls)');
+    evidence.push('Potential is before native/local alternatives, result equivalence and SeenRelay overhead.');
+  } else if(result.kind==='langfuse') {
+    evidence.push('Observed exact repeat starts: '+(report.exact_repeat_starts??0));
+    evidence.push('Recorded spend on exact repeat starts: '+money(report.recorded_cost_on_exact_repeat_starts_usd));
+    evidence.push('Actual savings: not measured (repeat spend is not avoidable spend)');
+    evidence.push('Tool cost coverage and read-only/native eligibility require review.');
+  } else if(result.kind==='savings-ledger') {
+    const e=report.evidence;
+    evidence.push('Actual avoided executions: '+e.actual_avoided_executions);
+    evidence.push('Measured gross avoided cost: '+money(e.gross_avoided_cost_usd)+' ('+e.gross_cost_coverage+' coverage)');
+    evidence.push('Measured SeenRelay overhead: '+money(e.seenrelay_overhead_usd));
+    evidence.push('Measured net savings: '+money(e.net_savings_usd));
+    evidence.push('Savings still require strongest native/SOTA and independent customer evidence before commercial claims.');
+  }
   return [
     'SeenRelay local economic audit',
     '==============================',
     'Kind: '+result.kind,
     'Status: '+result.status,
+    ...evidence,
+    '',
     'Next step: '+result.next_action,
     '',
     'This audit is local and non-commercial. No customer ROI, USE verdict, or billing authority is implied.'
-  ].join('\n')+'\n';
+  ].join('\\n')+'\\n';
 }
