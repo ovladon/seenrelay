@@ -139,5 +139,5 @@ export function renderLocalEconomicAudit(result) {
     'Next step: '+result.next_action,
     '',
     'This audit is local and non-commercial. No customer ROI, USE verdict, or billing authority is implied.'
-  ].join('\\n')+'\\n';
+  ].join('\n')+'\n';
 }
