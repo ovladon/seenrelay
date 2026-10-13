@@ -18,7 +18,7 @@ export function publicLandingPage(origin: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="SeenRelay measures repeated expensive read-only execution, keeps stronger native controls first, and avoids only the work that proves safe positive value.">
+<meta name="description" content="Find unnecessary AI-agent spending with a free local audit. Measure repeated paid reads, prefer native controls first, and only reuse work after safety and net savings are established.">
 <link rel="canonical" href="${origin}/">
 <link rel="service-desc" type="application/json" href="${origin}/service.json" title="SeenRelay machine descriptor">
 <link rel="service-desc" type="application/json" href="${origin}/openapi.json" title="SeenRelay OpenAPI description">
@@ -29,11 +29,11 @@ export function publicLandingPage(origin: string): string {
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SeenRelay — Decide when you actually need to look again.">
-<meta property="og:description" content="Measure what repeats, keep native controls first, and skip only the calls that earn a safe economic shortcut.">
+<meta property="og:title" content="SeenRelay — Find wasted AI spending before you pay again.">
+<meta property="og:description" content="Audit recurring paid reads. Avoid only qualified work, measure realized savings, and keep your existing authoritative fallback.">
 <meta property="og:url" content="${origin}/">
 <meta name="twitter:card" content="summary">
-<title>SeenRelay — Decide when you actually need to look again.</title>
+<title>SeenRelay — Find wasted AI spending before you pay again.</title>
 <link rel="stylesheet" href="/revamp.css">
 <link rel="stylesheet" href="/sota.css">
 <link rel="stylesheet" href="/revamp-factual.css">
@@ -56,7 +56,7 @@ export function publicLandingPage(origin: string): string {
     <summary>Menu</summary>
     <nav aria-label="Mobile navigation"><a href="#how">How it works</a><a href="/clients">Integrations</a><a href="/proof">Proof</a><a href="/trust">Trust</a><a href="/quickstart">Docs</a></nav>
   </details>
-  <div class="rv-nav-actions"><a class="rv-button primary" href="#start">Start locally</a></div>
+  <div class="rv-nav-actions"><a class="rv-button primary" href="#start">Audit my AI costs</a></div>
 </header>
 
 <main id="main-content">
@@ -64,11 +64,11 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-hero rv-funnel-hero" id="what">
   <div>
     <div class="rv-kicker"><i></i><span>EXECUTION ECONOMICS · CLIENT ${version}</span></div>
-    <h1>Decide when you actually need to look again.</h1>
-    <p class="rv-lead">SeenRelay sits around expensive read-only calls, measures what actually repeats, keeps stronger native controls first, and avoids only the work that proves worth avoiding.</p>
+    <h1>Find wasted AI spending before you pay again.</h1>
+    <p class="rv-lead">Audit expensive read-only calls in your AI agents. SeenRelay measures what actually repeats, prefers cheaper native controls, and helps avoid work only when safety and net value are supported by evidence.</p>
     <div class="rv-actions rv-actions-spaced">
-      <a class="rv-button primary" href="#start">Start locally</a>
-      <a class="rv-button" href="/clients#instrument">Install with an agent</a>
+      <a class="rv-button primary" href="#start">Audit my AI costs</a>
+      <a class="rv-button" href="/clients#instrument">Let my agent audit</a>
     </div>
     <div class="rv-proofline" aria-label="SeenRelay operating boundary">
       <span>local first</span><span>native controls first</span><span>fail open</span><span>exact read-only paths</span><span>remove if net value ≤ 0</span>
@@ -191,10 +191,10 @@ export function publicLandingPage(origin: string): string {
 <section class="rv-shell rv-final" id="start">
   <div>
     <div class="rv-eyebrow">START LOCALLY</div>
-    <h2>One command. No source upload.</h2>
+    <h2>One command. Realized savings start at $0.</h2>
     <p>The audit command scans a project locally or evaluates an existing compatible trace or savings ledger. A project scan is only a prescreen, and trace candidates are not proven savings. Shadow measurement keeps the original authoritative call. Deploy SeenRelay only if it beats the strongest applicable native control after overhead.</p>
     <div class="rv-code"><pre id="hero-audit-command">${auditCommand}</pre><button class="rv-copy" type="button" data-copy-target="hero-audit-command">Copy</button></div>
-    <p class="rv-small">USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key currently required · local audit cannot authorize reuse.</p>
+    <p class="rv-small">Potential savings are not money saved. Realized savings remain $0 until paid work is actually avoided and measured. USE / DO NOT USE / INSUFFICIENT EVIDENCE · no SeenRelay API key currently required · local audit cannot authorize reuse.</p>
   </div>
   <div class="rv-actions">
     <a class="rv-button primary" href="/quickstart">Start locally</a>
