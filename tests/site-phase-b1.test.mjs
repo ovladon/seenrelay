@@ -23,7 +23,7 @@ test('homepage follows a short human journey from outcome to automatic loop to p
   const ids = ['what', 'how', 'where', 'proof', 'start'].map((id) => landing.indexOf(`id="${id}"`));
   assert.ok(ids.every((x) => x >= 0));
   assert.ok(ids.every((x, i) => i === 0 || x > ids[i - 1]));
-  assert.match(landing, /Decide when you actually need to look again\./);
+  assert.match(landing, /Find wasted AI spending before you pay again\./);
   assert.match(landing, /Start locally/i);
   assert.match(landing, /Observe\. Learn\. Decide\. Savings Report\./i);
   assert.match(landing, /Controlled proof is not customer savings/i);
@@ -85,7 +85,7 @@ test('homepage visual system remains responsive, accessible and dependency free'
 });
 
 test('preview gate enforces the concise savings homepage and bounded proof', () => {
-  for (const marker of ['Decide when you actually need to look again.', 'Start locally', '$1.44', '79.61%', 'Real live event monitoring', 'Controlled proof is not customer savings', 'Shadow measurement keeps the original authoritative call']) {
+  for (const marker of ['Find wasted AI spending before you pay again.', 'Start locally', '$1.44', '79.61%', 'Real live event monitoring', 'Controlled proof is not customer savings', 'Shadow measurement keeps the original authoritative call']) {
     assert.ok(previewGate.includes(marker), `preview gate must require: ${marker}`);
   }
   assert.match(previewGate, /grep -q '79\.61%' \/tmp\/site\.html/);
