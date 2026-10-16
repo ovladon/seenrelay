@@ -12,7 +12,7 @@ function oneOf(name, value, allowed) {
 }
 
 export function buildAdoptionReportPayload(input, seenrelayVersion) {
-  if (typeof seenrelayVersion !== 'string' || !/^\\d+\\.\\d+\\.\\d+(?:[+-][0-9A-Za-z.-]+)?$/.test(seenrelayVersion)) {
+  if (typeof seenrelayVersion !== 'string' || !/^\d+\.\d+\.\d+(?:[+-][0-9A-Za-z.-]+)?$/.test(seenrelayVersion)) {
     throw new TypeError('seenrelay version is invalid');
   }
   return {
