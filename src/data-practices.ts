@@ -14,11 +14,12 @@ export function dataPracticesDescriptor(origin: string) {
       observation_request_processing: ['value in request memory for deterministic fingerprinting', 'timestamps', 'optional evidence fingerprint', 'optional source validator'],
       provenance: ['privacy-salted observer identifier', 'assurance class', 'optional proof fingerprint'],
       hive: ['privacy-salted operational client fingerprint', 'optional server-verified first-party classification derived from a short-lived signed marker', 'privacy-salted conservative reuse-independence bucket', 'lease state', 'aggregate contribution/reuse counters'],
-      aggregate_metrics: ['CHECK/OBSERVE outcomes', 'useful reuse', 'lease counts', 'MCP initialize/tools/list aggregate protocol-interest events']
+      aggregate_metrics: ['CHECK/OBSERVE outcomes', 'useful reuse', 'lease counts', 'MCP initialize/tools/list aggregate protocol-interest events', 'explicit opt-in adoption reports aggregated by day/version/integration/deployment/mode/verdict/coarse workload class']
     },
     application_persists: {
       observation_evidence: ['deterministic value fingerprint', 'timestamps', 'pseudonymous provenance', 'optional evidence fingerprint', 'optional source validator'],
-      fact_state: ['fact identity metadata', 'current/previous value fingerprints', 'freshness timestamps', 'observation counters']
+      fact_state: ['fact identity metadata', 'current/previous value fingerprints', 'freshness timestamps', 'observation counters'],
+      opt_in_adoption_reporting: ['daily aggregate count', 'SeenRelay version', 'integration class', 'local/hosted/private-L1 deployment class', 'shadow/active mode', 'USE/DO NOT USE/INSUFFICIENT EVIDENCE verdict', 'coarse workload class']
     },
     legacy_storage: 'Active Production raw-value columns have been purged, and database constraints prevent raw submitted values from being persisted there. Historical database branches or provider recovery snapshots may retain earlier state until removed under backup or retention controls.',
     shared_response_boundary: 'CHECK returns comparison status, value fingerprints and bounded evidence metadata; it does not return another observer\'s submitted raw value.',
