@@ -34,6 +34,7 @@ import { starterFactsDescriptor, starterFactsPage } from './starter-facts.js';
 import { productFactsForOrigin } from './public-facts-view.js';
 import type { CheckRequest, ObserveRequest } from './types.js';
 import { maintenanceCron } from './maintenance.js';
+import { adoptionAtlasDistributionCron } from './adoption-atlas-distribution.js';
 import { agentSkillMarkdown, agentSkillIndex } from '../shared/agent-skill.mjs';
 import { auditPublicRoot } from './readiness.js';
 import { readinessPresentationPage, readinessSurfaceDescriptor } from './readiness-presentation.js';
@@ -359,6 +360,7 @@ app.get('/openapi.json', (c) => { c.header('cache-control', 'public, max-age=360
 app.all('/mcp', (c) => handleMcp(c.req.raw));
 
 app.get('/internal/maintenance', (c) => maintenanceCron(c.req.raw));
+app.get('/internal/adoption-atlas-refresh', (c) => adoptionAtlasDistributionCron(c.req.raw));
 
 app.get('/admin', (c) => adminPage(c.req.raw));
 app.post('/admin/login', async (c) => {
