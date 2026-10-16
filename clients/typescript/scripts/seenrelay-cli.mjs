@@ -72,7 +72,7 @@ if (command === 'audit') {
     throw new TypeError('--overhead-usd must be a non-negative finite number');
   }
   const report=await runLocalEconomicAudit(inputPath,{overheadUsd});
-  process.stdout.write(json?`${JSON.stringify(report,null,2)}\\n`:renderLocalEconomicAudit(report));
+  process.stdout.write(json?`${JSON.stringify(report,null,2)}\n`:renderLocalEconomicAudit(report));
 } else if (command === 'scan') {
   const root = path.resolve(positional[0] ?? process.cwd());
   const report = await scanRepository(root);
@@ -120,10 +120,10 @@ if (command === 'audit') {
   if(args.includes('--share')) {
     const receipt=await shareAdoptionReport(payload);
     const result={schema_version:'seenrelay-adoption-report-result-v1',shared:true,network_contact:true,payload,privacy_boundary:boundary,receipt};
-    process.stdout.write(json ? `${JSON.stringify(result,null,2)}\\n` : renderAdoptionReport(result));
+    process.stdout.write(json ? `${JSON.stringify(result,null,2)}\n` : renderAdoptionReport(result));
   } else {
     const result={schema_version:'seenrelay-adoption-report-result-v1',shared:false,network_contact:false,payload,privacy_boundary:boundary};
-    process.stdout.write(json ? `${JSON.stringify(result,null,2)}\\n` : renderAdoptionReport(result));
+    process.stdout.write(json ? `${JSON.stringify(result,null,2)}\n` : renderAdoptionReport(result));
   }
 } else if (command === 'savings-report') {
   if (!positional[0]) {

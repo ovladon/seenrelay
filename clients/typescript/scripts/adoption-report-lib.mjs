@@ -67,5 +67,5 @@ export function renderAdoptionReport(result) {
       : 'Shared: no — preview only. Add --share to opt in.',
     'No actor ID, repository, filename, prompt, response, source URL, fact/value or customer identity is included.'
   ];
-  return lines.join('\\n') + '\\n';
+  return lines.join('\n') + '\n';
 }
