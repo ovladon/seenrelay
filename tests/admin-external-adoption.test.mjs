@@ -66,6 +66,8 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.doesNotMatch(admin, /\n\s+unknown_rate:checks\?unknown\/checks/);
   assert.match(admin, /client_only_local_first:'not observable by the hosted service/);
   assert.match(admin, /hidden_client_telemetry:false/);
+  assert.match(admin, /adoption_atlas_v1/);
+  assert.match(admin, /triangulates hosted, voluntary and public distribution evidence/);
   assert.match(admin, /external_actor_count:'pseudonymous lease\/activity classification only; not a unique human or agent count'/);
 
   assert.match(reference, /\/v1\/observe/);
@@ -112,6 +114,8 @@ test('Control Room distinguishes hosted protocol activity from discovery, first-
   assert.doesNotMatch(ui, /s\.derived\?\.qualified_reuse_rate/);
   assert.doesNotMatch(ui, /derived\?\.unknown_rate/);
   assert.match(ui, /classification is temporarily unavailable/);
+  assert.match(ui, /Adoption Atlas v1 · triangulated evidence/);
+  assert.match(ui, /Unique users \/ companies/);
 });
 
 test('Preview gate resolves the core deployment and tolerates a non-deploying PR tail', () => {

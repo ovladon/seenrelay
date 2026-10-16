@@ -4,6 +4,7 @@ import { hiveSigningRotationState } from './hive.js';
 import { internalTelemetryClassifierState } from './traffic-classification.js';
 import { runHiveHousekeeping } from './reuse.js';
 import { evaluateMaintenanceAutopilot } from './maintenance-autopilot.js';
+import { runAdoptionAtlasDistributionCycle } from './adoption-atlas-distribution.js';
 
 function headers(extra: Record<string,string>={}) {
   return new Headers({'cache-control':'no-store','x-content-type-options':'nosniff',...extra});
@@ -57,11 +58,21 @@ export async function collectMaintenanceAutopilot() {
 export async function runMaintenanceAutopilotCycle() {
   const cfg=config();
   const housekeeping=await runHiveHousekeeping(cfg.hiveLeaseRetentionSeconds,cfg.hiveReuseRetentionSeconds,cfg.retentionSeconds);
+  let adoptionAtlasDistribution: unknown;
+  try {
+    adoptionAtlasDistribution=await runAdoptionAtlasDistributionCycle();
+  } catch (error) {
+    console.error(JSON.stringify({event:'adoption_atlas_distribution_refresh_error',error:error instanceof Error?error.message:'unknown'}));
+    adoptionAtlasDistribution={status:'unavailable',classification:'public-distribution-context-unavailable'};
+  }
   const evaluation=await collectMaintenanceAutopilot();
   const result={
     version:'maintenance-cycle-v1',
     ran_at:new Date().toISOString(),
-    automatic_actions:[{id:'retention-housekeeping',result:housekeeping}],
+    automatic_actions:[
+      {id:'retention-housekeeping',result:housekeeping},
+      {id:'adoption-atlas-distribution-refresh',result:adoptionAtlasDistribution}
+    ],
     evaluation
   };
   await recordAdminAudit('MAINTENANCE_AUTOPILOT',result);

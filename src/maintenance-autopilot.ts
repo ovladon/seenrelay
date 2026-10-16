@@ -104,7 +104,7 @@ export function evaluateMaintenanceAutopilot(input: MaintenanceAutopilotInput) {
     ));
   }
 
-  // Retention cleanup is the only Production-mutating action this evaluator authorizes automatically.
+  // Automatic writes are bounded to retention cleanup and aggregate public-distribution context.
   recommendations.push(recommendation(
     'retention-housekeeping','info','operations',
     'Run retention housekeeping using the configured lease, reuse-event, and observation retention windows.',
@@ -120,7 +120,7 @@ export function evaluateMaintenanceAutopilot(input: MaintenanceAutopilotInput) {
     state,
     release_policy:'discover -> isolate -> implement candidate -> verify -> explicit release' as const,
     automatic_mutation_policy:{
-      allowed:['retention-housekeeping'],
+      allowed:['retention-housekeeping','adoption-atlas-distribution-refresh'],
       forbidden:['merge-to-main','enable-billing','change-fact-identity','change-privacy-semantics','add-domain-operation','auto-enable-reuse','change-runtime-incident-mode']
     },
     signals:{

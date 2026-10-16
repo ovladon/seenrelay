@@ -10,6 +10,8 @@ import { internalTelemetryClassifierState } from './traffic-classification.js';
 import { evaluateMaintenanceAutopilot } from './maintenance-autopilot.js';
 import { collectMaintenanceAutopilot } from './maintenance.js';
 import { getAdoptionAtlasSnapshot } from './adoption-atlas-db.js';
+import { getLatestAdoptionDistributionSnapshot } from './adoption-atlas-distribution-db.js';
+import { buildAdoptionAtlasV1 } from './adoption-atlas-v1.js';
 
 const COOKIE = 'sr_admin';
 
@@ -134,6 +136,18 @@ export async function adminSnapshot(request: Request): Promise<Response> {
     console.error(JSON.stringify({event:'admin_adoption_atlas_snapshot_error',error:error instanceof Error?error.message:'unknown'}));
     adoptionAtlas={status:'unavailable',classification:'voluntary-opt-in-adoption-atlas-unavailable',summary:{},cells:[]};
   }
+  let adoptionDistribution: Awaited<ReturnType<typeof getLatestAdoptionDistributionSnapshot>> | {status:'unavailable';classification:string;snapshot:null};
+  try { adoptionDistribution=await getLatestAdoptionDistributionSnapshot(); }
+  catch (error) {
+    console.error(JSON.stringify({event:'admin_adoption_distribution_snapshot_error',error:error instanceof Error?error.message:'unknown'}));
+    adoptionDistribution={status:'unavailable',classification:'public-distribution-context-unavailable',snapshot:null};
+  }
+  const adoptionAtlasV1=buildAdoptionAtlasV1({
+    hosted:adoption,
+    voluntary:adoptionAtlas,
+    distribution:adoptionDistribution,
+    now:new Date().toISOString()
+  });
   const summary=data.summary as Record<string,unknown>;
   const adoptionSummary=adoption.summary as Record<string,unknown>;
   const checks=Number(adoptionSummary.checks_external_retained ?? 0);
@@ -151,7 +165,7 @@ export async function adminSnapshot(request: Request): Promise<Response> {
     credential_rotation:credentialRotation
   });
   return json({
-    now:new Date().toISOString(),csrf:auth.csrf,controls,data,adoption,adoption_atlas:adoptionAtlas,
+    now:new Date().toISOString(),csrf:auth.csrf,controls,data,adoption,adoption_atlas:adoptionAtlas,adoption_distribution:adoptionDistribution,adoption_atlas_v1:adoptionAtlasV1,
     derived:{
       external_retained_qualified_reuse_rate:checks?reuse/checks:0,
       global_unknown_rate:globalChecks?globalUnknown/globalChecks:0
@@ -164,6 +178,7 @@ export async function adminSnapshot(request: Request): Promise<Response> {
       external_actor_count:'pseudonymous lease/activity classification only; not a unique human or agent count',
       client_only_local_first:'not observable by the hosted service unless the user explicitly runs adoption-report --share',
       adoption_report:'voluntary unverified aggregate signal; no unique-actor claim and no hidden telemetry',
+      adoption_atlas_v1:'triangulates hosted, voluntary and public distribution evidence; confidence is evidence strength, never a user/company count',
       hidden_client_telemetry:false
     },
     safety,
@@ -177,8 +192,11 @@ export async function adminOperationsExport(request: Request): Promise<Response>
   const [controls,stats]=await Promise.all([getRuntimeControls(),getPublicStats()]);
   let adoption: unknown;
   try { adoption=await getAdminAdoptionData(); } catch { adoption={status:'unavailable'}; }
-  let adoptionAtlas: unknown;
-  try { adoptionAtlas=await getAdoptionAtlasSnapshot(30); } catch { adoptionAtlas={status:'unavailable'}; }
+  let adoptionAtlas: any;
+  try { adoptionAtlas=await getAdoptionAtlasSnapshot(30); } catch { adoptionAtlas={status:'unavailable',summary:{},cells:[]}; }
+  let adoptionDistribution: any;
+  try { adoptionDistribution=await getLatestAdoptionDistributionSnapshot(); } catch { adoptionDistribution={status:'unavailable',snapshot:null}; }
+  const adoptionAtlasV1=buildAdoptionAtlasV1({hosted:adoption as any,voluntary:adoptionAtlas,distribution:adoptionDistribution});
   const maintenanceAutopilot=await collectMaintenanceAutopilot();
   await recordAdminAudit('OPERATIONS_EXPORT',{});
   const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState(), internalTelemetry=internalTelemetryClassifierState();
@@ -188,6 +206,8 @@ export async function adminOperationsExport(request: Request): Promise<Response>
     operational_summary:stats,
     external_adoption:adoption,
     adoption_atlas:adoptionAtlas,
+    adoption_distribution:adoptionDistribution,
+    adoption_atlas_v1:adoptionAtlasV1,
     maintenance_autopilot:maintenanceAutopilot,
     runtime:{mode:controls.mode,checks_enabled:controls.checks_enabled,observes_enabled:controls.observes_enabled,rewards_enabled:controls.rewards_enabled},
     security_posture:{admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_configured:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),internal_telemetry_classifier_configured:internalTelemetry.configured,billing_enabled:false},

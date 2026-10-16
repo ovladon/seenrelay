@@ -18,7 +18,7 @@ test('maintenance autopilot is scheduled off the CHECK/OBSERVE hot path and rema
   assert.match(maintenance,/MAINTENANCE_AUTOPILOT/);
   assert.match(maintenance,/runHiveHousekeeping/);
   assert.doesNotMatch(maintenance,/setRuntimeControls|merge_pull|paymentsEnabled\s*=|observeFact|checkFact/);
-  assert.match(evaluator,/allowed:\['retention-housekeeping'\]/);
+  assert.match(evaluator,/allowed:\['retention-housekeeping','adoption-atlas-distribution-refresh'\]/);
   assert.match(evaluator,/forbidden:\['merge-to-main','enable-billing','change-fact-identity','change-privacy-semantics','add-domain-operation','auto-enable-reuse','change-runtime-incident-mode'\]/);
   assert.match(admin,/maintenance_autopilot:maintenanceAutopilot/);
   assert.match(docs,/explicit release/);

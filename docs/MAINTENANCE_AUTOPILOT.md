@@ -35,7 +35,7 @@ The Control Room data surface and the automated maintenance cycle use the same d
 
 A Vercel Cron invokes `/internal/maintenance` once per day when `CRON_SECRET` is configured. The route accepts only `Authorization: Bearer <CRON_SECRET>` and fails closed when the secret is missing or incorrect.
 
-The automated cycle may mutate Production only by running the existing retention housekeeping with the configured lease, reuse-event and observation retention windows. It records the cycle in the admin audit trail. It does **not** automatically change runtime incident mode, enable reuse, alter fact identity, change privacy semantics, enable billing, add a domain operation, merge code or release a candidate.
+The automated cycle has two bounded write classes: retention housekeeping with the configured lease, reuse-event and observation retention windows, and one daily aggregate/public Adoption Atlas distribution snapshot. The distribution refresh performs public metadata/discovery probes only; it does not inspect user payloads or create identity-level telemetry. A refresh failure is recorded as unavailable without undoing housekeeping. The cycle records its result in the admin audit trail. It does **not** automatically change runtime incident mode, enable reuse, alter fact identity, change privacy semantics, enable billing, add a domain operation, merge code or release a candidate.
 
 The Control Room snapshot API and Operations Export expose the same evaluator result used by the scheduled cycle. Manual and automatic operations therefore do not maintain separate definitions of health.
 
