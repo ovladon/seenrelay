@@ -11,10 +11,10 @@ const healthyInput = () => ({
   credential_rotation:{transition_active:false}
 });
 
-test('maintenance evaluator permits only retention housekeeping as automatic Production mutation', () => {
+test('maintenance evaluator permits only bounded housekeeping and Adoption Atlas aggregate refresh writes', () => {
   const result=evaluateMaintenanceAutopilot(healthyInput());
   assert.equal(result.state,'HEALTHY');
-  assert.deepEqual(result.automatic_mutation_policy.allowed,['retention-housekeeping']);
+  assert.deepEqual(result.automatic_mutation_policy.allowed,['retention-housekeeping','adoption-atlas-distribution-refresh']);
   assert.ok(result.automatic_mutation_policy.forbidden.includes('merge-to-main'));
   assert.ok(result.automatic_mutation_policy.forbidden.includes('auto-enable-reuse'));
   assert.deepEqual(result.recommendations.filter(x=>x.automatic_action!=='none').map(x=>x.id),['retention-housekeeping']);
