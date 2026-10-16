@@ -13,12 +13,12 @@ test('maintenance autopilot is scheduled off the CHECK/OBSERVE hot path and rema
 
   assert.match(index,/app\.get\('\/internal\/maintenance'/);
   assert.doesNotMatch(index.match(/app\.post\('\/v1\/check'[\s\S]*?app\.post\('\/v1\/observe'/)?.[0]||'',/maintenanceCron|collectMaintenanceAutopilot|runMaintenanceAutopilotCycle/);
-  assert.deepEqual(vercel.crons,[{path:'/internal/maintenance',schedule:'23 3 * * *'},{path:'/internal/adoption-atlas-refresh',schedule:'53 5 * * *'}]);
+  assert.deepEqual(vercel.crons,[{path:'/internal/maintenance',schedule:'23 3 * * *'}]);
   assert.match(maintenance,/CRON_SECRET/);
   assert.match(maintenance,/MAINTENANCE_AUTOPILOT/);
   assert.match(maintenance,/runHiveHousekeeping/);
   assert.doesNotMatch(maintenance,/setRuntimeControls|merge_pull|paymentsEnabled\s*=|observeFact|checkFact/);
-  assert.match(evaluator,/allowed:\['retention-housekeeping'\]/);
+  assert.match(evaluator,/allowed:\['retention-housekeeping','adoption-atlas-distribution-refresh'\]/);
   assert.match(evaluator,/forbidden:\['merge-to-main','enable-billing','change-fact-identity','change-privacy-semantics','add-domain-operation','auto-enable-reuse','change-runtime-incident-mode'\]/);
   assert.match(admin,/maintenance_autopilot:maintenanceAutopilot/);
   assert.match(docs,/explicit release/);
