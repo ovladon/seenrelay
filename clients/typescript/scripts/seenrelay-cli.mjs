@@ -9,6 +9,8 @@ import { analyzeOtelFleetTraceFile } from './otel-trace-census-lib.mjs';
 import { analyzeLangfuseObservationsFile, renderLangfuseCensusReport } from './langfuse-census-lib.mjs';
 import { buildSavingsReportFromFile, renderSavingsReport } from './savings-report-lib.mjs';
 import { runLocalEconomicAudit, renderLocalEconomicAudit } from './local-economic-audit-lib.mjs';
+import fs from 'node:fs';
+import { buildAdoptionReportPayload, adoptionReportPrivacyBoundary, shareAdoptionReport, renderAdoptionReport } from './adoption-report-lib.mjs';
 
 function help() {
   return `SeenRelay CLI
@@ -30,8 +32,9 @@ Commands:
   otel-trace-census  Local-only adapter from OTLP/JSON spans into the same conservative census.
   langfuse-census    Local-only candidate census over exported Langfuse TOOL observations.
   savings-report     Local-only measured Savings Report from active fleet ledger/receipts; never an invoice, payment receipt, USE verdict or customer-ROI claim.
+  adoption-report     Preview a privacy-bounded adoption signal locally. Network contact occurs only with explicit --share.
 
-None of these commands contacts SeenRelay. Static scan cannot return a USE verdict. Trace and Langfuse census report pre-activation opportunity, not actual savings. Savings Report can count actual follower reuse but cannot establish native/SOTA superiority or customer ROI by itself.
+All commands are local-only unless adoption-report is invoked with --share. Static scan cannot return a USE verdict. Trace and Langfuse census report pre-activation opportunity, not actual savings. Savings Report can count actual follower reuse but cannot establish native/SOTA superiority or customer ROI by itself. adoption-report is voluntary, unverified and never a unique-user/company metric.
 `;
 }
 
@@ -53,6 +56,12 @@ function optionValue(name) {
   if(i<0) return null;
   if(i===args.length-1 || args[i+1].startsWith('-')) throw new TypeError(name+' requires a value');
   return args[i+1];
+}
+
+function requiredOption(name) {
+  const value=optionValue(name);
+  if(value===null) throw new TypeError(name+' is required');
+  return value;
 }
 
 if (command === 'audit') {
@@ -98,6 +107,24 @@ if (command === 'audit') {
   }
   const report = await analyzeLangfuseObservationsFile(path.resolve(positional[0]));
   process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : renderLangfuseCensusReport(report));
+} else if (command === 'adoption-report') {
+  const packageJson=JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url),'utf8'));
+  const payload=buildAdoptionReportPayload({
+    integrationClass:requiredOption('--integration-class'),
+    deploymentClass:requiredOption('--deployment'),
+    mode:requiredOption('--mode'),
+    decision:requiredOption('--decision'),
+    workloadClass:requiredOption('--workload-class')
+  },String(packageJson.version));
+  const boundary=adoptionReportPrivacyBoundary();
+  if(args.includes('--share')) {
+    const receipt=await shareAdoptionReport(payload);
+    const result={schema_version:'seenrelay-adoption-report-result-v1',shared:true,network_contact:true,payload,privacy_boundary:boundary,receipt};
+    process.stdout.write(json ? `${JSON.stringify(result,null,2)}\\n` : renderAdoptionReport(result));
+  } else {
+    const result={schema_version:'seenrelay-adoption-report-result-v1',shared:false,network_contact:false,payload,privacy_boundary:boundary};
+    process.stdout.write(json ? `${JSON.stringify(result,null,2)}\\n` : renderAdoptionReport(result));
+  }
 } else if (command === 'savings-report') {
   if (!positional[0]) {
     process.stderr.write(`savings-report requires a fleet ledger JSON or receipt JSONL file\n\n${help()}`);
