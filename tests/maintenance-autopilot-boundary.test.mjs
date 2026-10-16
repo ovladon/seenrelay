@@ -13,7 +13,7 @@ test('maintenance autopilot is scheduled off the CHECK/OBSERVE hot path and rema
 
   assert.match(index,/app\.get\('\/internal\/maintenance'/);
   assert.doesNotMatch(index.match(/app\.post\('\/v1\/check'[\s\S]*?app\.post\('\/v1\/observe'/)?.[0]||'',/maintenanceCron|collectMaintenanceAutopilot|runMaintenanceAutopilotCycle/);
-  assert.deepEqual(vercel.crons,[{path:'/internal/maintenance',schedule:'23 3 * * *'}]);
+  assert.deepEqual(vercel.crons,[{path:'/internal/maintenance',schedule:'23 3 * * *'},{path:'/internal/adoption-atlas-refresh',schedule:'53 5 * * *'}]);
   assert.match(maintenance,/CRON_SECRET/);
   assert.match(maintenance,/MAINTENANCE_AUTOPILOT/);
   assert.match(maintenance,/runHiveHousekeeping/);
