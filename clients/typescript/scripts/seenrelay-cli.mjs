@@ -9,6 +9,7 @@ import { analyzeOtelFleetTraceFile } from './otel-trace-census-lib.mjs';
 import { analyzeLangfuseObservationsFile, renderLangfuseCensusReport } from './langfuse-census-lib.mjs';
 import { buildSavingsReportFromFile, renderSavingsReport } from './savings-report-lib.mjs';
 import { runLocalEconomicAudit, renderLocalEconomicAudit } from './local-economic-audit-lib.mjs';
+import { buildAdoptionReport, renderAdoptionReport, shareAdoptionReport } from './adoption-report-lib.mjs';
 
 function help() {
   return `SeenRelay CLI
@@ -20,7 +21,7 @@ Usage:
   seenrelay trace-census <trace.json|trace.jsonl> [--json]
   seenrelay otel-trace-census <otlp.json> [--json]
   seenrelay langfuse-census <observations.json|observations.jsonl> [--json]
-  seenrelay savings-report <ledger.json|receipts.jsonl> [--overhead-usd N] [--json]
+  seenrelay savings-report <ledger.json|receipts.jsonl> [--overhead-usd N] [--json]\n  seenrelay adoption-report --integration <class> --deployment <local|hosted|private-l1> --mode <shadow|active> --verdict <USE|DO_NOT_USE|INSUFFICIENT_EVIDENCE> --workload <class> [--share] [--json]
 
 Commands:
   scan               Local-only static prescreen for recurring expensive read-only validation candidates.
@@ -29,9 +30,9 @@ Commands:
   trace-census       Local-only census of exact eligible in-flight overlap from sanitized call traces.
   otel-trace-census  Local-only adapter from OTLP/JSON spans into the same conservative census.
   langfuse-census    Local-only candidate census over exported Langfuse TOOL observations.
-  savings-report     Local-only measured Savings Report from active fleet ledger/receipts; never an invoice, payment receipt, USE verdict or customer-ROI claim.
+  savings-report     Local-only measured Savings Report from active fleet ledger/receipts; never an invoice, payment receipt, USE verdict or customer-ROI claim.\n  adoption-report     Preview a coarse adoption payload locally; sends it only when --share is explicitly supplied.
 
-None of these commands contacts SeenRelay. Static scan cannot return a USE verdict. Trace and Langfuse census report pre-activation opportunity, not actual savings. Savings Report can count actual follower reuse but cannot establish native/SOTA superiority or customer ROI by itself.
+All commands are local-only except adoption-report when --share is explicitly supplied. Static scan cannot return a USE verdict. Trace and Langfuse census report pre-activation opportunity, not actual savings. Savings Report can count actual follower reuse but cannot establish native/SOTA superiority or customer ROI by itself.
 `;
 }
 
@@ -110,6 +111,26 @@ if (command === 'audit') {
   }
   const report=buildSavingsReportFromFile(path.resolve(positional[0]),{overheadUsd});
   process.stdout.write(json ? `${JSON.stringify(report, null, 2)}\n` : renderSavingsReport(report));
+} else if (command === 'adoption-report') {
+  const report = await buildAdoptionReport({
+    integration: optionValue('--integration'),
+    deployment: optionValue('--deployment'),
+    mode: optionValue('--mode'),
+    verdict: optionValue('--verdict'),
+    workload: optionValue('--workload')
+  });
+  const share = args.includes('--share');
+  let shared = false;
+  let response = null;
+  if (share) {
+    response = await shareAdoptionReport(report);
+    shared = true;
+  }
+  if (json) {
+    process.stdout.write(`${JSON.stringify({report, shared, response}, null, 2)}\n`);
+  } else {
+    process.stdout.write(renderAdoptionReport(report, shared));
+  }
 } else {
   process.stderr.write(`Unknown command: ${command}\n\n${help()}`);
   process.exit(2);
