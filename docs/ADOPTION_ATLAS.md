@@ -62,7 +62,7 @@ The Control Room now combines four evidence classes without collapsing them into
 3. **Voluntary local** — explicit `adoption-report --share` aggregate reports. These remain unverified and non-deduplicated.
 4. **Public reach context** — daily public distribution observations such as registry/directory reachability, npm seven-day downloads, GitHub repository counters and an independently displayed MCPField install count when parseable.
 
-The public-reach class is **context, not adoption**. npm downloads, directory listings, stars, forks, and displayed catalog installs do not establish unique users, companies, customers, revenue, geography, or retention.
+The public-reach class is **context, not adoption**. npm downloads, directory listings, stars, forks, and displayed catalog installs do not establish unique users, companies, customers, geography, or retention.
 
 ### Confidence states
 
@@ -74,7 +74,7 @@ The public-reach class is **context, not adoption**. npm downloads, directory li
 
 `STRONG` requires multiple retained external leases, repeat activity, bidirectional CHECK/OBSERVE, qualified cross-client reuse, recent hosted activity, and at least two corroborating evidence classes.
 
-These labels describe **strength of evidence**, not market size.
+These labels describe **strength of evidence**, not population size.
 
 ### Automated public-distribution collection
 
