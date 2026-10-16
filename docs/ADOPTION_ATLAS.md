@@ -46,7 +46,7 @@ Normal HTTP transport necessarily reaches the hosting/network layer, but the See
 
 ## Claim boundary
 
-Adoption Atlas reports are voluntary and unverified. They are not deduplicated and therefore do not establish unique users, companies, customers, revenue, ROI, or geography.
+Adoption Atlas reports are voluntary and unverified. They are not deduplicated and therefore do not establish unique users, companies, customers, ROI, or geography.
 
 They are one input to triangulation alongside independently measured hosted protocol activity, package/download signals, directory/install counters, GitHub/distribution signals, and qualified external reuse.
 
