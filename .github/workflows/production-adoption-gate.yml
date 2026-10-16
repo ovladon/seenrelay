@@ -126,6 +126,30 @@ jobs:
           jq -e '.ok == true and .environment == "production" and .billing_enabled == false and (.deployment_sha | type == "string" and length > 0)' "$RUNNER_TEMP/health.json" >/dev/null
           echo 'Production remains healthy with billing disabled; this push intentionally required no Vercel deployment.'
 
+      - name: Verify Adoption Atlas receiver contract in Production
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location \
+            https://seenrelay.com/openapi.json \
+            --output "$RUNNER_TEMP/openapi.json"
+          jq -e '
+            .paths["/v1/adoption-report"].post.operationId == "shareAdoptionReport"
+            and .components.schemas.AdoptionReport.additionalProperties == false
+            and (.components.schemas.AdoptionReport.required | sort) ==
+              (["schema_version","seenrelay_version","integration_class","deployment_class","mode","decision","workload_class"] | sort)
+          ' "$RUNNER_TEMP/openapi.json" >/dev/null
+
+          status="$(curl --silent --show-error \
+            --output "$RUNNER_TEMP/adoption-report-invalid.json" \
+            --write-out '%{http_code}' \
+            --request POST \
+            --header 'content-type: application/json' \
+            --data '{}' \
+            https://seenrelay.com/v1/adoption-report)"
+          test "$status" = '400'
+          echo 'Production exposes the strict Adoption Atlas receiver; invalid smoke input is rejected before persistence.'
+
       - name: Verify Delta first-party observation boundary in Production
         shell: bash
         run: |
