@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { buildAdoptionReportPayload, adoptionReportPrivacyBoundary, shareAdoptionReport } from '../clients/typescript/scripts/adoption-report-lib.mjs';
 
 test('adoption report payload is a closed coarse schema', () => {
@@ -67,4 +68,43 @@ test('public adoption-report route is bounded and admin labels Atlas as unverifi
   assert.match(adminDb,/reports_are_unique_actors: false/);
   assert.match(adminDb,/deduplicated: false/);
   assert.match(adminDb,/identity_stored: false/);
+});
+
+
+test('packaged CLI adoption-report preview is valid JSON and remains network-free', () => {
+  const run=spawnSync(process.execPath,[
+    new URL('../clients/typescript/scripts/seenrelay-cli.mjs',import.meta.url).pathname,
+    'adoption-report',
+    '--integration-class','cli',
+    '--deployment','local',
+    '--mode','shadow',
+    '--decision','INSUFFICIENT',
+    '--workload-class','monitoring',
+    '--json'
+  ],{encoding:'utf8'});
+  assert.equal(run.status,0,run.stderr);
+  const parsed=JSON.parse(run.stdout);
+  assert.equal(parsed.schema_version,'seenrelay-adoption-report-result-v1');
+  assert.equal(parsed.shared,false);
+  assert.equal(parsed.network_contact,false);
+  assert.equal(parsed.payload.seenrelay_version,'0.2.30');
+  assert.equal(parsed.privacy_boundary.default_network_contact,false);
+  assert.equal(parsed.privacy_boundary.share_requires_explicit_flag,true);
+  assert.equal(run.stdout.endsWith('\n'),true);
+  assert.equal(run.stdout.endsWith('\\\\n'),false);
+});
+
+test('human adoption-report rendering uses real line breaks', () => {
+  const run=spawnSync(process.execPath,[
+    new URL('../clients/typescript/scripts/seenrelay-cli.mjs',import.meta.url).pathname,
+    'adoption-report',
+    '--integration-class','cli',
+    '--deployment','local',
+    '--mode','shadow',
+    '--decision','INSUFFICIENT',
+    '--workload-class','monitoring'
+  ],{encoding:'utf8'});
+  assert.equal(run.status,0,run.stderr);
+  assert.match(run.stdout,/SeenRelay Adoption Report\n\nVersion: 0\.2\.30\n/);
+  assert.doesNotMatch(run.stdout,/\\\\n/);
 });
