@@ -48,6 +48,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
+          trap 'echo "Readiness smoke failed at shell line $LINENO" >&2' ERR
           url="$(node scripts/resolve-pr-preview-url.mjs)"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
