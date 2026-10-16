@@ -73,7 +73,7 @@ export function buildAdoptionAtlasV1(input:{
   const triangulationScore=adoptionEvidenceScore+reachContextScore;
 
   const voluntaryCorroboration=reportsTotal>0;
-  const independentDistributionCorroboration=mcpfieldInstalls>0||npmDownloads>0||githubStars+githubForks>0;
+  const independentDistributionCorroboration=mcpfieldInstalls>0;
   const qualified=qualifiedConsumers>0||qualifiedEvents>0;
   const recentHosted=lastHostedAge!==null&&lastHostedAge<=30;
 
@@ -155,7 +155,7 @@ export function buildAdoptionAtlasV1(input:{
     },
     rules:{
       emerging:'at least one hosted external lease, voluntary report, or independently displayed MCPField install signal',
-      confirmed:'repeat/bidirectional/qualified hosted activity plus voluntary or independent public distribution corroboration',
+      confirmed:'repeat/bidirectional/qualified hosted activity plus voluntary or independently displayed catalog corroboration',
       strong:'multiple retained external leases + repeat + bidirectional + qualified reuse + recent hosted activity + at least two corroborating evidence classes'
     }
   };
