@@ -27,6 +27,7 @@ import { trustDescriptor, trustPage } from './trust.js';
 import { clientsPage, llmsText, robotsText, sitemapXml } from './adoption.js';
 import { getPublicStats } from './public-db.js';
 import { getPublicExternalAdoptionSnapshot } from './external-adoption.js';
+import { adoptionReportSummary, ingestAdoptionReport } from './adoption-report.js';
 import { assertRuntimeFactAllowed } from './runtime-guard.js';
 import { dataPracticesDescriptor, dataPracticesPage } from './data-practices.js';
 import { privacyPage } from './privacy.js';
@@ -334,6 +335,16 @@ app.get('/external-adoption.json', async (c) => {
   c.header('cache-control', 'public, max-age=30, stale-while-revalidate=90');
   c.header('access-control-allow-origin', '*');
   return c.json(await getPublicExternalAdoptionSnapshot());
+});
+app.post('/v1/adoption-report', async (c) => {
+  const body = await readJsonBody<unknown>(c.req.raw, 2048);
+  const result = await ingestAdoptionReport(body);
+  return c.json(result.body, result.status);
+});
+app.get('/adoption-report/summary.json', async (c) => {
+  c.header('cache-control', 'public, max-age=30, stale-while-revalidate=90');
+  c.header('access-control-allow-origin', '*');
+  return c.json(await adoptionReportSummary());
 });
 app.get('/healthz', (c) => {
   const deploymentSha = process.env.VERCEL_GIT_COMMIT_SHA || null;
