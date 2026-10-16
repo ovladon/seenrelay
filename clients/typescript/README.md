@@ -594,6 +594,21 @@ await measured.seenRelayFirecrawlSdkShadowPilot.flush();
 
 The original SDK method always runs with the exact argument list supplied by the application, and the exact raw provider result is returned. The adapter converts the successful result only inside the measurement bridge so it can reuse the existing Firecrawl shadow semantics. If that internal measurement serialization fails after Firecrawl succeeds, the provider result still returns successfully and shadow evidence for that call is simply unavailable.
 
+## Optional anonymous adoption report
+
+Local-only use is intentionally invisible to SeenRelay. If you want to contribute coarse ecosystem usage evidence, preview a closed report locally:
+
+```bash
+npx seenrelay adoption-report \
+  --integration ambient \
+  --deployment local \
+  --mode shadow \
+  --verdict USE \
+  --workload mcp-tool
+```
+
+Nothing is sent unless you add `--share`. The shared payload contains only the SeenRelay version, integration class, deployment class, shadow/active mode, verdict and coarse workload class. It contains no prompt, response, source URL, fact/value, repository name, filename, customer identity or IP-as-identity. Server-side application storage is aggregate-only; the resulting counts are technical self-reports, not proof of unique users, companies, customer ROI, willingness to pay or paid adoption.
+
 ## Protocol boundary
 
 The client does not add a third SeenRelay operation. The hosted service still exposes only CHECK and OBSERVE. SeenRelay reports source-backed observations; it does not browse, search, verify arbitrary facts on demand, act as a truth oracle or provide shared general-agent memory.

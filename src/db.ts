@@ -246,3 +246,47 @@ export async function creditUsefulReuse(factKey: string, valueHash: string, cuto
     SELECT COUNT(*)::int AS awarded FROM ins`, [factKey, valueHash, cutoffIso, consumerLeaseId, nowIso, utilityUnits]) as Array<{awarded: number}>;
   return rows[0]?.awarded || 0;
 }
+
+
+export interface AdoptionReportAggregateInput {
+  seenrelay_version: string;
+  integration_class: string;
+  deployment: string;
+  mode: string;
+  verdict: string;
+  workload_class: string;
+}
+
+export async function recordAdoptionReport(input: AdoptionReportAggregateInput, nowIso: string): Promise<void> {
+  await sql().query(
+    `INSERT INTO adoption_reports_daily (
+      day, seenrelay_version, integration_class, deployment, mode, verdict, workload_class,
+      reports, first_at, last_at
+    ) VALUES (
+      $1::timestamptz::date,$2,$3,$4,$5,$6,$7,1,$1::timestamptz,$1::timestamptz
+    )
+    ON CONFLICT (day, seenrelay_version, integration_class, deployment, mode, verdict, workload_class)
+    DO UPDATE SET
+      reports = adoption_reports_daily.reports + 1,
+      last_at = GREATEST(adoption_reports_daily.last_at, EXCLUDED.last_at)`,
+    [nowIso,input.seenrelay_version,input.integration_class,input.deployment,input.mode,input.verdict,input.workload_class]
+  );
+}
+
+export interface AdoptionReportAggregateRow extends AdoptionReportAggregateInput {
+  reports: number;
+  first_at: string;
+  last_at: string;
+}
+
+export async function getAdoptionReportAggregate(): Promise<AdoptionReportAggregateRow[]> {
+  return await sql().query(
+    `SELECT
+      seenrelay_version, integration_class, deployment, mode, verdict, workload_class,
+      SUM(reports)::int AS reports, MIN(first_at)::text AS first_at, MAX(last_at)::text AS last_at
+    FROM adoption_reports_daily
+    GROUP BY seenrelay_version, integration_class, deployment, mode, verdict, workload_class
+    ORDER BY MAX(last_at) DESC, SUM(reports) DESC
+    LIMIT 200`
+  ) as AdoptionReportAggregateRow[];
+}
