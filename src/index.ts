@@ -38,6 +38,7 @@ import { agentSkillMarkdown, agentSkillIndex } from '../shared/agent-skill.mjs';
 import { auditPublicRoot } from './readiness.js';
 import { readinessPresentationPage, readinessSurfaceDescriptor } from './readiness-presentation.js';
 import { ReadinessV2ActivationError, readinessV2ActivationState, runActivatedReadinessV2 } from './readiness-v2-activation.js';
+import { acceptAdoptionReport } from './adoption-atlas.js';
 import readinessServiceApp from './readiness-service.js';
 import { readinessAuditOrigin, readinessConnectSrc, readinessRemoteEndpoint, readinessV2EnabledForPresentation } from './readiness-routing.js';
 
@@ -90,6 +91,14 @@ app.get('/', (c) => {
     return c.html(publicLandingPage(origin));
   }
   return c.json(serviceDescriptor(origin));
+});
+
+app.post('/v1/adoption-report', async (c) => {
+  const bounded = await boundedRequest(c.req.raw, 2048);
+  if ('response' in bounded) return bounded.response;
+  const body = await readJsonBody<unknown>(bounded.request, 2048);
+  const result = await acceptAdoptionReport(body);
+  return c.json(result, 202);
 });
 
 app.get('/service.json', (c) => {
