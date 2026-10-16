@@ -44,8 +44,8 @@ runs:
         set -euo pipefail
         out="$RUNNER_TEMP/seenrelay-cost-prescreen"
         mkdir -p "$out"
-        npx --yes seenrelay@0.2.25 scan "$SR_PATH" --json > "$out/scan.json"
-        npx --yes seenrelay@0.2.25 adopt-plan "$SR_PATH" --json > "$out/adopt-plan.json"
+        npx --yes seenrelay@0.2.30 scan "$SR_PATH" --json > "$out/scan.json"
+        npx --yes seenrelay@0.2.30 adopt-plan "$SR_PATH" --json > "$out/adopt-plan.json"
         echo "report_path=$out/scan.json" >> "$GITHUB_OUTPUT"
         echo "plan_path=$out/adopt-plan.json" >> "$GITHUB_OUTPUT"
 
