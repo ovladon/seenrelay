@@ -15,10 +15,6 @@
     {
       "path": "/internal/maintenance",
       "schedule": "23 3 * * *"
-    },
-    {
-      "path": "/internal/adoption-atlas-refresh",
-      "schedule": "53 5 * * *"
     }
   ]
 }
