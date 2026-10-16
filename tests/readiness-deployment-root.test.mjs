@@ -10,7 +10,7 @@ const readinessEntry = fs.readFileSync(new URL('../deploy/readiness/src/index.ts
 
 test('readiness deployment root is cron-free while core maintenance schedule stays unchanged', () => {
   assert.equal(Object.hasOwn(readinessVercel, 'crons'), false);
-  assert.deepEqual(coreVercel.crons, [{ path: '/internal/maintenance', schedule: '23 3 * * *' }, { path: '/internal/adoption-atlas-refresh', schedule: '53 5 * * *' }]);
+  assert.deepEqual(coreVercel.crons, [{ path: '/internal/maintenance', schedule: '23 3 * * *' }]);
 });
 
 test('readiness deployment root is an explicit Hono entrypoint for the isolated service', () => {
