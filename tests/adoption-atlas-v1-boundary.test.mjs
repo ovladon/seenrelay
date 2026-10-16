@@ -11,14 +11,14 @@ test('Adoption Atlas distribution collection is cron-only and off the CHECK/OBSE
   const migration=read('migrations/0009_adoption_atlas_distribution.sql');
   const vercel=JSON.parse(read('vercel.json'));
 
-  assert.match(index,/app\.get\('\/internal\/adoption-atlas-refresh'/);
+  assert.doesNotMatch(index,/app\.get\('\/internal\/adoption-atlas-refresh'/);
   const hot=index.match(/app\.post\('\/v1\/check'[\s\S]*?app\.post\('\/v1\/observe'[\s\S]*?\n\}\);/)?.[0]||'';
-  assert.doesNotMatch(hot,/collectAdoptionDistributionSnapshot|runAdoptionAtlasDistributionCycle|adoptionAtlasDistributionCron/);
-  assert.deepEqual(vercel.crons,[
-    {path:'/internal/maintenance',schedule:'23 3 * * *'},
-    {path:'/internal/adoption-atlas-refresh',schedule:'53 5 * * *'}
-  ]);
-  assert.match(collector,/CRON_SECRET/);
+  assert.doesNotMatch(hot,/collectAdoptionDistributionSnapshot|runAdoptionAtlasDistributionCycle/);
+  assert.deepEqual(vercel.crons,[{path:'/internal/maintenance',schedule:'23 3 * * *'}]);
+  const maintenance=read('src/maintenance.ts');
+  assert.match(maintenance,/CRON_SECRET/);
+  assert.match(maintenance,/runAdoptionAtlasDistributionCycle/);
+  assert.match(maintenance,/adoption-atlas-distribution-refresh/);
   assert.match(collector,/public-distribution-context-not-adoption/);
   assert.match(evaluator,/distribution_metrics_are_adoption:false/);
   assert.match(evaluator,/unique_users:'UNKNOWN'/);
