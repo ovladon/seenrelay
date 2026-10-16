@@ -40,10 +40,7 @@ export async function shareAdoptionReport(payload, { fetchImpl = globalThis.fetc
   if (typeof fetchImpl !== 'function') throw new TypeError('fetch implementation is required');
   const response = await fetchImpl(endpoint, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'user-agent': `SeenRelay-Adoption-Report/${payload.seenrelay_version}`
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(10_000)
   });
