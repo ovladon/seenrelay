@@ -9,6 +9,7 @@ import { hiveSigningRotationState } from './hive.js';
 import { internalTelemetryClassifierState } from './traffic-classification.js';
 import { evaluateMaintenanceAutopilot } from './maintenance-autopilot.js';
 import { collectMaintenanceAutopilot } from './maintenance.js';
+import { getAdoptionAtlasSnapshot } from './adoption-atlas-db.js';
 
 const COOKIE = 'sr_admin';
 
@@ -127,6 +128,12 @@ export async function adminSnapshot(request: Request): Promise<Response> {
   const [controls,data]=await Promise.all([getRuntimeControls(),getAdminSnapshotData()]);
   let adoption: Awaited<ReturnType<typeof getAdminAdoptionData>> | ReturnType<typeof adoptionUnavailable>;
   try { adoption=await getAdminAdoptionData(); } catch (error) { adoption=adoptionUnavailable(error); }
+  let adoptionAtlas: Awaited<ReturnType<typeof getAdoptionAtlasSnapshot>> | {status:'unavailable';classification:string;summary:Record<string,never>;cells:never[]};
+  try { adoptionAtlas=await getAdoptionAtlasSnapshot(30); }
+  catch (error) {
+    console.error(JSON.stringify({event:'admin_adoption_atlas_snapshot_error',error:error instanceof Error?error.message:'unknown'}));
+    adoptionAtlas={status:'unavailable',classification:'voluntary-opt-in-adoption-atlas-unavailable',summary:{},cells:[]};
+  }
   const summary=data.summary as Record<string,unknown>;
   const adoptionSummary=adoption.summary as Record<string,unknown>;
   const checks=Number(adoptionSummary.checks_external_retained ?? 0);
@@ -144,7 +151,7 @@ export async function adminSnapshot(request: Request): Promise<Response> {
     credential_rotation:credentialRotation
   });
   return json({
-    now:new Date().toISOString(),csrf:auth.csrf,controls,data,adoption,
+    now:new Date().toISOString(),csrf:auth.csrf,controls,data,adoption,adoption_atlas:adoptionAtlas,
     derived:{
       external_retained_qualified_reuse_rate:checks?reuse/checks:0,
       global_unknown_rate:globalChecks?globalUnknown/globalChecks:0
@@ -155,7 +162,8 @@ export async function adminSnapshot(request: Request): Promise<Response> {
       mcp_discovery:'aggregate initialize/tools-list interest only; not adoption',
       hosted_check_observe:'successful hosted protocol operations are recorded in Production operational telemetry',
       external_actor_count:'pseudonymous lease/activity classification only; not a unique human or agent count',
-      client_only_local_first:'not observable by the hosted service when shared relay is not used',
+      client_only_local_first:'not observable by the hosted service unless the user explicitly runs adoption-report --share',
+      adoption_report:'voluntary unverified aggregate signal; no unique-actor claim and no hidden telemetry',
       hidden_client_telemetry:false
     },
     safety,
@@ -169,6 +177,8 @@ export async function adminOperationsExport(request: Request): Promise<Response>
   const [controls,stats]=await Promise.all([getRuntimeControls(),getPublicStats()]);
   let adoption: unknown;
   try { adoption=await getAdminAdoptionData(); } catch { adoption={status:'unavailable'}; }
+  let adoptionAtlas: unknown;
+  try { adoptionAtlas=await getAdoptionAtlasSnapshot(30); } catch { adoptionAtlas={status:'unavailable'}; }
   const maintenanceAutopilot=await collectMaintenanceAutopilot();
   await recordAdminAudit('OPERATIONS_EXPORT',{});
   const adminRotation=adminSecretRotationState(), hiveRotation=hiveSigningRotationState(), internalTelemetry=internalTelemetryClassifierState();
@@ -177,6 +187,7 @@ export async function adminOperationsExport(request: Request): Promise<Response>
     service:{name:'SeenRelay',version:config().version,domain:'seenrelay.com',operations:['CHECK','OBSERVE'],fact_identity:'seenrelay-fact-v3'},
     operational_summary:stats,
     external_adoption:adoption,
+    adoption_atlas:adoptionAtlas,
     maintenance_autopilot:maintenanceAutopilot,
     runtime:{mode:controls.mode,checks_enabled:controls.checks_enabled,observes_enabled:controls.observes_enabled,rewards_enabled:controls.rewards_enabled},
     security_posture:{admin_secret_configured:adminRotation.configured,admin_previous_secret_active:adminRotation.previousAuthenticationKeyActive,hive_signing_secret_configured:hiveRotation.dedicated,hive_previous_signing_secret_active:hiveRotation.previousVerificationKeyActive,privacy_salt_configured:Boolean(process.env.PRIVACY_SALT?.trim()),internal_telemetry_classifier_configured:internalTelemetry.configured,billing_enabled:false},

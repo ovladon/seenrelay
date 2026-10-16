@@ -21,6 +21,13 @@ export function openApi(baseUrl: string) {
         requestBody:{required:true,content:{'application/json':{schema:{$ref:'#/components/schemas/ObserveRequest'}}}},
         responses:{'200':{description:'Observation accepted or deduplicated, future-CHECK eligibility, and Hive state'},'400':{description:'Invalid request'},'503':{description:'Temporarily controlled or unavailable'}}
       }},
+      '/v1/adoption-report': { post: {
+        operationId:'shareAdoptionReport',
+        summary:'Explicitly opt in to one privacy-bounded aggregate Adoption Atlas report',
+        description:'Voluntary unverified self-report. No account or actor identifier is accepted by the schema. The service stores only coarse daily aggregate counters; counts are not deduplicated users, companies or verified customers.',
+        requestBody:{required:true,content:{'application/json':{schema:{$ref:'#/components/schemas/AdoptionReport'}}}},
+        responses:{'202':{description:'Aggregate counter incremented'},'400':{description:'Invalid report'},'413':{description:'Request body exceeds the bounded limit'}}
+      }},
       '/readiness/audit': { post: {
         operationId:'auditAiVisitReadiness',
         summary:'Run one bounded machine-readable audit of a public HTTPS site root',
@@ -58,6 +65,15 @@ export function openApi(baseUrl: string) {
       ObserverProof:{type:'object',additionalProperties:false,required:['scheme','public_key','timestamp','nonce','signature'],properties:{scheme:{const:'ed25519-v1'},public_key:{type:'string',description:'Raw 32-byte Ed25519 public key, unpadded base64url.'},timestamp:{type:'string',format:'date-time'},nonce:{type:'string',description:'16..64 random bytes, unpadded base64url.'},signature:{type:'string',description:'Raw 64-byte Ed25519 signature, unpadded base64url.'}}},
       CheckRequest:{type:'object',additionalProperties:false,required:['fact','known_value'],properties:{fact:{$ref:'#/components/schemas/FactDescriptor'},known_value:{},max_age_seconds:{type:'integer',minimum:1,maximum:604800,default:3600}}},
       ObserveRequest:{type:'object',additionalProperties:false,required:['fact','value'],properties:{fact:{$ref:'#/components/schemas/FactDescriptor'},value:{},observed_at:{type:'string',format:'date-time'},observer_id:{type:'string',maxLength:128,description:'Self-asserted identity label. Unverified unless observer_proof is supplied.'},observer_proof:{$ref:'#/components/schemas/ObserverProof'},evidence_fingerprint:{type:'string',maxLength:256},idempotency_key:{type:'string',maxLength:128},source_validator:{type:'object',additionalProperties:false,required:['kind','value'],description:'Optional observer-supplied validator metadata. Stored and returned as a hint; SeenRelay does not verify it against the source.',properties:{kind:{enum:['etag','last_modified','content_hash','other']},value:{type:'string',maxLength:512,pattern:'^[^\\r\\n]+$'}}}}},
+      AdoptionReport:{type:'object',additionalProperties:false,required:['schema_version','seenrelay_version','integration_class','deployment_class','mode','decision','workload_class'],properties:{
+        schema_version:{const:'seenrelay-adoption-report-v1'},
+        seenrelay_version:{type:'string',pattern:'^[0-9]+\\.[0-9]+\\.[0-9]+([+-][0-9A-Za-z.-]+)?$'},
+        integration_class:{enum:['cli','sdk','mcp','agent-skill','framework-adapter','rest-openapi','other']},
+        deployment_class:{enum:['local','hosted','private-l1']},
+        mode:{enum:['shadow','active']},
+        decision:{enum:['USE','DO_NOT_USE','INSUFFICIENT']},
+        workload_class:{enum:['web-research','browser-automation','extraction','api-validation','mcp-tools','agent-tools','monitoring','other']}
+      }},
       ReadinessAuditRequest:{type:'object',additionalProperties:false,required:['site'],properties:{site:{type:'string',minLength:1,maxLength:253,description:'Public DNS hostname or HTTPS origin. Paths, credentials, non-default ports, IP literals and local/internal hosts are rejected.'}}},
       ReadinessCheck:{type:'object',additionalProperties:false,required:['id','status','label','detail'],properties:{id:{type:'string'},status:{enum:['PASS','FIX','INFO']},label:{type:'string'},detail:{type:'string'}}},
       ReadinessEvidence:{type:'object',additionalProperties:false,required:['requested_origin','status','elapsed_ms','body_bytes_read','body_truncated','content_type','cache_control','etag_present','last_modified_present','vary_accept','machine_link_header_present','redirect_location'],properties:{
