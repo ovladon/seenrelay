@@ -5,20 +5,6 @@ type Probe = { status: ProbeStatus; detail: string; value?: number | null };
 
 const UA = 'SeenRelay-Adoption-Atlas/1.0 (+https://seenrelay.com)';
 
-function headers(extra: Record<string,string>={}) {
-  return new Headers({'cache-control':'no-store','x-content-type-options':'nosniff',...extra});
-}
-function json(body: unknown,status=200) {
-  return new Response(JSON.stringify(body),{status,headers:headers({'content-type':'application/json; charset=utf-8'})});
-}
-async function sameSecret(a:string,b:string):Promise<boolean> {
-  const bytes=(v:string)=>new TextEncoder().encode(v);
-  const [ha,hb]=await Promise.all([crypto.subtle.digest('SHA-256',bytes(a)),crypto.subtle.digest('SHA-256',bytes(b))]);
-  const aa=new Uint8Array(ha),bb=new Uint8Array(hb); let diff=aa.length^bb.length;
-  for(let i=0;i<Math.min(aa.length,bb.length);i++) diff|=aa[i]!^bb[i]!;
-  return diff===0;
-}
-
 async function getText(url:string, fetchImpl:typeof fetch):Promise<string> {
   const response=await fetchImpl(url,{
     headers:{'user-agent':UA,accept:'*/*'},
@@ -128,17 +114,4 @@ export async function runAdoptionAtlasDistributionCycle(fetchImpl:typeof fetch=g
     classification:'public-distribution-context-not-adoption',
     snapshot
   };
-}
-
-export async function adoptionAtlasDistributionCron(request:Request):Promise<Response> {
-  const secret=process.env.CRON_SECRET?.trim()||'';
-  if(secret.length<32) return json({error:{code:'ADOPTION_ATLAS_CRON_NOT_CONFIGURED'}},503);
-  const auth=request.headers.get('authorization')||'';
-  if(!await sameSecret(auth,`Bearer ${secret}`)) return json({error:{code:'ADOPTION_ATLAS_CRON_UNAUTHORIZED'}},401);
-  try {
-    return json({ok:true,result:await runAdoptionAtlasDistributionCycle()});
-  } catch(error) {
-    console.error(JSON.stringify({event:'adoption_atlas_distribution_error',error:error instanceof Error?error.message:'unknown'}));
-    return json({error:{code:'ADOPTION_ATLAS_DISTRIBUTION_FAILED'}},500);
-  }
 }
