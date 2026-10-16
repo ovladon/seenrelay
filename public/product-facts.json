@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-10-02T10:19:04Z",
+  "updated_at": "2026-10-16T11:41:38Z",
   "positioning": {
     "category": "execution reuse and validation cost avoidance for distributed software and AI agents",
     "headline": "Avoid redundant expensive execution",
-    "subheadline": "Client 0.2.25 is published on npm and PyPI. JavaScript / TypeScript adds `seenrelay guide`, a local-only combined prescreen + adoption-plan entry point for agents/operators; it does not upload source, modify the project, contact SeenRelay, enable reuse or return a USE verdict. Python remains behaviorally unchanged in 0.2.25.",
+    "subheadline": "Client 0.2.30 is published on npm and PyPI. JavaScript / TypeScript includes `seenrelay adoption-report`: it previews locally by default and contacts SeenRelay only after explicit `--share`, sending only coarse Adoption Atlas dimensions. Python remains behaviorally unchanged in 0.2.30.",
     "current_pricing": "free",
     "account_required": false,
     "api_key_required": false
@@ -14,10 +14,10 @@
     "npm_command": "npm install seenrelay",
     "pypi_package": "seenrelay",
     "pypi_command": "pip install seenrelay",
-    "client_version": "0.2.25",
+    "client_version": "0.2.30",
     "runtime_dependencies": 0,
-    "registry_install_verified_at": "2026-10-02T10:19:04Z",
-    "verification": "Client 0.2.25 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises the packaged local-only scan and guide CLI paths, verifies native-first and non-mutating adoption semantics, validates package entry targets, and repacks the installed package. Python remains behaviorally unchanged.",
+    "registry_install_verified_at": "2026-10-16T11:41:38Z",
+    "verification": "Client 0.2.30 was published to npm and PyPI through trusted publishing. The public promotion gate clean-installs the exact version from both registries; npm verification imports every declared export, exercises packaged local-only scan, guide, and adoption-report preview paths, verifies that adoption-report makes no network contact without explicit --share, validates package entry targets, and repacks the installed package. Python remains behaviorally unchanged.",
     "scan_command": "npx seenrelay scan",
     "scan_mode": "local_static_prescreen",
     "scan_uploads_source": false,
@@ -28,7 +28,11 @@
     "guide_uploads_source": false,
     "guide_modifies_project": false,
     "guide_contacts_seenrelay": false,
-    "guide_can_authorize_reuse": false
+    "guide_can_authorize_reuse": false,
+    "adoption_report_command": "npx seenrelay adoption-report",
+    "adoption_report_mode": "local_preview_unless_explicit_share",
+    "adoption_report_default_network_contact": false,
+    "adoption_report_share_requires_explicit_flag": true
   },
   "fit": {
     "use_when": [
