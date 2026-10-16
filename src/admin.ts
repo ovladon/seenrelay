@@ -162,7 +162,7 @@ export async function adminSnapshot(request: Request): Promise<Response> {
       mcp_discovery:'aggregate initialize/tools-list interest only; not adoption',
       hosted_check_observe:'successful hosted protocol operations are recorded in Production operational telemetry',
       external_actor_count:'pseudonymous lease/activity classification only; not a unique human or agent count',
-      client_only_local_first:'not observable unless the user explicitly runs adoption-report --share',
+      client_only_local_first:'not observable by the hosted service unless the user explicitly runs adoption-report --share',
       adoption_report:'voluntary unverified aggregate signal; no unique-actor claim and no hidden telemetry',
       hidden_client_telemetry:false
     },
