@@ -75,6 +75,15 @@ jobs:
           ./node_modules/.bin/seenrelay guide sample --json > guide.json
           node -e "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('guide.json','utf8')); if(r.schema_version!=='seenrelay-guided-adoption-v1'||r.authority?.modifies_project!==false||r.authority?.uploads_source!==false||r.authority?.enables_reuse!==false||r.decision!=='INSTRUMENT_SHADOW_ONLY') process.exit(1)"
 
+          ./node_modules/.bin/seenrelay adoption-report \
+            --integration-class cli \
+            --deployment local \
+            --mode shadow \
+            --decision INSUFFICIENT \
+            --workload-class monitoring \
+            --json > adoption-report.json
+          node -e "const fs=require('fs'); const r=JSON.parse(fs.readFileSync('adoption-report.json','utf8')); if(r.schema_version!=='seenrelay-adoption-report-result-v1'||r.shared!==false||r.network_contact!==false||r.privacy_boundary?.share_requires_explicit_flag!==true||r.privacy_boundary?.default_network_contact!==false) process.exit(1)"
+
           mkdir -p mcp-native/jobs
           cat > mcp-native/jobs/list-tools.ts <<'EOF'
           import { Client } from '@modelcontextprotocol/sdk/client/index.js';
