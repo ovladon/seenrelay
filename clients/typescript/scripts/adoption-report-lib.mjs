@@ -63,7 +63,7 @@ export function renderAdoptionReport(result) {
     `Workload: ${p.workload_class}`,
     '',
     result.shared
-      ? 'Shared: yes — one anonymous aggregate counter was incremented.'
+      ? 'Shared: yes — one privacy-bounded aggregate counter was incremented.'
       : 'Shared: no — preview only. Add --share to opt in.',
     'No actor ID, repository, filename, prompt, response, source URL, fact/value or customer identity is included.'
   ];
