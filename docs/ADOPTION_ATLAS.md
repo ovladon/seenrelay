@@ -51,3 +51,43 @@ Adoption Atlas reports are voluntary and unverified. They are not deduplicated a
 They are one input to triangulation alongside independently measured hosted protocol activity, package/download signals, directory/install counters, GitHub/distribution signals, and qualified external reuse.
 
 No client-only usage becomes visible unless a user explicitly opts in with `--share`.
+
+
+## Adoption Atlas v1 triangulation
+
+The Control Room now combines four evidence classes without collapsing them into a user count:
+
+1. **Direct hosted** — Production CHECK/OBSERVE activity classified as external after first-party, controlled-benchmark and public-demo exclusion.
+2. **Qualified external** — external-to-external qualified reuse events and the external leases that consumed them.
+3. **Voluntary local** — explicit `adoption-report --share` aggregate reports. These remain unverified and non-deduplicated.
+4. **Public reach context** — daily public distribution observations such as registry/directory reachability, npm seven-day downloads, GitHub repository counters and an independently displayed MCPField install count when parseable.
+
+The public-reach class is **context, not adoption**. npm downloads, directory listings, stars, forks, and displayed catalog installs do not establish unique users, companies, customers, revenue, geography, or retention.
+
+### Confidence states
+
+`NOT_YET_OBSERVED` means no admissible adoption signal has been seen.
+
+`EMERGING` requires at least one direct external hosted lease, one voluntary report, or an independently displayed MCPField install signal.
+
+`CONFIRMED` requires repeat, bidirectional, or qualified hosted activity plus corroboration from voluntary or independent public-distribution evidence.
+
+`STRONG` requires multiple retained external leases, repeat activity, bidirectional CHECK/OBSERVE, qualified cross-client reuse, recent hosted activity, and at least two corroborating evidence classes.
+
+These labels describe **strength of evidence**, not market size.
+
+### Automated public-distribution collection
+
+A separate Vercel Cron calls `/internal/adoption-atlas-refresh` once per day. The route uses the same fail-closed `CRON_SECRET` authentication model as maintenance. Collection is off the CHECK/OBSERVE hot path and stores only daily aggregate/public metrics.
+
+The collector currently checks:
+
+- npm package downloads for the public last-week window;
+- public GitHub repository stars/forks;
+- MCPField SeenRelay listing and displayed install count when parseable;
+- Official MCP Registry discovery;
+- Glama discovery;
+- Agent Plugins Directory;
+- Anthropic Claude Community marketplace mirror.
+
+Failures remain visible as failed distribution probes. They do not erase direct hosted evidence or fabricate adoption.
