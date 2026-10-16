@@ -78,7 +78,7 @@ These labels describe **strength of evidence**, not population size.
 
 ### Automated public-distribution collection
 
-A separate Vercel Cron calls `/internal/adoption-atlas-refresh` once per day. The route uses the same fail-closed `CRON_SECRET` authentication model as maintenance. Collection is off the CHECK/OBSERVE hot path and stores only daily aggregate/public metrics.
+The existing daily Vercel maintenance Cron also runs the Adoption Atlas distribution refresh after retention housekeeping. The maintenance route remains protected by the same fail-closed `CRON_SECRET` authentication. Collection is off the CHECK/OBSERVE hot path and stores only daily aggregate/public metrics. A distribution-refresh failure is recorded as unavailable and does not undo or block retention housekeeping.
 
 The collector currently checks:
 
