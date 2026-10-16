@@ -70,7 +70,7 @@ The public-reach class is **context, not adoption**. npm downloads, directory li
 
 `EMERGING` requires at least one direct external hosted lease, one voluntary report, or an independently displayed MCPField install signal.
 
-`CONFIRMED` requires repeat, bidirectional, or qualified hosted activity plus corroboration from voluntary or independent public-distribution evidence.
+`CONFIRMED` requires repeat, bidirectional, or qualified hosted activity plus corroboration from voluntary reports or an independently displayed catalog signal. npm downloads and GitHub counters remain reach context and cannot satisfy this gate by themselves.
 
 `STRONG` requires multiple retained external leases, repeat activity, bidirectional CHECK/OBSERVE, qualified cross-client reuse, recent hosted activity, and at least two corroborating evidence classes.
 
