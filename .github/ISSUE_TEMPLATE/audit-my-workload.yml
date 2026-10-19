@@ -1,0 +1,101 @@
+name: Audit my workload
+description: Get a public native-first prescreen of a repeated expensive read-only workload. No installation required to ask.
+title: "[Workload audit] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when you suspect agents, workers, services, CI jobs, browser tasks, or other software repeatedly pay for the same read-only work.
+
+        You do **not** need to install SeenRelay first. The first result may be **REJECT BEFORE COLLECTION**, **MEASURE IN SHADOW**, or **INSUFFICIENT EVIDENCE**. A native/local/provider control winning is a successful outcome.
+
+        **This issue is public. Do not include credentials, customer data, private URLs, proprietary prompts, source payloads, access tokens, or confidential invoices.**
+
+  - type: input
+    id: public_repo
+    attributes:
+      label: Public repository or project URL
+      description: Optional. Leave blank if there is no public repository.
+      placeholder: "https://github.com/owner/repo"
+
+  - type: dropdown
+    id: workload_surface
+    attributes:
+      label: Workload surface
+      options:
+        - AI agent / multi-agent / MCP tool
+        - Browser / scraping / extraction
+        - Search / research / retrieval
+        - HTTP / API / service read
+        - CI / test / validation job
+        - OpenTelemetry / trace-observed workload
+        - IoT / edge read-only validation
+        - Other read-only execution
+    validations:
+      required: true
+
+  - type: textarea
+    id: repeated_work
+    attributes:
+      label: What expensive read-only work appears to repeat?
+      description: Describe one exact operation. Approximate descriptions are fine for the first prescreen.
+      placeholder: "Example: 8 workers independently call the same paid search for the same current state within a few minutes."
+    validations:
+      required: true
+
+  - type: textarea
+    id: recurrence
+    attributes:
+      label: Rough recurrence / concurrency
+      description: Give approximate calls, workers, timing, or overlap. Unknown is acceptable.
+      placeholder: "Example: 20 workers, 2-5 overlapping calls, ~5,000 executions/month."
+    validations:
+      required: true
+
+  - type: textarea
+    id: cost
+    attributes:
+      label: Cost, latency, or constrained capacity
+      description: Broad public/provider units only. Do not post confidential invoices.
+      placeholder: "Example: 1 provider credit per call; ~2 seconds; concurrency cap 10."
+
+  - type: textarea
+    id: native_controls
+    attributes:
+      label: Native/local controls already available
+      description: Mention local cache, single-flight, ETag/Last-Modified, provider cache, shared application cache, immutable/versioned identifiers, or other controls. "Unknown" is acceptable.
+      placeholder: "Example: provider cache exists but still bills each call; no cross-worker single-flight."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: side_effect
+    attributes:
+      label: Side-effect class
+      options:
+        - Read-only
+        - Idempotent read
+        - Unsure
+        - Mutating / state-changing
+    validations:
+      required: true
+
+  - type: dropdown
+    id: desired_result
+    attributes:
+      label: What would be useful?
+      options:
+        - Tell me whether this should be measured at all
+        - Give me a bounded shadow-measurement plan
+        - Compare SeenRelay with the strongest native/local control
+        - Help interpret an existing measurement
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: public_boundary
+    attributes:
+      label: Public issue boundary
+      options:
+        - label: I have not included credentials, customer data, private URLs, proprietary prompts, source payloads, tokens, device identifiers, or confidential invoices.
+          required: true

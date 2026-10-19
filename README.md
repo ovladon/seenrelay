@@ -33,6 +33,14 @@ CHECK is not a lookup for somebody else's raw result. The caller supplies the kn
 
 For a small public set of source-backed facts, use the canonical starter descriptors at `https://seenrelay.com/starter-facts.json`. They publish identity metadata only — no observed values, no recommended TTL and no reuse authorization. Full decision-layer rationale: [`docs/DECISION_LAYER.md`](docs/DECISION_LAYER.md).
 
+## Not sure whether SeenRelay fits? Ask for a workload audit
+
+If you have a public workload that appears to repeat expensive read-only work, you can ask for a native-first prescreen before installing anything:
+
+https://github.com/ovladon/seenrelay/issues/new?template=audit-my-workload.yml
+
+The first answer may be **REJECT BEFORE COLLECTION**, **MEASURE IN SHADOW**, or **INSUFFICIENT EVIDENCE**. A local, source-native, or provider-native control winning is a successful result.
+
 ## Fastest start: give SeenRelay to your coding agent
 
 Claude Code can install SeenRelay persistently from this repository's validated self-hosted marketplace:
