@@ -86,7 +86,7 @@ Teams can expose the same local-only static prescreen in CI without a SeenRelay 
 
 ~~~yaml
 - id: seenrelay
-  uses: ovladon/seenrelay/actions/cost-prescreen@main
+  uses: ovladon/seenrelay-cost-prescreen@v1
 ~~~
 
 The action runs on the GitHub runner, does not contact the SeenRelay service, does not upload source code to SeenRelay, and cannot enable reuse or return a `USE` verdict. It produces a team-visible job summary plus machine outputs for the static status and next non-mutating decision.
