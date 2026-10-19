@@ -57,6 +57,9 @@ export function clientsPage(origin: string): string {
   <div class="rv-choice-grid">
     <article class="rv-choice"><header><b>Coding agent</b><span>Agent Skill</span></header><p>Install the published SeenRelay skill, then ask the coding agent to inspect the project, select a supported adapter, preserve the authoritative call, run existing tests and report repeated eligible workloads.</p><div class="rv-code"><pre>${esc(skillCommand)}</pre></div><a href="/.well-known/agent-skills/seenrelay/SKILL.md">Inspect the skill →</a></article>
 
+    <article class="rv-choice"><header><b>GitHub Actions</b><span>Zero-install prescreen</span></header><p>Run the local-only Cost Prescreen in CI before integrating SeenRelay. It does not contact the SeenRelay service, upload source code, enable reuse or return a <code>USE</code> verdict.</p><div class="rv-code"><pre>- id: seenrelay
+  uses: ovladon/seenrelay-cost-prescreen@v1</pre></div><a href="https://github.com/ovladon/seenrelay-cost-prescreen">SeenRelay Cost Prescreen →</a></article>
+
     <article class="rv-choice"><header><b>Claude Code</b><span>Persistent plugin</span></header><p>Install the validated repository-hosted SeenRelay plugin persistently. It provides the same measurement-first contract without automatically attaching the hosted MCP endpoint or enabling reuse.</p><div class="rv-code"><pre>${esc(claudePluginCommand)}</pre></div><p>This self-hosted path is available now and does not imply Anthropic marketplace approval or listing.</p></article>
 
     <article class="rv-choice"><header><b>Existing MCP client</b><span>JavaScript / TypeScript</span></header><p>One wrapper line adds local shadow measurement. Existing <code>callTool(...)</code> usage stays unchanged.</p><div class="rv-code"><pre>import { ambientMcpClient } from 'seenrelay/ambient';
