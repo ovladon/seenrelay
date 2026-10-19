@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: prescreen
-        uses: ovladon/seenrelay/actions/cost-prescreen@main
+        uses: ovladon/seenrelay-cost-prescreen@v1
       - run: |
           echo "status=${{ steps.prescreen.outputs.static_status }}"
           echo "decision=${{ steps.prescreen.outputs.decision }}"
