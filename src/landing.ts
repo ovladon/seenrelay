@@ -199,6 +199,7 @@ export function publicLandingPage(origin: string): string {
   <div class="rv-actions">
     <a class="rv-button primary" href="/quickstart">Start locally</a>
     <a class="rv-button" href="/clients#instrument">Install with an agent</a>
+    <a class="rv-button" href="https://github.com/ovladon/seenrelay/issues/new?template=audit-my-workload.yml">Ask for a workload audit</a>
   </div>
 </section>
 
