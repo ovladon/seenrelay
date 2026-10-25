@@ -1,6 +1,16 @@
 name: Public Facts Freshness
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/product-facts.json'
+      - 'src/public-facts.generated.ts'
+      - 'scripts/sync-public-surfaces.mjs'
+      - 'clients/RELEASE_VERSION'
+      - 'clients/typescript/package.json'
+      - 'clients/python/pyproject.toml'
+      - '.github/workflows/public-facts-freshness.yml'
   schedule:
     - cron: '17 5 * * *'
   workflow_dispatch:
