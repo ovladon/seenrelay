@@ -1,9 +1,9 @@
 export const standardsPosture = {
-  reviewed_at: '2026-08-24',
+  reviewed_at: '2026-10-25',
   maintenance_model: 'continuous_watch_isolated_candidate_verified_release',
   mcp: {
     implemented: '2026-07-28',
-    sdk: '@modelcontextprotocol/server@2.0.0',
+    sdk: '@modelcontextprotocol/server@2.3.1',
     status: 'implemented_e2e_verified',
     transport: 'stateless_http',
     discovery: 'server/discover',

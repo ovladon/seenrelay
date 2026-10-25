@@ -6,7 +6,7 @@ SeenRelay depends on third-party software that remains subject to its own licens
 
 | Package | License |
 | --- | --- |
-| `@modelcontextprotocol/server` | MIT |
+| `@modelcontextprotocol/server` | Apache-2.0 |
 | `@neondatabase/serverless` | MIT |
 | `hono` | MIT |
 | `zod` | MIT |
