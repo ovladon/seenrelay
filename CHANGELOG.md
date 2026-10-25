@@ -4,7 +4,9 @@
 Current install/version/verified benchmark facts are generated from `public/product-facts.json`. See [`docs/VERIFIED_RESULTS.md`](docs/VERIFIED_RESULTS.md) and `https://seenrelay.com/product-facts.json`.
 <!-- END GENERATED:PUBLIC-FACTS -->
 
-## Unreleased — Deterministic client wrappers
+## Unreleased
+- Refreshed public pricing facts after official-source revalidation on 2026-10-25.
+- Patched high-severity dependency advisories by moving @modelcontextprotocol/server to 2.3.1 and Zod to 4.6.7; aligned standards metadata and third-party licensing. — Deterministic client wrappers
 
 - Add Python distributed fleet shadow-overlap measurement parity for reviewed read-only calls. The Python meter remains shadow-only: every authoritative call executes, no result is shared, coordinate/store failures fail open, and caller-supplied observed cost is not relabeled as avoided savings.
 - Add a generic `wrapFleetShadowCall()` helper and make fleet coordinate canonicalization fail-open: non-JSON/cyclic coordinates never suppress the authoritative call and are counted as unclassified measurement rather than forced into a hash.
