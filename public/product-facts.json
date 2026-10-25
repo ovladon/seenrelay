@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "updated_at": "2026-10-16T11:41:38Z",
+  "updated_at": "2026-10-25T07:45:00Z",
   "positioning": {
     "category": "execution reuse and validation cost avoidance for distributed software and AI agents",
     "headline": "Avoid redundant expensive execution",
@@ -160,11 +160,11 @@
     }
   ],
   "pricing_snapshots": {
-    "checked_at": "2026-09-25",
+    "checked_at": "2026-10-25",
     "max_age_days": 30,
     "openai_web_search": {
       "price_usd_per_1000_calls": 10,
-      "source": "https://platform.openai.com/pricing",
+      "source": "https://developers.openai.com/api/docs/pricing",
       "note": "Search-content token effects are separate."
     },
     "firecrawl": {
