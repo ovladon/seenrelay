@@ -210,7 +210,7 @@ test('maintenance autopilot can prepare updates but cannot silently write produc
 test('standards posture pins implemented MCP and treats other standards explicitly', () => {
   const standards = read('src','standards.ts');
   assert.match(standards, /implemented: '2026-07-28'/);
-  assert.match(standards, /@modelcontextprotocol\/server@2\.0\.0/);
+  assert.match(standards, /@modelcontextprotocol\/server@2\.3\.1/);
   assert.match(standards, /tracked: '1\.0\.0'/);
   assert.match(standards, /RFC9700/);
   assert.match(standards, /RFC9449/);
