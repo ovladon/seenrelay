@@ -18,7 +18,7 @@ If several workers check the same git commit and a fix changes the code, does Se
 | Case | Uncoordinated | Native local single-flight | SeenRelay | Qualifier |
 | --- | ---: | ---: | ---: | --- |
 | Four workers x two immutable commits | 8 checks | 2 checks | 2 checks | 6 SeenRelay follower reuses; changed commit forces fresh authoritative check |
-| Five distinct commits, one worker each | 5 checks | 5 checks by identity | 5 checks | No compatible in-flight repetition |
+| Five distinct commits, one worker each | 5 checks | not independently measured | 5 checks | No compatible in-flight repetition |
 | Five independent reviews of one commit | 5 checks | not applicable: independent work | 5 checks | Policy requires independent samples; not shareable |
 
 **Result:** In the same-process case, SeenRelay removes 6 duplicate executions versus no coordination, but demonstrates **zero incremental avoided checks over the stronger native single-flight**. With fast changes/unique commit identities, it removes zero checks. A completed result is not automatically a sequential cache entry.
