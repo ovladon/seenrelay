@@ -1,0 +1,111 @@
+name: Production SLO Watch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/production-sli-probe.mjs'
+      - '.github/workflows/production-slo-watch.yml'
+  schedule:
+    - cron: '17 1,7,13,19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: seenrelay-production-slo-watch
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '22'
+
+      - name: Measure production SLI and P99
+        run: node scripts/production-sli-probe.mjs
+
+      - name: Publish SLI summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f production-sli-report.json ]; then
+            node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+            const r=require('./production-sli-report.json');
+            console.log('# SeenRelay Production SLO Watch');
+            console.log('');
+            console.log(`Generated: ${r.generated_at}`);
+            console.log(`SLO probe: **${r.slo_ok?'PASS':'BREACH'}**`);
+            console.log(`CHECK p99: **${r.check_latency.p99_ms ?? 'missing'} ms** (objective <= ${r.objectives.check_p99_ms_max} ms)`);
+            console.log(`Health success: **${(100*r.availability.health_success_fraction).toFixed(2)}%**`);
+            console.log(`Service success: **${(100*r.availability.service_success_fraction).toFixed(2)}%**`);
+            console.log(`CHECK success: **${(100*r.availability.check_success_fraction).toFixed(2)}%**`);
+            NODE
+          fi
+
+      - name: Open or close SLO breach issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title='[slo] SeenRelay production SLI breach'
+          issue=$(gh issue list --state open --search '"[slo] SeenRelay production SLI breach" in:title' --json number --jq '.[0].number // empty')
+          if [ ! -f production-sli-report.json ]; then
+            bad=true
+            body='Production SLI probe failed before producing a report. Inspect the workflow run.'
+          else
+            bad=$(node -e "const r=require('./production-sli-report.json');process.stdout.write(String(!r.slo_ok))")
+            body=$(node - <<'NODE'
+            const r=require('./production-sli-report.json');
+            console.log([
+              '# Production SLI breach',
+              '',
+              `Generated: ${r.generated_at}`,
+              `CHECK p99: ${r.check_latency.p99_ms ?? 'missing'} ms (objective <= ${r.objectives.check_p99_ms_max} ms)`,
+              `Health success: ${(100*r.availability.health_success_fraction).toFixed(2)}%`,
+              `Service success: ${(100*r.availability.service_success_fraction).toFixed(2)}%`,
+              `CHECK success: ${(100*r.availability.check_success_fraction).toFixed(2)}%`,
+              '',
+              'Breaches:',
+              ...(r.breaches||[]).map(x=>`- ${x}`),
+              '',
+              'This is synthetic first-party monitoring and is not external adoption evidence.'
+            ].join('\n'));
+            NODE
+            )
+          fi
+          if [ "$bad" = true ]; then
+            if [ -n "$issue" ]; then
+              gh issue edit "$issue" --body "$body"
+            else
+              gh issue create --title "$title" --body "$body"
+            fi
+          elif [ -n "$issue" ]; then
+            gh issue comment "$issue" --body 'Latest production SLI probe recovered. Closing automatically.'
+            gh issue close "$issue"
+          fi
+
+      - name: Upload SLI evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: production-sli-${{ github.run_id }}
+          path: production-sli-report.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Enforce SLO probe
+        shell: bash
+        run: |
+          node -e "const r=require('./production-sli-report.json');if(!r.slo_ok)process.exit(1)"

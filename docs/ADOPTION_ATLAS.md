@@ -91,3 +91,19 @@ The collector currently checks:
 - Anthropic Claude Community marketplace mirror.
 
 Failures remain visible as failed distribution probes. They do not erase direct hosted evidence or fabricate adoption.
+
+
+## Autonomous distribution snapshot
+
+The daily GitHub Distribution Radar publishes a sanitized snapshot to the dedicated branch `automation/adoption-atlas-distribution`.
+
+This branch is machine-maintained and is not merged into `main`. It contains only public reach/discovery metrics and probe status. It does not contain actor, client, IP, request, fact, prompt or customer identity.
+
+Control Room prefers the freshest source between:
+
+1. the Neon aggregate snapshot; and
+2. the public automation snapshot.
+
+When the automation snapshot is fresher, the runtime may backfill the aggregate Neon row. This removes Adoption Atlas dependence on the Vercel maintenance cron while retaining the cron as an additional collection path.
+
+The snapshot remains **distribution context, not adoption**. Downloads, stars, forks and catalog install counters cannot establish unique users or companies.

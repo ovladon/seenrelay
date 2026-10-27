@@ -36,6 +36,8 @@ export function llmsText(origin: string): string {
   const clientVersion = publicProductFacts.install.client_version;
   return `# SeenRelay
 
+Autonomous agents should start with ${origin}/agent-bootstrap.json. It is a zero-contact machine descriptor for deciding whether to connect the remote MCP endpoint, run the local prescreen, or leave SeenRelay out.
+
 SeenRelay is execution-reuse infrastructure for agents, services, CI workers, browser jobs, scheduled processes and selected IoT/edge reads. Start locally: run the non-mutating prescreen, instrument only a plausible expensive read-only candidate, preserve every authoritative validation in shadow, prefer stronger native/local/source/provider controls, and keep SeenRelay only where the measured workload returns a justified USE rather than DO NOT USE or INSUFFICIENT EVIDENCE.
 
 Site and API owners can also use ${origin}/readiness for a free native-first quick audit of one public HTTPS root response. That surface checks bounded HTTP freshness/validator evidence and recommends native fixes first; it cannot determine SeenRelay workload fit from a surface scan.

@@ -1,0 +1,124 @@
+name: Disaster Recovery Restore Drill
+
+on:
+  schedule:
+    - cron: '31 2 * * 1'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+      - 'scripts/migrate.mjs'
+      - '.github/workflows/dr-restore-drill.yml'
+      - 'docs/DISASTER_RECOVERY.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  restore-drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build isolated source database from migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          PG_CONTAINER="$(docker ps --filter ancestor=postgres:18 --format '{{.ID}}' | head -n1)"
+          test -n "$PG_CONTAINER"
+          docker exec "$PG_CONTAINER" createdb -U postgres seenrelay_drill
+          for migration in migrations/*.sql; do
+            docker exec -i "$PG_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d seenrelay_drill < "$migration"
+          done
+          docker exec -i "$PG_CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d seenrelay_drill <<'SQL'
+          INSERT INTO facts (fact_key,subject,predicate,qualifiers_json,source_url)
+          VALUES ('drill-fact','DR restore drill','drill.state','{}'::jsonb,'https://example.com/seenrelay-drill')
+          ON CONFLICT DO NOTHING;
+          SQL
+          docker exec "$PG_CONTAINER" psql -At -U postgres -d seenrelay_drill -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name" > before.tables
+          docker exec "$PG_CONTAINER" psql -At -U postgres -d seenrelay_drill -c "SELECT COUNT(*) FROM facts" > before.facts
+
+      - name: Dump and restore into a fresh database
+        shell: bash
+        run: |
+          set -euo pipefail
+          PG_CONTAINER="$(docker ps --filter ancestor=postgres:18 --format '{{.ID}}' | head -n1)"
+          test -n "$PG_CONTAINER"
+          docker exec "$PG_CONTAINER" pg_dump -U postgres --format=custom --no-owner --no-privileges -d seenrelay_drill -f /tmp/seenrelay-drill.dump
+          docker exec "$PG_CONTAINER" createdb -U postgres seenrelay_restore
+          docker exec "$PG_CONTAINER" pg_restore -U postgres --no-owner --no-privileges -d seenrelay_restore /tmp/seenrelay-drill.dump
+          docker exec "$PG_CONTAINER" psql -At -U postgres -d seenrelay_restore -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name" > after.tables
+          docker exec "$PG_CONTAINER" psql -At -U postgres -d seenrelay_restore -c "SELECT COUNT(*) FROM facts" > after.facts
+          diff -u before.tables after.tables
+          diff -u before.facts after.facts
+          test "$(cat after.facts)" = '1'
+          docker exec "$PG_CONTAINER" psql -At -U postgres -d seenrelay_restore -c "SELECT COUNT(*) FROM runtime_controls WHERE control_id='global'" | grep -qx '1'
+          docker exec "$PG_CONTAINER" psql -At -U postgres -d seenrelay_restore -c "SELECT to_regclass('public.adoption_atlas_daily') IS NOT NULL" | grep -qx 't'
+          docker exec "$PG_CONTAINER" psql -At -U postgres -d seenrelay_restore -c "SELECT to_regclass('public.adoption_atlas_distribution_daily') IS NOT NULL" | grep -qx 't'
+
+      - name: Record restore evidence
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo '# SeenRelay DR restore drill'
+            echo
+            echo "Result: **PASS**"
+            echo "Migrations: $(find migrations -maxdepth 1 -name '*.sql' | wc -l)"
+            echo "Restored public tables: $(wc -l < after.tables)"
+            echo 'Synthetic production data used: **no**'
+            echo
+            echo 'This validates schema/data backup and restore mechanics in an isolated PostgreSQL service. It does not claim that a provider-level Neon backup has been restored.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or close DR failure issue
+        if: always() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title='[dr] SeenRelay restore drill failure'
+          issue=$(gh issue list --state open --search '"[dr] SeenRelay restore drill failure" in:title' --json number --jq '.[0].number // empty')
+          if [ "${{ job.status }}" != success ]; then
+            body="Weekly isolated restore drill failed in workflow run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}."
+            if [ -n "$issue" ]; then gh issue edit "$issue" --body "$body"; else gh issue create --title "$title" --body "$body"; fi
+          elif [ -n "$issue" ]; then
+            gh issue comment "$issue" --body 'Latest isolated restore drill passed. Closing automatically.'
+            gh issue close "$issue"
+          fi
+
+      - name: Upload drill artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.2
+        with:
+          name: dr-restore-drill-${{ github.run_id }}
+          path: |
+            before.tables
+            after.tables
+            before.facts
+            after.facts
+          if-no-files-found: warn
+          retention-days: 30

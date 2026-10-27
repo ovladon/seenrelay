@@ -3,7 +3,7 @@ import { publicProductFacts } from './public-facts.generated.js';
 export function agentAdoptionDescriptor(origin: string) {
   return {
     schema: 'seenrelay-agent-adoption-v1',
-    updated_at: '2026-10-02',
+    updated_at: '2026-10-27',
     audience: ['autonomous_agent', 'coding_agent', 'agent_orchestrator', 'human_operator'],
     objective: 'Measure whether SeenRelay belongs on a narrow repeated expensive read-only path, then keep or remove it based on evidence.',
     canonical_origin: origin,
@@ -17,7 +17,8 @@ export function agentAdoptionDescriptor(origin: string) {
       trust: `${origin}/trust.json`,
       case_study: `${origin}/case-studies/company-fleet.json`,
       commercial: `${origin}/commercial.json`,
-      github_cost_prescreen_action: 'ovladon/seenrelay/actions/cost-prescreen@main'
+      github_cost_prescreen_action: 'ovladon/seenrelay/actions/cost-prescreen@main',
+      zero_contact_bootstrap: `${origin}/agent-bootstrap.json`
     },
     install: {
       scan: publicProductFacts.install.scan_command,

@@ -90,7 +90,7 @@ const handler = createMcpHandler(() => {
   );
   server.registerTool('check_fact', {
     title: 'Check Fact Freshness',
-    description: 'Cost preflight before repeated paid or slow source-backed validation, especially across an agent fleet. Use before paid web search, metered scraping, browser/extraction, rate-limited APIs or multi-step validation when the caller already has a known value. Returns SAME_OBSERVED, CHANGED_OBSERVED, CONTESTED, STALE or UNKNOWN. Only SAME_OBSERVED can be considered for caller-policy-gated reuse; every other status requires normal authoritative validation before OBSERVE. SeenRelay never browses or verifies externally.',
+    description: 'Avoid a duplicate expensive read-only tool call before repeating source-backed validation, especially across an agent fleet. Use for repeated paid web search, metered scraping, browser/extraction, rate-limited APIs, duplicate API validation or multi-step validation when the caller already has a known value. Returns SAME_OBSERVED, CHANGED_OBSERVED, CONTESTED, STALE or UNKNOWN. Only SAME_OBSERVED can be considered for caller-policy-gated reuse; every other status requires normal authoritative validation before OBSERVE. SeenRelay never browses or verifies externally.',
     inputSchema: CheckRequest,
     outputSchema: CheckOutput,
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false }
@@ -115,7 +115,7 @@ const handler = createMcpHandler(() => {
 
   server.registerTool('observe_fact', {
     title: 'Contribute Fact Observation',
-    description: 'After independently performing a source-backed validation, deposit the observed result for later CHECKs. Returns accepted=true when a new observation is stored or deduplicated=true for a recognized retry/recent duplicate. Never OBSERVE hearsay. Optional Ed25519 proof establishes key possession and continuity, not truth or real-world independence.',
+    description: 'After independently performing a fresh paid search, scrape, browser extraction, API read or other source-backed validation, deposit the observed result for later CHECKs. Returns accepted=true when a new observation is stored or deduplicated=true for a recognized retry/recent duplicate. Never OBSERVE hearsay. Optional Ed25519 proof establishes key possession and continuity, not truth or real-world independence.',
     inputSchema: ObserveRequest,
     outputSchema: ObserveOutput,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }

@@ -90,6 +90,7 @@ export function serviceDescriptor(origin: string) {
       verdicts: ['USE', 'DO NOT USE', 'INSUFFICIENT EVIDENCE'],
       agent_skill: `${origin}/.well-known/agent-skills/seenrelay/SKILL.md`,
       agent_adoption: `${origin}/agent-adoption.json`,
+      agent_bootstrap: `${origin}/agent-bootstrap.json`,
       agents_page: `${origin}/agents`,
       trust: `${origin}/trust.json`,
       quickstart: `${origin}/quickstart`
@@ -143,7 +144,8 @@ export function serviceDescriptor(origin: string) {
       trust: `${origin}/trust.json`,
       updates: `${origin}/updates.json`,
       updates_atom: `${origin}/updates.atom`,
-      commercial: `${origin}/commercial.json`
+      commercial: `${origin}/commercial.json`,
+      agent_bootstrap: `${origin}/agent-bootstrap.json`
     },
     public_product_facts: productFactsForOrigin(origin),
     latest_verified_updates: publicProductFacts.latest_verified_updates
