@@ -39,17 +39,7 @@ jobs:
         shell: bash
         run: |
           if [ -f production-sli-report.json ]; then
-            node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
-            const r=require('./production-sli-report.json');
-            console.log('# SeenRelay Production SLO Watch');
-            console.log('');
-            console.log(`Generated: ${r.generated_at}`);
-            console.log(`SLO probe: **${r.slo_ok?'PASS':'BREACH'}**`);
-            console.log(`CHECK p99: **${r.check_latency.p99_ms ?? 'missing'} ms** (objective <= ${r.objectives.check_p99_ms_max} ms)`);
-            console.log(`Health success: **${(100*r.availability.health_success_fraction).toFixed(2)}%**`);
-            console.log(`Service success: **${(100*r.availability.service_success_fraction).toFixed(2)}%**`);
-            console.log(`CHECK success: **${(100*r.availability.check_success_fraction).toFixed(2)}%**`);
-            NODE
+            node scripts/production-sli-format.mjs summary >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Open or close SLO breach issue
@@ -66,24 +56,7 @@ jobs:
             body='Production SLI probe failed before producing a report. Inspect the workflow run.'
           else
             bad=$(node -e "const r=require('./production-sli-report.json');process.stdout.write(String(!r.slo_ok))")
-            body=$(node - <<'NODE'
-            const r=require('./production-sli-report.json');
-            console.log([
-              '# Production SLI breach',
-              '',
-              `Generated: ${r.generated_at}`,
-              `CHECK p99: ${r.check_latency.p99_ms ?? 'missing'} ms (objective <= ${r.objectives.check_p99_ms_max} ms)`,
-              `Health success: ${(100*r.availability.health_success_fraction).toFixed(2)}%`,
-              `Service success: ${(100*r.availability.service_success_fraction).toFixed(2)}%`,
-              `CHECK success: ${(100*r.availability.check_success_fraction).toFixed(2)}%`,
-              '',
-              'Breaches:',
-              ...(r.breaches||[]).map(x=>`- ${x}`),
-              '',
-              'This is synthetic first-party monitoring and is not external adoption evidence.'
-            ].join('\n'));
-            NODE
-            )
+            body="$(node scripts/production-sli-format.mjs issue)"
           fi
           if [ "$bad" = true ]; then
             if [ -n "$issue" ]; then
