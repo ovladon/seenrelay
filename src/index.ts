@@ -21,6 +21,7 @@ import { proofAtlasDescriptor, proofAtlasPage } from './proof-atlas.js';
 import { companyFleetCaseStudyDescriptor, companyFleetCaseStudyPage } from './company-fleet-case-study.js';
 import { updatesAtom, updatesDescriptor, updatesPage } from './updates.js';
 import { agentAdoptionDescriptor, agentsPage } from './agent-adoption.js';
+import { agentBootstrapDescriptor } from './agent-bootstrap.js';
 import { useCaseAtlasDescriptor, useCaseAtlasPage } from './use-cases.js';
 import { langfusePage } from './langfuse.js';
 import { trustDescriptor, trustPage } from './trust.js';
@@ -50,6 +51,7 @@ function publicDiscoveryLinks(origin: string): string {
     `<${origin}/openapi.json>; rel="service-desc"; type="application/json"`,
     `<${origin}/product-facts.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/agent-adoption.json>; rel="service-meta"; type="application/json"`,
+    `<${origin}/agent-bootstrap.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/trust.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/commercial.json>; rel="service-meta"; type="application/json"`,
     `<${origin}/quickstart>; rel="service-doc"; type="text/html"`,
@@ -180,6 +182,16 @@ app.get('/agent-adoption.json', (c) => {
   c.header('cache-control', 'public, max-age=300');
   c.header('access-control-allow-origin', '*');
   return c.json(agentAdoptionDescriptor(new URL(c.req.url).origin));
+});
+app.get('/agent-bootstrap.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  c.header('access-control-allow-origin', '*');
+  return c.json(agentBootstrapDescriptor(new URL(c.req.url).origin));
+});
+app.get('/.well-known/seenrelay.json', (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  c.header('access-control-allow-origin', '*');
+  return c.json(agentBootstrapDescriptor(new URL(c.req.url).origin));
 });
 app.get('/fleet', (c) => {
   c.header('content-security-policy', "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
