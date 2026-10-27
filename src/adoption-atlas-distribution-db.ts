@@ -11,10 +11,52 @@ export interface AdoptionDistributionSnapshot {
   signals: Record<string, unknown>;
 }
 
+const AUTOMATION_SNAPSHOT_URL =
+  'https://raw.githubusercontent.com/ovladon/seenrelay/automation/adoption-atlas-distribution/public/adoption-distribution-latest.json';
+
 function sql() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is not configured');
   return neon(url);
+}
+
+function finiteInteger(value: unknown): number | null {
+  const n=Number(value);
+  return Number.isInteger(n)&&n>=0?n:null;
+}
+
+function parsePublicSnapshot(value: unknown): AdoptionDistributionSnapshot | null {
+  if(!value||typeof value!=='object'||Array.isArray(value)) return null;
+  const x=value as Record<string,unknown>;
+  if(x.schema_version!=='seenrelay-adoption-distribution-public-v1') return null;
+  if(typeof x.collected_at!=='string'||!Number.isFinite(Date.parse(x.collected_at))) return null;
+  const checked=finiteInteger(x.checked_surfaces);
+  const healthy=finiteInteger(x.healthy_surfaces);
+  if(checked===null||healthy===null||healthy>checked) return null;
+  if(!x.signals||typeof x.signals!=='object'||Array.isArray(x.signals)) return null;
+  return {
+    collected_at:x.collected_at,
+    checked_surfaces:checked,
+    healthy_surfaces:healthy,
+    npm_downloads_7d:finiteInteger(x.npm_downloads_7d),
+    github_stars:finiteInteger(x.github_stars),
+    github_forks:finiteInteger(x.github_forks),
+    mcpfield_installs:finiteInteger(x.mcpfield_installs),
+    signals:x.signals as Record<string,unknown>
+  };
+}
+
+async function fetchAutomationSnapshot(fetchImpl: typeof fetch): Promise<AdoptionDistributionSnapshot | null> {
+  try {
+    const response=await fetchImpl(AUTOMATION_SNAPSHOT_URL,{
+      headers:{accept:'application/json','user-agent':'SeenRelay-Adoption-Atlas/1.1'},
+      signal:AbortSignal.timeout(5_000)
+    });
+    if(!response.ok) return null;
+    return parsePublicSnapshot(await response.json());
+  } catch {
+    return null;
+  }
 }
 
 export async function recordAdoptionDistributionSnapshot(snapshot: AdoptionDistributionSnapshot): Promise<void> {
@@ -46,7 +88,21 @@ export async function recordAdoptionDistributionSnapshot(snapshot: AdoptionDistr
   ]);
 }
 
-export async function getLatestAdoptionDistributionSnapshot() {
+function dbSnapshot(row:any): AdoptionDistributionSnapshot & {day:string} {
+  return {
+    day:row.day,
+    collected_at:row.collected_at,
+    checked_surfaces:Number(row.checked_surfaces||0),
+    healthy_surfaces:Number(row.healthy_surfaces||0),
+    npm_downloads_7d:row.npm_downloads_7d===null?null:Number(row.npm_downloads_7d),
+    github_stars:row.github_stars===null?null:Number(row.github_stars),
+    github_forks:row.github_forks===null?null:Number(row.github_forks),
+    mcpfield_installs:row.mcpfield_installs===null?null:Number(row.mcpfield_installs),
+    signals:row.signals_json||{}
+  };
+}
+
+export async function getLatestAdoptionDistributionSnapshot(fetchImpl: typeof fetch = globalThis.fetch) {
   const rows = await sql().query(`
     SELECT
       day::text,
@@ -62,27 +118,36 @@ export async function getLatestAdoptionDistributionSnapshot() {
     ORDER BY day DESC
     LIMIT 1
   `) as any[];
-  const row = rows[0];
-  if (!row) {
+  const db=rows[0]?dbSnapshot(rows[0]):null;
+  const automated=await fetchAutomationSnapshot(fetchImpl);
+  const dbTime=db?Date.parse(db.collected_at):Number.NEGATIVE_INFINITY;
+  const autoTime=automated?Date.parse(automated.collected_at):Number.NEGATIVE_INFINITY;
+
+  if(automated&&autoTime>dbTime){
+    try { await recordAdoptionDistributionSnapshot(automated); } catch (error) {
+      console.error(JSON.stringify({event:'adoption_distribution_backfill_error',error:error instanceof Error?error.message:'unknown'}));
+    }
     return {
-      status: 'empty' as const,
-      classification: 'public-distribution-context-not-adoption',
-      snapshot: null
+      status:'ok' as const,
+      classification:'public-distribution-context-not-adoption',
+      source:'github-automation-snapshot' as const,
+      snapshot:{day:automated.collected_at.slice(0,10),...automated}
     };
   }
+
+  if(db){
+    return {
+      status:'ok' as const,
+      classification:'public-distribution-context-not-adoption',
+      source:'neon-aggregate' as const,
+      snapshot:db
+    };
+  }
+
   return {
-    status: 'ok' as const,
-    classification: 'public-distribution-context-not-adoption',
-    snapshot: {
-      day: row.day,
-      collected_at: row.collected_at,
-      checked_surfaces: Number(row.checked_surfaces || 0),
-      healthy_surfaces: Number(row.healthy_surfaces || 0),
-      npm_downloads_7d: row.npm_downloads_7d === null ? null : Number(row.npm_downloads_7d),
-      github_stars: row.github_stars === null ? null : Number(row.github_stars),
-      github_forks: row.github_forks === null ? null : Number(row.github_forks),
-      mcpfield_installs: row.mcpfield_installs === null ? null : Number(row.mcpfield_installs),
-      signals: row.signals_json || {}
-    }
+    status:'empty' as const,
+    classification:'public-distribution-context-not-adoption',
+    source:'none' as const,
+    snapshot:null
   };
 }
