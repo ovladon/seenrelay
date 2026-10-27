@@ -35,8 +35,8 @@ test('Production SLO Watch measures internal synthetic CHECK and auto-manages al
 test('DR drill is isolated and restores from dump into a fresh database',()=>{
   const wf=read('.github/workflows/dr-restore-drill.yml');
   assert.match(wf,/postgres:18/);
-  assert.match(wf,/pg_dump --format=custom/);
-  assert.match(wf,/pg_restore --no-owner --no-privileges/);
+  assert.match(wf,/pg_dump[^\n]*--format=custom/);
+  assert.match(wf,/pg_restore[^\n]*--no-owner --no-privileges/);
   assert.match(wf,/seenrelay_drill/);
   assert.match(wf,/seenrelay_restore/);
   assert.doesNotMatch(wf,/DATABASE_URL|DATABASE_ADMIN_URL|neon\.tech|seenrelay\.com/);
