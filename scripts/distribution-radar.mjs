@@ -13,6 +13,12 @@ const productFacts = JSON.parse(fs.readFileSync(new URL('../public/product-facts
 const pluginManifest = JSON.parse(fs.readFileSync(new URL('../plugin.json', import.meta.url), 'utf8'));
 const portableMcp = JSON.parse(fs.readFileSync(new URL('../mcp.json', import.meta.url), 'utf8'));
 const checks = [];
+const metrics = {
+  npm_downloads_7d: null,
+  github_stars: null,
+  github_forks: null,
+  mcpfield_installs: null
+};
 
 function repositoryString(value) {
   if (typeof value === 'string') return value;
@@ -109,6 +115,40 @@ await run('pypi', 'PyPI promoted client', 'critical', async () => {
   return `seenrelay==${version}`;
 });
 
+
+await run('npm-downloads', 'npm seven-day downloads', 'informational', async () => {
+  const body = await request('https://api.npmjs.org/downloads/point/last-week/seenrelay', { json: true });
+  const value = Number(body?.downloads);
+  if (!Number.isInteger(value) || value < 0) throw new Error('npm downloads response did not contain a non-negative integer');
+  metrics.npm_downloads_7d = value;
+  return `${value} downloads in npm last-week window; reach context only`;
+});
+
+await run('github-repository-reach', 'GitHub repository reach', 'informational', async () => {
+  const body = await request('https://api.github.com/repos/ovladon/seenrelay', { json: true });
+  const stars = Number(body?.stargazers_count);
+  const forks = Number(body?.forks_count);
+  if (!Number.isInteger(stars) || stars < 0 || !Number.isInteger(forks) || forks < 0) {
+    throw new Error('GitHub repository counters were missing or invalid');
+  }
+  metrics.github_stars = stars;
+  metrics.github_forks = forks;
+  return `${stars} stars; ${forks} forks; reach context only`;
+});
+
+await run('mcpfield', 'MCPField listing signal', 'advisory', async () => {
+  const text = await request('https://mcpfield.com/en/skills/seenrelay');
+  if (!/SeenRelay/i.test(text)) throw new Error('MCPField page no longer identifies SeenRelay');
+  const match = text.match(/([0-9][0-9,.]*)\s*(?:installs?|installations?)/i);
+  if (match?.[1]) {
+    const installs = Number(match[1].replaceAll(',', ''));
+    if (Number.isInteger(installs) && installs >= 0) metrics.mcpfield_installs = installs;
+  }
+  return metrics.mcpfield_installs === null
+    ? 'listing reachable; displayed install count not machine-parseable'
+    : `${metrics.mcpfield_installs} displayed installs; not deduplicated users`;
+});
+
 await run('glama', 'Glama connector discovery', 'advisory', async () => {
   const canonicalUrl = 'https://glama.ai/mcp/connectors/io.github.ovladon/seenrelay';
   const canonicalText = await request(canonicalUrl);
@@ -169,6 +209,7 @@ const report = {
   drift: failures.length > 0,
   critical_failure_count: criticalFailures.length,
   advisory_failure_count: failures.filter((check) => check.severity === 'advisory').length,
+  metrics,
   checks
 };
 
