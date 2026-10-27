@@ -1,6 +1,11 @@
 name: Production SLO Watch
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/production-sli-probe.mjs'
+      - '.github/workflows/production-slo-watch.yml'
   schedule:
     - cron: '17 1,7,13,19 * * *'
   workflow_dispatch:
