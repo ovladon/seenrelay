@@ -1,6 +1,12 @@
 name: Distribution Radar
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/distribution-radar.mjs'
+      - 'scripts/publish-adoption-distribution-snapshot.mjs'
+      - '.github/workflows/distribution-radar.yml'
   schedule:
     - cron: '41 5 * * *'
   workflow_dispatch:
