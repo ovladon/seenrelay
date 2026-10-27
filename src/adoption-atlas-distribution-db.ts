@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 export interface AdoptionDistributionSnapshot {
+  [key: string]: unknown;
   collected_at: string;
   checked_surfaces: number;
   healthy_surfaces: number;
