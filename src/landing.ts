@@ -25,6 +25,7 @@ export function publicLandingPage(origin: string): string {
 <link rel="service-meta" type="application/json" href="${origin}/product-facts.json" title="SeenRelay verified product facts">
 <link rel="service-doc" href="${origin}/quickstart" title="SeenRelay integration documentation">
 <link rel="alternate" type="application/json" href="${origin}/.well-known/agent-skills/index.json" title="SeenRelay Agent Skill discovery">
+<link rel="ard" type="application/json" href="${origin}/.well-known/ard.json" title="SeenRelay agentic resource catalog">
 <meta name="theme-color" content="#080a0e">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">

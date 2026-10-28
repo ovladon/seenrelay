@@ -3,7 +3,7 @@ import { publicProductFacts } from './public-facts.generated.js';
 export { clientsPage } from './integrations.js';
 
 export function robotsText(origin: string): string {
-  return `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /admin/\nDisallow: /internal\nDisallow: /internal/\nSitemap: ${origin}/sitemap.xml\n`;
+  return `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /admin/\nDisallow: /internal\nDisallow: /internal/\nAgentmap: ${origin}/.well-known/ard.json\nSitemap: ${origin}/sitemap.xml\n`;
 }
 
 const SITEMAP_PAGES = [
