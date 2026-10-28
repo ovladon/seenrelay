@@ -1,0 +1,39 @@
+{
+  "entries": [
+    {
+      "@context": "https://agenticresourcediscovery.org/context/v1",
+      "identifier": "urn:air:seenrelay.com:mcp:seenrelay",
+      "displayName": "SeenRelay MCP — CHECK and OBSERVE",
+      "type": "application/mcp-server-card+json",
+      "url": "https://seenrelay.com/.well-known/mcp/server-card.json",
+      "description": "Compare a caller-known source-backed value against recent shared observations; contribute only independently validated results. No on-demand browsing or truth guarantee. Native and authoritative controls take precedence.",
+      "capabilities": [
+        "check_fact",
+        "observe_fact"
+      ],
+      "representativeQueries": [
+        "Check whether my known source-backed fact has a recent matching observation before I pay to validate it again",
+        "Record a freshly and independently validated fact for later compatible checks",
+        "Is a recent observation compatible with my known value, or must I validate the source normally?"
+      ]
+    },
+    {
+      "@context": "https://agenticresourcediscovery.org/context/v1",
+      "identifier": "urn:air:seenrelay.com:skill:shadow-audit",
+      "displayName": "SeenRelay native-first shadow audit skill",
+      "type": "application/agent-skills+md",
+      "url": "https://seenrelay.com/.well-known/agent-skills/seenrelay/SKILL.md",
+      "description": "Guide a coding agent through a local prescreen and shadow measurement of repeated expensive read-only validations without suppressing authoritative calls or enabling reuse. Prefer source/provider-native controls; report USE, DO NOT USE or INSUFFICIENT EVIDENCE.",
+      "capabilities": [
+        "local_prescreen",
+        "shadow_audit",
+        "native_control_comparison"
+      ],
+      "representativeQueries": [
+        "Audit my AI agent project for repeated expensive read-only tool calls without changing application behavior",
+        "Compare provider-native caching with SeenRelay shadow measurement before considering reuse",
+        "Find repeated paid browser, search or extraction calls and decide whether SeenRelay is worth using"
+      ]
+    }
+  ]
+}
