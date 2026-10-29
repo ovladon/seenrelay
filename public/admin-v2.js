@@ -45,6 +45,7 @@ function milestone(label,done,detail){const d=document.createElement('div');d.cl
 
 function render(s){
   snapshot=s;csrf=s.csrf;
+  globalThis.SeenRelayOwnerOverview?.render(s);
   const x=s.data?.summary||{},a=s.adoption||{status:'unavailable',summary:{}},ax=a.summary||{},atlas=s.adoption_atlas||{status:'unavailable',summary:{}},at=atlas.summary||{},atlasV1=s.adoption_atlas_v1||{},ae=atlasV1.evidence||{},c=s.controls||{},ss=s.safety||{},r=s.readiness||{},std=r.standards||{},ops=r.operations||{},custody=r.custody_transfer||{},rotation=s.credential_rotation||{};
   const adoptionOk=a.status==='ok';
   const banner=document.getElementById('telemetry-banner');
