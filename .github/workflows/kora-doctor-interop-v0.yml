@@ -1,0 +1,53 @@
+name: KORA Doctor Interop Synthetic v0
+on:
+  pull_request:
+    paths:
+      - 'examples/kora-doctor-interop-v0/**'
+      - '.github/workflows/kora-doctor-interop-v0.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Checkout SeenRelay fixture
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Generate privacy-preserving AUDR fixture and test expected verdicts
+        run: |
+          cd examples/kora-doctor-interop-v0
+          python3 generate_fixture.py
+          node --test test.mjs
+          node classify.mjs fixture.audr.jsonl > /tmp/sr-kora-admission.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/sr-kora-admission.json'))
+          assert len(x['decisions'])==16
+          assert x['summary']['SHADOW_CANDIDATE']==1
+          assert all(not d['auto_reuse_authorized'] and d['verified_saved_usd'] is None for d in x['decisions'])
+          print('SeenRelay advisory synthetic comparator: PASS')
+          PY
+      - name: Verify actual pinned KORA Doctor CLI parses same AUDR fixture
+        run: |
+          set -eu
+          git clone -q --filter=blob:none --no-checkout https://github.com/Krako-Labs/kora-doctor.git /tmp/kora-doctor
+          git -C /tmp/kora-doctor checkout --detach 986f2d44bb8f74aa9e83839e66118884fe446627
+          PYTHONPATH=/tmp/kora-doctor python3 -m kora_doctor audit examples/kora-doctor-interop-v0/fixture.audr.jsonl --json > /tmp/kora-audit.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('/tmp/kora-audit.json'))
+          assert r['records']==32, r
+          assert r['tool_calls']==32, r
+          assert r['runs']==16, r
+          assert r['category_counts'].get('repeated_tool_retrieval',0)>0, r
+          print('KORA Doctor v0.1.10 pinned commit: AUDR PARSE PASS')
+          print('KORA repeated candidate records:',r['category_counts']['repeated_tool_retrieval'])
+          PY
