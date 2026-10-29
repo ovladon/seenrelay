@@ -46,3 +46,24 @@ test('portable agent, MCP Registry, and Gemini manifests stay aligned with the r
   assert.equal(gemini.description, plugin.description);
   assert.equal(gemini.mcpServers?.seenrelay?.description, plugin.description);
 });
+
+test('Codex repository marketplace is opt-in and indexes the existing native-first skill', () => {
+  const portable = json('plugin.json');
+  const codex = json('.codex-plugin', 'plugin.json');
+  const marketplace = json('.agents', 'plugins', 'marketplace.json');
+
+  assert.equal(codex.name, portable.name);
+  assert.equal(codex.version, portable.version);
+  assert.equal(codex.description, portable.description);
+  assert.equal(codex.skills, './skills/');
+  assert.ok(read('skills', 'seenrelay', 'SKILL.md').includes('Start with measurement'));
+  assert.equal(Object.hasOwn(codex, 'mcpServers'), false, 'compatibility overlay must not attach a remote MCP server');
+  assert.equal(Object.hasOwn(codex, 'hooks'), false, 'compatibility overlay must not install lifecycle hooks');
+
+  assert.equal(marketplace.name, 'seenrelay');
+  assert.deepEqual(marketplace.plugins.map((plugin) => plugin.name), ['seenrelay']);
+  const entry = marketplace.plugins[0];
+  assert.deepEqual(entry.source, { source: 'local', path: './' });
+  assert.deepEqual(entry.policy, { installation: 'AVAILABLE', authentication: 'ON_INSTALL' });
+  assert.equal(Object.hasOwn(entry, 'mcpServers'), false);
+});
