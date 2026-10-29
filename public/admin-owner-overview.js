@@ -48,8 +48,8 @@ function model(snapshot,clock=Date.now()){
        detail:'Cross-client technical evidence only. Not necessarily a paid call avoided, monetary savings or a customer.'},
       {title:'3 · Do we know real savings?',value:'NOT MEASURED',label:'External customer net savings',
        detail:'This dashboard has no independent customer bill, best-native comparator or monetized implementation overhead.'},
-      {title:'4 · Are we earning money?',value:'UNKNOWN',label:'Customers and revenue not tracked here',
-       detail:'SeenRelay billing setting: '+billing+'. Free service and absent sales telemetry do not independently prove zero revenue.'}
+      {title:'4 · Are we earning money?',value:'UNKNOWN',label:'Customers and income not tracked here',
+       detail:'SeenRelay billing setting: '+billing+'. Free service and absent sales telemetry do not independently prove zero income.'}
     ],
     signals:[
       {title:'Runtime',detail:warning},
@@ -67,34 +67,34 @@ function add(parent,tag,className,value){
 }
 function render(snapshot){
   const parent=document.querySelector('.grid');if(!parent)return;
-  let root=document.getElementById('founder-overview');
-  if(!root){root=document.createElement('section');root.id='founder-overview';root.className='card span-12 founder-overview';parent.insertBefore(root,parent.firstElementChild)}
+  let root=document.getElementById('owner-overview');
+  if(!root){root=document.createElement('section');root.id='owner-overview';root.className='card span-12 owner-overview';parent.insertBefore(root,parent.firstElementChild)}
   root.replaceChildren();
   const data=model(snapshot);
-  const header=add(root,'div','founder-overview-head');
+  const header=add(root,'div','owner-overview-head');
   const title=add(header,'div','');
-  add(title,'h2','','Founder overview · start here');
-  add(title,'p','founder-sub','What we can verify about adoption, value and money — without confusing activity with customers.');
-  const stamp=add(header,'span','founder-stamp',data.captured_at?'Snapshot: '+data.captured_at:'Snapshot time unavailable');
+  add(title,'h2','','Owner overview · start here');
+  add(title,'p','owner-sub','What we can verify about adoption, value and money — without confusing activity with customers.');
+  const stamp=add(header,'span','owner-stamp',data.captured_at?'Snapshot: '+data.captured_at:'Snapshot time unavailable');
   stamp.setAttribute('aria-label','Snapshot timestamp');
-  const verdict=add(root,'div','founder-verdict');
+  const verdict=add(root,'div','owner-verdict');
   add(verdict,'strong','',data.headline);
   add(verdict,'p','',data.headline_detail);
-  const cardArea=add(root,'div','founder-card-grid');
+  const cardArea=add(root,'div','owner-card-grid');
   for(const card of data.cards){
-    const box=add(cardArea,'div','founder-card');
-    add(box,'span','founder-card-title',card.title);
-    add(box,'strong','founder-card-value',card.value);
-    add(box,'span','founder-card-label',card.label);
-    add(box,'p','founder-card-detail',card.detail);
+    const box=add(cardArea,'div','owner-card');
+    add(box,'span','owner-card-title',card.title);
+    add(box,'strong','owner-card-value',card.value);
+    add(box,'span','owner-card-label',card.label);
+    add(box,'p','owner-card-detail',card.detail);
   }
-  const statusArea=add(root,'div','founder-signal-grid');
+  const statusArea=add(root,'div','owner-signal-grid');
   for(const entry of data.signals){
-    const box=add(statusArea,'div','founder-signal');
+    const box=add(statusArea,'div','owner-signal');
     add(box,'strong','',entry.title);
     add(box,'p','',entry.detail);
   }
-  const glossary=add(root,'details','founder-glossary');
+  const glossary=add(root,'details','owner-glossary');
   add(glossary,'summary','','What do these numbers mean? Read the plain-language guide');
   const dl=add(glossary,'dl','');
   for(const [k,v] of [
@@ -105,9 +105,9 @@ function render(snapshot){
     ['Retained','Counts reflect records still in the database and their retention policy, not all-time historic adoption.'],
     ['Local/opt-in','Client-only runs are invisible to the hosted service unless a user voluntarily shares an aggregate report.'],
     ['Adoption Atlas','An evidence-strength index combining hosted, voluntary and public-reach signals. A score is not a number of users.'],
-    ['Money','Revenue, infrastructure invoices, external customer bill reduction, profit and purchasing intent require independent evidence not stored in this panel.']
+    ['Money','Revenue, infrastructure invoices, external customer bill reduction, margin and purchasing intent require independent evidence not stored in this panel.']
   ]){add(dl,'dt','',k);add(dl,'dd','',v)}
-  add(root,'p','founder-technical-note','Below: technical operations, adoption diagnostics, safety and incident controls. You do not need to change runtime controls to review business progress.');
+  add(root,'p','owner-technical-note','Below: technical operations, adoption diagnostics, safety and incident controls. You do not need to change runtime controls to review business progress.');
 }
 g.SeenRelayOwnerOverview={model,render};
 })();
