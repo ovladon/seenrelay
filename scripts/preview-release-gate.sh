@@ -159,6 +159,16 @@ test "$code" = 404
 grep -q 'BILLING_DISABLED' /tmp/billing.json
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/admin" -o /tmp/admin.html
 grep -q 'SeenRelay Runtime Control Room' /tmp/admin.html
+# Admin depends on client JS; missing assets must not regress into silent form reloads.
+grep -q 'type="button">Unlock' /tmp/admin.html
+grep -q '/admin-v2.js' /tmp/admin.html
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/admin-v2.js" -o /tmp/admin-v2.js
+grep -q 'Password accepted, but your browser did not retain' /tmp/admin-v2.js
+curl -fsS "${bypass[@]}" "$PREVIEW_URL/admin-owner-overview.js" -o /tmp/admin-owner-overview.js
+grep -q 'SeenRelayOwnerOverview' /tmp/admin-owner-overview.js
+code=$(curl -sS "${bypass[@]}" -o /tmp/admin-session.json -w '%{http_code}' "$PREVIEW_URL/admin/api/session")
+test "$code" = 401
+grep -q 'ADMIN_UNAUTHORIZED' /tmp/admin-session.json
 code=$(curl -sS "${bypass[@]}" -o /tmp/admin-api.json -w '%{http_code}' "$PREVIEW_URL/admin/api/operations-export")
 test "$code" = 401
 grep -q 'ADMIN_UNAUTHORIZED' /tmp/admin-api.json

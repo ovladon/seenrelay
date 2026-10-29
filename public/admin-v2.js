@@ -10,7 +10,54 @@ const ago=iso=>{if(!iso)return'never';const t=Date.parse(iso);if(!Number.isFinit
 const when=iso=>iso?new Date(iso).toLocaleString():'not yet';
 function toast(msg){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.append(t)}t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 async function api(url,opts={}){const h={'content-type':'application/json',...(opts.headers||{})};if(csrf&&opts.method&&opts.method!=='GET')h['x-seenrelay-csrf']=csrf;const r=await fetch(url,{credentials:'same-origin',...opts,headers:h});const j=await r.json().catch(()=>({}));if(r.status===401){location.reload();throw new Error('Session expired')}if(!r.ok)throw new Error(j?.error?.code||`HTTP ${r.status}`);return j}
-if(!authenticated){document.getElementById('login')?.addEventListener('submit',async e=>{e.preventDefault();const err=document.getElementById('login-error');err.textContent='';try{await api('/admin/login',{method:'POST',body:JSON.stringify({secret:document.getElementById('secret').value})});location.reload()}catch(x){err.textContent=x.message==='ADMIN_NOT_CONFIGURED'?'ADMIN_SECRET is not configured.':'Access denied.'}});return}
+if(!authenticated){
+  const form=document.getElementById('login');
+  const button=document.getElementById('unlock');
+  const err=document.getElementById('login-error');
+  const input=document.getElementById('secret');
+  button?.addEventListener('click',()=>form?.requestSubmit());
+  form?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(button.disabled)return;
+    button.disabled=true;
+    button.setAttribute('aria-busy','true');
+    button.textContent='Checking access…';
+    err.textContent='';
+    try{
+      const response=await fetch('/admin/login',{
+        method:'POST',credentials:'same-origin',cache:'no-store',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({secret:input.value})
+      });
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok||result.ok!==true){
+        if(response.status===401)throw new Error('The admin secret was not accepted.');
+        if(result?.error?.code==='ADMIN_NOT_CONFIGURED')throw new Error('Admin access is not configured on this deployment.');
+        throw new Error('Login failed (HTTP '+response.status+').');
+      }
+      // A successful password response does not prove that a browser stored its HttpOnly session cookie.
+      // Verify a second, protected request BEFORE navigating. Never expose cookie values or the secret.
+      const verify=await fetch('/admin/api/session',{
+        method:'GET',credentials:'same-origin',cache:'no-store',
+        headers:{accept:'application/json'}
+      });
+      const status=await verify.json().catch(()=>({}));
+      if(!verify.ok||status.authenticated!==true){
+        if(verify.status===401)throw new Error('Password accepted, but your browser did not retain the secure session cookie. Allow cookies for this site and try again.');
+        throw new Error('Password accepted, but the server could not confirm the session (HTTP '+verify.status+').');
+      }
+      input.value='';
+      location.replace('/admin?session_verified='+Date.now());
+    }catch(x){
+      err.textContent=x instanceof Error?x.message:'Unable to sign in. Check your network and browser cookie settings.';
+    }finally{
+      button.disabled=false;
+      button.removeAttribute('aria-busy');
+      button.textContent='Unlock';
+    }
+  });
+  return
+}
 
 app.innerHTML=`<div class="shell">
 <div class="topbar"><div class="title"><h1>SeenRelay Control Room</h1><p>Hosted protocol activity first · first-party bootstrap separated · client-only use is visible only by explicit opt-in</p></div><div class="actions"><span class="badge"><span id="mode-dot" class="dot"></span><span id="mode">—</span></span><button id="refresh" class="btn">Refresh</button><button id="export" class="btn">Export operations</button><button id="housekeep" class="btn">Housekeeping</button><button id="logout" class="btn">Lock</button></div></div>

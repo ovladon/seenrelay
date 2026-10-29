@@ -8,7 +8,7 @@ import { handleMcp } from './mcp.js';
 import { openApi } from './openapi.js';
 import { deriveClientKey } from './identity.js';
 import { checkFact, observeFact } from './service.js';
-import { adminControl, adminHousekeeping, adminLogin, adminLogout, adminOperationsExport, adminPage, adminPlaybook, adminSnapshot } from './admin.js';
+import { adminControl, adminHousekeeping, adminLogin, adminLogout, adminOperationsExport, adminPage, adminPlaybook, adminSnapshot, adminSessionStatus } from './admin.js';
 import { serviceDescriptor } from './public.js';
 import { publicLandingPage } from './landing.js';
 import { quickstartPage } from './quickstart.js';
@@ -373,6 +373,7 @@ app.all('/mcp', (c) => handleMcp(c.req.raw));
 app.get('/internal/maintenance', (c) => maintenanceCron(c.req.raw));
 
 app.get('/admin', (c) => adminPage(c.req.raw));
+app.get('/admin/api/session', (c) => adminSessionStatus(c.req.raw));
 app.post('/admin/login', async (c) => {
   const bounded = await boundedRequest(c.req.raw, Math.min(config().maxBodyBytes, 4096));
   if ('response' in bounded) return bounded.response;
