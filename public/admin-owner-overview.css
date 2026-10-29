@@ -1,26 +1,26 @@
-.founder-overview{border:1px solid #355575;background:linear-gradient(150deg,#132438,#0e1824 72%);padding:24px}
-.founder-overview-head{display:flex;align-items:start;justify-content:space-between;gap:16px}
-.founder-overview-head h2{font-size:24px;margin:0 0 8px;letter-spacing:-.025em}
-.founder-sub{margin:0;color:#adc4d9;max-width:720px;line-height:1.5}
-.founder-stamp{font-size:12px;color:#a1bfd5;flex-shrink:0}
-.founder-verdict{border-left:4px solid #66bd9e;background:rgba(61,141,120,.1);border-radius:6px;padding:14px 18px;margin:22px 0 16px}
-.founder-verdict strong{font-size:19px;display:block;margin-bottom:5px}
-.founder-verdict p{margin:0;font-size:13px;line-height:1.55;color:#b5cbdc}
-.founder-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.founder-card{padding:16px;border:1px solid #304458;border-radius:10px;background:#111c2a;min-width:0}
-.founder-card-title{font-size:12px;color:#bed2df;display:block;margin-bottom:10px}
-.founder-card-value{font-size:22px;line-height:1.2;display:block;color:#eff6fc;overflow-wrap:anywhere}
-.founder-card-label{display:block;color:#80d9bd;font-size:12px;margin:9px 0}
-.founder-card-detail{font-size:12px;color:#b2c2d0;line-height:1.5;margin:0}
-.founder-signal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
-.founder-signal{border-top:1px solid #334858;padding:10px 4px}
-.founder-signal strong{font-size:12px}
-.founder-signal p{color:#b0c6d6;font-size:12px;line-height:1.5;margin:5px 0}
-.founder-glossary{margin-top:12px;background:rgba(255,255,255,.035);border:1px solid #314453;border-radius:8px;padding:12px 16px}
-.founder-glossary summary{cursor:pointer;font-weight:600;color:#e0f2f7}
-.founder-glossary dl{display:grid;grid-template-columns:165px 1fr;gap:9px 14px;font-size:12px;line-height:1.5;margin:16px 0 4px}
-.founder-glossary dt{font-weight:600;color:#d4e5f0}
-.founder-glossary dd{margin:0;color:#b8cbd9}
-.founder-technical-note{margin:12px 0 0;color:#94acbe;font-size:12px}
-@media(max-width:1100px){.founder-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:670px){.founder-overview{padding:15px}.founder-overview-head{flex-direction:column}.founder-card-grid,.founder-signal-grid{grid-template-columns:1fr}.founder-glossary dl{grid-template-columns:1fr;gap:3px}.founder-glossary dd{margin-bottom:9px}}
+.owner-overview{border:1px solid #355575;background:linear-gradient(150deg,#132438,#0e1824 72%);padding:24px}
+.owner-overview-head{display:flex;align-items:start;justify-content:space-between;gap:16px}
+.owner-overview-head h2{font-size:24px;margin:0 0 8px;letter-spacing:-.025em}
+.owner-sub{margin:0;color:#adc4d9;max-width:720px;line-height:1.5}
+.owner-stamp{font-size:12px;color:#a1bfd5;flex-shrink:0}
+.owner-verdict{border-left:4px solid #66bd9e;background:rgba(61,141,120,.1);border-radius:6px;padding:14px 18px;margin:22px 0 16px}
+.owner-verdict strong{font-size:19px;display:block;margin-bottom:5px}
+.owner-verdict p{margin:0;font-size:13px;line-height:1.55;color:#b5cbdc}
+.owner-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.owner-card{padding:16px;border:1px solid #304458;border-radius:10px;background:#111c2a;min-width:0}
+.owner-card-title{font-size:12px;color:#bed2df;display:block;margin-bottom:10px}
+.owner-card-value{font-size:22px;line-height:1.2;display:block;color:#eff6fc;overflow-wrap:anywhere}
+.owner-card-label{display:block;color:#80d9bd;font-size:12px;margin:9px 0}
+.owner-card-detail{font-size:12px;color:#b2c2d0;line-height:1.5;margin:0}
+.owner-signal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.owner-signal{border-top:1px solid #334858;padding:10px 4px}
+.owner-signal strong{font-size:12px}
+.owner-signal p{color:#b0c6d6;font-size:12px;line-height:1.5;margin:5px 0}
+.owner-glossary{margin-top:12px;background:rgba(255,255,255,.035);border:1px solid #314453;border-radius:8px;padding:12px 16px}
+.owner-glossary summary{cursor:pointer;font-weight:600;color:#e0f2f7}
+.owner-glossary dl{display:grid;grid-template-columns:165px 1fr;gap:9px 14px;font-size:12px;line-height:1.5;margin:16px 0 4px}
+.owner-glossary dt{font-weight:600;color:#d4e5f0}
+.owner-glossary dd{margin:0;color:#b8cbd9}
+.owner-technical-note{margin:12px 0 0;color:#94acbe;font-size:12px}
+@media(max-width:1100px){.owner-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:670px){.owner-overview{padding:15px}.owner-overview-head{flex-direction:column}.owner-card-grid,.owner-signal-grid{grid-template-columns:1fr}.owner-glossary dl{grid-template-columns:1fr;gap:3px}.owner-glossary dd{margin-bottom:9px}}
