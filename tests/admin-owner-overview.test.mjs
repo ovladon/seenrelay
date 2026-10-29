@@ -28,7 +28,7 @@ test('owner summary counts are telemetry, not people or commercial claims',()=>{
  assert.equal(s.cards[2].value,'NOT MEASURED');
  assert.equal(s.cards[3].value,'UNKNOWN');
  assert.match(s.cards[3].detail,/OFF/);
- assert.match(s.headline_detail,/1 hours ago/);
+ assert.match(s.headline_detail,/1 hour ago/);
 });
 test('unavailable external classification must show UNKNOWN rather than zero',()=>{
  const s=model({...base,adoption:{status:'unavailable',summary:{}}});
@@ -60,6 +60,7 @@ test('missing fields do not silently become zero, bad timestamps do not crash',(
  const s=model({...base,now:'bad',adoption:{status:'ok',summary:{last_external_activity_at:'wrong'}}});
  assert.equal(s.cards[0].value,'UNKNOWN');
  assert.equal(s.cards[1].value,'UNKNOWN');
+ assert.match(s.headline,/External count unavailable/);
  assert.match(s.headline_detail,/not recorded/);
 });
 test('one shot initialization is read-only and does not call a remote endpoint',()=>{
