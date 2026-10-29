@@ -105,7 +105,7 @@ function render(snapshot){
     ['Retained','Counts reflect records still in the database and their retention policy, not all-time historic adoption.'],
     ['Local/opt-in','Client-only runs are invisible to the hosted service unless a user voluntarily shares an aggregate report.'],
     ['Adoption Atlas','An evidence-strength index combining hosted, voluntary and public-reach signals. A score is not a number of users.'],
-    ['Money','Revenue, infrastructure invoices, external customer bill reduction, margin and purchasing intent require independent evidence not stored in this panel.']
+    ['Money','income, infrastructure invoices, external customer bill reduction, margin and purchasing intent require independent evidence not stored in this panel.']
   ]){add(dl,'dt','',k);add(dl,'dd','',v)}
   add(root,'p','owner-technical-note','Below: technical operations, adoption diagnostics, safety and incident controls. You do not need to change runtime controls to review business progress.');
 }
