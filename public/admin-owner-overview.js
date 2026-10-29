@@ -12,9 +12,9 @@ function when(value,clock=Date.now()){
   const ms=Date.parse(value);if(!Number.isFinite(ms))return 'not recorded';
   const age=Math.max(0,Math.floor((clock-ms)/1000));
   if(age<60)return 'less than a minute ago';
-  if(age<3600)return Math.floor(age/60)+' minutes ago';
-  if(age<86400)return Math.floor(age/3600)+' hours ago';
-  return Math.floor(age/86400)+' days ago';
+  if(age<3600){const n=Math.floor(age/60);return n+' minute'+(n===1?'':'s')+' ago';}
+  if(age<86400){const n=Math.floor(age/3600);return n+' hour'+(n===1?'':'s')+' ago';}
+  const n=Math.floor(age/86400);return n+' day'+(n===1?'':'s')+' ago';
 }
 function model(snapshot,clock=Date.now()){
   const a=snapshot?.adoption;
@@ -39,7 +39,7 @@ function model(snapshot,clock=Date.now()){
   const warning=mode==='NORMAL'?'Running normally':mode==='UNKNOWN'?'Runtime status unknown':'Non-normal mode: '+mode+' (review operational controls)';
   return {
     captured_at:typeof snapshot?.now==='string'?snapshot.now:null,
-    headline:good?(external===0?'No retained external hosted adoption yet':'External hosted activity recorded'):'Adoption visibility unavailable',
+    headline:good?(external===null?'External count unavailable':external===0?'No retained external hosted leases recorded':'External hosted activity recorded'):'Adoption visibility unavailable',
     headline_detail:good?count(external)+' retained external protocol leases; last external activity '+age+'. These are not unique people or companies.':'No external counts are inferred while classification is unavailable.',
     cards:[
       {title:'1 · Are outsiders using it?',value:count(external),label:'Retained external protocol leases',
