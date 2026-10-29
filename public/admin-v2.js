@@ -20,6 +20,7 @@ if(!authenticated){
     e.preventDefault();
     if(button.disabled)return;
     button.disabled=true;
+    button.setAttribute('aria-busy','true');
     button.textContent='Checking access…';
     err.textContent='';
     try{
@@ -51,6 +52,7 @@ if(!authenticated){
       err.textContent=x instanceof Error?x.message:'Unable to sign in. Check your network and browser cookie settings.';
     }finally{
       button.disabled=false;
+      button.removeAttribute('aria-busy');
       button.textContent='Unlock';
     }
   });
