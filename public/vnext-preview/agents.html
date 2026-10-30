@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="SeenRelay isolated agent onboarding design preview. Discover the current machine contract, start with a local assessment, and preserve source validation when evidence is insufficient.">
+  <title>SeenRelay agents — isolated design preview</title>
+  <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./theme.css">
+  <link rel="stylesheet" href="./guide.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="prototype-banner" role="note"><span class="signal"></span><strong>Isolated design preview.</strong> This is an onboarding prototype, not a new API, Agent Skill release or live marketplace.</div>
+  <header class="site-header">
+    <div class="shell nav-row">
+      <a class="brand" href="./index.html" aria-label="SeenRelay preview home"><img src="/seenrelay-logo.svg" width="35" height="35" alt=""><span>seenrelay</span><span class="brand-mark">/ network intelligence</span></a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="./index.html#how">How it works</a>
+        <a href="/clients">Integrations</a>
+        <a href="/proof">Proof</a>
+        <a href="/trust">Trust</a>
+        <a href="./agents.html" aria-current="page">For agents</a>
+      </nav>
+      <a class="nav-cta" href="./index.html#start">Start locally <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <main id="main">
+    <section class="guide-hero shell">
+      <p class="eyebrow"><span class="line-glyph"></span> AGENT-FIRST ONBOARDING</p>
+      <h1>Read the contract.<br><span>Decide from evidence.</span></h1>
+      <p class="lede">Integrate through stable machine descriptors—not by extracting instructions from website copy. Start with a safe local measurement. Keep normal source execution whenever freshness, identity, rights or economics are insufficient.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="/agent-adoption.json">Machine onboarding descriptor <span aria-hidden="true">↗</span></a>
+        <a class="button secondary" href="/openapi.json">Current OpenAPI <span aria-hidden="true">↗</span></a>
+      </div>
+      <p class="hero-footnote">The current public protocol has exactly two domain operations: CHECK and OBSERVE. This preview does not change either operation.</p>
+    </section>
+    <section class="segment shell" aria-labelledby="discovery-title">
+      <div class="section-intro">
+        <div><p class="eyebrow">01 / DISCOVER</p><h2 id="discovery-title">One canonical entry.<br><span class="muted">No screen scraping.</span></h2></div>
+        <p>These links point to the existing deployed machine interfaces. A machine client should verify their advertised versions, request schemas and compatibility before execution.</p>
+      </div>
+      <div class="guide-grid">
+        <a class="guide-card" href="/service.json"><span class="guide-card-index">01 / SERVICE</span><h3>Capabilities and endpoints</h3><p>Identify the current service and supported discovery surfaces.</p><code>/service.json</code></a>
+        <a class="guide-card" href="/agent-adoption.json"><span class="guide-card-index">02 / ADOPTION</span><h3>Machine-first installation</h3><p>Use the current onboarding descriptor as source-of-truth for an automated client.</p><code>/agent-adoption.json</code></a>
+        <a class="guide-card" href="/openapi.json"><span class="guide-card-index">03 / CONTRACT</span><h3>Typed REST operations</h3><p>Inspect schemas, statuses and errors before composing calls.</p><code>/openapi.json</code></a>
+        <a class="guide-card" href="/.well-known/agent-skills/seenrelay/SKILL.md"><span class="guide-card-index">04 / SKILL</span><h3>Agent Skill instructions</h3><p>Compare the installed Skill with the served canonical version; do not assume a cached copy is current.</p><code>/.well-known/agent-skills/…</code></a>
+      </div>
+    </section>
+    <section class="segment guide-band" aria-labelledby="flow-title">
+      <div class="shell">
+        <div class="section-intro">
+          <div><p class="eyebrow">02 / A SAFE FIRST RUN</p><h2 id="flow-title">Observe. Qualify.<br><span class="muted">Keep only what works.</span></h2></div>
+          <p>Agents should not begin by suppressing real operations. Evaluation must first establish a compatible target and an economically meaningful residual after native controls.</p>
+        </div>
+        <ol class="guide-steps">
+          <li><span class="guide-step-num">01</span><div><h3>Inspect locally</h3><p>Run the supported local scan and identify expensive repeated read-only calls. Keep prompts, source values and private paths local.</p><div class="guide-command"><code>npx seenrelay scan</code></div></div></li>
+          <li><span class="guide-step-num">02</span><div><h3>Honor source-native controls</h3><p>Try authoritative validators, native caching and existing batching or single-flight mechanisms first. A stronger native baseline is a correct stop condition.</p></div></li>
+          <li><span class="guide-step-num">03</span><div><h3>Measure before suppression</h3><p>Use a shadow assessment for actual compatible demand, correctness, freshness and SeenRelay overhead. Do not classify synthetic results as customer savings.</p></div></li>
+          <li><span class="guide-step-num">04</span><div><h3>Use qualified evidence—or validate normally</h3><p>A matching historical observation can support a decision only within policy and scope. If anything is unknown, stale, contested, incompatible or rights-restricted, perform the normal authoritative source operation.</p></div></li>
+        </ol>
+      </div>
+    </section>
+    <section class="segment shell" aria-labelledby="operations-title">
+      <div class="section-intro">
+        <div><p class="eyebrow">03 / SOURCE-BASED PROTOCOL</p><h2 id="operations-title">Two operations.<br><span class="muted">Explicit uncertainty.</span></h2></div>
+        <p>CHECK compares a buyer-held known value against bounded recent observations. OBSERVE follows independently obtained source information. Neither operation is an external source fetch by SeenRelay.</p>
+      </div>
+      <div class="guide-grid guide-grid-two">
+        <article class="guide-card">
+          <span class="guide-card-index">POST /v1/check</span>
+          <h3>Check a known value</h3>
+          <p>Submit a canonical fact descriptor, existing known value and maximum age. Read the response status and provenance; never infer that a signature alone proves source truth.</p>
+          <div class="guide-code"><code>SAME_OBSERVED · CHANGED_OBSERVED<br>CONTESTED · STALE · UNKNOWN</code></div>
+        </article>
+        <article class="guide-card">
+          <span class="guide-card-index">POST /v1/observe</span>
+          <h3>Report an actual source observation</h3>
+          <p>Only after your agent has legitimately acquired the source value. Preserve exact source, locator, variant, rights and time; use idempotency and appropriate observer proof.</p>
+          <div class="guide-code"><code>Authoritative acquisition happens first.<br>No reward for OBSERVE alone.</code></div>
+        </article>
+      </div>
+      <p class="guide-disclaimer">Field-level change maps, cross-provider network sales and change forecasting are research directions—not capabilities claimed by these current endpoints.</p>
+      <a class="inline-link" href="/agents">Read the currently published agent guide <span aria-hidden="true">↗</span></a>
+    </section>
+    <section class="segment shell guide-end">
+      <p class="eyebrow">04 / KEEP THE BOUNDARY</p>
+      <h2>Correctness is part of the economics.</h2>
+      <p>A cheap shortcut is worthless if it crosses a tenant, misidentifies a variant, violates source rights, or acts on obsolete information. SeenRelay must remain able to say <strong>DO NOT USE</strong>.</p>
+      <div class="hero-actions"><a class="button primary" href="/trust">Trust and privacy</a><a class="button secondary" href="/proof">Evidence and negative cases</a></div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner"><span><strong>seenrelay</strong> — better decisions about costly observations.</span><div><a href="./index.html">Preview home</a><a href="/privacy">Privacy</a><a href="/trust">Trust</a><a href="/">Current website</a></div></div>
+    <p class="shell legal-note">Isolated preview. The live machine contracts remain authoritative. This page neither activates trading nor promises savings.</p>
+  </footer>
+</body>
+</html>

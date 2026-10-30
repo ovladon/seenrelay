@@ -27,3 +27,10 @@ Preliminary WCAG relative luminance calculations show primary/secondary/jade/blu
 ## Next work
 
 Replace the static prototype with integrated full-site page templates and shared design tokens in an isolated branch. Build automated screenshot and accessibility baselines; confirm actual self-serve and agent flows, refine with usability evidence, and stage a reversible website cutover.
+
+## Expanded isolated agent journey (2026-10-30)
+
+- agents.html adds a consistent second preview page: canonical machine discovery, local scan, native-first controls, CHECK/OBSERVE status boundaries and explicit rejection of unverified source-value delivery.
+- guide.css reuses existing semantic theme tokens; no new third-party dependencies or network operations.
+- Preview homepage navigation now links to the new agent page. Existing /agents, /clients, /proof, /trust and machine endpoints remain unchanged.
+- Still requires visual/mobile/keyboard/Agent Skill install-byte end-to-end verification before any Production decision.
