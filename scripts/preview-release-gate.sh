@@ -91,6 +91,26 @@ grep -q 'Shadow measurement keeps the original authoritative call' /tmp/site.htm
 grep -qi 'no SeenRelay API key' /tmp/site.html
 grep -q 'Agent tool calls' /tmp/site.html
 grep -q 'Polling / CI / monitors' /tmp/site.html
+# Additive candidate QA: keep all canonical homepage and service checks above intact.
+# Verify isolated website-design files really resolve on the deployed preview host.
+if [ -f public/vnext-preview/index.html ]; then
+  curl -fsS "${bypass[@]}" -H 'accept: text/html' "$PREVIEW_URL/vnext-preview/index.html" -o /tmp/vnext-candidate.html
+  grep -q '<!doctype html>' /tmp/vnext-candidate.html
+  grep -q 'Isolated design preview' /tmp/vnext-candidate.html
+  grep -q 'SIMULATED FIELD MAP' /tmp/vnext-candidate.html
+  grep -q 'npx seenrelay scan' /tmp/vnext-candidate.html
+  grep -q '/service.json' /tmp/vnext-candidate.html
+  curl -fsS "${bypass[@]}" -H 'accept: text/html' "$PREVIEW_URL/vnext-preview/agents.html" -o /tmp/vnext-agents.html
+  grep -q 'Isolated design preview' /tmp/vnext-agents.html
+  grep -q '/openapi.json' /tmp/vnext-agents.html
+  curl -fsS "${bypass[@]}" "$PREVIEW_URL/vnext-preview/theme.css" -o /tmp/vnext-theme.css
+  curl -fsS "${bypass[@]}" "$PREVIEW_URL/vnext-preview/guide.css" -o /tmp/vnext-guide.css
+  curl -fsS "${bypass[@]}" "$PREVIEW_URL/vnext-preview/demo.js" -o /tmp/vnext-demo.js
+  test -s /tmp/vnext-theme.css
+  test -s /tmp/vnext-guide.css
+  test -s /tmp/vnext-demo.js
+fi
+
 curl -fsS "${bypass[@]}" "$PREVIEW_URL/revamp.js" -o /tmp/revamp.js
 grep -q 'web-starter-check' /tmp/revamp.js
 grep -q 'fetch(catalogEndpoint' /tmp/revamp.js
