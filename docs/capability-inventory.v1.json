@@ -9,7 +9,7 @@
       "id": "protocol.check",
       "status": "active",
       "domain": "runtime",
-      "criticality": "supported",
+      "criticality": "release-critical",
       "checks": [
         {
           "path": "src/index.ts",
@@ -21,7 +21,7 @@
       "id": "protocol.observe",
       "status": "active",
       "domain": "runtime",
-      "criticality": "supported",
+      "criticality": "release-critical",
       "checks": [
         {
           "path": "src/index.ts",
