@@ -37,8 +37,13 @@ Replace the static prototype with integrated full-site page templates and shared
 
 ## Opening the redesigned preview (reviewer instructions)
 
-The root homepage of the CURRENT Production deployment remains unchanged by design. The Vercel `seenrelay` deployment for THIS pull request/branch must be opened, not the separate `seenrelay-readiness` check. With Vercel system environment variables exposed, opening its `/` route in a browser now returns a temporary redirect to `/vnext-preview/index.html`, while non-HTML calls to `/` still receive the current machine service descriptor. Other preview branches and Production remain on the existing homepage.
+The current Production homepage and the root route of this Vercel branch deployment intentionally remain identical. The existing Preview Release Gate verifies these public onboarding/proof contracts, machine discovery, billing-disabled behavior and safety. The isolated design is NOT promoted to `/` until those requirements are carried over and tested.
 
-To bypass the homepage router when verifying static assets, append `/vnext-preview/index.html` to the Vercel deployment host. The accompanying `/vnext-preview/agents.html` is the second standalone design page. If Vercel system variables are not exposed, branch-only redirect will NOT activate; use the direct static path and check deployment configuration. Vercel Authentication may require the authorized project owner to sign in; do not weaken deployment protection for design review.
+Open the `Vercel – seenrelay` deployment for this pull request (NOT `seenrelay-readiness`), then navigate directly to:
 
-New `tests/site-vnext-isolated-preview-route.test.mjs` checks that the branch-only redirect is scoped and the existing production HTML and machine-descriptor fallbacks remain in the source. Full visual/mobile/keyboard QA remains a separate promotion blocker.
+- `/vnext-preview/index.html` — redesign homepage and clearly labeled future fingerprint-map simulation.
+- `/vnext-preview/agents.html` — integrated agent-first design experiment.
+
+As verified by the Preview Release Gate workflow's URL-resolution log, the PR preview deployment host for 2026-10-30 was `https://seenrelay-git-a10-site-vnext-iso-22eb44-ovladonn-9636s-projects.vercel.app`. For that deployment, the full candidate homepage URL is `https://seenrelay-git-a10-site-vnext-iso-22eb44-ovladonn-9636s-projects.vercel.app/vnext-preview/index.html`. A later deployment may assign a different host; use its current GitHub check status if so. If Vercel Authentication blocks access, use the project owner's authorized sign-in and do not weaken protection.
+
+The regression test `tests/site-vnext-isolated-preview-route.test.mjs` checks that the canonical root route remains intact and candidate static assets exist. Vercel/CI checks alone do NOT replace visual, responsive, contrast, keyboard, or end-to-end agent installation testing.
