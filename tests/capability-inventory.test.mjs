@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { validateInventory, compareToBaseline } from '../scripts/verify-capability-inventory.mjs';
 
 const inventory = JSON.parse(fs.readFileSync(new URL('../docs/capability-inventory.v1.json', import.meta.url), 'utf8'));
