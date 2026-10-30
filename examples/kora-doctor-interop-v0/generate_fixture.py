@@ -35,6 +35,7 @@ for index,(case,outcome,opt) in enumerate(CASES,1):
       'sr.tenant_hmac':h('tenant:'+case+('other' if j and opt.get('tenant_change') else '')),
       'sr.auth_scope_hmac':h('auth:'+case+('other' if j and opt.get('auth_change') else '')),
       'sr.environment_hash':h('environment-v1'),
+      'sr.source_id_hash':h('source-id:'+case),
       'sr.source_version_hash':h('source:'+case+('v2' if j and opt.get('version_change') else 'v1')),
       'sr.dependencies_hash':h('dependencies:'+case),
       'sr.dependencies_complete':'false' if opt.get('incomplete') else 'true',
