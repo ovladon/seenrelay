@@ -34,3 +34,11 @@ Replace the static prototype with integrated full-site page templates and shared
 - guide.css reuses existing semantic theme tokens; no new third-party dependencies or network operations.
 - Preview homepage navigation now links to the new agent page. Existing /agents, /clients, /proof, /trust and machine endpoints remain unchanged.
 - Still requires visual/mobile/keyboard/Agent Skill install-byte end-to-end verification before any Production decision.
+
+## Opening the redesigned preview (reviewer instructions)
+
+The root homepage of the CURRENT Production deployment remains unchanged by design. The Vercel `seenrelay` deployment for THIS pull request/branch must be opened, not the separate `seenrelay-readiness` check. With Vercel system environment variables exposed, opening its `/` route in a browser now returns a temporary redirect to `/vnext-preview/index.html`, while non-HTML calls to `/` still receive the current machine service descriptor. Other preview branches and Production remain on the existing homepage.
+
+To bypass the homepage router when verifying static assets, append `/vnext-preview/index.html` to the Vercel deployment host. The accompanying `/vnext-preview/agents.html` is the second standalone design page. If Vercel system variables are not exposed, branch-only redirect will NOT activate; use the direct static path and check deployment configuration. Vercel Authentication may require the authorized project owner to sign in; do not weaken deployment protection for design review.
+
+New `tests/site-vnext-isolated-preview-route.test.mjs` checks that the branch-only redirect is scoped and the existing production HTML and machine-descriptor fallbacks remain in the source. Full visual/mobile/keyboard QA remains a separate promotion blocker.
