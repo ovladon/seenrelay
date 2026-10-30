@@ -88,6 +88,13 @@ app.get('/', (c) => {
   c.header('link', publicDiscoveryLinks(origin));
   c.header('content-language', 'en');
   if (accept.includes('text/html')) {
+    // This branch-only presentation route cannot affect Production or other previews.
+    // The canonical service descriptor remains available to non-HTML callers.
+    if (process.env.VERCEL_ENV === 'preview' &&
+        process.env.VERCEL_GIT_COMMIT_REF === 'a10/site-vnext-isolated-prototype-20261030') {
+      c.header('cache-control', 'no-store');
+      return c.redirect('/vnext-preview/index.html', 302);
+    }
     c.header('content-security-policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'");
     c.header('cache-control', 'public, max-age=60');
     return c.html(publicLandingPage(origin));
