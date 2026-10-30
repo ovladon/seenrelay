@@ -8,7 +8,7 @@ const agent=fs.readFileSync(new URL('../src/agent-adoption.ts',import.meta.url),
 const skill=fs.readFileSync(new URL('../shared/agent-skill.mjs',import.meta.url),'utf8');
 
 test('GitHub cost prescreen pins the current verified public client',()=>{
-  assert.match(action,new RegExp('seenrelay@'+facts.install.client_version.replace(/\./g,'\\.')));
+  assert.ok(action.includes(`seenrelay@${facts.install.client_version}`), 'GitHub action must pin the literal published client version');
 });
 
 test('GitHub cost prescreen remains local-only and pre-evidentiary',()=>{
