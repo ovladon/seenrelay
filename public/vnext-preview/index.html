@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="SeenRelay site vNext design prototype. Understand when external observations need repeating, evaluate native alternatives first, and start with a safe local assessment.">
+  <title>SeenRelay — Site vNext design preview</title>
+  <link rel="icon" href="/seenrelay-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./theme.css">
+  <script defer src="./demo.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="prototype-banner" role="note"><span class="signal"></span><strong>Isolated design preview.</strong> The change-map interaction below is simulated research UX, not a deployed SeenRelay capability or live marketplace.</div>
+  <header class="site-header">
+    <div class="shell nav-row">
+      <a class="brand" href="/" aria-label="SeenRelay home"><img src="/seenrelay-logo.svg" width="35" height="35" alt=""><span>seenrelay</span><span class="brand-mark">/ network intelligence</span></a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="/clients">Integrations</a>
+        <a href="/proof">Proof</a>
+        <a href="/trust">Trust</a>
+        <a href="#agents">For agents</a>
+      </nav>
+      <a class="nav-cta" href="#start">Start locally <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="line-glyph"></span> The economic preflight for agent observations</p>
+        <h1>Before you look again, <em>know if you need to.</em></h1>
+        <p class="lede">Agents repeatedly pay to check information that another compatible process may have observed recently. SeenRelay helps identify the work that can safely be avoided—and the work that still needs a real source check.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#start">Try it on your own workload <span aria-hidden="true">↗</span></a>
+          <a class="button secondary" href="#how">See the decision process <span aria-hidden="true">↓</span></a>
+        </div>
+        <p class="hero-footnote"><span class="tick" aria-hidden="true">✓</span> Local-first assessment <span aria-hidden="true">·</span> Native controls first <span aria-hidden="true">·</span> No savings assumed</p>
+      </div>
+      <aside class="hero-diagram" aria-labelledby="diagram-title">
+        <div class="diagram-top"><span class="live-dot"></span><span>DECISION TRACE</span><span class="sim-label">Illustrative</span></div>
+        <h2 id="diagram-title">One eligible observation. Multiple decisions.</h2>
+        <div class="flow-step">
+          <span class="step-code">01 / ASK</span><div><strong>Another agent needs a source check</strong><p>Same qualified fact identity and compatible context.</p></div>
+        </div>
+        <div class="flow-connector" aria-hidden="true"></div>
+        <div class="flow-step">
+          <span class="step-code">02 / QUALIFY</span><div><strong>Compare source, age and assurance</strong><p>Never extend hard freshness requirements.</p></div>
+        </div>
+        <div class="flow-connector" aria-hidden="true"></div>
+        <div class="flow-step highlighted">
+          <span class="step-code">03 / DECIDE</span><div><strong>Reuse evidence or validate first-hand</strong><p>If evidence is insufficient, do the normal read.</p></div>
+        </div>
+        <div class="diagram-footer"><span class="mini-icon" aria-hidden="true">↳</span> A correct <strong>DO NOT USE</strong> is a useful result.</div>
+      </aside>
+    </section>
+
+    <section id="how" class="segment shell">
+      <div class="section-intro">
+        <div><p class="eyebrow">01 / THE IDEA</p><h2>Observe precisely.<br><span class="muted">Recheck only what matters.</span></h2></div>
+        <p>From one coarse fingerprint to individually relevant fields. This is the proposed Freshness Network direction; the interactive example is a simulation of future fine-grained change detection.</p>
+      </div>
+      <div class="demo-layout">
+        <div class="demo-controls">
+          <p class="demo-kicker">SIMULATED FIELD MAP</p>
+          <h3>What did the next observation change?</h3>
+          <p class="small-copy">Switch between two possible results. A hash indicates a difference; it does not reveal the new value.</p>
+          <div class="toggle-group" role="group" aria-label="Simulated observation result">
+            <button type="button" class="toggle is-active" data-state="same" aria-pressed="true">No relevant change</button>
+            <button type="button" class="toggle" data-state="changed" aria-pressed="false">Relevant fields changed</button>
+          </div>
+          <div class="agent-interest">
+            <span class="interest-label">AGENT INTEREST MANIFEST</span>
+            <p>Track <strong>price</strong> and <strong>availability</strong>. RAM and color are not required for this decision.</p>
+          </div>
+          <p id="demo-verdict" class="verdict" aria-live="polite">No monitored dependency changed in the two observed snapshots. Existing conclusions may remain compatible, subject to freshness and assurance.</p>
+        </div>
+        <div class="fingerprint-panel" aria-label="Simulated hierarchical fingerprint changes">
+          <div class="panel-head"><span>product / 123</span><span class="hash">root:f8b6…</span></div>
+          <div class="tree-branch">
+            <div class="tree-row group"><span>Commercial fields</span><span id="commercial-status" class="status stable">MATCH</span></div>
+            <div class="tree-row leaf"><span>↳ price.amount</span><span id="price-status" class="status stable">MATCH</span></div>
+            <div class="tree-row leaf"><span>↳ availability</span><span id="stock-status" class="status stable">MATCH</span></div>
+          </div>
+          <div class="tree-branch">
+            <div class="tree-row group"><span>Technical fields</span><span id="technical-status" class="status stable">MATCH</span></div>
+            <div class="tree-row leaf"><span>↳ ram_gb</span><span id="ram-status" class="status stable">MATCH</span></div>
+            <div class="tree-row leaf"><span>↳ color</span><span id="color-status" class="status stable">MATCH</span></div>
+          </div>
+          <p class="panel-note">No raw source content is represented in this hypothetical fingerprint mirror. These are simulated outcomes, not live observations.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="start" class="segment segment-start">
+      <div class="shell start-grid">
+        <div>
+          <p class="eyebrow">02 / START WITH WHAT EXISTS TODAY</p>
+          <h2>Find out whether SeenRelay belongs in your stack.</h2>
+          <p>Run a local assessment, review the evidence, then enable only what passes the native-first economic and safety tests.</p>
+          <div class="command" aria-label="Local assessment command"><code>npx seenrelay scan</code><button id="copy-command" type="button" aria-label="Copy local assessment command">Copy</button></div>
+          <p class="command-note" id="copy-status" aria-live="polite">No account needed for the local assessment. Check prerequisites in the documentation.</p>
+        </div>
+        <div class="start-steps">
+          <div><span>1</span><p><strong>Inspect locally</strong><small>Find recurring read-only work and native alternatives.</small></p></div>
+          <div><span>2</span><p><strong>Test safely</strong><small>Shadow actual calls without suppressing any operation.</small></p></div>
+          <div><span>3</span><p><strong>Keep or remove</strong><small>Require real incremental savings before adoption.</small></p></div>
+          <a href="/quickstart">Full guided quickstart <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="segment shell evidence">
+      <div class="section-intro">
+        <div><p class="eyebrow">03 / EVIDENCE BEFORE CLAIMS</p><h2>Sometimes native wins.<br><span class="muted">We show that too.</span></h2></div>
+        <p>Controlled mechanism tests demonstrate what is technically possible. They are not proof of recurring savings for independent customers.</p>
+      </div>
+      <div class="evidence-grid">
+        <article class="fact-card"><span class="fact-icon">✓</span><h3>Source-native first</h3><p>Prefer existing provider caching, conditional requests and shared controls wherever they are better.</p></article>
+        <article class="fact-card"><span class="fact-icon">↗</span><h3>Safe fallback</h3><p>Insufficient evidence means normal authoritative validation, not a speculative shortcut.</p></article>
+        <article class="fact-card"><span class="fact-icon">≠</span><h3>Proof has levels</h3><p>Keep simulated examples, controlled tests, natural workloads and customer outcomes distinct.</p></article>
+      </div>
+      <a class="inline-link" href="/proof">Explore the published evidence and limitations <span aria-hidden="true">↗</span></a>
+    </section>
+
+    <section id="agents" class="segment shell agent-section">
+      <div>
+        <p class="eyebrow">04 / AGENTS ARE FIRST-CLASS USERS</p>
+        <h2>Don't scrape the website.<br><span class="muted">Read the machine contract.</span></h2>
+        <p>Deterministic discovery, compatibility, structured schemas and documented fallbacks. The existing public protocol remains CHECK and OBSERVE.</p>
+        <a class="button secondary" href="/agents">Agent installation guide <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="machine-links" aria-label="Public machine-readable endpoints">
+        <a href="/service.json"><span>Service descriptor</span><code>/service.json</code><span aria-hidden="true">↗</span></a>
+        <a href="/agent-adoption.json"><span>Agent onboarding</span><code>/agent-adoption.json</code><span aria-hidden="true">↗</span></a>
+        <a href="/openapi.json"><span>OpenAPI contract</span><code>/openapi.json</code><span aria-hidden="true">↗</span></a>
+        <a href="/.well-known/agent-skills/seenrelay/SKILL.md"><span>Agent Skill</span><code>/.well-known/agent-skills/…</code><span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner"><span><strong>seenrelay</strong> — read only when the evidence justifies it.</span><div><a href="/privacy">Privacy</a><a href="/trust">Trust</a><a href="/clients">Clients</a><a href="/">Current website</a></div></div>
+    <p class="shell legal-note">This is an isolated design prototype. Site descriptions do not supersede the canonical deployed API or establish marketplace availability, customer savings, or predicted change utility.</p>
+  </footer>
+</body>
+</html>
