@@ -35,6 +35,9 @@ function decide(a,b){
     return no('REVALIDATION_REQUIRED','EXECUTION_INPUT_CHANGED');
   if(label(a,'sr.dependencies_complete')!=='true'||label(b,'sr.dependencies_complete')!=='true')
     return no('INSUFFICIENT_EVIDENCE','INCOMPLETE_DEPENDENCIES');
+  if(!hash(label(a,'sr.source_id_hash'))||!hash(label(b,'sr.source_id_hash')))
+    return no('INSUFFICIENT_EVIDENCE','SOURCE_IDENTITY_UNKNOWN');
+  if(!same(a,b,'sr.source_id_hash'))return no('REVALIDATION_REQUIRED','SOURCE_IDENTITY_CHANGED');
   if(!hash(label(a,'sr.source_version_hash'))||!hash(label(b,'sr.source_version_hash')))
     return no('INSUFFICIENT_EVIDENCE','SOURCE_VERSION_UNKNOWN');
   if(!same(a,b,'sr.source_version_hash'))return no('REVALIDATION_REQUIRED','SOURCE_VERSION_CHANGED');
