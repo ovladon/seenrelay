@@ -40,3 +40,26 @@ test('different scope is explicitly rejected despite identical hashes',()=>{
  q.attribution.labels['sr.tenant_hmac']='sha256:'+'f'.repeat(64);
  assert.equal(analyze([p,q])[0].status,'REJECT_SCOPE');
 });
+
+test('opaque source identity is required and cross-source version collisions cannot advance',()=>{
+ const p=structuredClone(records[0]),q=structuredClone(records[1]);
+ delete q.attribution.labels['sr.source_id_hash'];
+ assert.equal(analyze([p,q])[0].status,'INSUFFICIENT_EVIDENCE');
+ q.attribution.labels['sr.source_id_hash']='sha256:'+'f'.repeat(64);
+ assert.equal(analyze([p,q])[0].status,'REVALIDATION_REQUIRED');
+});
+test('changed dependency fingerprint triggers revalidation even with same results',()=>{
+ const p=structuredClone(records[0]),q=structuredClone(records[1]);
+ q.attribution.labels['sr.dependencies_hash']='sha256:'+'f'.repeat(64);
+ assert.equal(analyze([p,q])[0].status,'REVALIDATION_REQUIRED');
+});
+test('stripping a hard freshness deadline yields insufficient evidence',()=>{
+ const p=structuredClone(records[0]),q=structuredClone(records[1]);
+ delete q.attribution.labels['sr.hard_valid_until'];
+ assert.equal(analyze([p,q])[0].status,'INSUFFICIENT_EVIDENCE');
+});
+test('same hashes with unverified source confirmation never advance',()=>{
+ const p=structuredClone(records[0]),q=structuredClone(records[1]);
+ delete q.attribution.labels['sr.source_confirmation'];
+ assert.equal(analyze([p,q])[0].status,'INSUFFICIENT_EVIDENCE');
+});

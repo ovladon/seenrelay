@@ -51,3 +51,27 @@ jobs:
           print('KORA Doctor v0.1.10 pinned commit: AUDR PARSE PASS')
           print('KORA repeated candidate records:',r['category_counts']['repeated_tool_retrieval'])
           PY
+      - name: Reconcile all 16 KORA/SeenRelay scenario IDs and explanations
+        run: |
+          node examples/kora-doctor-interop-v0/compare-16.mjs /tmp/kora-audit.json /tmp/sr-kora-admission.json /tmp
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/comparison-16.json'))
+          assert len(x['rows'])==16
+          assert sum(r['kora_repeated_read_candidate'] for r in x['rows'])==15
+          assert sum(r['seenrelay_advisory_decision']=='SHADOW_CANDIDATE' for r in x['rows'])==1
+          assert all(r['kora_reason'] and r['seenrelay_reason_code'] and r['explanation'] for r in x['rows'])
+          assert all(r['auto_reuse_authorized'] is False and r['verified_saved_usd'] is None for r in x['rows'])
+          print('Per-scenario contract/reason cross-check: PASS')
+          PY
+          cat /tmp/comparison-16.md
+      - name: Publish strictly synthetic 16-case comparison artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kora-seenrelay-offline-comparison-v0
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            /tmp/comparison-16.json
+            /tmp/comparison-16.md
+
