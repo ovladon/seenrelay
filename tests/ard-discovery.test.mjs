@@ -4,9 +4,12 @@ import fs from 'node:fs';
 
 const read = (path) => fs.readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 const catalog = JSON.parse(read('public/.well-known/ard.json'));
+const aiCatalog = JSON.parse(read('public/.well-known/ai-catalog.json'));
+
 
 test('ARD v0.91 catalog is discoverable through well-known path, HTML link and robots Agentmap', () => {
-  assert.equal(read('public/.well-known/ai-catalog.json'), read('public/.well-known/ard.json'));
+  assert.deepEqual(aiCatalog, catalog);
+  assert.equal(catalog.specVersion, '1.0');
   assert.ok(read('src/landing.ts').includes('rel="ard" type="application/json" href="${origin}/.well-known/ard.json"'));
   assert.ok(read('src/adoption.ts').includes('Agentmap: ${origin}/.well-known/ard.json'));
 });
@@ -28,7 +31,7 @@ test('ARD entries are truthful domain-owned references, not auto-execution or ad
     assert.equal(Object.hasOwn(entry, 'updatedAt'), false, 'no stale manual timestamp');
   }
   assert.equal(byId.get('urn:air:seenrelay.com:mcp:seenrelay').type, 'application/mcp-server-card+json');
-  assert.equal(byId.get('urn:air:seenrelay.com:mcp:seenrelay').url, 'https://seenrelay.com/.well-known/mcp/server-card.json');
+  assert.equal(byId.get('urn:air:seenrelay.com:mcp:seenrelay').url, 'https://seenrelay.com/mcp/server-card');
   assert.deepEqual(byId.get('urn:air:seenrelay.com:mcp:seenrelay').capabilities, ['check_fact','observe_fact']);
   assert.equal(byId.get('urn:air:seenrelay.com:skill:shadow-audit').type, 'application/agent-skills+md');
   assert.equal(byId.get('urn:air:seenrelay.com:skill:shadow-audit').url, 'https://seenrelay.com/.well-known/agent-skills/seenrelay/SKILL.md');
