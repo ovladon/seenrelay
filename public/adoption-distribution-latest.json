@@ -1,0 +1,89 @@
+{
+  "schema_version": "seenrelay-adoption-distribution-public-v1",
+  "collected_at": "2026-10-31T05:43:48.547Z",
+  "checked_surfaces": 14,
+  "healthy_surfaces": 12,
+  "npm_downloads_7d": 77,
+  "github_stars": 0,
+  "github_forks": 0,
+  "mcpfield_installs": null,
+  "signals": {
+    "production-health": {
+      "status": "ok",
+      "severity": "critical",
+      "detail": "production d02d0afc93e7ff2172daeb4bf98f85ac81000dae"
+    },
+    "service-descriptor": {
+      "status": "ok",
+      "severity": "critical",
+      "detail": "SeenRelay 0.3.10"
+    },
+    "agent-skill-index": {
+      "status": "ok",
+      "severity": "critical",
+      "detail": "seenrelay skill is discoverable"
+    },
+    "agent-skill-document": {
+      "status": "ok",
+      "severity": "critical",
+      "detail": "canonical skill and audit contract are present"
+    },
+    "mcp-registry": {
+      "status": "ok",
+      "severity": "critical",
+      "detail": "io.github.ovladon/seenrelay@0.3.10 (exact-version lookup)"
+    },
+    "npm": {
+      "status": "ok",
+      "severity": "critical",
+      "detail": "seenrelay@0.2.30"
+    },
+    "pypi": {
+      "status": "ok",
+      "severity": "critical",
+      "detail": "seenrelay==0.2.30"
+    },
+    "npm-downloads": {
+      "status": "ok",
+      "severity": "informational",
+      "detail": "77 downloads in npm last-week window; reach context only"
+    },
+    "github-repository-reach": {
+      "status": "ok",
+      "severity": "informational",
+      "detail": "0 stars; 0 forks; reach context only"
+    },
+    "mcpfield": {
+      "status": "fail",
+      "severity": "advisory",
+      "detail": "request failed after bounded retries: 403 Forbidden"
+    },
+    "glama": {
+      "status": "ok",
+      "severity": "advisory",
+      "detail": "canonical listing present and reports Healthy"
+    },
+    "claude-community-marketplace": {
+      "status": "fail",
+      "severity": "advisory",
+      "detail": "Published plugin seenrelay is not in the public Claude community marketplace mirror"
+    },
+    "agent-plugins-directory": {
+      "status": "ok",
+      "severity": "advisory",
+      "detail": "indexed 0.3.10 with current discovery copy"
+    },
+    "agent-plugins-package": {
+      "status": "ok",
+      "severity": "informational",
+      "detail": "portable package is internally consistent"
+    }
+  },
+  "claim_boundary": {
+    "public_reach_context_only": true,
+    "unique_users": "UNKNOWN",
+    "unique_companies": "UNKNOWN",
+    "paying_customers": "UNKNOWN",
+    "geography": "UNKNOWN"
+  }
+}
