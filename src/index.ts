@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { admitHive, finishHiveCheck, finishHiveObserve } from './hive.js';
 import { boundedRequest, readJsonBody, requestId } from './http.js';
 import { handleMcp } from './mcp.js';
+import { mcpServerCard } from './mcp-server-card.js';
 import { openApi } from './openapi.js';
 import { deriveClientKey } from './identity.js';
 import { checkFact, observeFact } from './service.js';
@@ -368,6 +369,17 @@ app.get('/healthz', (c) => {
   });
 });
 app.get('/openapi.json', (c) => { c.header('cache-control', 'public, max-age=3600'); return c.json(openApi(new URL(c.req.url).origin)); });
+app.get('/mcp/server-card', (c) => {
+  // Discovery metadata only. Runtime MCP initialize/tools/list remain authoritative.
+  c.header('access-control-allow-origin', '*');
+  c.header('access-control-allow-methods', 'GET');
+  c.header('access-control-allow-headers', 'Content-Type, If-None-Match');
+  c.header('access-control-expose-headers', 'ETag');
+  c.header('cache-control', 'public, max-age=3600');
+  return c.body(JSON.stringify(mcpServerCard()), 200, {
+    'content-type': 'application/mcp-server-card+json; charset=utf-8'
+  });
+});
 app.all('/mcp', (c) => handleMcp(c.req.raw));
 
 app.get('/internal/maintenance', (c) => maintenanceCron(c.req.raw));
