@@ -197,9 +197,12 @@ jobs:
           export npm_config_yes=true
           HOME="$TMP/home" npx skills add https://seenrelay.com --skill seenrelay --yes
 
-          INSTALLED="$(find "$TMP" -type f -path '*/seenrelay/SKILL.md' -print -quit)"
-          if [ -z "$INSTALLED" ]; then
-            echo 'The exact public install command completed without an installed seenrelay/SKILL.md.' >&2
+          # The installer links agent-specific copies into .agents/skills/seenrelay.
+          # Compare its canonical installation, not a filesystem-order-dependent
+          # agent-specific copy, which may be transformed for that agent.
+          INSTALLED="$TMP/work/.agents/skills/seenrelay/SKILL.md"
+          if [ ! -f "$INSTALLED" ]; then
+            echo 'The exact public install command completed without the canonical .agents/skills/seenrelay/SKILL.md.' >&2
             find "$TMP" -maxdepth 6 -type f -print >&2 || true
             exit 1
           fi
