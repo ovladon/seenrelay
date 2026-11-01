@@ -206,6 +206,30 @@ test('self-hosted Claude marketplace exposes a persistent direct-install path', 
   assert.match(quickstart, /does not imply Anthropic approval/i);
 });
 
+test('Copilot marketplace exposes the existing portable plugin without auto-enabling reuse', () => {
+  const catalog = JSON.parse(read('.github', 'plugin', 'marketplace.json'));
+  const plugin = JSON.parse(read('plugin.json'));
+  const mcp = JSON.parse(read('mcp.json'));
+  const skill = read('skills', 'seenrelay', 'SKILL.md');
+
+  assert.equal(catalog.name, 'seenrelay');
+  assert.equal(catalog.owner?.name, 'SeenRelay');
+  assert.equal(catalog.plugins?.length, 1);
+  assert.equal(catalog.plugins[0]?.name, plugin.name);
+  assert.equal(catalog.plugins[0]?.source, './');
+  assert.equal(plugin.$schema, 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
+  assert.equal(mcp.mcpServers?.seenrelay?.url, 'https://seenrelay.com/mcp');
+  assert.match(skill, /Start in shadow mode|Start with measurement/i);
+  assert.match(skill, /native\/source controls|source-native/i);
+  assert.match(skill, /Do not turn candidate tools into active reuse/i);
+  assert.doesNotMatch(JSON.stringify(catalog), /enabledPlugins|automatic_reuse|auto_enable|api[_-]?key/i);
+
+  const readme = read('README.md');
+  assert.match(readme, /copilot plugin marketplace add ovladon\/seenrelay/);
+  assert.match(readme, /copilot plugin install seenrelay@seenrelay/);
+  assert.match(readme, /does not enable reuse automatically/i);
+});
+
 test('Claude community marketplace readiness uses Anthropic policy floor at pinned SHAs', () => {
   const workflow = read('.github', 'workflows', 'claude-community-readiness.yml');
   assert.match(workflow, /CLAUDE_CODE_VALIDATOR_VERSION:\s*'2\.1\.278'/);

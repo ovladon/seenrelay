@@ -1,0 +1,17 @@
+{
+  "name": "seenrelay",
+  "owner": {
+    "name": "SeenRelay"
+  },
+  "metadata": {
+    "description": "Repository-hosted SeenRelay agent plugin catalog; installation is optional."
+  },
+  "plugins": [
+    {
+      "name": "seenrelay",
+      "description": "Measure repeated expensive read-only agent checks in shadow mode, with local and source-native controls first. Reuse requires separate caller authorization.",
+      "source": "./",
+      "homepage": "https://seenrelay.com"
+    }
+  ]
+}

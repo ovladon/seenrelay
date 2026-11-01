@@ -52,6 +52,15 @@ claude plugin install --scope user seenrelay@seenrelay
 
 This direct-install path is repository-hosted and does not imply Anthropic marketplace approval. It does not automatically attach the hosted MCP endpoint or enable reuse.
 
+GitHub Copilot CLI can discover the existing portable Agent Plugins package from this repository's self-hosted marketplace:
+
+```bash
+copilot plugin marketplace add ovladon/seenrelay
+copilot plugin install seenrelay@seenrelay
+```
+
+The Copilot route is optional and uses the repository's existing skill and MCP metadata. It does not enable reuse automatically. Marketplace publication does not imply listing in a curated or default catalog, and end-to-end Copilot installation is not yet independently verified.
+
 Other Agent Skills clients can use the canonical domain:
 
 ```bash
