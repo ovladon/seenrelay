@@ -95,6 +95,13 @@ Claude Code persistent repository-hosted plugin:
 
 This self-hosted path is validated and available now. It does not imply Anthropic marketplace approval, does not automatically attach the hosted MCP endpoint, and does not enable reuse.
 
+GitHub Copilot CLI optional repository-hosted plugin:
+
+\`copilot plugin marketplace add ovladon/seenrelay\`
+\`copilot plugin install seenrelay@seenrelay\`
+
+The Copilot route is self-serve but has not been independently verified end to end. It is not a claim of inclusion in a default or curated marketplace, does not enable reuse, and requires normal project authority.
+
 Other compatible Agent Skills clients can install the published SeenRelay skill directly from the canonical domain:
 
 \`npx skills add ${origin} --skill seenrelay --yes\`
