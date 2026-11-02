@@ -29,7 +29,18 @@ export function agentAdoptionDescriptor(origin: string) {
       claude_code: [
         'claude plugin marketplace add ovladon/seenrelay',
         'claude plugin install --scope user seenrelay@seenrelay'
-      ]
+      ],
+      copilot_cli: [
+        'copilot plugin marketplace add ovladon/seenrelay',
+        'copilot plugin install seenrelay@seenrelay'
+      ],
+      copilot_cli_status: {
+        distribution: 'optional_repository_hosted_marketplace',
+        end_to_end_install_verified: false,
+        curated_marketplace_listing_verified: false,
+        enables_reuse_automatically: false,
+        requires_project_authority: true
+      }
     },
     autonomous_decision_contract: {
       project_mutation_authority: 'never_granted_by_seenrelay',
