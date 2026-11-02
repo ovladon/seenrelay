@@ -3,7 +3,7 @@ import { publicProductFacts } from './public-facts.generated.js';
 export function agentAdoptionDescriptor(origin: string) {
   return {
     schema: 'seenrelay-agent-adoption-v1',
-    updated_at: '2026-10-27',
+    updated_at: '2026-11-02',
     audience: ['autonomous_agent', 'coding_agent', 'agent_orchestrator', 'human_operator'],
     objective: 'Measure whether SeenRelay belongs on a narrow repeated expensive read-only path, then keep or remove it based on evidence.',
     canonical_origin: origin,
