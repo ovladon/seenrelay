@@ -228,6 +228,19 @@ test('Copilot marketplace exposes the existing portable plugin without auto-enab
   assert.match(readme, /copilot plugin marketplace add ovladon\/seenrelay/);
   assert.match(readme, /copilot plugin install seenrelay@seenrelay/);
   assert.match(readme, /does not enable reuse automatically/i);
+
+  // The zero-contact machine contract and llms.txt must not lag the README.
+  const adoptionContract = read('src', 'agent-adoption.ts');
+  const llmsSource = read('src', 'adoption.ts');
+  for (const surface of [adoptionContract, llmsSource]) {
+    assert.match(surface, /copilot plugin marketplace add ovladon\/seenrelay/);
+    assert.match(surface, /copilot plugin install seenrelay@seenrelay/);
+  }
+  assert.match(adoptionContract, /end_to_end_install_verified: false/);
+  assert.match(adoptionContract, /curated_marketplace_listing_verified: false/);
+  assert.match(adoptionContract, /enables_reuse_automatically: false/);
+  assert.match(llmsSource, /has not been independently verified end to end/);
+  assert.match(llmsSource, /does not enable reuse/);
 });
 
 test('Claude community marketplace readiness uses Anthropic policy floor at pinned SHAs', () => {
