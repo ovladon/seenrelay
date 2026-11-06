@@ -1,0 +1,345 @@
+{
+  "schema": "seenrelay-public-capability-inventory-v1",
+  "version": 1,
+  "baseline_date": "2026-10-30",
+  "scope": "Implemented public capabilities only. This is a structural sentry, not a substitute for behavior, deployment, economics, security, accessibility or independent adoption tests.",
+  "retirement_policy": "No deletion or retirement of active capability IDs without approved, recorded replacement/migration and PR review.",
+  "capabilities": [
+    {
+      "id": "protocol.check",
+      "status": "active",
+      "domain": "runtime",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "app.post('/v1/check'"
+        }
+      ]
+    },
+    {
+      "id": "protocol.observe",
+      "status": "active",
+      "domain": "runtime",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "app.post('/v1/observe'"
+        }
+      ]
+    },
+    {
+      "id": "identity.source_fact_v3",
+      "status": "active",
+      "domain": "runtime",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/canonical.ts",
+          "contains": "seenrelay-fact-v3"
+        }
+      ]
+    },
+    {
+      "id": "identity.source_native_locator",
+      "status": "active",
+      "domain": "runtime",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/canonical.ts",
+          "contains": "json_pointer"
+        }
+      ]
+    },
+    {
+      "id": "fingerprint.keyed_hmac",
+      "status": "active",
+      "domain": "runtime",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/value-fingerprint.ts",
+          "contains": "HMAC"
+        }
+      ]
+    },
+    {
+      "id": "provenance.ed25519_key_continuity",
+      "status": "active",
+      "domain": "runtime",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/identity.ts",
+          "contains": "ed25519"
+        }
+      ]
+    },
+    {
+      "id": "privacy.hash_only_storage_guard",
+      "status": "active",
+      "domain": "privacy",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "tests/hash-only-storage.test.mjs",
+          "contains": "hash"
+        }
+      ]
+    },
+    {
+      "id": "policy.billing_disabled",
+      "status": "active",
+      "domain": "policy",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/billing.ts",
+          "contains": "Billing is disabled in this SeenRelay deployment"
+        }
+      ]
+    },
+    {
+      "id": "policy.no_source_fetch_in_runtime",
+      "status": "active",
+      "domain": "policy",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "scripts/guardrails.mjs",
+          "contains": "Outbound fetch is forbidden"
+        }
+      ]
+    },
+    {
+      "id": "fleet.hive_lease",
+      "status": "active",
+      "domain": "runtime",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/hive.ts",
+          "contains": "lease"
+        }
+      ]
+    },
+    {
+      "id": "fleet.useful_reuse_guard",
+      "status": "active",
+      "domain": "runtime",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/reuse.ts",
+          "contains": "creditUsefulReuseGuarded"
+        }
+      ]
+    },
+    {
+      "id": "adoption.local_only_opt_in",
+      "status": "active",
+      "domain": "adoption",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/adoption-atlas-v1.ts",
+          "contains": "buildAdoptionAtlasV1"
+        }
+      ]
+    },
+    {
+      "id": "observer.reference_public_sources",
+      "status": "active",
+      "domain": "observer",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "scripts/reference-observer.mjs",
+          "contains": "seenrelay-reference-observer-v1"
+        }
+      ]
+    },
+    {
+      "id": "client.typescript",
+      "status": "active",
+      "domain": "client",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "clients/typescript/package.json",
+          "contains": "seenrelay"
+        }
+      ]
+    },
+    {
+      "id": "client.python",
+      "status": "active",
+      "domain": "client",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "clients/python/pyproject.toml",
+          "contains": "seenrelay"
+        }
+      ]
+    },
+    {
+      "id": "machine.mcp",
+      "status": "active",
+      "domain": "machine",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/mcp'"
+        }
+      ]
+    },
+    {
+      "id": "machine.open_api",
+      "status": "active",
+      "domain": "machine",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/openapi.json'"
+        }
+      ]
+    },
+    {
+      "id": "machine.service_descriptor",
+      "status": "active",
+      "domain": "machine",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/service.json'"
+        }
+      ]
+    },
+    {
+      "id": "machine.product_facts",
+      "status": "active",
+      "domain": "machine",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/product-facts.json'"
+        }
+      ]
+    },
+    {
+      "id": "machine.agent_adoption",
+      "status": "active",
+      "domain": "machine",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/agent-adoption.json'"
+        }
+      ]
+    },
+    {
+      "id": "machine.agent_skill",
+      "status": "active",
+      "domain": "machine",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/.well-known/agent-skills/seenrelay/SKILL.md'"
+        }
+      ]
+    },
+    {
+      "id": "site.human_agent_entry",
+      "status": "active",
+      "domain": "site",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/agents'"
+        }
+      ]
+    },
+    {
+      "id": "site.integrations",
+      "status": "active",
+      "domain": "site",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/clients'"
+        }
+      ]
+    },
+    {
+      "id": "site.proof",
+      "status": "active",
+      "domain": "site",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/proof'"
+        }
+      ]
+    },
+    {
+      "id": "site.trust",
+      "status": "active",
+      "domain": "site",
+      "criticality": "supported",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/trust'"
+        }
+      ]
+    },
+    {
+      "id": "ops.health",
+      "status": "active",
+      "domain": "ops",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/healthz'"
+        }
+      ]
+    },
+    {
+      "id": "ops.authenticated_control_room",
+      "status": "active",
+      "domain": "ops",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/admin'"
+        }
+      ]
+    },
+    {
+      "id": "ops.control_room_auth",
+      "status": "active",
+      "domain": "ops",
+      "criticality": "release-critical",
+      "checks": [
+        {
+          "path": "src/index.ts",
+          "contains": "'/admin/login'"
+        }
+      ]
+    }
+  ]
+}

@@ -25,6 +25,16 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
+      - name: Preserve implemented public capability contracts
+        env:
+          BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          node scripts/verify-capability-inventory.mjs
+          if [ -n "${BASE_COMMIT:-}" ]; then
+            git fetch --no-tags origin "$BASE_COMMIT" --depth=1
+            node scripts/verify-capability-inventory.mjs --base-commit "$BASE_COMMIT"
+          fi
       - name: Run project checks except fleet target structural tests
         run: |
           npm run public:sync:check
