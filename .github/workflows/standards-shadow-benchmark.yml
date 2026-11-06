@@ -10,7 +10,7 @@ on:
       - 'tests/standards-shadow-collector-v2.test.mjs'
       - '.github/workflows/standards-shadow-benchmark.yml'
   schedule:
-    - cron: '47 4 * * *'
+    - cron: '47 4 * * 3'
   workflow_dispatch:
 
 permissions:
