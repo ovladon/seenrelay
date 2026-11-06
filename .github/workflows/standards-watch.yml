@@ -2,7 +2,7 @@ name: Standards Watch
 
 on:
   schedule:
-    - cron: '17 4 * * *'
+    - cron: '17 4 * * 3'
   workflow_dispatch:
 
 permissions:
