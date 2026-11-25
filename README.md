@@ -2,6 +2,8 @@
 
 **Decide when you actually need to look again.**
 
+[![SeenRelay on StartupScores](https://startupscores.com/badge/seenrelay.svg?style=shield&v=combo&theme=dark)](https://startupscores.com/open-source/seenrelay)
+
 SeenRelay measures repeated expensive read-only execution around agents and distributed software. It prefers local/private and source/provider-native controls first, preserves authoritative execution while measuring, and keeps only paths that earn a `USE` verdict. Start locally with `npx seenrelay scan`; if no candidate exists or a stronger native control already wins, stop there. `DO NOT USE` and `INSUFFICIENT EVIDENCE` are valid outcomes.
 
 Currently free · no account · no SeenRelay API key required.
