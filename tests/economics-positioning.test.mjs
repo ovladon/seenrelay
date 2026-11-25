@@ -27,7 +27,11 @@ test('public and machine-facing guidance targets repeated expensive validation w
   assert.match(publicSource, /pricing_snapshots: publicProductFacts\.pricing_snapshots/);
   assert.match(indexSource, /app\.get\('\/economics'/);
 
-  assert.equal(facts.pricing_snapshots.checked_at, '2026-10-25');
+  const verifiedAt = Date.parse(`${facts.pricing_snapshots.checked_at}T00:00:00Z`);
+  assert.ok(Number.isFinite(verifiedAt) &&
+    verifiedAt <= Date.now() &&
+    Date.now() - verifiedAt <= facts.pricing_snapshots.max_age_days * 86_400_000,
+    'public provider pricing snapshots must be current and not future-dated');
   assert.equal(facts.pricing_snapshots.firecrawl.basic_scrape_credits_per_page, 1);
   assert.equal(facts.pricing_snapshots.firecrawl.json_extraction_total_credits_per_page, 5);
   assert.ok(facts.verified_benchmarks.length >= 1, 'historical benchmark evidence remains available for technical verification');
