@@ -96,6 +96,39 @@ export function publicLandingPage(origin: string): string {
   </div>
 </section>
 
+<section class="rv-shell rv-ecosystem" id="ecosystem" aria-labelledby="rv-ecosystem-title">
+  <div class="rv-ecosystem-intro">
+    <div>
+      <div class="rv-eyebrow">PUBLIC DISTRIBUTION · DIRECT LINKS</div>
+      <h2 id="rv-ecosystem-title">Available in the agent ecosystem.</h2>
+    </div>
+    <p>Find the existing SeenRelay connector and installable clients in public directories and registries. <a href="/clients">See integration options →</a></p>
+  </div>
+  <div class="rv-ecosystem-grid" aria-label="Public SeenRelay listings">
+    <a class="rv-ecosystem-card" href="https://registry.modelcontextprotocol.io/?q=io.github.ovladon%2Fseenrelay" target="_blank" rel="noopener noreferrer" aria-label="Find SeenRelay in the official MCP Registry (opens in a new tab)">
+      <span class="rv-ecosystem-kicker">SERVER REGISTRY</span>
+      <strong>MCP Registry <span aria-hidden="true">↗</span></strong>
+      <small>Public server identity</small>
+    </a>
+    <a class="rv-ecosystem-card" href="https://glama.ai/mcp/connectors/io.github.ovladon/seenrelay" target="_blank" rel="noopener noreferrer" aria-label="View the SeenRelay connector on Glama (opens in a new tab)">
+      <span class="rv-ecosystem-kicker">CONNECTOR DIRECTORY</span>
+      <strong>Glama <span aria-hidden="true">↗</span></strong>
+      <small>External connector listing</small>
+    </a>
+    <a class="rv-ecosystem-card" href="https://www.npmjs.com/package/seenrelay" target="_blank" rel="noopener noreferrer" aria-label="View the SeenRelay JavaScript and TypeScript package on npm (opens in a new tab)">
+      <span class="rv-ecosystem-kicker">JAVASCRIPT · TYPESCRIPT</span>
+      <strong>npm <span aria-hidden="true">↗</span></strong>
+      <small>Installable client package</small>
+    </a>
+    <a class="rv-ecosystem-card" href="https://pypi.org/project/seenrelay/" target="_blank" rel="noopener noreferrer" aria-label="View the SeenRelay Python package on PyPI (opens in a new tab)">
+      <span class="rv-ecosystem-kicker">PYTHON</span>
+      <strong>PyPI <span aria-hidden="true">↗</span></strong>
+      <small>Installable client package</small>
+    </a>
+  </div>
+  <p class="rv-ecosystem-footnote">Public listings and package distribution are independently inspectable; they do not imply platform endorsement, security certification, external customer adoption, or permission to skip source validation.</p>
+</section>
+
 <section class="rv-shell rv-section" id="how">
   <div class="rv-section-head">
     <div><div class="rv-eyebrow">AUTOMATIC LOOP</div><h2>Observe. Learn. Decide. Savings Report.</h2></div>
