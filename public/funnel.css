@@ -33,3 +33,24 @@
 .rv-small{font-size:12px;line-height:1.6;color:#798791}
 .rv-small a{color:#b7c9ff}
 @media(max-width:860px){.rv-cta-panel{grid-template-columns:1fr;align-items:start}}
+
+
+/* Public ecosystem discovery: external listings, not endorsements. */
+.rv-ecosystem{padding-top:32px;padding-bottom:38px}
+.rv-ecosystem-intro{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:18px}
+.rv-ecosystem-intro h2{font-size:clamp(24px,2.55vw,34px);line-height:1.1;letter-spacing:-.035em;font-weight:730;margin:9px 0 0}
+.rv-ecosystem-intro p{max-width:430px;margin:0;color:#aab5c0;font-size:13px;line-height:1.6}
+.rv-ecosystem-intro p a{color:#b4eadb;text-underline-offset:3px}
+.rv-ecosystem-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.rv-ecosystem-card{min-width:0;min-height:137px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:20px 20px 17px;border-radius:16px;border:1px solid #29343f;background:linear-gradient(153deg,rgba(25,34,43,.91),rgba(11,16,22,.96));color:#f1f7fb;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.035);transition:border-color .2s ease,transform .2s ease,background-color .2s ease}
+.rv-ecosystem-card:hover{border-color:#73c7b8;transform:translateY(-2px);background-color:#17252b}
+.rv-ecosystem-card:focus-visible{outline:3px solid #93e2cc;outline-offset:3px}
+.rv-ecosystem-kicker{font-size:10px;letter-spacing:.12em;line-height:1.4;font-weight:760;color:#92cdbd}
+.rv-ecosystem-card strong{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;font-size:20px;font-weight:710;letter-spacing:-.03em;line-height:1.2}
+.rv-ecosystem-card strong span{color:#83baa9;font-size:17px;font-weight:500;transition:transform .2s ease}
+.rv-ecosystem-card:hover strong span{transform:translate(2px,-2px)}
+.rv-ecosystem-card small{font-size:12px;line-height:1.4;color:#a9b6c3}
+.rv-ecosystem-footnote{max-width:940px;margin:13px 2px 0;color:#8998a6;font-size:11px;line-height:1.65}
+@media(max-width:940px){.rv-ecosystem-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.rv-ecosystem-intro{align-items:start;flex-direction:column;gap:10px}}
+@media(max-width:520px){.rv-ecosystem{padding-top:24px;padding-bottom:25px}.rv-ecosystem-grid{gap:9px}.rv-ecosystem-card{min-height:124px;padding:16px 13px;border-radius:13px}.rv-ecosystem-card strong{font-size:17px}.rv-ecosystem-kicker{font-size:9px;letter-spacing:.065em}.rv-ecosystem-card small{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.rv-ecosystem-card,.rv-ecosystem-card strong span{transition:none}.rv-ecosystem-card:hover{transform:none}.rv-ecosystem-card:hover strong span{transform:none}}
